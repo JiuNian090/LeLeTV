@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对 JiunianTV 项目的关注！我们欢迎所有形式的贡献，包括但不限于代码提交、问题报告、功能建议、文档改进等。
+感谢您对 LeLeTV 项目的关注！我们欢迎所有形式的贡献，包括但不限于代码提交、问题报告、功能建议、文档改进等。
 
 ## 如何贡献
 
@@ -10,8 +10,8 @@
 
 ```bash
 # 替换 YOUR_USERNAME 为您的 GitHub 用户名
-git clone https://github.com/YOUR_USERNAME/JiunianTV.git
-cd JiunianTV
+git clone https://github.com/YOUR_USERNAME/LeLeTV.git
+cd LeLeTV
 ```
 
 3. **安装依赖**
@@ -41,7 +41,7 @@ cd JiunianTV
 
 如果您发现了 bug 或希望建议新功能：
 
-1. 首先查看 [Issues](https://github.com/LibreSpark/JiunianTV/issues) 确保问题尚未被报告
+1. 首先查看 [Issues](https://github.com/LibreSpark/LeLeTV/issues) 确保问题尚未被报告
 2. 创建新的 Issue，请包含：
    - 清晰的标题和描述
    - 重现步骤（如果是 bug）
@@ -255,13 +255,13 @@ function search(k) {
 
 如果您有任何问题或需要帮助：
 
-- **GitHub Issues**: [报告问题或建议](https://github.com/LibreSpark/JiunianTV/issues)
-- **GitHub Discussions**: [参与社区讨论](https://github.com/LibreSpark/JiunianTV/discussions)
+- **GitHub Issues**: [报告问题或建议](https://github.com/LibreSpark/LeLeTV/issues)
+- **GitHub Discussions**: [参与社区讨论](https://github.com/LibreSpark/LeLeTV/discussions)
 - **Email**: 通过 GitHub 联系项目维护者
 
 ## 🙏 致谢
 
-感谢所有为 JiunianTV 项目做出贡献的开发者！您的每一份贡献都让这个项目变得更好。
+感谢所有为 LeLeTV 项目做出贡献的开发者！您的每一份贡献都让这个项目变得更好。
 
 ### 贡献者列表
 
@@ -271,4 +271,4 @@ function search(k) {
 
 **再次感谢您的贡献！** 🎉
 
-让我们一起构建一个更好的 JiunianTV！
+让我们一起构建一个更好的 LeLeTV！

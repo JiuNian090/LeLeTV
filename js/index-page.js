@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     window.history.replaceState(
                         { search: keyword }, 
-                        `搜索: ${keyword} - JiunianTV`, 
+                        `搜索: ${keyword} - LeLeTV`, 
                         window.location.href
                     );
                 } catch (e) {
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 window.history.replaceState(
                     { search: searchQuery }, 
-                    `搜索: ${searchQuery} - JiunianTV`, 
+                    `搜索: ${searchQuery} - LeLeTV`, 
                     `/s=${encodeURIComponent(searchQuery)}`
                 );
             } catch (e) {

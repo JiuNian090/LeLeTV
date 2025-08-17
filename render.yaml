@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: jiunianTV
+    name: leleTV
     runtime: node
     plan: free
     buildCommand: 'npm install'

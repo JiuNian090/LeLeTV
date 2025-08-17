@@ -433,10 +433,10 @@ export async function onRequest(context) {
 
         let kvNamespace = null;
         try {
-            kvNamespace = env.JIUNIANTV_PROXY_KV;
+            kvNamespace = env.LELETV_PROXY_KV;
             if (!kvNamespace) throw new Error("KV 命名空间未绑定");
         } catch (e) {
-            logDebug(`KV 命名空间 'JIUNIANTV_PROXY_KV' 访问出错或未绑定: ${e.message}`);
+            logDebug(`KV 命名空间 'LELETV_PROXY_KV' 访问出错或未绑定: ${e.message}`);
             kvNamespace = null;
         }
 
@@ -503,10 +503,10 @@ export async function onRequest(context) {
         const cacheKey = `proxy_raw:${targetUrl}`; // 使用原始内容的缓存键
         let kvNamespace = null;
         try {
-            kvNamespace = env.JIUNIANTV_PROXY_KV;
+            kvNamespace = env.LELETV_PROXY_KV;
             if (!kvNamespace) throw new Error("KV 命名空间未绑定");
         } catch (e) {
-            logDebug(`KV 命名空间 'JIUNIANTV_PROXY_KV' 访问出错或未绑定: ${e.message}`);
+            logDebug(`KV 命名空间 'LELETV_PROXY_KV' 访问出错或未绑定: ${e.message}`);
             kvNamespace = null;
         }
 

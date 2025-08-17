@@ -148,7 +148,7 @@ function addVersionInfoToFooter() {
                 const updateBtn = versionElement.querySelector('span');
                 if (updateBtn) {
                     updateBtn.addEventListener('click', () => {
-                        window.open('https://github.com/LibreSpark/JiunianTV', '_blank');
+                        window.open('https://github.com/LibreSpark/LeLeTV', '_blank');
                     });
                 }
             }, 100);

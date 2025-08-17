@@ -177,11 +177,11 @@ function fillAndSearch(title) {
             // 使用HTML5 History API更新URL，不刷新页面
             window.history.pushState(
                 { search: safeTitle }, 
-                `搜索: ${safeTitle} - JiunianTV`, 
+                `搜索: ${safeTitle} - LeLeTV`, 
                 `/s=${encodedQuery}`
             );
             // 更新页面标题
-            document.title = `搜索: ${safeTitle} - JiunianTV`;
+            document.title = `搜索: ${safeTitle} - LeLeTV`;
         } catch (e) {
             console.error('更新浏览器历史失败:', e);
         }
@@ -237,11 +237,11 @@ async function fillAndSearchWithDouban(title) {
             // 使用HTML5 History API更新URL，不刷新页面
             window.history.pushState(
                 { search: safeTitle }, 
-                `搜索: ${safeTitle} - JiunianTV`, 
+                `搜索: ${safeTitle} - LeLeTV`, 
                 `/s=${encodedQuery}`
             );
             // 更新页面标题
-            document.title = `搜索: ${safeTitle} - JiunianTV`;
+            document.title = `搜索: ${safeTitle} - LeLeTV`;
         } catch (e) {
             console.error('更新浏览器历史失败:', e);
         }
@@ -791,3 +791,70 @@ function resetTagsToDefault() {
     
     showToast('已恢复默认标签', 'success');
 }
+
+function fillAndSearchWithDouban(keyword) {
+    // 阻止事件冒泡
+    event.stopPropagation();
+    
+    // 更新URL，但不刷新页面
+    try {
+        window.history.replaceState(
+            { search: keyword }, 
+            `搜索: ${keyword} - LeLeTV`, 
+            `/s=${encodeURIComponent(keyword)}`
+        );
+    } catch (e) {
+        console.error('更新浏览器历史失败:', e);
+    }
+    
+    // 设置搜索框的值
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) { 
+        searchInput.value = keyword;
+        toggleClearButton();
+    }
+    
+    // 滚动到搜索区域
+    const searchArea = document.getElementById('searchArea');
+    if (searchArea) {
+        searchArea.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // 执行搜索
+    search();
+}
+
+function fillAndSearch(keyword, event) {
+    // 阻止事件冒泡
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    // 更新URL，但 not refresh
+    try {
+        window.history.replaceState(
+            { search: keyword }, 
+            `搜索: ${keyword} - LeLeTV`, 
+            `/s=${encodeURIComponent(keyword)}`
+        );
+    } catch (e) {
+        console.error('更新浏览器历史失败:', e);
+    }
+    
+    // 设置搜索框的value
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) { 
+        searchInput.value = keyword;
+        toggleClearButton();
+    }
+    
+    // 滚动到搜索区域
+    const searchArea = document.getElementById('searchArea');
+    if (searchArea) {
+        searchArea.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // 执行搜索
+    search();
+}
+// ... existing code ...
