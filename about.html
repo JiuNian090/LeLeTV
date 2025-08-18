@@ -109,10 +109,64 @@
 						</div>
 					</div>
 				</div>
+
+				<!-- 分割线 -->
+				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
+
+				<!-- 更新日志 -->
+				<div id="changelog" class="mb-8 sm:mb-16">
+					<h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">更新日志</h2>
+					<div class="space-y-6">
+						<div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 sm:p-8">
+							<h3 class="text-xl font-bold mb-4 gradient-text">版本历史</h3>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">v202508190042 (2025-08-19 00:42)</h4>
+								<p class="ml-4 mb-1"><span class="text-green-400">[其他]</span> 更新项目仓库链接和版本检查URL</p>
+								<p class="text-gray-400 text-sm mt-2 ml-4">将版本检查URL仓库链接JiuNian090/LeLeTV，以匹配新的项目仓库位置</p>
+							</div>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">v202508190035 (2025-08-19 00:35)</h4>
+								<p class="ml-4 mb-1"><span class="text-green-400">[其他]</span> 添加更新日志链接并简化版本显示逻辑</p>
+								<p class="text-gray-400 text-sm mt-2 ml-4">在页脚添加更新日志链接，点击可显示更新日志弹窗</p>
+								<p class="text-gray-400 text-sm ml-4">简化最新版本的显示逻辑，移除冗余的事件监听</p>
+							</div>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">v202508190023 (2025-08-19 00:23)</h4>
+								<p class="ml-4 mb-1"><span class="text-green-400">[其他]</span> 优化最新版本点击事件处理逻辑</p>
+								<p class="text-gray-400 text-sm mt-2 ml-4">将内联HTML字符串创建改为DOM API创建元素，并直接添加点击事件监听器，避免使用setTimeout延迟绑定事件</p>
+							</div>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">v202508190018 (2025-08-19 00:18)</h4>
+								<p class="ml-4 mb-1"><span class="text-green-400">[其他]</span> 优化更新日志模态窗口的实现逻辑</p>
+							</div>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">v202508190008 (2025-08-19 00:08)</h4>
+								<p class="ml-4 mb-1"><span class="text-green-400">[其他]</span> 添加更新日志模态窗口功能</p>
+								<p class="text-gray-400 text-sm mt-2 ml-4">实现显示更新日志的模态窗口，包括从服务器获取CHANGELOG.md文件并解析为HTML格式显示。添加了关闭按钮、ESC键关闭和点击外部关闭功能，以及加载状态指示器。</p>
+							</div>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">v202508182359 (2025-08-18 23:59)</h4>
+								<p class="ml-4 mb-1"><span class="text-green-400">[其他]</span> 为最新版本添加点击查看更新日志功能</p>
+								<p class="text-gray-400 text-sm mt-2 ml-4">添加点击最新版本文本显示更新日志模态窗口的功能，包含模态窗口创建、关闭逻辑和Markdown内容解析。移除不再需要的测试文件。</p>
+							</div>
+
+							<div class="mb-6 p-4 bg-[#222] rounded-lg">
+								<h4 class="text-lg font-semibold mb-2 text-blue-400">更早版本</h4>
+								<p class="text-gray-400 text-sm mt-2 ml-4">包含更多历史版本更新信息，请查看项目源代码中的CHANGELOG.md文件。</p>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</main>
-	<footer class="footer py-6 border-t border-[#333] bg-[#0a0a0a]">
+	<footer class="footer py-6 border-t border-[#333] bg-[#0a0a0a]" id="footer">
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
@@ -138,5 +192,148 @@
             </div>
         </div>
     </footer>
+
+    <!-- 自动加载更新日志的脚本 -->
+    <script>
+        // 页面加载完成后尝试自动加载更新日志
+        document.addEventListener('DOMContentLoaded', function() {
+            const changelogContainer = document.getElementById('changelog');
+            if (!changelogContainer) return;
+            
+            // 获取版本历史容器
+            const versionHistoryContainer = changelogContainer.querySelector('div.space-y-6 > div > div');
+            if (!versionHistoryContainer) return;
+            
+            // 创建一个占位符，用于在加载完成前显示
+            const loadingPlaceholder = document.createElement('div');
+            loadingPlaceholder.className = 'text-center py-8';
+            loadingPlaceholder.innerHTML = `
+                <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-4 text-gray-400">加载更新日志中...</p>
+            `;
+            
+            // 保存原始内容，以便在加载失败时恢复
+            const originalContent = versionHistoryContainer.innerHTML;
+            
+            // 清空容器并显示加载占位符
+            versionHistoryContainer.innerHTML = '';
+            versionHistoryContainer.appendChild(loadingPlaceholder);
+            
+            // 尝试加载CHANGELOG.md文件
+            fetch('/CHANGELOG.md', { cache: 'no-store' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('获取更新日志失败');
+                    }
+                    return response.text();
+                })
+                .then(markdownContent => {
+                    // 将Markdown转换为HTML
+                    const htmlContent = parseChangelogMarkdown(markdownContent);
+                    
+                    // 更新容器内容
+                    versionHistoryContainer.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('加载更新日志出错:', error);
+                    
+                    // 加载失败时，恢复原始内容并显示错误提示
+                    versionHistoryContainer.innerHTML = originalContent;
+                    
+                    // 添加错误提示
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'bg-red-900/30 border border-red-800/50 rounded-lg p-4 text-center mt-4';
+                    errorMessage.innerHTML = `
+                        <p class="text-red-400 text-sm">自动加载更新日志失败，显示缓存内容</p>
+                    `;
+                    versionHistoryContainer.insertBefore(errorMessage, versionHistoryContainer.firstChild);
+                });
+        });
+        
+        // 解析CHANGELOG.md内容为HTML
+        function parseChangelogMarkdown(markdownContent) {
+            let htmlContent = '';
+            
+            // 将Markdown按行分割
+            const lines = markdownContent.split('\n');
+            
+            let inVersionSection = false;
+            let versionContent = '';
+            let versionCount = 0;
+            const MAX_DISPLAY_VERSIONS = 10; // 最多显示的版本数量
+            
+            lines.forEach((line) => {
+                // 处理标题
+                if (line.startsWith('# ')) {
+                    // 忽略一级标题
+                } else if (line.startsWith('## ')) {
+                    // 忽略二级标题
+                } else if (line.startsWith('### ')) {
+                    // 如果之前有版本内容，先处理
+                    if (inVersionSection && versionContent) {
+                        htmlContent += `
+                            <div class="mb-6 p-4 bg-[#222] rounded-lg">
+                                ${versionContent}
+                            </div>
+                        `;
+                        versionContent = '';
+                    }
+                    
+                    // 提取版本号和日期
+                    const versionMatch = line.match(/v(\d+)\s+\(([^)]+)\)/);
+                    if (versionMatch && versionCount < MAX_DISPLAY_VERSIONS) {
+                        const versionNumber = versionMatch[1];
+                        const versionDate = versionMatch[2];
+                        versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber} (${versionDate})</h4>`;
+                        versionCount++;
+                    } else if (line.includes('初始版本')) {
+                        if (versionCount <= MAX_DISPLAY_VERSIONS) {
+                            versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
+                            versionCount++;
+                        }
+                    }
+                    
+                    inVersionSection = true;
+                } else if (line.startsWith('- ') && inVersionSection && versionCount <= MAX_DISPLAY_VERSIONS) {
+                    // 处理列表项
+                    // 提取标签和内容
+                    const tagMatch = line.match(/- \[(.*?)\] (.*?)$/);
+                    if (tagMatch) {
+                        versionContent += `<p class="ml-4 mb-1"><span class="text-green-400">[${tagMatch[1]}]</span> ${tagMatch[2]}</p>`;
+                    } else {
+                        versionContent += `<p class="ml-4 mb-1">${line.substring(2)}</p>`;
+                    }
+                } else if (line.trim() !== '' && inVersionSection && versionCount <= MAX_DISPLAY_VERSIONS) {
+                    // 处理普通文本（描述）
+                    versionContent += `<p class="text-gray-400 text-sm mt-2 ml-4">${line}</p>`;
+                }
+            });
+            
+            // 处理最后一个版本内容
+            if (inVersionSection && versionContent) {
+                htmlContent += `
+                    <div class="mb-6 p-4 bg-[#222] rounded-lg">
+                        ${versionContent}
+                    </div>
+                `;
+            }
+            
+            // 添加更早版本的提示
+            const totalVersions = (markdownContent.match(/### v/g) || []).length;
+            if (totalVersions > MAX_DISPLAY_VERSIONS) {
+                htmlContent += `
+                    <div class="mb-6 p-4 bg-[#222] rounded-lg">
+                        <h4 class="text-lg font-semibold mb-2 text-blue-400">更早版本</h4>
+                        <p class="text-gray-400 text-sm mt-2 ml-4">包含更多历史版本更新信息，请查看项目源代码中的CHANGELOG.md文件。</p>
+                    </div>
+                `;
+            }
+            
+            return htmlContent;
+        }
+    </script>
 </body>
 </html>
