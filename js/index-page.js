@@ -1,18 +1,21 @@
 // 页面加载后显示弹窗脚本
 document.addEventListener('DOMContentLoaded', function() {
     // 弹窗显示脚本
-    // 检查用户是否已经看过声明
-    const hasSeenDisclaimer = localStorage.getItem('hasSeenDisclaimer');
+    // 检查用户是否已经看过声明以及上次查看时间
+    const lastAcceptedDisclaimer = localStorage.getItem('lastAcceptedDisclaimer');
+    const now = new Date().getTime();
+    const oneDayInMs = 24 * 60 * 60 * 1000; // 24小时的毫秒数
     
-    if (!hasSeenDisclaimer) {
+    // 如果上次接受时间超过24小时或从未接受过，则显示弹窗
+    if (!lastAcceptedDisclaimer || (now - parseInt(lastAcceptedDisclaimer)) > oneDayInMs) {
         // 显示弹窗
         const disclaimerModal = document.getElementById('disclaimerModal');
         disclaimerModal.style.display = 'flex';
         
         // 添加接受按钮事件
         document.getElementById('acceptDisclaimerBtn').addEventListener('click', function() {
-            // 保存用户已看过声明的状态
-            localStorage.setItem('hasSeenDisclaimer', 'true');
+            // 保存用户接受声明的时间戳
+            localStorage.setItem('lastAcceptedDisclaimer', now.toString());
             // 隐藏弹窗
             disclaimerModal.style.display = 'none';
         });
