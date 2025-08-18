@@ -177,6 +177,228 @@ function addVersionInfoToFooter() {
     });
 }
 
+// 显示更新日志模态窗口
+function showChangelogModal() {
+    // 检查是否已经存在更新日志模态窗口，如果有则移除
+    let changelogModal = document.getElementById('changelogModal');
+    if (changelogModal) {
+        changelogModal.remove();
+    }
+    
+    // 创建模态窗口容器
+    changelogModal = document.createElement('div');
+    changelogModal.id = 'changelogModal';
+    changelogModal.className = 'fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]';
+    
+    // 创建模态窗口内容
+    const modalContent = document.createElement('div');
+    modalContent.className = 'bg-[#111] p-8 rounded-lg border border-[#333] w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto';
+    
+    // 创建标题和关闭按钮
+    const header = document.createElement('div');
+    header.className = 'flex justify-between items-center mb-6';
+    
+    const title = document.createElement('h2');
+    title.className = 'text-2xl font-bold gradient-text text-center mx-auto';
+    title.textContent = '更新日志';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'text-gray-400 hover:text-white';
+    closeBtn.ariaLabel = '关闭';
+    closeBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    `;
+    
+    // 创建内容区域
+    const contentArea = document.createElement('div');
+    contentArea.id = 'changelogContent';
+    contentArea.className = 'text-gray-300 space-y-4';
+    
+    // 添加加载指示器
+    contentArea.innerHTML = `
+        <div class="flex justify-center items-center py-8">
+            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+    `;
+    
+    // 创建底部关闭按钮
+    const footer = document.createElement('div');
+    footer.className = 'mt-6 flex justify-center';
+    
+    const footerCloseBtn = document.createElement('button');
+    footerCloseBtn.id = 'closeChangelogBtnFooter';
+    footerCloseBtn.className = 'px-6 py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300';
+    footerCloseBtn.textContent = '关闭';
+    
+    // 组装模态窗口
+    header.appendChild(closeBtn);
+    header.appendChild(title);
+    // 添加一个占位元素以确保标题居中
+    const placeholder = document.createElement('div');
+    placeholder.className = 'w-6';
+    header.appendChild(placeholder);
+    
+    footer.appendChild(footerCloseBtn);
+    
+    modalContent.appendChild(header);
+    modalContent.appendChild(contentArea);
+    modalContent.appendChild(footer);
+    changelogModal.appendChild(modalContent);
+    
+    // 添加到文档中
+    document.body.appendChild(changelogModal);
+    
+    // 显示模态窗口
+    setTimeout(() => {
+        changelogModal.classList.remove('hidden');
+        changelogModal.classList.add('flex');
+    }, 10);
+    
+    // 加载更新日志内容
+    loadChangelogContent();
+    
+    // 添加关闭事件监听器
+    closeBtn.addEventListener('click', () => {
+        hideChangelogModal();
+    });
+    
+    footerCloseBtn.addEventListener('click', () => {
+        hideChangelogModal();
+    });
+    
+    // 点击模态窗口外部关闭
+    changelogModal.addEventListener('click', (event) => {
+        if (event.target === changelogModal) {
+            hideChangelogModal();
+        }
+    });
+    
+    // 按ESC键关闭
+    document.addEventListener('keydown', handleEscKey);
+    
+    // 隐藏模态窗口的函数
+    function hideChangelogModal() {
+        changelogModal.classList.add('hidden');
+        changelogModal.classList.remove('flex');
+        // 移除ESC键监听器
+        document.removeEventListener('keydown', handleEscKey);
+        // 延迟移除元素以允许动画完成
+        setTimeout(() => {
+            if (changelogModal.parentNode) {
+                changelogModal.parentNode.removeChild(changelogModal);
+            }
+        }, 300);
+    }
+    
+    // 处理ESC键事件
+    function handleEscKey(event) {
+        if (event.key === 'Escape') {
+            hideChangelogModal();
+        }
+    }
+}
+
+// 加载更新日志内容
+async function loadChangelogContent() {
+    const contentArea = document.getElementById('changelogContent');
+    
+    try {
+        // 从服务器获取CHANGELOG.md文件内容
+        const response = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error('无法加载更新日志');
+        }
+        
+        const markdown = await response.text();
+        
+        // 简单的Markdown转HTML处理
+        let html = parseChangelogMarkdown(markdown);
+        
+        // 显示解析后的内容
+        contentArea.innerHTML = html;
+    } catch (error) {
+        console.error('加载更新日志失败:', error);
+        contentArea.innerHTML = `
+            <div class="text-center">
+                <p class="text-red-500 font-medium mb-2">加载更新日志失败</p>
+                <p class="text-sm text-gray-500">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// 简单解析更新日志Markdown
+function parseChangelogMarkdown(markdown) {
+    let html = '';
+    
+    // 将Markdown按行分割
+    const lines = markdown.split('\n');
+    
+    let inVersionSection = false;
+    let versionContent = '';
+    
+    lines.forEach((line, index) => {
+        // 处理标题
+        if (line.startsWith('# ')) {
+            html += `<h1 class="text-2xl font-bold mb-4 gradient-text">${line.substring(2)}</h1>`;
+        } else if (line.startsWith('## ')) {
+            html += `<h2 class="text-xl font-bold mb-3 mt-6">${line.substring(3)}</h2>`;
+        } else if (line.startsWith('### ')) {
+            // 如果之前有版本内容，先处理
+            if (inVersionSection && versionContent) {
+                html += `
+                    <div class="mb-6 p-4 bg-[#1a1a1a] rounded-lg">
+                        ${versionContent}
+                    </div>
+                `;
+                versionContent = '';
+            }
+            
+            // 提取版本号和日期
+            const versionMatch = line.match(/v(\d+)\s+\(([^)]+)\)/);
+            if (versionMatch) {
+                const versionNumber = versionMatch[1];
+                const versionDate = versionMatch[2];
+                versionContent += `<h3 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber} (${versionDate})</h3>`;
+            } else {
+                versionContent += `<h3 class="text-lg font-semibold mb-2">${line.substring(4)}</h3>`;
+            }
+            
+            inVersionSection = true;
+        } else if (line.startsWith('- ')) {
+            // 处理列表项
+            if (inVersionSection) {
+                versionContent += `<p class="ml-4 mb-1">${line.substring(2)}</p>`;
+            } else {
+                html += `<p>${line}</p>`;
+            }
+        } else if (line.trim() !== '') {
+            // 处理普通文本
+            if (inVersionSection) {
+                versionContent += `<p class="text-gray-400 text-sm mt-2 ml-4">${line}</p>`;
+            } else {
+                html += `<p>${line}</p>`;
+            }
+        }
+    });
+    
+    // 处理最后一个版本内容
+    if (inVersionSection && versionContent) {
+        html += `
+            <div class="mb-6 p-4 bg-[#1a1a1a] rounded-lg">
+                ${versionContent}
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
 // 在页脚显示版本元素的辅助函数
 function displayVersionElement(element) {
     // 获取页脚元素
@@ -184,8 +406,7 @@ function displayVersionElement(element) {
     if (footerElement) {
         // 在原版权信息后插入版本信息
         footerElement.insertAdjacentElement('afterend', element);
-    } else {
-        // 如果找不到页脚元素，尝试在页脚区域最后添加
+    } else {        // 如果找不到页脚元素，尝试在页脚区域最后添加
         const footer = document.querySelector('.footer .container');
         if (footer) {
             footer.querySelector('div').appendChild(element);
