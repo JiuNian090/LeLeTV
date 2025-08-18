@@ -154,17 +154,20 @@ function addVersionInfoToFooter() {
             }, 100);
         } else {
             // 如果没有更新，显示当前版本为最新版本
-            versionElement.innerHTML = `版本: ${result.currentFormatted} <span id="latestVersionText" class="text-green-500 cursor-pointer hover:underline">最新版本</span>`;
+            const latestVersionElement = document.createElement('span');
+            latestVersionElement.id = 'latestVersionText';
+            latestVersionElement.className = 'text-green-500 cursor-pointer hover:underline';
+            latestVersionElement.textContent = '最新版本';
             
-            // 为最新版本文本添加点击事件
-            setTimeout(() => {
-                const latestVersionText = document.getElementById('latestVersionText');
-                if (latestVersionText) {
-                    latestVersionText.addEventListener('click', () => {
-                        showChangelogModal();
-                    });
-                }
-            }, 100);
+            // 直接添加点击事件
+            latestVersionElement.addEventListener('click', () => {
+                console.log('点击了最新版本，显示更新日志');
+                showChangelogModal();
+            });
+            
+            // 将文本内容和元素组合起来
+            versionElement.innerHTML = `版本: ${result.currentFormatted} `;
+            versionElement.appendChild(latestVersionElement);
         }
         
         // 显示版本元素
