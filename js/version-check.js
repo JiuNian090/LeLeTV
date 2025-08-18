@@ -154,7 +154,17 @@ function addVersionInfoToFooter() {
             }, 100);
         } else {
             // 如果没有更新，显示当前版本为最新版本
-            versionElement.innerHTML = `版本: ${result.currentFormatted} <span class="text-green-500">(最新版本)</span>`;
+            versionElement.innerHTML = `版本: ${result.currentFormatted} <span id="latestVersionText" class="text-green-500 cursor-pointer hover:underline">最新版本</span>`;
+            
+            // 为最新版本文本添加点击事件
+            setTimeout(() => {
+                const latestVersionText = document.getElementById('latestVersionText');
+                if (latestVersionText) {
+                    latestVersionText.addEventListener('click', () => {
+                        showChangelogModal();
+                    });
+                }
+            }, 100);
         }
         
         // 显示版本元素
@@ -180,6 +190,112 @@ function displayVersionElement(element) {
         if (footer) {
             footer.querySelector('div').appendChild(element);
         }
+    }
+}
+
+// 创建和显示更新日志模态窗口
+function showChangelogModal() {
+    // 检查是否已存在更新日志模态窗口
+    let changelogModal = document.getElementById('changelogModal');
+    
+    if (!changelogModal) {
+        // 创建模态窗口容器
+        changelogModal = document.createElement('div');
+        changelogModal.id = 'changelogModal';
+        changelogModal.className = 'fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]';
+        
+        // 创建模态窗口内容
+        changelogModal.innerHTML = `
+            <div class="bg-[#111] p-8 rounded-lg border border-[#333] w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="w-4"></div> <!-- 添加一个占位元素以确保标题居中 -->
+                    <h2 class="text-2xl font-bold gradient-text mb-6 text-center">更新日志</h2>
+                    <button id="closeChangelogBtn" class="close-btn bg-[#222] hover:bg-[#333] rounded-full p-1.5">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="changelogContent" class="text-gray-300 space-y-4">
+                    <p class="text-center text-amber-500">正在加载更新日志...</p>
+                </div>
+                <div class="mt-6 flex justify-center">
+                    <button id="closeChangelogBtnFooter" class="px-6 py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // 添加到文档中
+        document.body.appendChild(changelogModal);
+        
+        // 添加关闭按钮事件
+        document.getElementById('closeChangelogBtn').addEventListener('click', () => {
+            changelogModal.classList.add('hidden');
+        });
+        
+        // 添加底部关闭按钮事件
+        document.getElementById('closeChangelogBtnFooter').addEventListener('click', () => {
+            changelogModal.classList.add('hidden');
+        });
+        
+        // 添加点击外部关闭模态窗口
+        changelogModal.addEventListener('click', (e) => {
+            if (e.target === changelogModal) {
+                changelogModal.classList.add('hidden');
+            }
+        });
+        
+        // 添加ESC键关闭模态窗口
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !changelogModal.classList.contains('hidden')) {
+                changelogModal.classList.add('hidden');
+            }
+        });
+    }
+    
+    // 显示模态窗口
+    changelogModal.classList.remove('hidden');
+    changelogModal.classList.add('flex');
+    
+    // 加载更新日志内容
+    loadChangelogContent();
+}
+
+// 加载更新日志内容
+async function loadChangelogContent() {
+    const changelogContent = document.getElementById('changelogContent');
+    if (!changelogContent) return;
+    
+    try {
+        // 获取CHANGELOG.md内容
+        const response = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error('获取更新日志失败');
+        }
+        
+        const markdownContent = await response.text();
+        
+        // 将Markdown转换为HTML显示
+        // 简单的Markdown解析和格式化
+        let htmlContent = markdownContent
+            // 处理标题
+            .replace(/#{1,6} (.*?)$/gm, (match, p1) => {
+                const level = match.indexOf(' ');
+                return `<h${level} class="font-bold mt-6 mb-2">${p1}</h${level}>`;
+            })
+            // 处理版本条目
+            .replace(/### v(\d{12}) \((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)/gm, '<h3 class="text-xl font-bold text-blue-400 mt-6 mb-3">v$1 ($2)</h3>')
+            // 处理列表项
+            .replace(/^- \[(.*?)\] (.*?)$/gm, '<p class="mb-2">- <span class="text-green-400">[$1]</span> $2</p>')
+            // 处理空行
+            .replace(/\n{2,}/g, '<br><br>');
+        
+        changelogContent.innerHTML = htmlContent;
+    } catch (error) {
+        console.error('加载更新日志出错:', error);
+        changelogContent.innerHTML = `<p class="text-center text-red-500">加载更新日志失败：${error.message}</p>`;
     }
 }
 

@@ -1,1 +1,0 @@
-This is a test file to verify that the commit-msg hook can still correctly add new changelog entries to the top with the hidden format specification section.
