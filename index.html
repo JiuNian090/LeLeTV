@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeLeTV - 免费在线视频搜索与观看平台</title>
-    <meta name="description" content="LeLeTV是一个免费的在线视频搜索平台，无广告、安全，提供来自多个视频源的内容搜索与观看服务，无需注册即可使用。">
-    <meta name="keywords" content="在线视频,免费视频,视频搜索,电影,电视剧,LeLeTV">
+    <title>LeLeTV </title>
+    <meta name="description" content="LeLeTV是一个为乐乐自用的在线视频搜索平台，无广告、安全，提供来自多个视频源的内容搜索与观看服务，无需注册即可使用。">
+    <meta name="keywords" content="在线视频,视频搜索,电影,电视剧,LeLeTV">
     <meta name="author" content="LeLeTV Team">
 
     <!-- Favicon -->
@@ -299,7 +299,7 @@
                         </svg>
                         <span class="gradient-text font-bold">LeLeTV</span>
                     </div>
-                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 LeLeTV - 自由观影，畅享精彩</p>
+                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 LeLeTV - 自用观影平台</p>
                 </div>
                 
                 <div class="text-center md:text-right">
@@ -310,7 +310,6 @@
                     <div class="mt-2 flex justify-center md:justify-end space-x-4">
                         <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">关于我们</a>
                         <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">隐私政策</a>
-                        <a href="https://www.msf.hk/zh-hant/donate/general?type=one-off" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300 text-sm transition-colors">捐赠</a>
                     </div>
                 </div>
             </div>
@@ -338,7 +337,7 @@
                 <h2 class="text-2xl font-bold gradient-text">访问验证</h2>
             </div>
             <div class="mb-6">
-                <p class="text-gray-300 mb-4">请输入密码继续访问</p>
+                <p class="text-gray-300 mb-4">请输入密码继续访问，如若密码错误可以给乐乐发消息获取密码</p>
                 <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;">
                     <input type="text" name="username" id="username" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true">
                     <input type="password" id="passwordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="密码..." autocomplete="new-password">
@@ -369,10 +368,13 @@
                 <p>
                     <strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
                 </p>
+                <p>
+                    <strong class="text-blue-500">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！
+                </p>
             </div>
             <div class="mt-6 flex justify-center">
                 <button id="acceptDisclaimerBtn" class="px-6 py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
-                    我已了解并接受
+                    我已了解并接受不分享给他人
                 </button>
             </div>
         </div>
@@ -397,11 +399,11 @@
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "LeLeTV",
-        "url": "https://libretv.is-an.org/",
-        "description": "免费在线视频搜索与观看平台",
+        "url": "https://jntv.776645.xyz/",
+        "description": "自用免费观影平台",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://libretv.is-an.org/?s={search_term_string}",
+            "target": "https://jntv.776645.xyz/?s={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     }
