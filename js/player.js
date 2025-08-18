@@ -1581,10 +1581,10 @@ function formatSpeedDisplay(speedResult) {
     let className = 'speed-indicator good';
     let icon = '🟢';
     
-    if (speed > 2000) {
+    if (speed > 500) {
         className = 'speed-indicator poor';
         icon = '🔴';
-    } else if (speed > 1000) {
+    } else if (speed > 200) {
         className = 'speed-indicator medium';
         icon = '🟡';
     }

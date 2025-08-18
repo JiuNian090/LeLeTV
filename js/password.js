@@ -129,7 +129,7 @@ function showPasswordModal() {
             const errorMsg = document.getElementById('passwordError');
             if (form) form.style.display = 'none';
             if (errorMsg) {
-                errorMsg.textContent = '为确保安全，必须设置 PASSWORD 环境变量才能使用本服务，请联系管理员进行配置';
+                errorMsg.textContent = '为确保安全，必须设置 PASSWORD 环境变量才能使用本服务，请联系乐乐进行配置';
                 errorMsg.classList.remove('hidden');
                 errorMsg.className = 'text-red-500 mt-2 font-medium'; // 改为更醒目的红色
             }
@@ -138,7 +138,7 @@ function showPasswordModal() {
             const title = passwordModal.querySelector('h2');
             const description = passwordModal.querySelector('p');
             if (title) title.textContent = '访问验证';
-            if (description) description.textContent = '请输入密码继续访问';
+            if (description) description.textContent = '请输入密码继续访问，如若密码错误可以给乐乐发消息获取密码';
             
             const form = passwordModal.querySelector('form');
             if (form) form.style.display = 'block';
