@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'VERSION.txt'
+      - 'CHANGELOG.md'
   workflow_dispatch:
 
 jobs:
@@ -16,14 +19,19 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    - name: Bump version and commit changes
+    - name: Bump version
       run: |
         CURRENT_TIME=$(date +"%Y-%m-%d %H:%M")
+        VERSION=$(date +"%Y%m%d%H%M")
         git config user.name 'github-actions[bot]'
         git config user.email 'github-actions[bot]@users.noreply.github.com'
-        echo $(date +"%Y%m%d%H%M") > VERSION.txt
+        
+        # 更新VERSION.txt
+        echo $VERSION > VERSION.txt
+        
+        # 添加并提交更改
         git add VERSION.txt
-        git commit -m "Auto Update $CURRENT_TIME"
+        git commit -m "Auto Update version to $VERSION"
         git push origin main
 
     - name: Delete workflow runs
