@@ -1,0 +1,1 @@
+Final test file to verify that the commit-msg hook can correctly add new changelog entries to the top of the document while preserving history.
