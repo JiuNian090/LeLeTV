@@ -1,1 +1,0 @@
-Final verification test file to ensure the commit-msg hook can correctly add new changelog entries to the top with proper structure and formatting.

@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: leleTV
-    runtime: node
-    plan: free
-    buildCommand: 'npm install'
-    startCommand: 'node server.mjs'
-    autoDeploy: true

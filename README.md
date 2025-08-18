@@ -20,7 +20,9 @@ LeLeTV 是一个**私有库**，仅用于作者个人学习和技术研究用途
 
 **重要提示**: 为确保安全，所有部署都必须设置 PASSWORD 环境变量，否则用户将看到设置密码的提示。
 
-## 📋 Cloudflare Pages 部署指南
+## 📋 部署指南
+
+### Cloudflare Pages 部署
 
 1. Fork 或克隆本仓库到您的 GitHub 账户
 2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 Pages 服务
@@ -30,6 +32,14 @@ LeLeTV 是一个**私有库**，仅用于作者个人学习和技术研究用途
    - 输出目录：留空（默认为根目录）
 5. **⚠️ 关键步骤：在"设置" > "环境变量"中添加 `PASSWORD` 变量**
 6. 点击"保存并部署"
+
+### 本地部署
+
+1. 克隆本仓库到本地
+2. 安装依赖：`npm install`
+3. 设置环境变量 `PASSWORD`（必填）
+4. 启动本地服务器：`node server.mjs`
+5. 在浏览器中访问：`http://localhost:3000`
 
 ## ⚠️ 免责声明
 
