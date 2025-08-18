@@ -154,20 +154,7 @@ function addVersionInfoToFooter() {
             }, 100);
         } else {
             // 如果没有更新，显示当前版本为最新版本
-            const latestVersionElement = document.createElement('span');
-            latestVersionElement.id = 'latestVersionText';
-            latestVersionElement.className = 'text-green-500 cursor-pointer hover:underline';
-            latestVersionElement.textContent = '最新版本';
-            
-            // 直接添加点击事件
-            latestVersionElement.addEventListener('click', () => {
-                console.log('点击了最新版本，显示更新日志');
-                showChangelogModal();
-            });
-            
-            // 将文本内容和元素组合起来
-            versionElement.innerHTML = `版本: ${result.currentFormatted} `;
-            versionElement.appendChild(latestVersionElement);
+            versionElement.innerHTML = `版本: ${result.currentFormatted} <span class="text-green-500">最新版本</span>`;
         }
         
         // 显示版本元素
@@ -383,5 +370,19 @@ async function loadChangelogContent() {
     }
 }
 
-// 页面加载完成后添加版本信息
-document.addEventListener('DOMContentLoaded', addVersionInfoToFooter);
+// 为更新日志链接添加点击事件
+function setupChangelogLink() {
+    const changelogLink = document.getElementById('changelogLink');
+    if (changelogLink) {
+        changelogLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showChangelogModal();
+        });
+    }
+}
+
+// 页面加载完成后添加版本信息并设置更新日志链接
+document.addEventListener('DOMContentLoaded', () => {
+    addVersionInfoToFooter();
+    setupChangelogLink();
+});
