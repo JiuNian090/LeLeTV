@@ -20,6 +20,8 @@ body {
     border-radius: 16px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    -webkit-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -43,8 +45,10 @@ body {
     margin: 0;
     background: linear-gradient(to right, #00ccff, #ff3c78);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -moz-background-clip: text;
     background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -moz-text-fill-color: transparent;
 }
 
 .loading-animation {
@@ -60,6 +64,14 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+@-webkit-keyframes spin {
+    to { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes spin {
+    to { -moz-transform: rotate(360deg); }
 }
 
 .redirect-message {
@@ -85,6 +97,8 @@ body {
     color: #00ccff;
     text-decoration: none;
     font-weight: 500;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
     transition: all 0.2s ease;
     padding: 5px 10px;
     border-radius: 4px;

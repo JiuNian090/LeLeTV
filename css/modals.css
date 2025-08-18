@@ -7,6 +7,8 @@
     align-items: center;
     justify-content: center;
     z-index: 40;
+    -webkit-transition: opacity 0.3s ease;
+    -moz-transition: opacity 0.3s ease;
     transition: opacity 0.3s ease;
 }
 
@@ -34,7 +36,9 @@
     font-size: 1.5rem;
     font-weight: 700;
     background: linear-gradient(to right, #00ccff, #ff3c78);
+    background-clip: text;
     -webkit-background-clip: text;
+    -moz-background-clip: text;
     -webkit-text-fill-color: transparent;
     word-break: break-word;
     padding-right: 1rem;
@@ -44,6 +48,8 @@
 .modal-close {
     color: #9ca3af;
     font-size: 1.5rem;
+    -webkit-transition: color 0.2s;
+    -moz-transition: color 0.2s;
     transition: color 0.2s;
     flex-shrink: 0;
 }
@@ -126,11 +132,17 @@
     color: white;
     font-weight: 600;
     border-radius: 0.5rem;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
     transition: all 0.3s;
 }
 
 .disclaimer-button:hover {
+    -webkit-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+    -webkit-transform: translateY(-1px);
+    -moz-transform: translateY(-1px);
     transform: translateY(-1px);
 }
 
@@ -139,11 +151,15 @@
     position: fixed;
     top: 1rem;
     left: 50%;
+    -webkit-transform: translateX(-50%) translateY(-100%);
+    -moz-transform: translateX(-50%) translateY(-100%);
     transform: translateX(-50%) translateY(-100%);
     background-color: #ef4444;
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
+    -webkit-box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
+    -moz-box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
     transition: all 0.3s;
     opacity: 0;
@@ -151,6 +167,8 @@
 }
 
 .toast.show {
+    -webkit-transform: translateX(-50%) translateY(0);
+    -moz-transform: translateX(-50%) translateY(0);
     transform: translateX(-50%) translateY(0);
     opacity: 1;
 }
@@ -199,7 +217,27 @@
     to { opacity: 1; }
 }
 
+@-webkit-keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@-moz-keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@-webkit-keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@-moz-keyframes fadeOut {
     from { opacity: 1; }
     to { opacity: 0; }
 }
@@ -241,16 +279,24 @@
 
 /* 资源卡片悬停效果增强 */
 .resource-card {
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
     transition: all 0.2s ease;
 }
 
 .resource-card:hover {
+    -webkit-transform: translateY(-2px);
+    -moz-transform: translateY(-2px);
     transform: translateY(-2px);
+    -webkit-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    -moz-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .resource-card.current {
     border: 1px solid #3b82f6;
+    -webkit-box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+    -moz-box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
     box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 

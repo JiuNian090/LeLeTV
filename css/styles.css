@@ -12,6 +12,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
     transition: all 0.2s ease;
     z-index: 10;
 }
@@ -58,6 +60,8 @@
 }
 
 button, .card-hover {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
     transition: all 0.3s ease;
 }
 
@@ -65,6 +69,8 @@ button, .card-hover {
 .card-hover {
     border: 1px solid var(--border-color);
     background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+    -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     position: relative;
     overflow: hidden;
@@ -90,6 +96,7 @@ button, .card-hover {
     overflow: hidden;
     text-overflow: ellipsis;
     -webkit-line-clamp: 2;
+    line-clamp: 2; /* 标准属性，提高现代浏览器兼容性 */
     line-height: 1.2rem;
     word-break: break-word; /* 允许在任何字符间断行 */
     hyphens: auto; /* 允许断词 */
@@ -103,12 +110,18 @@ button, .card-hover {
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, transparent, var(--card-accent), transparent);
+    -webkit-transition: left 0.6s ease;
+    -moz-transition: left 0.6s ease;
     transition: left 0.6s ease;
 }
 
 .card-hover:hover {
     border-color: var(--card-hover-border);
+    -webkit-transform: translateY(-3px);
+    -moz-transform: translateY(-3px);
     transform: translateY(-3px);
+    -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
 }
 
@@ -118,21 +131,30 @@ button, .card-hover {
 
 .gradient-text {
     background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    background-clip: text;
     -webkit-background-clip: text;
+    -moz-background-clip: text;
     -webkit-text-fill-color: transparent;
+    -moz-text-fill-color: transparent;
 }
 
 /* 改进设置面板样式 */
 .settings-panel {
     scrollbar-width: thin;
     scrollbar-color: #444 #222;
+    -webkit-transform: translateX(100%);
+    -moz-transform: translateX(100%);
     transform: translateX(100%);
+    -webkit-transition: -webkit-transform 0.3s ease;
+    -moz-transition: -moz-transform 0.3s ease;
     transition: transform 0.3s ease;
     background: linear-gradient(135deg, var(--page-gradient-end), var(--page-gradient-start));
     border-left: 1px solid var(--primary-color);
 }
 
 .settings-panel.show {
+    -webkit-transform: translateX(0);
+    -moz-transform: translateX(0);
     transform: translateX(0);
 }
 
@@ -190,6 +212,8 @@ button, .card-hover {
     border-radius: 0.5rem;
     font-size: 0.875rem;
     border: 1px solid var(--border-color);
+    -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -258,7 +282,27 @@ body {
     to { opacity: 1; }
 }
 
+@-webkit-keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@-moz-keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@-webkit-keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@-moz-keyframes fadeOut {
     from { opacity: 1; }
     to { opacity: 0; }
 }
@@ -274,6 +318,8 @@ body {
 #modal > div {
     background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
     border: 1px solid var(--primary-color);
+    -webkit-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 204, 255, 0.1);
+    -moz-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 204, 255, 0.1);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 204, 255, 0.1);
     border-radius: 8px;
 }
@@ -287,6 +333,8 @@ body {
 #episodesGrid button:hover {
     background: rgba(0, 204, 255, 0.15);
     border-color: var(--primary-color);
+    -webkit-box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+    -moz-box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
     box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
 }
 
@@ -295,11 +343,15 @@ body {
 }
 
 #yellowFilterToggle:checked ~ .toggle-dot {
+    -webkit-transform: translateX(1.5rem);
+    -moz-transform: translateX(1.5rem);
     transform: translateX(1.5rem);
 }
 
 #yellowFilterToggle:focus + .toggle-bg,
 #yellowFilterToggle:hover + .toggle-bg {
+    -webkit-box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
+    -moz-box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
     box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
 }
 
@@ -363,6 +415,8 @@ body {
     height: 8px;
     border: solid white;
     border-width: 0 2px 2px 0;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
     transform: rotate(45deg);
 }
 
@@ -511,6 +565,8 @@ body {
 }
 
 .filter-disabled .toggle-dot {
+    -webkit-transform: translateX(0) !important;
+    -moz-transform: translateX(0) !important;
     transform: translateX(0) !important;
     background-color: #666 !important;
 }
@@ -559,7 +615,9 @@ body {
 }
 
 .filter-disabled .toggle-dot {
-    transform: translateX(0) ;
+    -webkit-transform: translateX(0);
+    -moz-transform: translateX(0);
+    transform: translateX(0);
     background-color: #777 ;
     opacity: 0.9;
 }
@@ -655,6 +713,8 @@ body {
 }
 
 .history-item:hover {
+    -webkit-transform: translateY(-2px);
+    -moz-transform: translateY(-2px);
     transform: translateY(-2px);
     border-color: #444;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -770,6 +830,8 @@ body {
     position: absolute;
     bottom: 60px;
     left: 50%;
+    -webkit-transform: translateX(-50%) translateY(20px);
+    -moz-transform: translateX(-50%) translateY(20px);
     transform: translateX(-50%) translateY(20px);
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
@@ -783,6 +845,8 @@ body {
 
 .position-restore-hint.show {
     opacity: 1;
+    -webkit-transform: translateX(-50%) translateY(0);
+    -moz-transform: translateX(-50%) translateY(0);
     transform: translateX(-50%) translateY(0);
 }
 
@@ -919,6 +983,8 @@ body {
 
 #toast.hidden {
     opacity: 0;
+    -webkit-transform: translateX(-50%) translateY(-100%);
+    -moz-transform: translateX(-50%) translateY(-100%);
     transform: translateX(-50%) translateY(-100%);
 }
 

@@ -107,9 +107,27 @@ div.player-loading-text {
     to { transform: rotate(360deg); }
 }
 
+@-webkit-keyframes player-spinner-rotate {
+    to { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes player-spinner-rotate {
+    to { -moz-transform: rotate(360deg); }
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes spin {
+    0% { -moz-transform: rotate(0deg); }
+    100% { -moz-transform: rotate(360deg); }
 }
 
 /* ArtPlayer specific styles */
@@ -126,7 +144,9 @@ div.player-loading-text {
 /* Fix for Chrome-specific issues */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
     .art-video-player video {
-        transform: translateZ(0) !important;
+        -webkit-transform: translateZ(0) !important;
+    -moz-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
         will-change: transform !important;
     }
 
@@ -216,17 +236,23 @@ div.player-loading-text {
     position: fixed;
     bottom: 20px;
     left: 50%;
+    -webkit-transform: translateX(-50%) translateY(100%);
+    -moz-transform: translateX(-50%) translateY(100%);
     transform: translateX(-50%) translateY(100%);
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
     padding: 10px 20px;
     border-radius: 4px;
     z-index: 1000;
+    -webkit-transition: -webkit-transform 0.3s ease;
+    -moz-transition: -moz-transform 0.3s ease;
     transition: transform 0.3s ease;
     font-size: 14px;
 }
 
 .position-restore-hint.show {
+    -webkit-transform: translateX(-50%) translateY(0);
+    -moz-transform: translateX(-50%) translateY(0);
     transform: translateX(-50%) translateY(0);
 }
 
@@ -257,6 +283,8 @@ div.player-loading-text {
     right: 0;
     bottom: 0;
     background-color: #333;
+    -webkit-transition: .4s;
+    -moz-transition: .4s;
     transition: .4s;
     border-radius: 24px;
 }
@@ -278,6 +306,8 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
+    -webkit-transform: translateX(22px);
+    -moz-transform: translateX(22px);
     transform: translateX(22px);
 }
 
@@ -286,6 +316,8 @@ input:checked + .slider:before {
     position: fixed;
     top: 50%;
     left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
@@ -297,6 +329,8 @@ input:checked + .slider:before {
     gap: 0.5rem;
     z-index: 1000;
     opacity: 0;
+    -webkit-transition: opacity 0.3s ease;
+    -moz-transition: opacity 0.3s ease;
     transition: opacity 0.3s ease;
 }
 
@@ -306,6 +340,7 @@ input:checked + .slider:before {
 
 /* 原生全屏时，播放器容器铺满 */
 .player-container:-webkit-full-screen,
+.player-container:-moz-full-screen,
 .player-container:fullscreen {
     position: fixed;
     top: 0; left: 0;
@@ -315,6 +350,7 @@ input:checked + .slider:before {
 }
 
 .player-container:-webkit-full-screen #player,
+.player-container:-moz-full-screen #player,
 .player-container:fullscreen #player {
     width: 100%; height: 100%;
 }
@@ -323,6 +359,8 @@ input:checked + .slider:before {
 #resourceInfoBarContainer {
     align-items: center;
     border-radius: 0.5rem;
+    -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -352,6 +390,8 @@ input:checked + .slider:before {
     gap: 6px;
     padding: 6px 12px;
     border-radius: 0.5rem;
+    -webkit-transition: background 0.2s;
+    -moz-transition: background 0.2s;
     transition: background 0.2s;
 }
 
@@ -369,6 +409,8 @@ input:checked + .slider:before {
     margin-right: 0;
     color: #a67c2d;
     vertical-align: middle;
+    -webkit-transition: -webkit-transform 0.3s;
+    -moz-transition: -moz-transform 0.3s;
     transition: transform 0.3s;
 }
 

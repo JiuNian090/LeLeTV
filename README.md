@@ -1,5 +1,4 @@
-# LeLeTV - 私有学习项目
-
+# LeLeTV - 自用观影平台
 <div align="center">
   <img src="image/logo.png" alt="LeLeTV Logo" width="120">
   <br>
