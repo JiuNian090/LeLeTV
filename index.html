@@ -80,6 +80,22 @@
                     <button onclick="selectAllAPIs(false)" class="px-2 py-1 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全不选</button>
                     <button onclick="selectAllAPIs(true, true)" class="px-2 py-1 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全选普通资源</button>
                 </div>
+
+                <!-- 自动全选脚本（仅首次打开时执行） -->
+                <script>
+                    // 页面加载完成后自动全选API
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // 检查是否已经执行过首次全选
+                        if (!localStorage.getItem('hasAutoSelected')) {
+                            // 延迟执行，确保API复选框已经初始化
+                            setTimeout(function() {
+                                selectAllAPIs(true);
+                                // 标记为已执行过首次全选
+                                localStorage.setItem('hasAutoSelected', 'true');
+                            }, 500);
+                        }
+                    });
+                </script>
                 
                 <!-- API选择区域 - 使用滚动区域 -->
                 <div class="max-h-40 overflow-y-auto bg-[#191919] p-2 rounded-lg mb-3">
@@ -369,7 +385,7 @@
                     <strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
                 </p>
                 <p>
-                    <strong class="text-blue-500">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！
+                    <strong class="text-blue-300">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！
                 </p>
             </div>
             <div class="mt-6 flex justify-center">
