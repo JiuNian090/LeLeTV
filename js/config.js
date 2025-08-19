@@ -17,7 +17,8 @@ const SITE_CONFIG = {
     url: 'https://leletv.776645.xyz',
     description: '自用观影平台',
     logo: 'image/logo.png',
-    version: '1.0.3'
+    version: '1.0.3',
+    author: 'Jiunian',
 };
 
 // API站点配置
@@ -27,10 +28,17 @@ const API_SITES = {
         name: '电影天堂资源',
         detail: 'http://caiji.dyttzyapi.com', 
     },
-    ruyi: {
-        api: 'https://cj.rycjapi.com/api.php/provide/vod',
-        name: '如意资源',
+    ffzy: {
+        api: 'http://ffzy5.tv/api.php/provide/vod',
+        name: '非凡资源',
+        detail: 'http://ffzy5.tv', 
     },
+
+    zy360: {
+        api: 'https://360zy.com/api.php/provide/vod',
+        name: '360资源',
+    },
+
     bfzy: {
         api: 'https://bfzyapi.com/api.php/provide/vod',
         name: '暴风资源',
