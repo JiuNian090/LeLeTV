@@ -64,10 +64,11 @@ document.addEventListener('DOMContentLoaded', function () {
 // 初始化API复选框
 function initAPICheckboxes() {
     const container = document.getElementById('apiCheckboxes');
-    // 清空容器，确保重新创建所有UI元素
+    
+    // 强制重新创建所有UI元素，确保每次刷新都能更新
     container.innerHTML = '';
 
-    // 更新selectedAPIs，移除不再存在的数据源
+    // 更新selectedAPIs，移除不再存在的数据源，添加新增数据源的选中状态
     const updatedSelectedAPIs = selectedAPIs.filter(apiKey => API_SITES[apiKey] !== undefined);
     selectedAPIs = updatedSelectedAPIs;
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
@@ -88,6 +89,7 @@ function initAPICheckboxes() {
     // 确保UI反映最新的数据源配置
     console.log('初始化API复选框，当前API_SITES数量：', Object.keys(API_SITES).length);
     console.log('当前选中的API数量：', selectedAPIs.length);
+    console.log('当前API_SITES配置：', JSON.stringify(Object.keys(API_SITES)));
 
     // 添加普通API组标题
     const normaldiv = document.createElement('div');
