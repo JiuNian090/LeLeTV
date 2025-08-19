@@ -66,6 +66,18 @@ function initAPICheckboxes() {
     const container = document.getElementById('apiCheckboxes');
     container.innerHTML = '';
 
+    // 更新selectedAPIs，移除不再存在的数据源
+    const updatedSelectedAPIs = selectedAPIs.filter(apiKey => API_SITES[apiKey] !== undefined);
+    if (updatedSelectedAPIs.length !== selectedAPIs.length) {
+        selectedAPIs = updatedSelectedAPIs;
+        localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+        
+        // 在数据源更新后自动全选所有API
+        setTimeout(() => {
+            selectAllAPIs(true, true); // 全选API，排除成人内容
+        }, 300);
+    }
+
     // 添加普通API组标题
     const normaldiv = document.createElement('div');
     normaldiv.id = 'normaldiv';

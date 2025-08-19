@@ -14,7 +14,7 @@ const PASSWORD_CONFIG = {
 // 网站信息配置
 const SITE_CONFIG = {
     name: 'LeLeTV',
-    url: 'https://libretv.is-an.org',
+    url: 'https://leletv.776645.xyz',
     description: '自用观影平台',
     logo: 'image/logo.png',
     version: '1.0.3'
