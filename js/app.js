@@ -71,10 +71,18 @@ function initAPICheckboxes() {
     selectedAPIs = updatedSelectedAPIs;
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
     
-    // 每次加载页面都自动全选所有有效API
-    setTimeout(() => {
-        selectAllAPIs(true, true); // 全选API，排除成人内容
-    }, 300);
+    // 立即更新选中的API数量显示
+    updateSelectedApiCount();
+    
+    // 只有在用户没有选择任何API时，才自动全选
+    if (selectedAPIs.length === 0) {
+        setTimeout(() => {
+            selectAllAPIs(true, true); // 全选API，排除成人内容
+            // 确保UI正确更新
+            updateSelectedAPIs();
+            checkAdultAPIsSelected();
+        }, 300);
+    }
 
     // 添加普通API组标题
     const normaldiv = document.createElement('div');
