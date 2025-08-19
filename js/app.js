@@ -67,12 +67,12 @@ function initAPICheckboxes() {
     
     // 强制重新创建所有UI元素，确保每次刷新都能更新
     container.innerHTML = '';
-
-    // 更新selectedAPIs，移除不再存在的数据源，添加新增数据源的选中状态
-    const updatedSelectedAPIs = selectedAPIs.filter(apiKey => API_SITES[apiKey] !== undefined);
-    selectedAPIs = updatedSelectedAPIs;
-    localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
     
+    // 清除localStorage中的selectedAPIs缓存，强制重新生成选中状态
+    localStorage.removeItem('selectedAPIs');
+    // 重置selectedAPIs数组
+    selectedAPIs = JSON.parse(localStorage.getItem('hasInitializedDefaults') || 'false') ? [] : ["tyyszy", "bfzy", "dyttzy", "ruyi"];
+
     // 立即更新选中的API数量显示
     updateSelectedApiCount();
     
