@@ -81,21 +81,7 @@
                     <button onclick="selectAllAPIs(true, true)" class="px-2 py-1 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全选普通资源</button>
                 </div>
 
-                <!-- 自动全选脚本（仅首次打开时执行） -->
-                <script>
-                    // 页面加载完成后自动全选API
-                    document.addEventListener('DOMContentLoaded', function() {
-                        // 检查是否已经执行过首次全选
-                        if (!localStorage.getItem('hasAutoSelected')) {
-                            // 延迟执行，确保API复选框已经初始化
-                            setTimeout(function() {
-                                selectAllAPIs(true);
-                                // 标记为已执行过首次全选
-                                localStorage.setItem('hasAutoSelected', 'true');
-                            }, 500);
-                        }
-                    });
-                </script>
+                <!-- 自动全选逻辑已移至app.js中，可保留用户选择 -->
                 
                 <!-- API选择区域 - 使用滚动区域 -->
                 <div class="max-h-40 overflow-y-auto bg-[#191919] p-2 rounded-lg mb-3">
