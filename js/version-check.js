@@ -1,22 +1,3 @@
-// 添加动画样式
-(function() {
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
-        }
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-    `;
-    document.head.appendChild(style);
-})();
-
 // 获取版本信息
 async function fetchVersion(url, errorMessage, options = {}) {
     const response = await fetch(url, options);
@@ -24,64 +5,6 @@ async function fetchVersion(url, errorMessage, options = {}) {
         throw new Error(errorMessage);
     }
     return await response.text();
-}
-
-// 版本检查函数
-async function checkForUpdates() {
-    try {
-        // 获取当前版本
-        const currentVersion = await fetchVersion('/VERSION.txt', '获取当前版本失败', {
-            cache: 'no-store'
-        });
-        
-        // 获取最新版本
-        let latestVersion;
-        const VERSION_URL = {
-            PROXY: 'https://ghfast.top/raw.githubusercontent.com/JiuNian090/LeLeTV/main/VERSION.txt',
-            DIRECT: 'https://raw.githubusercontent.com/JiuNian090/LeLeTV/main/VERSION.txt'
-        };
-        const FETCH_TIMEOUT = 1500;
-        
-        try {
-            // 尝试使用代理URL获取最新版本
-            const proxyPromise = fetchVersion(VERSION_URL.PROXY, '代理请求失败');
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('代理请求超时')), FETCH_TIMEOUT)
-            );
-            
-            latestVersion = await Promise.race([proxyPromise, timeoutPromise]);
-            console.log('通过代理服务器获取版本成功');
-        } catch (error) {
-            console.log('代理请求失败，尝试直接请求:', error.message);
-            try {
-                // 代理失败后尝试直接获取
-                latestVersion = await fetchVersion(VERSION_URL.DIRECT, '获取最新版本失败');
-                console.log('直接请求获取版本成功');
-            } catch (directError) {
-                console.error('所有版本检查请求均失败:', directError);
-                throw new Error('无法获取最新版本信息');
-            }
-        }
-        
-        console.log('当前版本:', currentVersion);
-        console.log('最新版本:', latestVersion);
-        
-        // 清理版本字符串（移除可能的空格或换行符）
-        const cleanCurrentVersion = currentVersion.trim();
-        const cleanLatestVersion = latestVersion.trim();
-        
-        // 返回版本信息
-        return {
-            current: cleanCurrentVersion,
-            latest: cleanLatestVersion,
-            hasUpdate: parseInt(cleanLatestVersion) > parseInt(cleanCurrentVersion),
-            currentFormatted: formatVersion(cleanCurrentVersion),
-            latestFormatted: formatVersion(cleanLatestVersion)
-        };
-    } catch (error) {
-        console.error('版本检测出错:', error);
-        throw error;
-    }
 }
 
 // 格式化版本号为可读形式 (yyyyMMddhhmm -> yyyy-MM-dd hh:mm)
@@ -119,43 +42,18 @@ function createErrorVersionElement(errorMessage) {
 
 // 添加版本信息到页脚
 function addVersionInfoToFooter() {
-    checkForUpdates().then(result => {
-        if (!result) {
-            // 如果版本检测失败，显示错误信息
-            const versionElement = createErrorVersionElement();
-            // 在页脚显示错误元素
-            displayVersionElement(versionElement);
-            return;
-        }
+    // 只获取并显示当前版本
+    fetchVersion('/VERSION.txt', '获取当前版本失败', {
+        cache: 'no-store'
+    }).then(currentVersion => {
+        // 清理并格式化版本号
+        const cleanCurrentVersion = currentVersion.trim();
+        const formattedVersion = formatVersion(cleanCurrentVersion);
         
         // 创建版本信息元素
         const versionElement = document.createElement('p');
         versionElement.className = 'text-gray-500 text-sm mt-1 text-center md:text-left';
-        
-        // 添加当前版本信息
-        versionElement.innerHTML = `版本: ${result.currentFormatted}`;
-        
-        // 如果有更新，添加更新提示
-        if (result.hasUpdate) {
-            versionElement.innerHTML += ` <span class="inline-flex items-center bg-red-600 text-white text-xs px-2 py-0.5 rounded-md ml-1 cursor-pointer animate-pulse font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                发现新版
-            </span>`;
-            
-            setTimeout(() => {
-                const updateBtn = versionElement.querySelector('span');
-                if (updateBtn) {
-                    updateBtn.addEventListener('click', () => {
-                        window.open('https://github.com/Jiunian090/LeLeTV', '_blank');
-                    });
-                }
-            }, 100);
-        } else {
-            // 如果没有更新，显示当前版本为最新版本
-            versionElement.innerHTML = `版本: ${result.currentFormatted} <span class="text-green-500">最新版本</span>`;
-        }
+        versionElement.innerHTML = `版本: ${formattedVersion}`;
         
         // 显示版本元素
         displayVersionElement(versionElement);
@@ -166,8 +64,6 @@ function addVersionInfoToFooter() {
         displayVersionElement(errorElement);
     });
 }
-
-
 
 // 在页脚显示版本元素的辅助函数
 function displayVersionElement(element) {
@@ -183,20 +79,3 @@ function displayVersionElement(element) {
         }
     }
 }
-
-// 为更新日志链接添加点击事件
-function setupChangelogLink() {
-    const changelogLink = document.getElementById('changelogLink');
-    if (changelogLink) {
-        changelogLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = 'about.html#changelog';
-        });
-    }
-}
-
-// 页面加载完成后添加版本信息并设置更新日志链接
-document.addEventListener('DOMContentLoaded', () => {
-    addVersionInfoToFooter();
-    setupChangelogLink();
-});
