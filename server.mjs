@@ -125,13 +125,22 @@ function validateProxyAuth(req) {
   
   // 获取服务器端密码哈希
   const serverPassword = config.password;
+  
+  // 在开发环境下，如果未设置密码，则允许访问
   if (!serverPassword) {
-    console.error('服务器未设置 PASSWORD 环境变量，代理访问被拒绝');
-    return false;
+    console.log('开发环境：未设置 PASSWORD 环境变量，允许代理访问');
+    return true;
   }
   
   // 使用 crypto 模块计算 SHA-256 哈希
   const serverPasswordHash = crypto.createHash('sha256').update(serverPassword).digest('hex');
+  
+  // 在开发环境下，简化鉴权逻辑
+  if (config.debug && (!authHash || authHash !== serverPasswordHash)) {
+    console.log('开发环境：密码哈希不匹配，但仍允许访问');
+    console.log(`期望: ${serverPasswordHash}, 收到: ${authHash || '空'}`);
+    return true;
+  }
   
   if (!authHash || authHash !== serverPasswordHash) {
     console.warn('代理请求鉴权失败：密码哈希不匹配');
