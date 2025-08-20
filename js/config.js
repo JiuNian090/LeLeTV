@@ -28,12 +28,7 @@ const API_SITES = {
         name: '电影天堂资源',
         detail: 'http://caiji.dyttzyapi.com', 
     },
-    ffzy: {
-        api: 'http://ffzy5.tv/api.php/provide/vod',
-        name: '非凡资源',
-        detail: 'http://ffzy5.tv', 
-    },
-
+    
     zy360: {
         api: 'https://360zy.com/api.php/provide/vod',
         name: '360资源',
