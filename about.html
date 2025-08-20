@@ -184,11 +184,12 @@
                     return response.text();
                 })
                 .then(markdownContent => {
-                    // 将Markdown转换为HTML
-                    const htmlContent = parseChangelogMarkdown(markdownContent);
-                    
-                    // 更新容器内容
-                    versionHistoryContainer.innerHTML = htmlContent;
+                    // 将Markdown解析为版本条目数组
+                        const versionEntries = parseChangelogMarkdown(markdownContent);
+
+                        // 渲染版本历史，支持折叠功能
+                        versionHistoryContainer.innerHTML = '';
+                        versionHistoryContainer.appendChild(renderVersionHistory(versionEntries));
                 })
                 .catch(error => {
                     console.error('加载更新日志出错:', error);
@@ -206,68 +207,141 @@
                 });
         });
         
-        // 解析CHANGELOG.md内容为HTML
+        // 解析CHANGELOG.md内容为版本历史条目数组
         function parseChangelogMarkdown(markdownContent) {
-            let htmlContent = '';
+            const versionEntries = [];
+            let currentEntry = null;
 
             // 将Markdown按行分割
             const lines = markdownContent.split('\n');
 
-            let inVersionSection = false;
-            let versionContent = '';
-            
             lines.forEach((line) => {
                 // 处理标题
-                if (line.startsWith('# ')) {
-                    // 忽略一级标题
-                } else if (line.startsWith('## ')) {
-                    // 忽略二级标题
-                } else if (line.startsWith('### ')) {
-                    // 如果之前有版本内容，先处理
-                    if (inVersionSection && versionContent) {
-                        htmlContent += `
-                            <div class="mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10">
-                                ${versionContent}
-                            </div>
-                        `;
-                        versionContent = '';
+                if (line.startsWith('### ')) {
+                    // 如果已有当前条目，先保存
+                    if (currentEntry) {
+                        versionEntries.push(currentEntry);
                     }
-                    
+
+                    // 创建新条目
+                    currentEntry = { content: '' };
+
                     // 提取版本号（不包含日期）
                     const versionMatch = line.match(/v(\d+)/);
                     if (versionMatch) {
                         const versionNumber = versionMatch[1];
-                        versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber}</h4>`;
+                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber}</h4>`;
                     } else if (line.includes('初始版本')) {
-                        versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
+                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
                     }
-                    
-                    inVersionSection = true;
-                } else if (line.startsWith('- ') && inVersionSection) {
+                } else if (line.startsWith('- ') && currentEntry) {
                     // 处理列表项
                     // 提取标签和内容
                     const tagMatch = line.match(/- \[(.*?)\] (.*?)$/);
                     if (tagMatch) {
-                        versionContent += `<p class="ml-4 mb-1"><span class="text-green-400">[${tagMatch[1]}]</span> ${tagMatch[2]}</p>`;
+                        currentEntry.content += `<p class="ml-4 mb-1"><span class="text-green-400">[${tagMatch[1]}]</span> ${tagMatch[2]}</p>`;
                     } else {
-                        versionContent += `<p class="ml-4 mb-1">${line.substring(2)}</p>`;
+                        currentEntry.content += `<p class="ml-4 mb-1">${line.substring(2)}</p>`;
                     }
-                } else if (line.trim() !== '' && inVersionSection) {
+                } else if (line.trim() !== '' && currentEntry) {
                     // 处理普通文本（描述）
-                    versionContent += `<p class="text-gray-400 text-sm mt-2 ml-4">${line}</p>`;
+                    currentEntry.content += `<p class="text-gray-400 text-sm mt-2 ml-4">${line}</p>`;
                 }
             });
-            
-            // 处理最后一个版本内容
-                if (inVersionSection && versionContent) {
-                    htmlContent += `
-                        <div class="mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10">
-                            ${versionContent}
-                        </div>
-                    `;
-                }
-            
-            return htmlContent;
+
+            // 处理最后一个条目
+            if (currentEntry) {
+                versionEntries.push(currentEntry);
+            }
+
+            return versionEntries;
+        }
+
+        // 渲染版本历史，支持折叠功能
+        function renderVersionHistory(versionEntries) {
+            const MAX_VISIBLE = 10;
+            const container = document.createElement('div');
+            container.className = 'space-y-4';
+
+            // 创建可见的版本条目
+            const visibleEntries = versionEntries.slice(0, MAX_VISIBLE);
+            visibleEntries.forEach((entry, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10';
+                entryDiv.innerHTML = entry.content;
+                container.appendChild(entryDiv);
+            });
+
+            // 检查是否有更多条目需要折叠
+            if (versionEntries.length > MAX_VISIBLE) {
+                // 创建折叠区域容器
+                const collapseContainer = document.createElement('div');
+                collapseContainer.id = 'collapsedEntries';
+                collapseContainer.className = 'overflow-hidden transition-all duration-500 max-h-0';
+
+                // 添加折叠的条目
+                const collapsedEntries = versionEntries.slice(MAX_VISIBLE);
+                collapsedEntries.forEach((entry) => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10';
+                    entryDiv.innerHTML = entry.content;
+                    collapseContainer.appendChild(entryDiv);
+                });
+
+                // 添加渐变遮罩
+                const gradientOverlay = document.createElement('div');
+                gradientOverlay.id = 'gradientOverlay';
+                gradientOverlay.className = 'h-20 w-full bg-gradient-to-t from-[#1a1a1a] to-transparent pointer-events-none absolute bottom-0 left-0';
+
+                // 创建展开/折叠按钮
+                const toggleButton = document.createElement('button');
+                toggleButton.id = 'toggleChangelog';
+                toggleButton.className = 'w-full py-3 mt-4 mb-6 bg-blue-900/30 hover:bg-blue-800/40 border border-blue-700/50 rounded-lg text-blue-400 font-medium transition-all flex items-center justify-center';
+                toggleButton.innerHTML = `
+                    <svg class="w-5 h-5 mr-2 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                    展开全部 ${versionEntries.length - MAX_VISIBLE} 条
+                `;
+
+                toggleButton.addEventListener('click', function() {
+                    const collapsedContainer = document.getElementById('collapsedEntries');
+                    const gradient = document.getElementById('gradientOverlay');
+                    const svg = this.querySelector('svg');
+
+                    if (collapsedContainer.style.maxHeight) {
+                        // 折叠
+                        collapsedContainer.style.maxHeight = null;
+                        gradient.style.display = 'block';
+                        this.innerHTML = `
+                            <svg class="w-5 h-5 mr-2 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            展开全部 ${versionEntries.length - MAX_VISIBLE} 条
+                        `;
+                    } else {
+                        // 展开
+                        collapsedContainer.style.maxHeight = collapsedContainer.scrollHeight + 'px';
+                        gradient.style.display = 'none';
+                        this.innerHTML = `
+                            <svg class="w-5 h-5 mr-2 transform transition-transform duration-300 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            收起
+                        `;
+                    }
+                });
+
+                // 组装折叠区域
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative';
+                wrapper.appendChild(collapseContainer);
+                wrapper.appendChild(gradientOverlay);
+                container.appendChild(wrapper);
+                container.appendChild(toggleButton);
+            }
+
+            return container;
         }
     </script>
 </body>
