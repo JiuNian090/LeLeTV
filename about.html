@@ -233,12 +233,11 @@
                         versionContent = '';
                     }
                     
-                    // 提取版本号和日期
-                    const versionMatch = line.match(/v(\d+)\s+\(([^)]+)\)/);
+                    // 提取版本号（不包含日期）
+                    const versionMatch = line.match(/v(\d+)/);
                     if (versionMatch) {
                         const versionNumber = versionMatch[1];
-                        const versionDate = versionMatch[2];
-                        versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber} (${versionDate})</h4>`;
+                        versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber}</h4>`;
                     } else if (line.includes('初始版本')) {
                         versionContent += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
                     }
