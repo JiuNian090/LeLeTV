@@ -358,13 +358,13 @@
     <!-- 版权声明弹窗 -->
     <div id="disclaimerModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]">
         <div class="bg-[#111] p-8 rounded-lg border border-[#333] w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 class="text-2xl font-bold gradient-text mb-6 text-center">使用声明</h2>
+            <h2 class="text-2xl font-bold gradient-text mb-6 text-center">使用说明</h2>
             <div class="text-gray-300 space-y-4">
                 <p>
-                    欢迎使用 LeLeTV。在开始使用前，请您了解并同意以下条款：
+                    欢迎使用 LeLeTV。在开始使用前，请您了解以下事项：
                 </p>
                 <p>
-                    <strong class="text-blue-400">如何使用：</strong> 用手机或电脑自带的浏览器打开这个网站，然后在浏览器菜单里选择"添加到桌面"，这样就能像使用App一样方便地访问啦！如有任何问题，欢迎联系乐乐。
+                    <strong class="text-blue-400">如何使用：</strong> 用设备自带的浏览器打开本网站，点击这个☞<span id="addToHomeBtn" class="text-green-400 font-semibold underline cursor-pointer transition-all duration-300 hover:text-green-300 hover:underline-offset-2">添加到桌面</span>，这样就能像使用App一样方便地访问啦！如有任何问题，请联系乐乐。
                 </p>
                 <p>
                     <strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
@@ -428,6 +428,51 @@
 
     <!-- PWA 注册 -->
     <script src="js/pwa-register.js"></script>
+
+    <!-- 添加到桌面功能 -->
+    <script>
+        // 获取添加到桌面按钮元素
+        const addToHomeBtn = document.getElementById('addToHomeBtn');
+        let deferredPrompt;
+
+        // 监听beforeinstallprompt事件
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // 阻止浏览器默认的安装提示
+            e.preventDefault();
+            // 保存事件，以便稍后触发
+            deferredPrompt = e;
+            // 使按钮可见（如果之前隐藏）
+            if (addToHomeBtn) {
+                addToHomeBtn.style.display = 'inline';
+            }
+        });
+
+        // 如果找到了添加到桌面按钮，添加点击事件监听
+        if (addToHomeBtn) {
+            addToHomeBtn.addEventListener('click', async () => {
+                // 如果存在deferredPrompt，触发安装提示
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    // 等待用户响应
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`用户${outcome === 'accepted' ? '接受' : '拒绝'}了添加到桌面的请求`);
+                    // 重置deferredPrompt
+                    deferredPrompt = null;
+                } else {
+                    // 如果不支持PWA安装提示，显示手动添加指南
+                    alert('请按照以下步骤手动添加到桌面：\n\n' +
+                          '1. 点击浏览器右上角的菜单按钮\n' +
+                          '2. 选择"添加到桌面"或类似选项\n' +
+                          '3. 确认添加');
+                }
+            });
+        }
+
+        // 监听appinstalled事件
+        window.addEventListener('appinstalled', () => {
+            console.log('应用已添加到桌面');
+        });
+    </script>
 
     <!-- 环境变量注入脚本 -->
     <script>
