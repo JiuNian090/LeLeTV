@@ -186,32 +186,157 @@
     margin-bottom: 1rem;
 }
 
-/* 响应式网格布局 */
-.search-results-grid {
-    display: grid;
-    gap: 1rem;
-}
-
-@media (max-width: 640px) {
-    .search-results-grid {
-        grid-template-columns: 1fr;
+/* 响应式设计优化 */
+/* 小屏幕设备 (手机) */
+@media (max-width: 480px) {
+    /* 调整页面整体内边距 */
+    body, html {
+        padding: 0;
+    }
+    
+    /* 顶部按钮布局优化 */
+    .top-buttons {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        position: relative;
+        top: 0;
+        left: 0;
+        right: 0;
+        transform: none;
+        margin-bottom: 1rem;
+    }
+    
+    /* 搜索区域优化 */
+    .search-area {
+        padding: 1rem;
+        width: 100%;
+        max-width: 100%;
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        margin-bottom: 1rem;
+    }
+    
+    .search-container {
+        width: 100%;
+    }
+    
+    /* 搜索按钮与输入框合并显示 */
+    #searchForm {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    #searchInput {
+        width: 100%;
+        margin-right: 0;
+    }
+    
+    #searchButton {
+        width: 100%;
+    }
+    
+    /* 最近搜索区域优化 */
+    .recent-searches {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    /* 豆瓣内容区域优化 */
+    .douban-container {
+        padding: 0 1rem;
+        margin-top: 1rem;
+    }
+    
+    /* 豆瓣内容网格 - 小屏幕显示1列 */
+    .douban-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+    
+    .douban-item {
+        width: 100%;
+        padding: 0.5rem;
+    }
+    
+    /* 调整标签容器显示 */
+    .douban-item .tags {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .tag {
+        padding: 2px 8px;
+        font-size: 0.75rem;
+    }
+    
+    /* 调整功能按钮样式 */
+    .douban-actions {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .douban-actions button {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        min-width: auto;
+    }
+    
+    /* 优化页脚显示 */
+    footer {
+        padding: 1rem;
+    }
+    
+    footer .container {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
     }
 }
 
-@media (min-width: 641px) and (max-width: 768px) {
-    .search-results-grid {
-        grid-template-columns: repeat(2, 1fr);
+/* 平板设备 */
+@media (min-width: 481px) and (max-width: 768px) {
+    /* 搜索区域优化 */
+    .search-area {
+        width: 90%;
+        max-width: 90%;
+    }
+    
+    /* 豆瓣内容网格 - 平板显示2列 */
+    .douban-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* 优化功能按钮区域 */
+    .top-buttons {
+        max-width: 90%;
+        flex-wrap: wrap;
+        gap: 0.75rem;
     }
 }
 
+/* 中小屏幕桌面设备 */
 @media (min-width: 769px) and (max-width: 1024px) {
-    .search-results-grid {
-        grid-template-columns: repeat(3, 1fr);
+    /* 豆瓣内容网格 - 中小屏幕显示3列 */
+    .douban-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 }
 
+/* 大屏幕设备优化 */
 @media (min-width: 1025px) {
-    .search-results-grid {
-        grid-template-columns: repeat(4, 1fr);
+    /* 豆瓣内容网格 - 大屏幕显示4列 */
+    .douban-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* 超大型屏幕设备优化 */
+@media (min-width: 1440px) {
+    /* 豆瓣内容网格 - 超大型屏幕显示5列 */
+    .douban-grid {
+        grid-template-columns: repeat(5, 1fr) !important;
     }
 }

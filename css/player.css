@@ -414,20 +414,146 @@ input:checked + .slider:before {
     transition: transform 0.3s;
 }
 
-/* 新增：移动端响应式样式 */
+/* 响应式样式优化 */
+/* 小屏幕设备优化 (手机) */
 @media (max-width: 640px) {
-    .episode-grid {
-        max-height: 40vh; /* 移动端增加集数列表高度 */
+    /* 调整页面顶部内边距，适应移动设备状态栏 */
+    body, html {
+        padding-top: 27px;
     }
-
-    /* 改进移动端按钮显示 */
+    
+    /* 减小固定头部高度和内边距 */
+    .player-header-fixed {
+        padding: 0.5rem;
+    }
+    
+    /* 缩小logo尺寸 */
+    .logo-icon {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    /* 简化标题区域显示 */
+    .logo-text {
+        font-size: 0.9rem !important;
+    }
+    
+    /* 隐藏标题文本，节省空间 */
+    #videoTitle {
+        display: none;
+    }
+    
+    /* 优化返回按钮 */
+    #goBack {
+        padding: 0.25rem 0.75rem;
+    }
+    
+    /* 优化播放器容器内边距 */
+    main {
+        padding: 0.5rem;
+    }
+    
+    /* 视频播放器自适应高度 */
+    #player {
+        height: 50vh !important;
+        min-height: 200px;
+    }
+    
+    /* 集数网格优化 */
+    .episode-grid {
+        max-height: 35vh;
+        overflow-y: auto;
+    }
+    
+    /* 优化集数显示网格 - 小屏幕显示3列 */
+    #episodesList {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    /* 优化功能按钮布局 */
+    .player-container .flex-wrap {
+        margin-bottom: 0.5rem;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+    }
+    
+    /* 优化自动连播开关位置 */
+    .player-container .flex-wrap .flex-shrink-0:first-child {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        align-self: stretch;
+    }
+    
+    /* 功能按钮区域在小屏幕上堆叠显示 */
+    .player-container .flex-wrap > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* 调整按钮大小和间距 */
     button {
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.875rem !important;
         white-space: nowrap;
     }
+    
+    /* 简化上一集/下一集按钮 */
+    #prevButton, #nextButton {
+        padding: 0.5rem !important;
+        min-width: 70px;
+    }
+    
+    #prevButton span, #nextButton span {
+        display: none;
+    }
+    
+    /* 优化模态框样式 */
+    #modal, #passwordModal {
+        padding: 1rem;
+    }
+    
+    /* 优化页脚显示 */
+    footer {
+        padding: 1rem 0.5rem;
+    }
+    
+    footer .container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    footer .container > div {
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+}
 
-    /* 控制栏在小屏幕上可能需要换行 */
+/* 平板设备优化 */
+@media (min-width: 641px) and (max-width: 1024px) {
+    /* 优化播放器高度 */
+    #player {
+        height: 55vh;
+    }
+    
+    /* 集数网格显示6列 */
+    #episodesList {
+        grid-template-columns: repeat(6, 1fr) !important;
+    }
+    
+    /* 调整功能按钮区域 */
     .player-container .flex-wrap {
-        margin-bottom: 4px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* 大屏幕设备优化 */
+@media (min-width: 1025px) {
+    /* 更大的播放器高度 */
+    #player {
+        height: 70vh;
     }
 }
 

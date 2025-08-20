@@ -110,33 +110,102 @@ body {
     text-decoration: underline;
 }
 
-/* 移动端优化 */
+/* 响应式设计优化 */
+/* 小屏幕设备 (手机) */
 @media (max-width: 480px) {
+    body {
+        font-size: 14px;
+        padding: 0;
+    }
+    
     .redirect-container {
         padding: 1.5rem;
         width: 85%;
+        min-height: 80vh;
+        flex-direction: column;
+        justify-content: center;
     }
-
+    
     .logo-icon {
         width: 30px;
         height: 30px;
     }
-
+    
     .logo-text {
-        font-size: 1.7rem;
+        font-size: 1.5rem;
+        text-align: center;
     }
-
+    
     .loading-animation {
         width: 40px;
         height: 40px;
-        margin-bottom: 15px;
+        margin: 15px auto;
     }
-
+    
     .redirect-message {
         font-size: 1rem;
+        text-align: center;
     }
-
+    
     #redirect-status {
         font-size: 0.8rem;
+        margin-bottom: 1.2rem;
+        text-align: center;
+    }
+    
+    .redirect-hint {
+        font-size: 0.85rem;
+        padding: 8px;
+    }
+    
+    .redirect-hint a {
+        font-size: 0.85rem;
+        padding: 4px 8px;
+        word-wrap: break-word;
+        display: inline-block;
+    }
+}
+
+/* 平板设备 */
+@media (min-width: 481px) and (max-width: 768px) {
+    .redirect-container {
+        padding: 2rem;
+        width: 75%;
+    }
+    
+    .logo-icon {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .logo-text {
+        font-size: 1.8rem;
+    }
+    
+    .loading-animation {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+/* 大屏幕设备优化 */
+@media (min-width: 769px) {
+    .redirect-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .logo-text {
+        font-size: 2rem;
+    }
+    
+    .loading-animation {
+        width: 50px;
+        height: 50px;
     }
 }
