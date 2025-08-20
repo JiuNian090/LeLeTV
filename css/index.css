@@ -1,5 +1,52 @@
 /* 主页特定样式 */
 
+/* header自适应移动端样式 */
+header {
+    transition: all 0.3s ease;
+}
+
+/* 媒体查询：移动端适配 */
+@media (max-width: 640px) {
+    header {
+        margin-bottom: 1rem;
+    }
+    
+    header svg {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+    
+    header h1 {
+        font-size: 2.5rem !important;
+    }
+    
+    header p {
+        font-size: 0.875rem;
+        margin-bottom: 4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        margin-bottom: 0.5rem;
+    }
+    
+    header svg {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    header h1 {
+        font-size: 2rem !important;
+    }
+    
+    header p {
+        font-size: 0.75rem;
+        margin-bottom: 3rem;
+    }
+}
+
 /* 历史记录和设置按钮定位样式 */
 .top-corner-button {
     position: fixed;
