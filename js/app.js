@@ -1,5 +1,5 @@
 // 全局变量
-let selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '["tyyszy","dyttzy", "bfzy", "ruyi"]'); // 默认选中资源
+let selectedAPIs = []; // 初始化为空，稍后在initAPICheckboxes中处理
 let customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
 
 // 添加当前播放的集数索引
@@ -61,6 +61,21 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(checkAdultAPIsSelected, 100);
 });
 
+// 重置数据源选择逻辑
+function resetDataSourceLogic() {
+    // 清除所有相关的本地存储项
+    localStorage.removeItem('dataSourceLogicVersion');
+    localStorage.removeItem('selectedAPIs');
+    localStorage.removeItem('hasUserSelectedAPIs');
+    localStorage.removeItem('lastRefreshTime');
+    
+    // 显示提示信息
+    showToast('数据源选择逻辑已重置，将应用新的选择规则', 'success');
+    
+    // 重新初始化API复选框，应用新逻辑
+    initAPICheckboxes();
+}
+
 // 初始化API复选框
 function initAPICheckboxes() {
     const container = document.getElementById('apiCheckboxes');
@@ -68,30 +83,100 @@ function initAPICheckboxes() {
     // 强制重新创建所有UI元素，确保每次刷新都能更新
     container.innerHTML = '';
     
-    // 清除localStorage中的selectedAPIs缓存，强制重新生成选中状态
-    localStorage.removeItem('selectedAPIs');
-    // 重置selectedAPIs数组
-    selectedAPIs = JSON.parse(localStorage.getItem('hasInitializedDefaults') || 'false') ? [] : ["tyyszy", "bfzy", "dyttzy", "ruyi"];
+    // 从当前版本开始，对所有用户应用新的数据源选择逻辑
+    applyNewDataSourceLogic();
 
     // 立即更新选中的API数量显示
     updateSelectedApiCount();
-    
-    // 只有在用户没有选择任何API时，才自动全选
-    if (selectedAPIs.length === 0) {
-        setTimeout(() => {
-            selectAllAPIs(true, true); // 全选API，排除成人内容
-            // 确保UI正确更新
-            updateSelectedAPIs();
-            checkAdultAPIsSelected();
-        }, 300);
-    }
     
     // 确保UI反映最新的数据源配置
     console.log('初始化API复选框，当前API_SITES数量：', Object.keys(API_SITES).length);
     console.log('当前选中的API数量：', selectedAPIs.length);
     console.log('当前API_SITES配置：', JSON.stringify(Object.keys(API_SITES)));
 
-    // 添加普通API组标题
+// 从当前版本开始，对所有用户应用新的数据源选择逻辑
+function applyNewDataSourceLogic() {
+    // 版本标记，用于标识用户是否已经应用了新的数据源选择逻辑
+    const DATA_SOURCE_LOGIC_VERSION = 'v1';
+    const currentVersion = localStorage.getItem('dataSourceLogicVersion');
+    const currentTime = Date.now();
+    const dayInMs = 24 * 60 * 60 * 1000;
+    
+    // 检查是否需要应用新逻辑
+    if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
+        // 清除之前的选择
+        selectedAPIs = getRandomDataSources(5);
+        localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+        localStorage.setItem('lastRefreshTime', currentTime.toString());
+        localStorage.setItem('hasUserSelectedAPIs', 'false');
+        localStorage.setItem('dataSourceLogicVersion', DATA_SOURCE_LOGIC_VERSION);
+        
+        console.log('应用新版本的数据源选择逻辑，已重置用户的选择');
+    } else {
+        // 检查是否需要刷新（每24小时）
+        const lastRefreshTime = localStorage.getItem('lastRefreshTime');
+        const hasUserSelected = localStorage.getItem('hasUserSelectedAPIs') === 'true';
+        
+        if (lastRefreshTime && currentTime - parseInt(lastRefreshTime) >= dayInMs) {
+            refreshDataSources(hasUserSelected);
+        }
+        
+        // 初始化selectedAPIs
+        const savedSelectedAPIs = localStorage.getItem('selectedAPIs');
+        if (savedSelectedAPIs) {
+            selectedAPIs = JSON.parse(savedSelectedAPIs);
+        } else {
+            // 第一次打开，随机选择5个数据源
+            selectedAPIs = getRandomDataSources(5);
+            localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+            localStorage.setItem('lastRefreshTime', currentTime.toString());
+            localStorage.setItem('hasUserSelectedAPIs', 'false');
+        }
+    }
+}
+
+// 刷新数据源
+function refreshDataSources(hasUserSelected) {
+    const currentTime = Date.now();
+    const savedSelectedAPIs = localStorage.getItem('selectedAPIs') || '[]';
+    const currentSelectedAPIs = JSON.parse(savedSelectedAPIs);
+    
+    // 获取当前所有可用数据源
+    const allDataSources = Object.keys(API_SITES).filter(key => !API_SITES[key].adult);
+    
+    // 更新已删除的数据源
+    const updatedSelectedAPIs = currentSelectedAPIs.filter(api => 
+        allDataSources.includes(api) || api.startsWith('custom_')
+    );
+    
+    if (!hasUserSelected) {
+        // 用户没有选择过，随机选择5个
+        selectedAPIs = getRandomDataSources(5);
+    } else {
+        // 用户有选择过，保留用户选择
+        selectedAPIs = updatedSelectedAPIs;
+    }
+    
+    localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+    localStorage.setItem('lastRefreshTime', currentTime.toString());
+}
+
+// 随机选择指定数量的数据源
+function getRandomDataSources(count) {
+    // 过滤掉成人数据源
+    const normalDataSources = Object.keys(API_SITES).filter(key => !API_SITES[key].adult);
+    
+    // 如果数据源不足5个，则全部选择
+    if (normalDataSources.length <= count) {
+        return normalDataSources;
+    }
+    
+    // 随机选择
+    const shuffled = [...normalDataSources].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+}
+
+// 添加普通API组标题
     const normaldiv = document.createElement('div');
     normaldiv.id = 'normaldiv';
     normaldiv.className = 'grid grid-cols-2 gap-2';
@@ -373,6 +458,8 @@ function updateSelectedAPIs() {
 
     // 保存到localStorage
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+    // 标记用户已经做过选择
+    localStorage.setItem('hasUserSelectedAPIs', 'true');
 
     // 更新显示选中的API数量
     updateSelectedApiCount();

@@ -75,10 +75,11 @@
                 <label class="block text-sm font-medium text-gray-400 mb-3 border-b border-[#333] pb-1">数据源设置</label>
                 
                 <!-- 批量操作按钮 -->
-                <div class="flex space-x-2 mb-3">
-                    <button onclick="selectAllAPIs(true)" class="px-2 py-1 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全选</button>
-                    <button onclick="selectAllAPIs(false)" class="px-2 py-1 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全不选</button>
-                    <button onclick="selectAllAPIs(true, true)" class="px-2 py-1 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全选普通资源</button>
+                <div class="flex space-x-1 mb-3 whitespace-nowrap">
+                    <button onclick="selectAllAPIs(true)" class="px-1.5 py-0.75 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全选</button>
+                    <button onclick="selectAllAPIs(false)" class="px-1.5 py-0.75 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全不选</button>
+                    <button onclick="selectAllAPIs(true, true)" class="px-1.5 py-0.75 bg-[#333] hover:bg-[#444] text-white text-xs rounded">全选普通资源</button>
+                    <button onclick="resetDataSourceLogic()" class="px-1.5 py-0.75 bg-[#333] hover:bg-[#444] text-white text-xs rounded">重置</button>
                 </div>
 
                 <!-- 自动全选逻辑已移至app.js中，可保留用户选择 -->
