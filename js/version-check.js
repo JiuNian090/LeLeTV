@@ -7,7 +7,7 @@ async function fetchVersion(url, errorMessage, options = {}) {
     return await response.text();
 }
 
-// 格式化版本号为可读形式 (yyyyMMddhhmm -> yyyy-MM-dd hh:mm)
+// 在版本号前面添加v前缀使其更像标准版本号
 function formatVersion(versionString) {
     // 检测版本字符串是否有效
     if (!versionString) {
@@ -17,18 +17,8 @@ function formatVersion(versionString) {
     // 清理版本字符串（移除可能的空格或换行符）
     const cleanedString = versionString.trim();
     
-    // 格式化标准12位版本号
-    if (cleanedString.length === 12) {
-        const year = cleanedString.substring(0, 4);
-        const month = cleanedString.substring(4, 6);
-        const day = cleanedString.substring(6, 8);
-        const hour = cleanedString.substring(8, 10);
-        const minute = cleanedString.substring(10, 12);
-        
-        return `${year}-${month}-${day} ${hour}:${minute}`;
-    }
-    
-    return cleanedString;
+    // 在版本号前面添加v前缀
+    return `v${cleanedString}`;
 }
 
 // 创建错误版本信息元素
