@@ -25,7 +25,7 @@ const SITE_CONFIG = {
 const API_SITES = {
     dyttzy: {
         api: 'http://caiji.dyttzyapi.com/api.php/provide/vod',
-        name: '电影天堂资源',
+        name: '电影天堂',
         detail: 'http://caiji.dyttzyapi.com', 
     },
     
@@ -72,18 +72,18 @@ const API_SITES = {
         name: '无尽资源'
     },
     
-    ysgc: {
-        api: 'https://cj.lziapi.com/api.php/provide/vod',
-        name: '影视工厂'
+    mtzy: {
+        api: 'https://caiji.maotaizy.cc/api.php/provide/vod/at/josn',
+        name: '茅台资源'
     },
 
     ikun: {
         api: 'https://ikunzyapi.com/api.php/provide/vod',
         name: 'iKun资源'
     },
-    lzi: {
-        api: 'https://cj.lziapi.com/api.php/provide/vod/',
-        name: '量子资源站'
+    hnzy: {
+        api: 'https://hongniuzy2.com/api.php/provide/vod',
+        name: '红牛资源'
     },
     testSource: {
         api: 'https://www.example.com/api.php/provide/vod',
