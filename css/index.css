@@ -68,10 +68,7 @@ header {
 /* 搜索区域样式 */
 .search-box {
     height: 3.5rem;
-    -webkit-box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
+    border-radius: 2rem;
     overflow: hidden;
     display: flex;
     align-items: stretch;

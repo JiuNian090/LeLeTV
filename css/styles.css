@@ -33,13 +33,13 @@
     /* 赛博影视主题配色方案 - 柔和版 */
     --primary-color: #00ccff;       /* 霓虹蓝主色调 */
     --primary-light: #33d6ff;       /* 浅霓虹蓝变体 */
-    --secondary-color: #0f1622;     /* 深蓝黑背景色 */
+    --secondary-color: #000000;     /* 纯黑色背景色 */
     --accent-color: #ff3c78;        /* 霓虹粉强调色 */
     --text-color: #e6f2ff;          /* 柔和的蓝白色文本 */
     --text-muted: #8599b2;          /* 淡蓝灰色次级文本 */
     --border-color: rgba(0, 204, 255, 0.15);
-    --page-gradient-start: #0f1622; /* 深蓝黑起始色 */
-    --page-gradient-end: #192231;   /* 深靛蓝结束色 */
+    --page-gradient-start: #000000; /* 纯黑色起始色 */
+    --page-gradient-end: #000000;   /* 纯黑色结束色 */
     --card-gradient-start: #121b29; /* 卡片起始色 */
     --card-gradient-end: #1c2939;   /* 卡片结束色 */
     --card-accent: rgba(0, 204, 255, 0.12); /* 霓虹蓝卡片强调色 */
@@ -47,16 +47,8 @@
 }
 
 .page-bg {
-    background: linear-gradient(180deg, var(--page-gradient-start), var(--page-gradient-end));
+    background: #000000;
     min-height: 100vh;
-    /* 柔和赛博点状背景 */
-    background-image: 
-        linear-gradient(180deg, var(--page-gradient-start), var(--page-gradient-end)),
-        radial-gradient(circle at 25px 25px, rgba(0, 204, 255, 0.04) 2px, transparent 3px),
-        radial-gradient(circle at 75px 75px, rgba(255, 60, 120, 0.02) 1px, transparent 2px),
-        radial-gradient(circle at 50px 50px, rgba(150, 255, 250, 0.015) 1px, transparent 2px);
-    background-blend-mode: normal;
-    background-size: cover, 100px 100px, 50px 50px, 75px 75px;
 }
 
 button, .card-hover {
