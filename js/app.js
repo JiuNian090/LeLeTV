@@ -655,13 +655,13 @@ function setupEventListeners() {
                     adultdiv.style.display = 'none';
                 }
             } else if (e.target.checked === false) {
-                // 如果禁用过滤，则显示成人API
+                // 如果禁用过滤，刷新并显示成人API列表
+                // 先移除已有的成人API区域
                 if (adultdiv) {
-                    adultdiv.style.display = '';
-                } else {
-                    // 如果成人API列表不存在，则创建它
-                    addAdultAPI();
+                    adultdiv.remove();
                 }
+                // 重新创建成人API列表，确保所有成人API都显示出来
+                addAdultAPI();
             }
         });
     }
