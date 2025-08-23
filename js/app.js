@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('yellowFilterEnabled', 'true');
         localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');
 
-        // 默认启用豆瓣功能
-        localStorage.setItem('doubanEnabled', 'true');
+        // 默认禁用豆瓣功能
+        localStorage.setItem('doubanEnabled', 'false');
 
         // 标记已初始化默认值
         localStorage.setItem('hasInitializedDefaults', 'true');
