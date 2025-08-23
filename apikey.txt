@@ -75,3 +75,89 @@ U酷资源, http://api.ukuapi.com/api.php/provide/vod
 丝袜资源, http://siwazyw.cc/api.php/provide/vod
 天空資源, http://m3u8.tiankongapi.com/api.php/provide/vod/from/tkm3u8
 海外看資源, http://haiwaikan.com/api.php/provide/vod
+
+
+{"key":"001海外看","name":"🐝海外看","type":1,"api":"https://haiwaikan.com/api.php/provide/vod","searchable":1,"quickSearch":1,"changeable":1},
+{"key":"001索尼","name":"🐝索尼","type":1,"api":"https://suoniapi.com/api.php/provide/vod","searchable":1,"quickSearch":0,"changeable":1},
+{"key":"001lzi","name":"🐝量子资源","type":1,"api":"http://cj.lziapi.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+{"key":"001暴風","name":"🐝暴風","type":1,"api":"https://bfzyapi.com/api.php/provide/vod","searchable":1,"quickSearch":1,"changeable":1},
+{"key":"001非凡","name":"🐝非凡","type":1,"api":"http://cj.ffzyapi.com/api.php/provide/vod","searchable":1,"quickSearch":1,"changeable":1},
+
+{"key":"丝袜资源","name":"丝袜资源","type":1,"api":"https://siwazyw.cc/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*91麻豆","name":"*91麻豆","type":1,"api":"https://md91.cc/api.php/provide/vod/","searchable":1,"quickSearch":0},
+…:"*秀色资源","name":"*秀色资源","type":1,"api":"https://api.xiuseapi.com/api.php/provide/vod/","searchable":1,"quickSearch":0},
+{"key":"*探探资源","name":"*探探资源","type":1,"api":"https://apittzy.com/api.php/provide/vod/","searchable":1,"quickSearch":0},
+…ey":"*色窝资源","name":"*色窝资源","type":1,"api":"https://sewozyapi.com/api.php/provide/vod/","searchable":1,"quickSearch":0},
+…:"*淫窝资源","name":"*淫窝资源","type":1,"api":"https://api.yinwoapi.com/api.php/provide/vod/","searchable":1,"quickSearch":0},
+{"key":"*99资源","name":"*99资源","type":1,"api":"http://99zy.pw/api.php/provide/vod/","searchable":1,"quickSearch":0},
+…"key":"*99资源吧","name":"*99资源吧","type":1,"api":"http://99zyba.com/api.php/provide/vod/","searchable":1,"quickSearch":0},
+
+极品资源,https://www.jpysvip.net/api.php/provide/vod/at/xml/,不解析
+KK看剧,http://www.kkkanju.com/api.php/provide/vod/at/xml,解析
+饭团资源,https://fantuan.wkfile.com/api.php/provide/vod/at/xml,解析
+乐奇艺,https://www.lqiyi.co/api.php/provide/vod/at/xml,解析
+u猫,http://umao.ml/api.php/provide/vod/at/xml,解析
+快播云,http://www.kuaibozy.com/api.php/provide/vod/at/xml/,不解析
+39影视,https://www.39kan.com/api.php/provide/vod/at/xml,不解析
+安逸影院,http://dy.51isu.com:11801/api.php/provide/vod/at/xml,不解析
+快播云,http://www.kuaibozy.com/api.php/provide/vod/at/xml/,不解析
+无尽资源,https://api.wujinapi.com/api.php/provide/vod/from/wjm3u8/at/xml/,不解析
+恐怖鸭资源,https://kongbuya.com/api.php/provide/vod/at/xml/,不解析
+芒果,https://www.mgav1.cc/api.php/provide/vod/at/xml/,不解析
+极品资源,https://www.jpysvip.net/api.php/provide/vod/at/xml/,不解析
+侦探APP,http://ys.huangguay.com/api.php/provide/vod/at/xml/,不解析
+KK看剧,http://www.kkkanju.com/api.php/provide/vod/at/xml,不解析
+萌果资源,http://api.appearoo.top/api.php/provide/vod/at/xml/,不解析
+速搜资源,http://www.susouzy.com/api.php/provide/vod/at/xml,不解析
+电影牛,https://www.dianyingn.com/api.php/provide/vod/at/xml/,不解析
+好好资源,http://haohaozy.com/api.php/provide/vod/at/xml/,不解析
+安逸,http://dy.51isu.com:11801/api.php/provide/vod/at/xml,不解析
+五一,http://dy.51isu.com:11801/api.php/provide/vod/at/xml,不解析
+
+…":"草榴资源","type":0,"api":"https://www.caoliuzy.com/api.php/provide/vod/at/xml/","playUrl":"https://jx.caoliuzycdn.com/m…
+…":"秀色资源","type":0,"api":"https://api.xiuseapi.com/api.php/provide/vod/from/xiuse/at/xmlsea/","searchable":1,"quickSear…
+…"name":"高清AV无码","type":1,"api":"http://xoxozy.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…伊人资源","type":1,"api":"https://api.yirenziyuan.com/api.php/provide/vod/?ac=list","searchable":1,"quickSearch":1,"filter…
+…色资源","name":黄色资源","type":1,"api":"http://hszy.vip/api.php/provide/vod/?ac=detail","searchable":1,"quickSearch":1,"filt…
+…ame":"空姐AV","type":1,"api":"https://kongjieav.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1}…
+…":爱爱影视","type":1,"api":"https://aays.shaozeyk.top/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1}…
+…"name":"老鸨资源","type":1,"api":"https://apilbzy.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…ame":"鸡坤资源","type":1,"api":"https://jkunzyapi.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…me":"好片资源","type":1,"api":"https://haopianapi.com/api.php/provide/vod/?ac=list","searchable":1,"quickSearch":1,"filter…
+…me":"橘猫资源","type":0,"api":"https://to.to-long.com/api.php/provide/vod/at/xml/","searchable":1,"quickSearch":1,"filtera…
+…e":"花色资源","type":1,"api":"https://api.huasezy.xyz/api.php/provide/vod/?ac=list","searchable":1,"quickSearch":1,"filter…
+…name":"滴滴资源","type":0,"api":"https://api.ddapi.cc/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…name":"奶香香资源","type":1,"api":"https://naixxzy.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…","name":"辣椒资源","type":0,"api":"https://apilj.com/api.php/provide/vod/at/xml/","searchable":1,"quickSearch":1,"filtera…
+…e": "滴滴资源","type": 1,"api": "https://api.ddapi.cc/api.php/provide/vod/", "searchable": 1,"quickSearch": 1, "filterable…
+…e":"花色资源","type":1,"api":"https://api.huasezy.xyz/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…源","name":"黄色资源","type":1,"api":"https://hszy.vip/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…,"name":"丝袜资源","type":1,"api":"https://siwazyw.cc/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+…","name":"番号资源","type":1,"api":"http://fhapi9.com/api.php/provide/vod/","searchable":1,"quickSearch":1,"filterable":1},
+
+{"key":"*91麻豆","name":"*91麻豆","type":1,"api":"https://91md.me/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*丝袜资源","name":"*丝袜资源","type":1,"api":"https://siwazyw.cc/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…:"*秀色资源","name":"*秀色资源","type":1,"api":"https://api.xiuseapi.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*探探资源","name":"*探探资源","type":1,"api":"https://apittzy.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…ey":"*色窝资源","name":"*色窝资源","type":1,"api":"https://sewozyapi.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…:"*淫窝资源","name":"*淫窝资源","type":1,"api":"https://api.yinwoapi.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*99资源","name":"*99资源","type":1,"api":"http://99zy.pw/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…"key":"*99资源吧","name":"*99资源吧","type":1,"api":"http://99zyba.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*酷豆资源","name":"*酷豆资源","type":1,"api":"https://kudouzy.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…key":"*酷豆2","name":"*酷豆2","type":1,"api":"https://api.kdapi.info/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…y":"*酷伦理","name":"*酷伦理","type":1,"api":"https://api.kudian70.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…ey":"*影库资源","name":"*影库资源","type":1,"api":"https://api.ykapi.net/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…y":"*爱播资源","name":"*爱播资源","type":1,"api":"https://cj.apiabzy.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…":"*CK资源","name":"*CK资源","type":1,"api":"http://www.feifei67.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…":"*老鸭资源","name":"*老鸭资源","type":1,"api":"https://api.apilyzy.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*花椒资源","name":"*花椒资源","type":1,"api":"https://apihjzy.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*乐播资源","name":"*乐播资源","type":1,"api":"https://lbapi9.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…*佳丽资源","name":"*佳丽资源","type":1,"api":"http://www.jializyzapi.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"*番号资源","name":"*番号资源","type":1,"api":"http://fhapi9.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…key":"*鲨鱼资源","name":"*鲨鱼资源","type":1,"api":"https://shayuapi.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+
+{"key":"❤91麻豆","name":"❤91麻豆资源","type":1,"api":"https://91md.me/api.php/provide/vod/","searchable":0,"quickSearch":0},
+{"key":"❤探探资源","name":"❤探探资源","type":1,"api":"https://apittzy.com/api.php/provide/vod/","searchable":0,"quickSearch":0},
+…y": "❤91麻豆","name": "❤91麻豆源","type": 1,"api": "https://91md.me/api.php/provide/vod/","searchable": 0,"quickSearch": 0},
+… "❤探探资源","name": "❤探探资源","type": 1,"api": "https://apittzy.com/api.php/provide/vod/","searchable": 0,"quickSearch": 0},
+…name":"🦁┃狮鹫┃资源","type":1,"api":"https://49zyw.com/api.php/provide/vod/?ac=list","searchable":1,"quickSearch":1,"filter…

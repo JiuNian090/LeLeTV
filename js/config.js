@@ -28,6 +28,15 @@ const API_SITES = {
         name: '电影天堂',
         detail: 'http://caiji.dyttzyapi.com', 
     },
+    bdzy: {
+        api: 'https://api.apibdzy.com/api.php/provide/vod/',
+        name: '百度资源', 
+    },
+
+    moduzy: {
+        api: 'https://caiji.moduapi.cc/api.php/provide/vod',
+        name: '魔都资源', 
+    },
     
     zy360: {
         api: 'https://360zy.com/api.php/provide/vod',
@@ -87,12 +96,12 @@ const API_SITES = {
     },
     ckzy: {
         api: 'https://ckzy.me/api.php/provide/vod',
-        name: 'CK资源',
+        name: 'ck资源',
         adult: true
     },
      fhzy: {
         api: 'http://fhapi9.com/api.php/provide/vod',
-        name: 'FH资源',
+        name: 'fh资源',
         adult: true
     },
     ywzy: {
@@ -103,6 +112,11 @@ const API_SITES = {
     mdzy: {
         api: 'https://91md.me/api.php/provide/vod',
         name: 'md资源',
+        adult: true
+    },
+    kgzy: {
+        api: 'https://jkunzyapi.com/api.php/provide/vod',
+        name: 'kg资源',
         adult: true
     },
     
