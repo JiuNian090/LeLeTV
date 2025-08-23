@@ -85,12 +85,28 @@ const API_SITES = {
         api: 'https://hongniuzy2.com/api.php/provide/vod',
         name: '红牛资源'
     },
-    testSource: {
-        api: 'https://www.example.com/api.php/provide/vod',
-        name: '空内容测试源',
+    ckzy: {
+        api: 'https://ckzy.me/api.php/provide/vod',
+        name: 'CK资源',
         adult: true
     },
-};
+     fhzy: {
+        api: 'http://fhapi9.com/api.php/provide/vod',
+        name: 'FH资源',
+        adult: true
+    },
+    ywzy: {
+        api: 'https://155api.com/api.php/provide/vod',
+        name: '155资源',
+        adult: true
+    },
+    mdzy: {
+        api: 'https://91md.me/api.php/provide/vod',
+        name: 'md资源',
+        adult: true
+    },
+    
+}
 
 
 // 定义合并方法
