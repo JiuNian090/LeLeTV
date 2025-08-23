@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 设置广告过滤开关初始状态
     const adFilterToggle = document.getElementById('adFilterToggle');
     if (adFilterToggle) {
+        // 默认打开分片广告过滤功能
         adFilterToggle.checked = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false'; // 默认为true
     }
 
@@ -648,15 +649,19 @@ function setupEventListeners() {
 
             // 控制黄色内容接口的显示状态
             const adultdiv = document.getElementById('adultdiv');
-            if (adultdiv) {
-                if (e.target.checked === true) {
+            if (e.target.checked === true) {
+                // 如果启用过滤，则隐藏成人API
+                if (adultdiv) {
                     adultdiv.style.display = 'none';
-                } else if (e.target.checked === false) {
-                    adultdiv.style.display = ''
                 }
-            } else {
-                // 添加成人API列表
-                addAdultAPI();
+            } else if (e.target.checked === false) {
+                // 如果禁用过滤，则显示成人API
+                if (adultdiv) {
+                    adultdiv.style.display = '';
+                } else {
+                    // 如果成人API列表不存在，则创建它
+                    addAdultAPI();
+                }
             }
         });
     }
