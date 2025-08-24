@@ -19,6 +19,14 @@ async function searchByAPIAndKeyWord(apiId, query) {
             apiName = API_SITES[apiId].name;
         }
         
+        // 记录开始时间用于负载均衡统计
+        const startTime = Date.now();
+        
+        // 增加API负载
+        if (window.loadBalancer) {
+            window.loadBalancer.increaseApiLoad(apiId);
+        }
+        
         // 添加超时处理
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -36,12 +44,17 @@ async function searchByAPIAndKeyWord(apiId, query) {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-            return [];
+            throw new Error(`API请求失败: ${response.status}`);
         }
         
         const data = await response.json();
         
         if (!data || !data.list || !Array.isArray(data.list) || data.list.length === 0) {
+            // 记录成功但无结果的情况
+            const responseTime = Date.now() - startTime;
+            if (window.loadBalancer) {
+                window.loadBalancer.recordApiResult(apiId, true, responseTime);
+            }
             return [];
         }
         
@@ -119,9 +132,21 @@ async function searchByAPIAndKeyWord(apiId, query) {
             });
         }
         
+        // 记录成功的请求
+        const responseTime = Date.now() - startTime;
+        if (window.loadBalancer) {
+            window.loadBalancer.recordApiResult(apiId, true, responseTime);
+        }
+        
         return results;
     } catch (error) {
         console.warn(`API ${apiId} 搜索失败:`, error);
+        
+        // 记录失败的请求
+        if (window.loadBalancer) {
+            window.loadBalancer.recordApiResult(apiId, false, 0, error);
+        }
+        
         return [];
     }
 }

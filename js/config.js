@@ -214,3 +214,24 @@ const CUSTOM_API_CONFIG = {
 
 // 隐藏内置黄色采集站API的变量
 const HIDE_BUILTIN_ADULT_APIS = false;
+
+// 负载均衡器配置
+const LOAD_BALANCER_CONFIG = {
+    enabled: true,                    // 是否启用负载均衡
+    healthCheckInterval: 5 * 60 * 1000, // 健康检查间隔（5分钟）
+    responseTimeThreshold: 10000,     // 响应时间阈值（10秒）
+    failureThreshold: 0.3,           // 失败率阈值（30%）
+    minHealthyApis: 2,               // 最少健康API数量
+    requestTimeout: 15000,           // 请求超时时间（15秒）
+    cooldownPeriod: 10 * 60 * 1000,  // 冷却期（10分钟）
+    maxConcurrentRequests: 3,        // 单个API最大并发请求数
+    retryAttempts: 3,               // 重试次数
+    retryDelay: 1000,               // 重试延迟（1秒）
+    enableFailover: true,           // 启用故障转移
+    enableHealthCheck: true,        // 启用自动健康检查
+    statsSaveInterval: 30000,       // 统计数据保存间隔（30秒）
+    blacklistThreshold: 5,          // 连续失败次数达到此值时加入黑名单
+    priorityBoostFactor: 1.2,       // 优先级提升因子
+    loadPenaltyFactor: 10,          // 负载惩罚因子
+    recentSuccessBonus: 1.2         // 最近成功加成
+};

@@ -757,21 +757,49 @@ async function search() {
         // 保存搜索历史
         saveSearchHistory(query);
 
-        // 从所有选中的API源搜索
+        // 从所有选中的API源搜索，使用负载均衡器
         let allResults = [];
-        const searchPromises = selectedAPIs.map(apiId => 
-            searchByAPIAndKeyWord(apiId, query)
-        );
-
-        // 等待所有搜索请求完成
-        const resultsArray = await Promise.all(searchPromises);
-
-        // 合并所有结果
-        resultsArray.forEach(results => {
-            if (Array.isArray(results) && results.length > 0) {
-                allResults = allResults.concat(results);
+        
+        if (window.loadBalancer) {
+            console.log('使用负载均衡器进行搜索');
+            try {
+                // 使用负载均衡器并行搜索多个API源
+                const searchPromises = selectedAPIs.map(async (apiId) => {
+                    try {
+                        // 检查API是否过载
+                        if (window.loadBalancer.isApiOverloaded(apiId)) {
+                            console.warn(`API ${apiId} 当前过载，跳过`);
+                            return [];
+                        }
+                        
+                        // 使用负载均衡器执行搜索
+                        return await searchByAPIAndKeyWord(apiId, query);
+                    } catch (error) {
+                        console.warn(`API ${apiId} 搜索失败:`, error);
+                        return [];
+                    }
+                });
+                
+                // 等待所有搜索请求完成
+                const resultsArray = await Promise.all(searchPromises);
+                
+                // 合并所有结果
+                resultsArray.forEach(results => {
+                    if (Array.isArray(results) && results.length > 0) {
+                        allResults = allResults.concat(results);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('负载均衡器搜索失败，降级到传统搜索:', error);
+                // 降级到传统搜索方式
+                allResults = await performTraditionalSearch(query);
             }
-        });
+        } else {
+            console.log('负载均衡器不可用，使用传统搜索方式');
+            // 降级到传统搜索方式
+            allResults = await performTraditionalSearch(query);
+        }
 
         // 对搜索结果进行排序：按名称优先，名称相同时按接口源排序
         allResults.sort((a, b) => {
@@ -1485,3 +1513,23 @@ function saveStringAsFile(content, fileName) {
 }
 
 // 移除Node.js的require语句，因为这是在浏览器环境中运行的
+
+// 传统搜索方式（作为降级选项）
+async function performTraditionalSearch(query) {
+    console.log('执行传统搜索方式');
+    const searchPromises = selectedAPIs.map(apiId => 
+        searchByAPIAndKeyWord(apiId, query)
+    );
+    
+    // 等待所有搜索请求完成
+    const resultsArray = await Promise.all(searchPromises);
+    
+    let allResults = [];
+    resultsArray.forEach(results => {
+        if (Array.isArray(results) && results.length > 0) {
+            allResults = allResults.concat(results);
+        }
+    });
+    
+    return allResults;
+}
