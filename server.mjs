@@ -15,6 +15,7 @@ const __dirname = path.dirname(__filename);
 const config = {
   port: process.env.PORT || 8080,
   password: process.env.PASSWORD || '',
+  adminPassword: process.env.ADMINPASSWORD || '',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   timeout: parseInt(process.env.REQUEST_TIMEOUT || '5000'),
   maxRetries: parseInt(process.env.MAX_RETRIES || '2'),
@@ -52,7 +53,7 @@ function sha256Hash(input) {
   });
 }
 
-async function renderPage(filePath, password) {
+async function renderPage(filePath, password, adminPassword = '') {
   let content = fs.readFileSync(filePath, 'utf8');
   if (password !== '') {
     const sha256 = await sha256Hash(password);
@@ -60,6 +61,15 @@ async function renderPage(filePath, password) {
   } else {
     content = content.replace('{{PASSWORD}}', '');
   }
+  
+  // 注入管理员密码
+  if (adminPassword !== '') {
+    const adminSha256 = await sha256Hash(adminPassword);
+    content = content.replace('{{ADMINPASSWORD}}', adminSha256);
+  } else {
+    content = content.replace('{{ADMINPASSWORD}}', '');
+  }
+  
   return content;
 }
 
@@ -75,7 +85,7 @@ app.get(['/', '/index.html', '/player.html'], async (req, res) => {
         break;
     }
     
-    const content = await renderPage(filePath, config.password);
+    const content = await renderPage(filePath, config.password, config.adminPassword);
     res.send(content);
   } catch (error) {
     console.error('页面渲染错误:', error);
@@ -86,7 +96,7 @@ app.get(['/', '/index.html', '/player.html'], async (req, res) => {
 app.get('/s=:keyword', async (req, res) => {
   try {
     const filePath = path.join(__dirname, 'index.html');
-    const content = await renderPage(filePath, config.password);
+    const content = await renderPage(filePath, config.password, config.adminPassword);
     res.send(content);
   } catch (error) {
     console.error('搜索页面渲染错误:', error);

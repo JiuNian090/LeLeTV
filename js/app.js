@@ -62,6 +62,101 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(checkAdultAPIsSelected, 100);
 });
 
+// 验证管理员密码
+function verifyAdminPassword() {
+    return new Promise((resolve) => {
+        // 检查是否设置了管理员密码
+        const adminPasswordHash = window.__ENV__ && window.__ENV__.ADMINPASSWORD;
+        if (!adminPasswordHash) {
+            showToast('未设置管理员密码，无法修改成人内容过滤设置', 'error');
+            resolve(false);
+            return;
+        }
+
+        // 创建密码输入弹窗
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/95 items-center justify-center z-[70]';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold gradient-text">管理员验证</h2>
+                </div>
+                <div class="mb-6">
+                    <p class="text-gray-300 mb-4">请输入管理员密码以修改成人内容过滤设置</p>
+                    <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="管理员密码...">
+                    <div class="mt-4 flex space-x-4">
+                        <button id="adminPasswordSubmitBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">确认</button>
+                        <button id="adminPasswordCancelBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">取消</button>
+                    </div>
+                </div>
+                <p id="adminPasswordError" class="text-red-500 mt-2 hidden">管理员密码错误，请重试</p>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const passwordInput = modal.querySelector('#adminPasswordInput');
+        const submitBtn = modal.querySelector('#adminPasswordSubmitBtn');
+        const cancelBtn = modal.querySelector('#adminPasswordCancelBtn');
+        const errorMsg = modal.querySelector('#adminPasswordError');
+
+        // 聚焦到密码输入框
+        passwordInput.focus();
+
+        const cleanup = () => {
+            document.body.removeChild(modal);
+        };
+
+        const verifyPassword = async () => {
+            const inputPassword = passwordInput.value.trim();
+            if (!inputPassword) {
+                errorMsg.textContent = '请输入管理员密码';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // 使用与服务器端相同的哈希方法
+                const inputHash = await window._jsSha256(inputPassword);
+                if (inputHash === adminPasswordHash) {
+                    cleanup();
+                    resolve(true);
+                } else {
+                    errorMsg.textContent = '管理员密码错误，请重试';
+                    errorMsg.classList.remove('hidden');
+                    passwordInput.select();
+                }
+            } catch (error) {
+                console.error('密码验证失败:', error);
+                errorMsg.textContent = '验证过程出错，请重试';
+                errorMsg.classList.remove('hidden');
+            }
+        };
+
+        submitBtn.addEventListener('click', verifyPassword);
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+
+        // 支持回车键提交
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+
+        // 支持ESC键取消
+        modal.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(false);
+            }
+        });
+    });
+}
+
 // 重置数据源选择逻辑
 function resetDataSourceLogic() {
     // 清除所有相关的本地存储项
@@ -644,7 +739,19 @@ function setupEventListeners() {
     // 黄色内容过滤开关事件绑定
     const yellowFilterToggle = document.getElementById('yellowFilterToggle');
     if (yellowFilterToggle) {
-        yellowFilterToggle.addEventListener('change', function (e) {
+        yellowFilterToggle.addEventListener('change', async function (e) {
+            // 如果是尝试关闭过滤器（即显示成人内容），需要验证管理员密码
+            if (!e.target.checked) {
+                const isAdminVerified = await verifyAdminPassword();
+                if (!isAdminVerified) {
+                    // 如果验证失败，恢复开关状态并显示提示
+                    e.target.checked = true;
+                    showToast('需要管理员密码才能关闭成人内容过滤', 'warning');
+                    return;
+                }
+            }
+
+            // 验证通过或开启过滤器，执行原有逻辑
             localStorage.setItem('yellowFilterEnabled', e.target.checked);
 
             // 控制黄色内容接口的显示状态

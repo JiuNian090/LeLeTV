@@ -36,6 +36,18 @@ export default async function middleware(request) {
     'window.__ENV__.PASSWORD = "{{PASSWORD}}";',
     `window.__ENV__.PASSWORD = "${passwordHash}"; // SHA-256 hash`
   );
+  
+  // 替换管理员密码占位符
+  const adminPassword = process.env.ADMINPASSWORD || '';
+  let adminPasswordHash = '';
+  if (adminPassword) {
+    adminPasswordHash = await sha256(adminPassword);
+  }
+  
+  modifiedHtml = modifiedHtml.replace(
+    'window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";',
+    `window.__ENV__.ADMINPASSWORD = "${adminPasswordHash}"; // SHA-256 hash`
+  );
 
   // 修复Response构造
   return new Response(modifiedHtml, {
