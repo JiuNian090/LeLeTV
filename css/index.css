@@ -1,5 +1,25 @@
 /* 主页特定样式 */
 
+/* 主页布局优化：标题中间偏上，搜索框中心偏下 */
+.home-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.home-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 确保搜索区域有合适的最大宽度和居中 */
+#searchArea {
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+}
+
 /* header自适应移动端样式 */
 header {
     transition: all 0.3s ease;
@@ -8,42 +28,79 @@ header {
 /* 媒体查询：移动端适配 */
 @media (max-width: 640px) {
     header {
-        margin-bottom: 1rem;
+        margin-bottom: 2rem;
     }
     
     header svg {
-        width: 2rem !important;
-        height: 2rem !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
     }
     
     header h1 {
-        font-size: 2.5rem !important;
+        font-size: 3rem !important;
     }
     
     header p {
         font-size: 0.875rem;
-        margin-bottom: 4rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* 移动端搜索框调整 */
+    #searchArea .max-w-2xl {
+        max-width: 100% !important;
+        padding: 0 1rem;
+    }
+    
+    .search-box {
+        height: 2.75rem; /* 移动端稍微调整高度 */
+    }
+    
+    /* 移动端上下占位区域调整 */
+    .flex-grow[style*="flex-grow: 1"] {
+        flex-grow: 0.5 !important;
+    }
+    
+    .flex-grow[style*="flex-grow: 1.5"] {
+        flex-grow: 1 !important;
     }
 }
 
 @media (max-width: 480px) {
     header {
-        margin-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
     }
     
     header svg {
-        width: 1.5rem !important;
-        height: 1.5rem !important;
+        width: 1.75rem !important;
+        height: 1.75rem !important;
         margin-right: 0.5rem !important;
     }
     
     header h1 {
-        font-size: 2rem !important;
+        font-size: 2.25rem !important;
     }
     
     header p {
         font-size: 0.75rem;
-        margin-bottom: 3rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* 超小屏幕搜索框调整 */
+    #searchArea .max-w-2xl {
+        padding: 0 0.75rem;
+    }
+    
+    .search-box {
+        height: 2.5rem; /* 超小屏幕进一步减少高度 */
+    }
+    
+    /* 超小屏幕上下占位区域调整 */
+    .flex-grow[style*="flex-grow: 1"] {
+        flex-grow: 0.3 !important;
+    }
+    
+    .flex-grow[style*="flex-grow: 1.5"] {
+        flex-grow: 0.8 !important;
     }
 }
 
@@ -67,15 +124,29 @@ header {
 
 /* 搜索区域样式 */
 .search-box {
-    height: 3.5rem;
+    height: 3rem; /* 更扁的搜索框 */
     border-radius: 2rem;
     overflow: hidden;
     display: flex;
     align-items: stretch;
+    max-width: 48rem; /* 更长的搜索框 */
+    transition: all 0.3s ease;
+}
+
+/* 搜索框悬停效果 */
+.search-box:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+/* 搜索框聚焦效果 */
+.search-box:focus-within {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .search-button {
-    width: 5rem;
+    width: 3rem; /* 调整按钮宽度以适配更扁的搜索框 */
     display: flex;
     align-items: center;
     justify-content: center;
