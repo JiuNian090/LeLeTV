@@ -243,40 +243,27 @@
         // PASSWORD 变量将在这里被服务器端注入
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
 
-        // 修复 home 跳转
-        document.addEventListener('DOMContentLoaded', function() {
-            // 使用事件委托处理首页按钮点击
-            document.body.addEventListener('click', function(event) {
-                const homeButton = event.target.closest('#homeButton');
-                if (homeButton) {
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    // 如果是在iframe中打开的，尝试关闭iframe
-                    if (window.self !== window.top) {
-                        try {
-                            // 尝试调用父窗口的关闭播放器函数
-                            window.parent.closeVideoPlayer && window.parent.closeVideoPlayer(true);
-                            return;
-                        } catch (e) {
-                            console.error('调用父窗口closeVideoPlayer失败:', e);
-                        }
-                    }
-
-                    // 多重兜底跳转
+        // 确保首页按钮功能正常
+        function ensureGoHome() {
+            if (typeof goHome !== 'function') {
+                window.goHome = function(event) {
+                    if (event) event.preventDefault();
                     try {
-                            window.location.href = '/';
+                        window.location.href = '/';
                     } catch (e) {
-                        try {
-                            window.location.replace('/');
-                        } catch (e2) {
-                            window.location.assign('/');
+                        window.location.assign('/');
                     }
-                    }
-                    return false;
-                }
-            });
-        });
+                };
+            }
+        }
+        
+        // 页面加载后立即执行
+        ensureGoHome();
+        
+        // DOM加载完成后再次确保
+        document.addEventListener('DOMContentLoaded', ensureGoHome);
+
+
     </script>
 </body>
 </html>
