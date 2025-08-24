@@ -187,8 +187,8 @@
         <div class="flex-1 flex flex-col">
             <!-- 主要内容区域 - 使用flexbox调整标题和搜索框位置 -->
             <div class="flex-1 flex flex-col">
-                <!-- 上方占位区域 -->
-                <div class="flex-grow" style="flex-grow: 1;"></div>
+                <!-- 上方占位区域 - 增加比例使搜索框更靠下 -->
+                <div class="flex-grow" style="flex-grow: 1.5;"></div>
                 
                 <!-- 网站标志和口号 - 位于页面中间偏上 -->
                 <header class="text-center mb-8">
@@ -204,11 +204,11 @@
                 </header>
 
                 <div id="searchArea" class="flex flex-col items-center justify-center">
-                    <div class="w-full max-w-2xl mx-auto">
+                    <div class="w-full max-w-4xl mx-auto">
                         <!-- 改进的搜索框容器 - 集成式设计 -->
                         <div class="relative mb-3">
                             <!-- 搜索框外层容器 -->
-                            <div class="h-12 bg-[#111] border border-[#333] rounded-full overflow-hidden flex items-center transition-all duration-300">
+                            <div class="h-12 bg-[#0a0a0a] border border-[#262626] rounded-full overflow-hidden flex items-center transition-all duration-300 hover:border-[#404040] focus-within:border-[#555555] focus-within:shadow-lg focus-within:shadow-blue-500/10">
                                 <!-- 左侧首页按钮 - 集成在搜索框内 -->
                                 <button onclick="resetToHome()" 
                                         class="h-full w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white transition-colors" 
@@ -253,8 +253,8 @@
                     </div>
                 </div>
                 
-                <!-- 下方占位区域 - 比上方更大，使搜索框位于中心偏下 -->
-                <div class="flex-grow" style="flex-grow: 1.5;"></div>
+                <!-- 下方占位区域 - 进一步增加使搜索框更靠下 -->
+                <div class="flex-grow" style="flex-grow: 2;"></div>
             </div>
             
             <!-- 豆瓣热门推荐区域: 默认隐藏，现在位于搜索区域下方，调整宽度 -->

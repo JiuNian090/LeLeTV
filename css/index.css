@@ -46,22 +46,23 @@ header {
     }
     
     /* 移动端搜索框调整 */
-    #searchArea .max-w-2xl {
+    #searchArea .max-w-4xl {
         max-width: 100% !important;
         padding: 0 1rem;
     }
     
     .search-box {
         height: 2.75rem; /* 移动端稍微调整高度 */
+        max-width: 100% !important;
     }
     
     /* 移动端上下占位区域调整 */
-    .flex-grow[style*="flex-grow: 1"] {
-        flex-grow: 0.5 !important;
+    .flex-grow[style*="flex-grow: 1.5"] {
+        flex-grow: 0.8 !important;
     }
     
-    .flex-grow[style*="flex-grow: 1.5"] {
-        flex-grow: 1 !important;
+    .flex-grow[style*="flex-grow: 2"] {
+        flex-grow: 1.2 !important;
     }
 }
 
@@ -86,7 +87,7 @@ header {
     }
     
     /* 超小屏幕搜索框调整 */
-    #searchArea .max-w-2xl {
+    #searchArea .max-w-4xl {
         padding: 0 0.75rem;
     }
     
@@ -95,12 +96,12 @@ header {
     }
     
     /* 超小屏幕上下占位区域调整 */
-    .flex-grow[style*="flex-grow: 1"] {
-        flex-grow: 0.3 !important;
+    .flex-grow[style*="flex-grow: 1.5"] {
+        flex-grow: 0.5 !important;
     }
     
-    .flex-grow[style*="flex-grow: 1.5"] {
-        flex-grow: 0.8 !important;
+    .flex-grow[style*="flex-grow: 2"] {
+        flex-grow: 1 !important;
     }
 }
 
@@ -129,20 +130,35 @@ header {
     overflow: hidden;
     display: flex;
     align-items: stretch;
-    max-width: 48rem; /* 更长的搜索框 */
+    max-width: 268.8rem; /* 比原来长一倍的搜索框 */
     transition: all 0.3s ease;
+    background: #0a0a0a; /* 深黑色背景 */
+    border: 1px solid #262626; /* 深灰色边框 */
 }
 
-/* 搜索框悬停效果 */
+/* 搜索框悬停效果 - 微软风格 */
 .search-box:hover {
-    border-color: rgba(59, 130, 246, 0.3);
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+    border-color: #404040;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.02);
 }
 
-/* 搜索框聚焦效果 */
+/* 搜索框聚焦效果 - 优雅的蓝色高亮 */
 .search-box:focus-within {
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    border-color: #555555;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 微软风格的输入框背景渐变 */
+.search-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.005));
+    pointer-events: none;
+    border-radius: inherit;
 }
 
 .search-button {
@@ -150,32 +166,35 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
-    color: black;
+    background: transparent;
+    color: #888888;
     font-weight: 500;
-    -webkit-transition: background-color 0.2s;
-    -moz-transition: background-color 0.2s;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .search-button:hover {
-    background: #f0f0f0;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .search-input {
     flex: 1;
-    background: #111;
-    border-top: 1px solid #333;
-    border-bottom: 1px solid #333;
-    color: white;
+    background: transparent;
+    color: #ffffff;
     padding: 0 1.5rem;
     font-size: 1rem;
     outline: none;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
+    border: none;
 }
 
-.search-input:focus {
-    background: #191919;
+.search-input::placeholder {
+    color: #666666;
+    transition: color 0.2s ease;
+}
+
+.search-input:focus::placeholder {
+    color: #888888;
 }
 
 /* 最近搜索记录样式 */

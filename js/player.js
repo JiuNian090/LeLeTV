@@ -1,57 +1,13 @@
 const selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');
 const customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
 
-// 改进返回功能
-function goBack(event) {
+// 改进首页跳转功能
+function goHome(event) {
     // 防止默认链接行为
     if (event) event.preventDefault();
     
-    // 1. 优先检查URL参数中的returnUrl
-    const urlParams = new URLSearchParams(window.location.search);
-    const returnUrl = urlParams.get('returnUrl');
-    
-    if (returnUrl) {
-        // 如果URL中有returnUrl参数，优先使用
-        window.location.href = decodeURIComponent(returnUrl);
-        return;
-    }
-    
-    // 2. 检查localStorage中保存的lastPageUrl
-    const lastPageUrl = localStorage.getItem('lastPageUrl');
-    if (lastPageUrl && lastPageUrl !== window.location.href) {
-        window.location.href = lastPageUrl;
-        return;
-    }
-    
-    // 3. 检查是否是从搜索页面进入的播放器
-    const referrer = document.referrer;
-    
-    // 检查 referrer 是否包含搜索参数
-    if (referrer && (referrer.includes('/s=') || referrer.includes('?s='))) {
-        // 如果是从搜索页面来的，返回到搜索页面
-        window.location.href = referrer;
-        return;
-    }
-    
-    // 4. 如果是在iframe中打开的，尝试关闭iframe
-    if (window.self !== window.top) {
-        try {
-            // 尝试调用父窗口的关闭播放器函数
-            window.parent.closeVideoPlayer && window.parent.closeVideoPlayer();
-            return;
-        } catch (e) {
-            console.error('调用父窗口closeVideoPlayer失败:', e);
-        }
-    }
-    
-    // 5. 无法确定上一页，则返回首页
-    if (!referrer || referrer === '') {
-        window.location.href = '/';
-        return;
-    }
-    
-    // 6. 以上都不满足，使用默认行为：返回上一页
-    window.history.back();
+    // 直接跳转到首页
+    window.location.href = '/';
 }
 
 // 页面加载时保存当前URL到localStorage，作为返回目标
