@@ -434,10 +434,14 @@ function loadViewingHistory() {
 
         // 为防止XSS，使用encodeURIComponent编码URL
         const safeURL = encodeURIComponent(item.url);
+        
+        // 获取缩略图
+        const hasThumbnail = item.cover && item.cover.startsWith('http');
+        const thumbnailUrl = hasThumbnail ? item.cover : '';
 
         // 构建历史记录项HTML，添加删除按钮，需要放在position:relative的容器中
         return `
-            <div class="history-item cursor-pointer relative group" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
+            <div class="history-item cursor-pointer relative group flex" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
                 <button onclick="event.stopPropagation(); deleteHistoryItem('${safeURL}')"
                         class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-red-400 p-1 rounded-full hover:bg-gray-800 z-10"
                         title="删除记录">
@@ -445,7 +449,13 @@ function loadViewingHistory() {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
-                <div class="history-info">
+                ${hasThumbnail ? `
+                <div class="history-thumbnail flex-shrink-0 image-container">
+                    <img data-lazy-src="${thumbnailUrl}" alt="${safeTitle}"
+                         class="w-full h-full object-cover"
+                         onerror="this.style.display='none'; this.parentElement.classList.add('hidden');">
+                </div>` : ''}
+                <div class="history-info flex-grow ${hasThumbnail ? 'ml-3' : ''}">
                     <div class="history-title">${safeTitle}</div>
                     <div class="history-meta">
                         <span class="history-episode">${episodeText}</span>
@@ -464,6 +474,13 @@ function loadViewingHistory() {
     // 检查是否存在较多历史记录，添加底部边距确保底部按钮不会挡住内容
     if (history.length > 5) {
         historyList.classList.add('pb-4');
+    }
+    
+    // 刷新懒加载观察器
+    if (window.lazyLoader) {
+        setTimeout(() => {
+            window.lazyLoader.refresh();
+        }, 100);
     }
 }
 

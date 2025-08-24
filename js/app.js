@@ -868,11 +868,10 @@ async function search() {
                      onclick="showDetails('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
                     <div class="flex h-full">
                         ${hasCover ? `
-                        <div class="relative flex-shrink-0 search-card-img-container">
-                            <img src="${item.vod_pic}" alt="${safeName}" 
+                        <div class="relative flex-shrink-0 search-card-img-container image-container">
+                            <img data-lazy-src="${item.vod_pic}" alt="${safeName}" 
                                  class="h-full w-full object-cover transition-transform hover:scale-110" 
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');" 
-                                 loading="lazy">
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');">
                             <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
                         </div>` : ''}
                         
@@ -915,6 +914,11 @@ async function search() {
         }).join('');
 
         resultsDiv.innerHTML = safeResults;
+        
+        // 刷新懒加载观察器
+        if (window.lazyLoader) {
+            window.lazyLoader.refresh();
+        }
     } catch (error) {
         console.error('搜索错误:', error);
         if (error.name === 'AbortError') {
@@ -1063,6 +1067,16 @@ async function showDetails(id, vod_name, sourceCode) {
 
             currentEpisodes = data.episodes;
             currentEpisodeIndex = 0;
+            
+            // 保存视频详细信息到localStorage
+            try {
+                localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
+                if (data.videoInfo) {
+                    localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
+                }
+            } catch (e) {
+                console.error('保存视频详细信息失败:', e);
+            }
 
             modalContent.innerHTML = `
                 ${detailInfoHtml}

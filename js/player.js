@@ -1058,6 +1058,19 @@ function saveToHistory() {
         show_identifier_for_video_info = (currentEpisodes && currentEpisodes.length > 0) ? currentEpisodes[0] : currentVideoUrl;
     }
 
+    // 尝试获取当前视频的封面信息
+    let currentVideoCover = '';
+    try {
+        // 从localStorage中获取可能存在的视频详细信息
+        const storedVideoInfo = localStorage.getItem('currentVideoInfo');
+        if (storedVideoInfo) {
+            const parsedInfo = JSON.parse(storedVideoInfo);
+            currentVideoCover = parsedInfo.cover || '';
+        }
+    } catch (e) {
+        // 忽略解析错误
+    }
+
     // 构建要保存的视频信息对象
     const videoInfo = {
         title: currentVideoTitle,
@@ -1071,7 +1084,8 @@ function saveToHistory() {
         timestamp: Date.now(),
         playbackPosition: currentPosition,
         duration: videoDuration,
-        episodes: currentEpisodes && currentEpisodes.length > 0 ? [...currentEpisodes] : []
+        episodes: currentEpisodes && currentEpisodes.length > 0 ? [...currentEpisodes] : [],
+        cover: currentVideoCover // 添加封面信息
     };
     
     try {
@@ -1100,6 +1114,11 @@ function saveToHistory() {
             // 更新播放进度信息
             existingItem.playbackPosition = videoInfo.playbackPosition > 10 ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
+            
+            // 更新封面信息（如果有的话）
+            if (videoInfo.cover) {
+                existingItem.cover = videoInfo.cover;
+            }
             
             // 更新集数列表（如果新的集数列表与存储的不同，例如集数增加了）
             if (videoInfo.episodes && videoInfo.episodes.length > 0) {
@@ -1634,8 +1653,8 @@ async function showSwitchResourceModal() {
         html += `
             <div class="relative group ${isCurrentSource ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}" 
                  ${!isCurrentSource ? `onclick="switchToResource('${sourceKey}', '${result.vod_id}')"` : ''}>
-                <div class="aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 relative">
-                    <img src="${result.vod_pic}" 
+                <div class="aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 relative image-container">
+                    <img data-lazy-src="${result.vod_pic}" 
                          alt="${result.vod_name}"
                          class="w-full h-full object-cover"
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjY2IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgcnk9IjIiPjwvcmVjdD48cGF0aCBkPSJNMjEgMTV2NGEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMnYtNCI+PC9wYXRoPjxwb2x5bGluZSBwb2ludHM9IjE3IDggMTIgMyA3IDgiPjwvcG9seWxpbmU+PHBhdGggZD0iTTEyIDN2MTIiPjwvcGF0aD48L3N2Zz4='">
@@ -1665,6 +1684,13 @@ async function showSwitchResourceModal() {
     
     html += '</div>';
     modalContent.innerHTML = html;
+    
+    // 刷新懒加载观察器
+    if (window.lazyLoader) {
+        setTimeout(() => {
+            window.lazyLoader.refresh();
+        }, 100);
+    }
 }
 
 // 切换资源的函数
@@ -1733,6 +1759,11 @@ async function switchToResource(sourceKey, vodId) {
             localStorage.setItem('currentEpisodeIndex', targetIndex);
             localStorage.setItem('currentSourceCode', sourceKey);
             localStorage.setItem('lastPlayTime', Date.now());
+            
+            // 保存视频详细信息，包括封面
+            if (data.videoInfo) {
+                localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
+            }
         } catch (e) {
             console.error('保存播放状态失败:', e);
         }
