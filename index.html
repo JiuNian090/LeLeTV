@@ -73,7 +73,12 @@
         <div class="space-y-5">
             <!-- 数据源设置区域 -->
             <div class="p-3 bg-[#151515] rounded-lg shadow-inner">
-                <label class="block text-sm font-medium text-gray-400 mb-3 border-b border-[#333] pb-1">数据源设置</label>
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-sm font-medium text-gray-400 border-b border-[#333] pb-1">数据源设置</label>
+                    <button id="loadBalancerTrigger" onclick="toggleLoadBalancer()" class="bg-[#333] hover:bg-[#444] border border-[#333] hover:border-white rounded-lg px-2 py-1 transition-colors" aria-label="查看负载均衡状态" title="查看负载均衡状态">
+                        <span class="text-base">📶</span>
+                    </button>
+                </div>
                 
                 <!-- 批量操作按钮 -->
                 <div class="flex space-x-1 mb-3 whitespace-nowrap">

@@ -18,18 +18,6 @@ class LoadBalancerUI {
      * 创建状态面板
      */
     createStatusPanel() {
-        // 创建触发按钮
-        const triggerButton = document.createElement('button');
-        triggerButton.id = 'loadBalancerTrigger';
-        triggerButton.className = 'fixed top-4 right-20 z-[60] bg-[#222] hover:bg-[#333] border border-[#333] hover:border-white rounded-lg px-3 py-1.5 transition-colors';
-        triggerButton.innerHTML = `
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2M3 17V9a2 2 0 012-2h14a2 2 0 012 2v8M7 17v-2M12 17v-4M17 17v-6"/>
-            </svg>
-        `;
-        triggerButton.setAttribute('aria-label', '查看负载均衡状态');
-        triggerButton.title = '查看负载均衡状态';
-        
         // 创建状态面板
         const statusPanel = document.createElement('div');
         statusPanel.id = 'loadBalancerPanel';
@@ -88,7 +76,6 @@ class LoadBalancerUI {
         `;
 
         // 添加到页面
-        document.body.appendChild(triggerButton);
         document.body.appendChild(statusPanel);
     }
 
@@ -96,11 +83,6 @@ class LoadBalancerUI {
      * 设置事件监听器
      */
     setupEventListeners() {
-        // 触发按钮点击事件
-        document.getElementById('loadBalancerTrigger').addEventListener('click', () => {
-            this.togglePanel();
-        });
-
         // 关闭面板按钮
         document.getElementById('closeLoadBalancerPanel').addEventListener('click', () => {
             this.hidePanel();
@@ -365,7 +347,7 @@ class LoadBalancerUI {
             this.updateInterval = null;
         }
 
-        const elements = ['loadBalancerTrigger', 'loadBalancerPanel'];
+        const elements = ['loadBalancerPanel'];
         elements.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -386,3 +368,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
+
+// 全局函数，供HTML中的按钮调用
+window.toggleLoadBalancer = function() {
+    if (window.loadBalancerUI) {
+        window.loadBalancerUI.togglePanel();
+    }
+};
