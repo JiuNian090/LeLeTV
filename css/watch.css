@@ -1,7 +1,7 @@
 /* 添加重定向页面的基本样式 */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #000000;
+    background: #000000;
     color: white;
     margin: 0;
     padding: 0;
@@ -9,6 +9,29 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+/* 添加背景动画效果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 50%, rgba(0, 204, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 60, 120, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(0, 204, 255, 0.05) 0%, transparent 50%);
+    animation: backgroundShift 20s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes backgroundShift {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(1deg); }
+    50% { transform: translateY(5px) rotate(-1deg); }
+    75% { transform: translateY(-5px) rotate(0.5deg); }
 }
 
 .redirect-container {
@@ -16,14 +39,48 @@ body {
     max-width: 90%;
     width: 380px;
     padding: 2rem;
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    -webkit-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(145deg, rgba(0, 0, 0, 0.4), rgba(17, 17, 17, 0.3));
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    -webkit-box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 
+                        0 4px 16px rgba(0, 204, 255, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    -moz-box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 
+                     0 4px 16px rgba(0, 204, 255, 0.1),
+                     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 
+                0 4px 16px rgba(0, 204, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    animation: containerBreathe 4s ease-in-out infinite;
+    position: relative;
+}
+
+.redirect-container::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+                rgba(0, 204, 255, 0.3), 
+                rgba(255, 60, 120, 0.3), 
+                rgba(0, 204, 255, 0.3));
+    border-radius: 22px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.redirect-container:hover::before {
+    opacity: 1;
+}
+
+@keyframes containerBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
 .logo-container {
