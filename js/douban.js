@@ -569,12 +569,12 @@ function renderDoubanCards(data, container) {
     container.innerHTML = "";
     container.appendChild(fragment);
     
-    // 懒加载功能已移除
-    // if (window.lazyLoader) {
-    //     setTimeout(() => {
-    //         window.lazyLoader.refresh();
-    //     }, 100);
-    // }
+    // 刷新懒加载观察器
+    if (window.lazyLoader) {
+        setTimeout(() => {
+            window.lazyLoader.refresh();
+        }, 100);
+    }
 }
 
 // 重置到首页
@@ -864,4 +864,3 @@ function fillAndSearch(keyword, event) {
     // 执行搜索
     search();
 }
-// ... existing code ...
