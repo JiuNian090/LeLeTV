@@ -451,7 +451,7 @@ function loadViewingHistory() {
                 </button>
                 ${hasThumbnail ? `
                 <div class="history-thumbnail flex-shrink-0 image-container">
-                    <img data-lazy-src="${thumbnailUrl}" alt="${safeTitle}"
+                    <img src="${thumbnailUrl}" alt="${safeTitle}"
                          class="w-full h-full object-cover"
                          onerror="this.style.display='none'; this.parentElement.classList.add('hidden');">
                 </div>` : ''}

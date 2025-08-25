@@ -1004,7 +1004,7 @@ async function search() {
                     <div class="flex h-full">
                         ${hasCover ? `
                         <div class="relative flex-shrink-0 search-card-img-container image-container">
-                            <img data-lazy-src="${item.vod_pic}" alt="${safeName}" 
+                            <img src="${item.vod_pic}" alt="${safeName}" 
                                  class="h-full w-full object-cover transition-transform hover:scale-110" 
                                  onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');">
                             <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
@@ -1430,7 +1430,7 @@ async function importConfigFromUrl() {
                 <button id="confirmUrlImport" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">导入</button>
                 <button id="cancelUrlImport" class="bg-[#444] hover:bg-[#555] text-white px-4 py-2 rounded">取消</button>
             </div>
-        </div>`;
+        </div`;
 
     document.body.appendChild(modal);
 
