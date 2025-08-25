@@ -1,32 +1,5 @@
 /* LeLeTV 全局样式 */
 
-/* 页面过渡动画 */
-* {
-    box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    transition: all 0.3s ease;
-}
-
-/* 页面加载动画 */
-.page-enter {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: pageEnter 0.6s ease-out forwards;
-}
-
-@keyframes pageEnter {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 .close-btn {
     position: absolute;
     top: 12px;
@@ -206,25 +179,18 @@ button, .card-hover {
 }
 
 ::-webkit-scrollbar-track {
-    background: linear-gradient(90deg, #111, #0f0f0f);
-    border-radius: 6px;
+    background: #111;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #333, #444);
-    border-radius: 6px;
+    background: #333;
+    border-radius: 4px;
     transition: all 0.3s ease;
-    border: 1px solid rgba(0, 204, 255, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #444, #555);
-    border-color: rgba(0, 204, 255, 0.3);
-    box-shadow: 0 0 8px rgba(0, 204, 255, 0.2);
-}
-
-::-webkit-scrollbar-corner {
-    background: #111;
+    background: #444;
 }
 
 * {

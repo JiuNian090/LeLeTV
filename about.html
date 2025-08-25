@@ -13,28 +13,30 @@
     <link rel="icon" href="image/logo.png">
     <link rel="apple-touch-icon" href="image/logo-black.png">
 </head>
-<body class="page-bg text-white flex flex-col min-h-screen page-enter">
-	<!-- 统一的浮动返回按钮 - 与首页风格一致 -->
-	<div class="fixed top-4 left-4 z-10">
-		<a href="/" class="bg-[#222] hover:bg-[#333] border border-[#333] hover:border-white rounded-lg px-3 py-2 transition-colors flex items-center" aria-label="返回首页">
-			<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-			</svg>
-			<span class="text-sm">首页</span>
-		</a>
-	</div>	<main class="flex-grow container mx-auto px-4 sm:px-6 py-8 sm:py-16">
-		<!-- 页面标题 - 与首页风格一致 -->
-		<div class="text-center mb-12 sm:mb-16">
-			<div class="flex justify-center items-center mb-6">
-				<svg class="w-12 h-12 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-				</svg>
-				<h1 class="text-4xl sm:text-5xl font-bold gradient-text">LeLeTV</h1>
-			</div>
-			<h2 class="text-2xl sm:text-3xl font-semibold text-gray-300 mb-4">关于我们</h2>
-			<p class="text-gray-400 text-lg max-w-2xl mx-auto">了解 LeLeTV 的更多信息</p>
-		</div>
-		
+<body class="page-bg text-white flex flex-col min-h-screen">
+	<header class="border-b border-[#333] bg-[#000000] p-4">
+        <div class="container mx-auto flex items-center">
+            <div class="flex items-center">
+                <a href="/" class="flex items-center">
+                    <svg class="w-8 h-8 mr-2 text-[#00ccff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <h1 class="text-xl font-bold gradient-text">LeLeTV</h1>
+                </a>
+            </div>
+            <div class="flex-1 text-center">
+                <h2 class="text-xl font-semibold">关于LeLeTV</h2>
+            </div>
+            <div class="flex items-center">
+                <a href="/" class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center">
+                    <svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    回到首页
+                </a>
+            </div>
+        </div>
+    </header>	<main class="flex-grow container mx-auto px-4 sm:px-6 py-8 sm:py-16">
 		<div class="max-w-5xl mx-auto">
 			<!-- 主要内容区域 -->
 			<div class="bg-[#000000] border border-[#333] rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-12 shadow-2xl">
