@@ -326,16 +326,7 @@ function renderDoubanTags(tags) {
     // 清空标签容器
     tagContainer.innerHTML = '';
 
-    // 先添加标签管理按钮
-    const manageBtn = document.createElement('button');
-    manageBtn.className = 'py-1.5 px-3.5 rounded text-sm font-medium transition-all duration-300 bg-[#1a1a1a] text-gray-300 hover:bg-pink-700 hover:text-white border border-[#333] hover:border-white';
-    manageBtn.innerHTML = '<span class="flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>管理标签</span>';
-    manageBtn.onclick = function() {
-        showTagManageModal();
-    };
-    tagContainer.appendChild(manageBtn);
-
-    // 添加所有标签
+    // 先添加所有标签
     currentTags.forEach(tag => {
         const btn = document.createElement('button');
         
@@ -363,6 +354,15 @@ function renderDoubanTags(tags) {
         
         tagContainer.appendChild(btn);
     });
+
+    // 最后添加标签管理按钮
+    const manageBtn = document.createElement('button');
+    manageBtn.className = 'py-1.5 px-3.5 rounded text-sm font-medium transition-all duration-300 bg-[#1a1a1a] text-gray-300 hover:bg-pink-700 hover:text-white border border-[#333] hover:border-white';
+    manageBtn.innerHTML = '<span class="flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>管理标签</span>';
+    manageBtn.onclick = function() {
+        showTagManageModal();
+    };
+    tagContainer.appendChild(manageBtn);
 }
 
 // 设置换一批按钮事件
