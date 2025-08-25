@@ -21,53 +21,53 @@ class LoadBalancerUI {
         // 创建状态面板
         const statusPanel = document.createElement('div');
         statusPanel.id = 'loadBalancerPanel';
-        statusPanel.className = 'fixed top-16 right-4 z-[60] bg-[#111] border border-[#333] rounded-lg shadow-xl max-w-md w-80 hidden transform transition-all duration-300 max-h-[80vh] overflow-hidden';
+        statusPanel.className = 'fixed top-20 right-80 z-[60] bg-[#111] border border-[#333] rounded-lg shadow-xl max-w-sm w-72 hidden transform transition-all duration-300 max-h-[70vh] overflow-hidden';
         statusPanel.innerHTML = `
-            <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-white">负载均衡状态</h3>
+            <div class="p-3">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-md font-bold text-white">负载均衡状态</h3>
                     <button id="closeLoadBalancerPanel" class="text-gray-400 hover:text-white transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
                 
-                <div class="space-y-4">
+                <div class="space-y-3">
                     <!-- 总体统计 -->
-                    <div class="bg-[#1a1a1a] p-3 rounded-lg">
-                        <h4 class="text-sm font-semibold text-gray-300 mb-2">总体状态</h4>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-[#1a1a1a] p-2 rounded-lg">
+                        <h4 class="text-xs font-semibold text-gray-300 mb-1">总体状态</h4>
+                        <div class="grid grid-cols-2 gap-1 text-xs">
                             <div class="text-center">
-                                <div class="text-green-400 font-bold" id="healthyApiCount">-</div>
+                                <div class="text-green-400 font-bold text-sm" id="healthyApiCount">-</div>
                                 <div class="text-gray-500">健康API</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-yellow-400 font-bold" id="totalApiCount">-</div>
+                                <div class="text-yellow-400 font-bold text-sm" id="totalApiCount">-</div>
                                 <div class="text-gray-500">总API数</div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- API列表 -->
-                    <div class="bg-[#1a1a1a] p-3 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="text-sm font-semibold text-gray-300">API源状态</h4>
+                    <div class="bg-[#1a1a1a] p-2 rounded-lg">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-xs font-semibold text-gray-300">API源状态</h4>
                             <button id="resetStatsBtn" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                                重置统计
+                                重置
                             </button>
                         </div>
-                        <div id="apiStatusList" class="space-y-2 max-h-60 overflow-y-auto">
+                        <div id="apiStatusList" class="space-y-1 max-h-48 overflow-y-auto">
                             <!-- API状态列表将在这里动态生成 -->
                         </div>
                     </div>
                     
                     <!-- 操作按钮 -->
-                    <div class="flex space-x-2">
-                        <button id="healthCheckBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-xs transition-colors">
-                            立即健康检查
+                    <div class="flex space-x-1">
+                        <button id="healthCheckBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-xs transition-colors">
+                            健康检查
                         </button>
-                        <button id="exportStatsBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-xs transition-colors">
+                        <button id="exportStatsBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-1 px-2 rounded text-xs transition-colors">
                             导出统计
                         </button>
                     </div>
