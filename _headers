@@ -1,0 +1,7 @@
+# 设置 PNG 文件的正确 MIME 类型
+/image/*.png
+  Content-Type: image/png
+
+# 确保 manifest.json 有正确的 MIME 类型
+/manifest.json
+  Content-Type: application/manifest+json
