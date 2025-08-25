@@ -535,10 +535,10 @@ function renderDoubanCards(data, container) {
             // 2. 也准备代理URL作为备选
             const proxiedCoverUrl = PROXY_URL + encodeURIComponent(originalCoverUrl);
             
-            // 为不同设备优化卡片布局
+            // 为不同设备优化卡片布局 - 直接加载图片而不是使用懒加载
             card.innerHTML = `
                 <div class="relative w-full aspect-[2/3] overflow-hidden cursor-pointer image-container" onclick="fillAndSearchWithDouban('${safeTitle}')">
-                    <img data-lazy-src="${originalCoverUrl}" alt="${safeTitle}" 
+                    <img src="${originalCoverUrl}" alt="${safeTitle}" 
                         class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                         onerror="this.onerror=null; this.src='${proxiedCoverUrl}'; this.classList.add('object-contain');"
                         referrerpolicy="no-referrer">
@@ -569,12 +569,7 @@ function renderDoubanCards(data, container) {
     container.innerHTML = "";
     container.appendChild(fragment);
     
-    // 刷新懒加载观察器
-    if (window.lazyLoader) {
-        setTimeout(() => {
-            window.lazyLoader.refresh();
-        }, 100);
-    }
+    // 不再需要刷新懒加载观察器，因为图片已直接加载
 }
 
 // 重置到首页
