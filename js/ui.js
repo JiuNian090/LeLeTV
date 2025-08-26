@@ -23,11 +23,18 @@ function toggleSettings(e) {
     panel.classList.toggle('show');
 }
 
-// 改进的Toast显示函数 - 支持队列显示多个Toast
+// 优化的Toast显示函数 - 支持队列显示多个Toast、自定义时长和更流畅的动画
 const toastQueue = [];
 let isShowingToast = false;
+let currentToastTimeout = null;
 
-function showToast(message, type = 'error') {
+function showToast(message, type = 'error', duration = 3000) {
+    // 验证输入
+    if (!message || typeof message !== 'string') {
+        console.warn('Invalid toast message:', message);
+        return;
+    }
+
     // 首先确保toast元素存在
     let toast = document.getElementById('toast');
     let toastMessage = document.getElementById('toastMessage');
@@ -36,8 +43,8 @@ function showToast(message, type = 'error') {
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toast';
-        toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 opacity-0';
-        toast.style = 'z-index: 2147483647'
+        toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 opacity-0 pointer-events-none';
+        toast.style = 'z-index: 2147483647';
         toastMessage = document.createElement('p');
         toastMessage.id = 'toastMessage';
         toast.appendChild(toastMessage);
@@ -45,8 +52,14 @@ function showToast(message, type = 'error') {
         document.body.appendChild(toast);
     }
 
+    // 限制消息长度
+    const maxMessageLength = 120;
+    if (message.length > maxMessageLength) {
+        message = message.substring(0, maxMessageLength) + '...';
+    }
+
     // 将新的toast添加到队列
-    toastQueue.push({ message, type });
+    toastQueue.push({ message, type, duration });
 
     // 如果当前没有显示中的toast，则开始显示
     if (!isShowingToast) {
@@ -60,37 +73,92 @@ function showNextToast() {
         return;
     }
 
+    // 清除任何现有的超时
+    if (currentToastTimeout) {
+        clearTimeout(currentToastTimeout);
+        currentToastTimeout = null;
+    }
+
     isShowingToast = true;
-    const { message, type } = toastQueue.shift();
+    const { message, type, duration } = toastQueue.shift();
 
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
 
-    const bgColors = {
-        'error': 'bg-red-500',
-        'success': 'bg-green-500',
-        'info': 'bg-blue-500',
-        'warning': 'bg-yellow-500'
+    // 根据toast类型设置不同的样式和图标
+    const toastStyles = {
+        'error': {
+            backgroundColor: '#ef4444', // bg-red-500
+            icon: '❌',
+            border: '1px solid #dc2626'
+        },
+        'success': {
+            backgroundColor: '#10b981', // bg-green-500
+            icon: '✅',
+            border: '1px solid #059669'
+        },
+        'info': {
+            backgroundColor: '#3b82f6', // bg-blue-500
+            icon: 'ℹ️',
+            border: '1px solid #2563eb'
+        },
+        'warning': {
+            backgroundColor: '#f59e0b', // bg-yellow-500
+            icon: '⚠️',
+            border: '1px solid #d97706'
+        }
     };
 
-    const bgColor = bgColors[type] || bgColors.error;
-    toast.className = `fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${bgColor} text-white z-50`;
+    const style = toastStyles[type] || toastStyles.error;
+    
+    // 设置样式
+    toast.style.backgroundColor = style.backgroundColor;
+    toast.style.border = style.border;
+    toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    toast.style.minWidth = '200px';
+    toast.style.textAlign = 'center';
+    toast.style.padding = '0.75rem 1.5rem';
+    toast.style.borderRadius = '8px';
+    toast.style.color = 'white';
+    toast.style.fontSize = '0.95rem';
+    toast.style.lineHeight = '1.4';
+    
+    // 响应式调整：在移动设备上调整样式
+    if (window.innerWidth <= 640) {
+        toast.style.left = '10px';
+        toast.style.right = '10px';
+        toast.style.transform = 'translateX(0)';
+        toast.style.width = 'auto';
+        toast.style.maxWidth = 'calc(100% - 20px)';
+        toast.style.fontSize = '0.9rem';
+        toast.style.padding = '0.65rem 1rem';
+    } else {
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+    }
+    
+    // 设置消息内容，添加图标
     toastMessage.textContent = message;
-
-    // 显示提示
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-
-    // 3秒后自动隐藏
+    
+    // 显示提示 - 使用CSS过渡效果
     setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = window.innerWidth <= 640 ? 'translateY(0)' : 'translate(-50%, 0)';
+        toast.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+    }, 50);
+
+    // 自动隐藏
+    currentToastTimeout = setTimeout(() => {
+        // 添加退出动画
         toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(-100%)';
+        toast.style.transform = window.innerWidth <= 640 ? 'translateY(-10px)' : 'translate(-50%, -10px)';
+        toast.style.transition = 'opacity 0.2s ease-in, transform 0.2s ease-in';
 
         // 等待动画完成后显示下一个toast
         setTimeout(() => {
             showNextToast();
-        }, 300);
-    }, 3000);
+        }, 250);
+    }, duration);
 }
 
 // 添加显示/隐藏 loading 的函数
