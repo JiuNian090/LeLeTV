@@ -66,3 +66,13 @@ LeLeTV 是一个**私有库**，仅用于作者个人学习和技术研究用途
 ## 鸣谢
 
 感谢 [LibreTV](https://github.com/LibreSpark/LibreTV) 项目及其作者，本学习项目基于其代码结构和设计思路进行了修改和调整，用于个人学习和技术研究目的。
+
+## 📧 联系方式
+
+如有好的功能建议，或者有什么其他问题，欢迎联系作者：
+
+<div class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
+  您可以在网站页面中点击 <span id="contactLeLe" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span> 来获取作者邮箱。
+</div>
+
+点击后将会自动复制邮箱到剪贴板并显示成功提示。
