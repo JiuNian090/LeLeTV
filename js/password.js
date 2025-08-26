@@ -138,7 +138,7 @@ function showPasswordModal() {
             const title = passwordModal.querySelector('h2');
             const description = passwordModal.querySelector('p');
             if (title) title.textContent = '访问验证';
-            if (description) description.textContent = '请输入密码继续访问，如若密码错误可以给乐乐发消息获取密码';
+            if (description) description.innerHTML = '请输入密码继续访问，如若密码错误可以<span id="contactLeLe7" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码';
             
             const form = passwordModal.querySelector('form');
             if (form) form.style.display = 'block';

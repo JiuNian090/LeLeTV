@@ -1074,9 +1074,12 @@ function setupEmailClickHandlers() {
     const contactElements = [
         document.getElementById('contactLeLe'),
         document.getElementById('contactLeLe2'),
-        document.getElementById('contactLeLe3')
+        document.getElementById('contactLeLe3'),
+        document.getElementById('contactLeLe4'),
+        document.getElementById('contactLeLe5'),
+        document.getElementById('contactLeLe6'),
+        document.getElementById('contactLeLe7')
     ];
-    
     contactElements.forEach(element => {
         if (element) {
             element.addEventListener('click', function() {
