@@ -712,6 +712,9 @@ function setupEventListeners() {
             search();
         }
     });
+    
+    // 初始化邮箱点击事件处理器
+    setupEmailClickHandlers();
 
     // 点击外部关闭设置面板和历史记录面板
     document.addEventListener('click', function (e) {
@@ -1064,6 +1067,45 @@ async function search() {
     } finally {
         hideLoading();
     }
+}
+
+// 设置邮箱点击事件处理器
+function setupEmailClickHandlers() {
+    const contactElements = [
+        document.getElementById('contactLeLe'),
+        document.getElementById('contactLeLe2'),
+        document.getElementById('contactLeLe3')
+    ];
+    
+    contactElements.forEach(element => {
+        if (element) {
+            element.addEventListener('click', function() {
+                const email = 'jiunian929@gmail.com';
+                
+                // 创建临时文本区域以复制文本
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = email;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+                
+                // 显示邮箱文本并添加复制成功的提示
+                const originalText = this.textContent;
+                this.textContent = email;
+                this.classList.add('text-green-400');
+                
+                // 显示复制成功的toast提示
+                showToast('邮箱已复制到剪贴板', 'success');
+                
+                // 3秒后恢复原始文本和样式
+                setTimeout(() => {
+                    this.textContent = originalText === '点击查看' ? '点击查看' : '联系乐乐';
+                    this.classList.remove('text-green-400');
+                }, 3000);
+            });
+        }
+    });
 }
 
 // 切换清空按钮的显示状态
