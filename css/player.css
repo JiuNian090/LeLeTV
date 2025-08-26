@@ -302,7 +302,7 @@ div.player-loading-text {
 }
 
 input:checked + .slider {
-    background-color: #00ccff;
+    background-color: #7928CA;
 }
 
 input:checked + .slider:before {
@@ -383,7 +383,7 @@ input:checked + .slider:before {
     align-items: center;
     background: none;
     border: none;
-    color: #a67c2d;
+    color: #FF69B4;
     font-weight: bold;
     font-size: 1rem;
     cursor: pointer;
@@ -407,7 +407,7 @@ input:checked + .slider:before {
     width: 20px;
     height: 20px;
     margin-right: 0;
-    color: #a67c2d;
+    color: #FF69B4;
     vertical-align: middle;
     -webkit-transition: -webkit-transform 0.3s;
     -moz-transition: -moz-transform 0.3s;
