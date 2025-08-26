@@ -123,12 +123,39 @@ button, .card-hover {
 }
 
 .gradient-text {
-    background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
+    background-size: 300% auto;
     background-clip: text;
     -webkit-background-clip: text;
     -moz-background-clip: text;
     -webkit-text-fill-color: transparent;
     -moz-text-fill-color: transparent;
+    animation: gradientAnimation 8s ease infinite;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 50% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    75% {
+        background-position: 150% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+/* 渐变按钮悬停效果 */
+.gradient-btn:hover,
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 204, 255, 0.4);
 }
 
 /* 改进设置面板样式 */
@@ -199,9 +226,11 @@ button, .card-hover {
 }
 
 /* 统一按钮样式组件 */
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    border: 1px solid var(--primary-color);
+/* 通用渐变按钮类 */
+.gradient-btn {
+    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
+    background-size: 300% auto;
+    border: none;
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
@@ -210,6 +239,23 @@ button, .card-hover {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    animation: gradientAnimation 8s ease infinite;
+}
+
+/* 主按钮样式 - 使用现代多色渐变 */
+.btn-primary {
+    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
+    background-size: 300% auto;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    animation: gradientAnimation 8s ease infinite;
 }
 
 .btn-primary::before {

@@ -145,7 +145,7 @@ header {
 /* 搜索框聚焦效果 - 优雅的蓝色高亮 */
 .search-box:focus-within {
     border-color: #555555;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 0 2px rgba(121, 40, 202, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* 微软风格的输入框背景渐变 */
@@ -202,8 +202,8 @@ header {
     display: inline-block;
     padding: 0.25rem 0.75rem;
     margin: 0.25rem;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: rgba(121, 40, 202, 0.1);
+    border: 1px solid rgba(121, 40, 202, 0.2);
     border-radius: 0.5rem;
     color: #e5e7eb;
     font-size: 0.875rem;
@@ -213,8 +213,8 @@ header {
 }
 
 .recent-search-tag:hover {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(121, 40, 202, 0.2);
+    border-color: rgba(121, 40, 202, 0.4);
 }
 
 /* 豆瓣区域样式 */
@@ -246,7 +246,7 @@ header {
 }
 
 .douban-toggle-button.active {
-    background: #db2777;
+    background: #FF69B4;
     color: white;
 }
 
@@ -261,7 +261,7 @@ header {
 .douban-refresh-button {
     font-size: 0.875rem;
     padding: 0.25rem 0.75rem;
-    background: #db2777;
+    background: #FF69B4;
     color: white;
     border-radius: 0.5rem;
     display: flex;
@@ -270,7 +270,7 @@ header {
 }
 
 .douban-refresh-button:hover {
-    background: #be185d;
+    background: #FF1493;
 }
 
 .douban-tags-container {
@@ -286,22 +286,22 @@ header {
 
 .douban-tag {
     padding: 0.25rem 0.75rem;
-    background: rgba(219, 39, 119, 0.1);
-    border: 1px solid rgba(219, 39, 119, 0.2);
+    background: rgba(255, 105, 180, 0.1);
+    border: 1px solid rgba(255, 105, 180, 0.2);
     border-radius: 0.5rem;
-    color: #f9a8d4;
+    color: #FFB6C1;
     font-size: 0.875rem;
     transition: all 0.2s;
 }
 
 .douban-tag:hover {
-    background: rgba(219, 39, 119, 0.2);
-    border-color: rgba(219, 39, 119, 0.4);
+    background: rgba(255, 105, 180, 0.2);
+    border-color: rgba(255, 105, 180, 0.4);
 }
 
 .douban-tag.active {
-    background: #db2777;
-    border-color: #db2777;
+    background: #FF69B4;
+    border-color: #FF69B4;
     color: white;
 }
 

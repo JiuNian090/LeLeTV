@@ -45,12 +45,14 @@ body {
 .logo-text {
     font-size: 2rem;
     margin: 0;
-    background: linear-gradient(to right, #00ccff, #ff3c78);
+    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
+    background-size: 300% auto;
+    background-clip: text;
     -webkit-background-clip: text;
     -moz-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
     -moz-text-fill-color: transparent;
+    animation: gradientAnimation 8s ease infinite;
 }
 
 .loading-animation {
@@ -65,7 +67,26 @@ body {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 50% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    75% {
+        background-position: 150% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
 }
 
 @-webkit-keyframes spin {
