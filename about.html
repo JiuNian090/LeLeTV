@@ -13,6 +13,7 @@
     
     <script src="libs/tailwindcss.min.js"></script>
     <script src="js/lazy-loading.js"></script>
+    <script src="js/app.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="page-bg text-white flex flex-col min-h-screen">
@@ -279,6 +280,14 @@
 
             return container;
         }
+    </script>
+    <script>
+        // 页面加载完成后初始化邮箱点击处理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof setupEmailClickHandlers === 'function') {
+                setupEmailClickHandlers();
+            }
+        });
     </script>
 </body>
 </html>

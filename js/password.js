@@ -242,4 +242,9 @@ function initPasswordProtection() {
 // 在页面加载完成后初始化密码保护
 document.addEventListener('DOMContentLoaded', function () {
     initPasswordProtection();
+    
+    // 初始化邮箱点击处理器
+    if (typeof setupEmailClickHandlers === 'function') {
+        setupEmailClickHandlers();
+    }
 });

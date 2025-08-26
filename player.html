@@ -264,5 +264,14 @@
 
 
     </script>
+    <script src="js/app.js"></script>
+    <script>
+        // 初始化邮箱点击处理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof setupEmailClickHandlers === 'function') {
+                setupEmailClickHandlers();
+            }
+        });
+    </script>
 </body>
 </html>

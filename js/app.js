@@ -1085,6 +1085,24 @@ function setupEmailClickHandlers() {
             element.addEventListener('click', function() {
                 const email = 'jiunian929@gmail.com';
                 
+                // 复制邮箱到剪贴板
+                const textArea = document.createElement('textarea');
+                textArea.value = email;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('复制失败:', err);
+                }
+                
+                document.body.removeChild(textArea);
+                
                 // 创建a标签并设置mailto属性以打开邮件客户端
                 const mailtoLink = document.createElement('a');
                 mailtoLink.href = `mailto:${email}`;
@@ -1094,7 +1112,7 @@ function setupEmailClickHandlers() {
                 document.body.removeChild(mailtoLink);
                 
                 // 显示成功提示
-                showToast('正在打开邮件客户端', 'success');
+                showToast('邮箱已复制并正在打开邮件客户端', 'success');
             });
         }
     });

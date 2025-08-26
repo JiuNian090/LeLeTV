@@ -80,6 +80,15 @@
     <script src="js/legacy-components.js"></script>
     <script src="js/legacy-utility.js"></script>
     <script src="js/legacy-debug.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // 初始化邮箱点击处理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof setupEmailClickHandlers === 'function') {
+                setupEmailClickHandlers();
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="redirect-container">

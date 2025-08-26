@@ -394,13 +394,13 @@
                     欢迎使用 LeLeTV。在开始使用前，请您了解以下事项：
                 </p>
                 <p>
-                    <strong class="text-blue-400">如何使用：</strong> 用设备自带的浏览器打开本网站，点击这个☞<span id="addToHomeBtn" class="text-green-400 font-semibold underline cursor-pointer transition-all duration-300 hover:text-green-300 hover:underline-offset-2">添加到桌面</span>，这样就能像使用App一样方便地访问啦！如有任何问题，请<span id="contactLeLe" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
+                    <strong class="text-blue-400">如何使用：</strong> 用设备自带的浏览器打开本网站，点击这个☞<span id="addToHomeBtn" class="text-green-400 font-semibold underline cursor-pointer transition-all duration-300 hover:text-green-300 hover:underline-offset-2">添加到桌面</span>，这样就能像使用App一样方便地访问啦！。
                 </p>
                 <p>
                     <strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
                 </p>
                 <p class="text-lg italic">
-                    <strong class="text-red-600 font-bold">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！有问题请<span id="contactLeLe6" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
+                    <strong class="text-red-600 font-bold">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！如需分享或者有任何问题建议请<span id="contactLeLe6" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
                 </p>
             </div>
             <div class="mt-6 flex justify-center">
@@ -524,5 +524,14 @@
 
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
     <script src="js/index-page.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // 初始化邮箱点击处理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof setupEmailClickHandlers === 'function') {
+                setupEmailClickHandlers();
+            }
+        });
+    </script>
 </body>
 </html>
