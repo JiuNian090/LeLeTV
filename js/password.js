@@ -129,7 +129,7 @@ function showPasswordModal() {
             const errorMsg = document.getElementById('passwordError');
             if (form) form.style.display = 'none';
             if (errorMsg) {
-                errorMsg.textContent = '为确保安全，必须设置 PASSWORD 环境变量才能使用本服务，请联系乐乐进行配置';
+                errorMsg.innerHTML = '为确保安全，必须设置 PASSWORD 环境变量才能使用本服务，请<span id="contactLeLe2" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>进行配置';
                 errorMsg.classList.remove('hidden');
                 errorMsg.className = 'text-red-500 mt-2 font-medium'; // 改为更醒目的红色
             }
