@@ -72,7 +72,7 @@ LeLeTV 是一个**私有库**，仅用于作者个人学习和技术研究用途
 如有好的功能建议，或者有什么其他问题，欢迎联系作者：
 
 <div class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
-  您可以在网站页面中点击 <span id="contactLeLe" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span> 来获取作者邮箱。
+  邮箱：<span id="contactLeLe" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">jiunian929@gmail.com</span>
 </div>
 
-点击后将会自动复制邮箱到剪贴板并显示成功提示。
+在网站页面中点击上方邮箱地址，将会自动复制到剪贴板并显示成功提示。
