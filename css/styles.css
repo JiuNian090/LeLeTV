@@ -1119,6 +1119,27 @@ body {
     font-weight: 500;
 }
 
+/* 邮箱地址高亮效果 */
+.email-highlight {
+    animation: emailHighlight 2s ease;
+}
+
+@keyframes emailHighlight {
+    0% {
+        background-color: rgba(37, 99, 235, 0.2);
+        border-radius: 4px;
+        padding: 0 2px;
+    }
+    50% {
+        background-color: rgba(37, 99, 235, 0.4);
+        transform: scale(1.05);
+    }
+    100% {
+        background-color: transparent;
+        transform: scale(1);
+    }
+}
+
 /* 响应式调整 */
 @media (max-width: 640px) {
     #toast {
