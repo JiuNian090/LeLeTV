@@ -1755,6 +1755,12 @@ async function switchToResource(sourceKey, vodId) {
     
     showLoading();
     try {
+        // 保存当前播放进度
+        let currentPosition = 0;
+        if (art && art.video) {
+            currentPosition = art.video.currentTime;
+        }
+        
         // 构建API参数
         let apiParams = '';
         
@@ -1804,8 +1810,8 @@ async function switchToResource(sourceKey, vodId) {
         // 获取目标集数的URL
         const targetUrl = data.episodes[targetIndex];
         
-        // 构建播放页面URL
-        const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}`;
+        // 构建播放页面URL，包含当前播放进度
+        const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}`;
         
         // 保存当前状态到localStorage
         try {
@@ -1821,6 +1827,49 @@ async function switchToResource(sourceKey, vodId) {
             }
         } catch (e) {
             console.error('保存播放状态失败:', e);
+        }
+
+        // 更新历史记录中的源信息而不是创建新记录
+        try {
+            const historyRaw = localStorage.getItem('viewingHistory');
+            if (historyRaw) {
+                const history = JSON.parse(historyRaw);
+                
+                // 查找当前视频的历史记录项（通过标题和集数索引）
+                const currentUrlParams = new URLSearchParams(window.location.search);
+                const currentVodId = currentUrlParams.get('id') || '';
+                
+                let idx = -1;
+                if (currentVodId) {
+                    // 先尝试通过ID匹配
+                    idx = history.findIndex(item => item.vod_id === currentVodId);
+                }
+                
+                if (idx === -1) {
+                    // 如果没有找到ID匹配，尝试通过标题和集数索引匹配
+                    idx = history.findIndex(item => 
+                        item.title === currentVideoTitle && 
+                        item.episodeIndex === currentEpisodeIndex
+                    );
+                }
+                
+                if (idx !== -1) {
+                    // 更新现有记录的源信息和位置
+                    history[idx].sourceName = sourceKey;
+                    history[idx].timestamp = Date.now();
+                    if (currentPosition > 0) {
+                        history[idx].playbackPosition = currentPosition;
+                    }
+                    
+                    // 移动到最近观看的位置
+                    const updatedItem = history.splice(idx, 1)[0];
+                    history.unshift(updatedItem);
+                    
+                    localStorage.setItem('viewingHistory', JSON.stringify(history));
+                }
+            }
+        } catch (e) {
+            console.error('更新历史记录源信息时出错:', e);
         }
 
         // 跳转到播放页面

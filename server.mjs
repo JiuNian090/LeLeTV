@@ -21,7 +21,7 @@ const config = {
   maxRetries: parseInt(process.env.MAX_RETRIES || '2'),
   cacheMaxAge: process.env.CACHE_MAX_AGE || '1d',
   userAgent: process.env.USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-  debug: process.env.DEBUG === 'true'
+  debug: process.env.DEBUG === 'false'
 };
 
 const log = (...args) => {
