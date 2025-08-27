@@ -14,6 +14,7 @@
     <script src="libs/tailwindcss.min.js"></script>
     <script src="js/lazy-loading.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/version-utils.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="page-bg text-white flex flex-col min-h-screen">
@@ -235,7 +236,31 @@
                     const versionMatch = line.match(/v(\d+)/);
                     if (versionMatch) {
                         const versionNumber = versionMatch[1];
-                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">v${versionNumber}</h4>`;
+                        
+                        // 尝试将版本号转换为语义化版本号
+                        let semanticVersion = `v${versionNumber}`;
+                        
+                        // 优先使用versionUtils中的转换函数
+                        if (window.versionUtils && typeof window.versionUtils.convertToSemanticVersion === 'function') {
+                            semanticVersion = window.versionUtils.convertToSemanticVersion(versionNumber);
+                        } else if (versionNumber.length >= 12) {
+                            // 备用方案：如果versionUtils不可用，使用内置的转换逻辑
+                            // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
+                            // 转换规则：v2.0.YYMMDDHHMM
+                            // 年份前两位
+                            const yearPrefix = versionNumber.substring(2, 4);
+                            // 月份
+                            const month = versionNumber.substring(4, 6);
+                            // 日期
+                            const day = versionNumber.substring(6, 8);
+                            // 时间部分
+                            const time = versionNumber.substring(8, 12);
+                            
+                            // 组合成语义化版本号：v2.0.YYMMDDHHMM
+                            semanticVersion = `v2.0.${yearPrefix}${month}${day}${time}`;
+                        }
+                        
+                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${semanticVersion}</h4>`;
                     } else if (line.includes('初始版本')) {
                         currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
                     }

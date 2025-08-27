@@ -1,3 +1,6 @@
+// 引入版本工具函数
+// 注意：在实际使用时，需要确保version-utils.js已经在页面中加载
+
 // 获取版本信息
 async function fetchVersion(url, errorMessage, options = {}) {
     const response = await fetch(url, options);
@@ -7,7 +10,7 @@ async function fetchVersion(url, errorMessage, options = {}) {
     return await response.text();
 }
 
-// 在版本号前面添加v前缀使其更像标准版本号
+// 格式化版本号为语义化格式
 function formatVersion(versionString) {
     // 检测版本字符串是否有效
     if (!versionString) {
@@ -17,7 +20,29 @@ function formatVersion(versionString) {
     // 清理版本字符串（移除可能的空格或换行符）
     const cleanedString = versionString.trim();
     
-    // 在版本号前面添加v前缀
+    // 优先使用versionUtils中的转换函数
+    if (window.versionUtils && typeof window.versionUtils.formatVersionToSemantic === 'function') {
+        return window.versionUtils.formatVersionToSemantic(cleanedString);
+    }
+    
+    // 备用方案：如果versionUtils不可用，使用内置的转换逻辑
+    // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
+    // 转换规则：v2.0.YYMMDDHHMM
+    if (cleanedString.length >= 12) {
+        // 年份前两位
+        const yearPrefix = cleanedString.substring(2, 4);
+        // 月份
+        const month = cleanedString.substring(4, 6);
+        // 日期
+        const day = cleanedString.substring(6, 8);
+        // 时间部分
+        const time = cleanedString.substring(8, 12);
+        
+        // 组合成语义化版本号：v2.0.YYMMDDHHMM
+        return `v2.0.${yearPrefix}${month}${day}${time}`;
+    }
+    
+    // 基础格式：在版本号前面添加v前缀
     return `v${cleanedString}`;
 }
 
