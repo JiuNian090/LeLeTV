@@ -863,7 +863,8 @@ body {
 }
 
 .history-thumbnail {
-    width: 100%;
+    width: 60px;
+    min-width: 60px;
     height: 90px;
     background-color: #222;
     overflow: hidden;
@@ -1261,5 +1262,22 @@ body {
     #modal .detail-desc-content {
         max-height: 6rem;
         font-size: 0.8rem;
+    }
+}
+
+/* 负载均衡面板样式优化 */
+#loadBalancerPanel {
+    background: linear-gradient(135deg, var(--page-gradient-end), var(--page-gradient-start));
+    border: 1px solid var(--primary-color);
+}
+
+/* 负载均衡面板响应式设计 */
+@media (max-width: 768px) {
+    #loadBalancerPanel {
+        right: 1rem !important;
+        left: 1rem !important;
+        width: calc(100% - 2rem) !important;
+        max-width: none !important;
+        z-index: 70 !important;
     }
 }
