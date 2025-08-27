@@ -1159,13 +1159,27 @@ function showPositionRestoreHint(position) {
         </div>
     `;
 
-    // 添加到播放器容器
-    const playerContainer = document.querySelector('.player-container'); // Ensure this selector is correct
-    if (playerContainer) { // Check if playerContainer exists
-        playerContainer.appendChild(hint);
+    // 尝试添加到播放器容器或body
+    let container;
+    if (document.getElementById('player')) {
+        container = document.getElementById('player');
+    } else if (document.querySelector('.player-container')) {
+        container = document.querySelector('.player-container');
     } else {
-        return; // Exit if container not found
+        container = document.body;
+        // 如果添加到body，使用fixed定位
+        hint.style.position = 'fixed';
     }
+
+    if (container) {
+        container.appendChild(hint);
+    } else {
+        console.error('未找到合适的容器来显示恢复位置提示');
+        return;
+    }
+
+    // 确保提示使用正确的样式
+    hint.style.zIndex = '1000';
 
     // 显示提示
     setTimeout(() => {
@@ -1174,7 +1188,11 @@ function showPositionRestoreHint(position) {
         // 3秒后隐藏
         setTimeout(() => {
             hint.classList.remove('show');
-            setTimeout(() => hint.remove(), 300);
+            setTimeout(() => {
+                if (hint.parentNode) {
+                    hint.parentNode.removeChild(hint);
+                }
+            }, 300);
         }, 3000);
     }, 100);
 }
@@ -1216,16 +1234,39 @@ function saveCurrentProgress() {
     };
     try {
         localStorage.setItem(progressKey, JSON.stringify(progressData));
-        // --- 新增：同步更新 viewingHistory 中的进度 ---
+        
+        // 更新 viewingHistory 中的进度，确保播放进度在历史记录中保存
         try {
             const historyRaw = localStorage.getItem('viewingHistory');
             if (historyRaw) {
                 const history = JSON.parse(historyRaw);
-                // 用 title + 集数索引唯一标识
-                const idx = history.findIndex(item =>
-                    item.title === currentVideoTitle &&
-                    (item.episodeIndex === undefined || item.episodeIndex === currentEpisodeIndex)
-                );
+                
+                // 用更精确的匹配方式：sourceName + vod_id + episodeIndex
+                let idx = -1;
+                
+                // 尝试从URL获取source和id参数
+                const urlParams = new URLSearchParams(window.location.search);
+                const sourceName = urlParams.get('source') || '';
+                const vod_id = urlParams.get('id') || '';
+                
+                // 优先使用sourceName + vod_id匹配
+                if (sourceName && vod_id) {
+                    idx = history.findIndex(item => 
+                        item.sourceName === sourceName && 
+                        item.vod_id === vod_id &&
+                        (item.episodeIndex === undefined || item.episodeIndex === currentEpisodeIndex)
+                    );
+                }
+                
+                // 如果没有匹配到，使用title + episodeIndex作为备选匹配方式
+                if (idx === -1 && currentVideoTitle) {
+                    idx = history.findIndex(item =>
+                        item.title === currentVideoTitle &&
+                        (item.episodeIndex === undefined || item.episodeIndex === currentEpisodeIndex)
+                    );
+                }
+                
+                // 如果找到了匹配项，更新播放进度
                 if (idx !== -1) {
                     // 只在进度有明显变化时才更新，减少写入
                     if (
@@ -1237,11 +1278,25 @@ function saveCurrentProgress() {
                         history[idx].timestamp = Date.now();
                         localStorage.setItem('viewingHistory', JSON.stringify(history));
                     }
+                } else if (currentVideoTitle && currentVideoUrl) {
+                    // 如果找不到匹配项，并且有足够信息，创建一个新的历史记录项
+                    addToViewingHistory({
+                        title: currentVideoTitle,
+                        url: currentVideoUrl,
+                        sourceName: sourceName || '',
+                        vod_id: vod_id || '',
+                        episodeIndex: currentEpisodeIndex,
+                        playbackPosition: currentTime,
+                        duration: duration,
+                        episodes: currentEpisodes || []
+                    });
                 }
             }
         } catch (e) {
+            console.error('更新历史记录进度时出错:', e);
         }
     } catch (e) {
+        console.error('保存播放进度时出错:', e);
     }
 }
 

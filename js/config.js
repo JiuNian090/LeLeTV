@@ -200,6 +200,39 @@ const SECURITY_CONFIG = {
     // allowedApiDomains 不再需要，因为所有请求都通过内部代理
 };
 
+// 缓存管理配置
+const CACHE_CONFIG = {
+    // 缓存清理间隔（毫秒）- 24小时
+    cleanupInterval: 24 * 60 * 60 * 1000,
+    // 允许保留的用户设置和历史记录键名
+    preserveKeys: [
+        'selectedAPIs',          // 用户选择的API列表
+        'customAPIs',            // 自定义API列表
+        'yellowFilterEnabled',   // 黄色内容过滤开关
+        'adFilteringEnabled',    // 广告过滤开关
+        'doubanEnabled',         // 豆瓣功能开关
+        'hasInitializedDefaults',// 是否已初始化默认值
+        'viewingHistory',        // 观看历史记录
+        'videoSearchHistory',    // 搜索历史记录
+        'passwordVerified'       // 密码验证状态
+    ],
+    // 带时间戳的临时数据键名前缀
+    temporaryKeyPrefixes: [
+        'videoProgress_',        // 视频播放进度
+        'lastPageUrl',           // 最后访问的页面URL
+        'currentPlayingId',      // 当前播放的视频ID
+        'currentPlayingSource',  // 当前播放的视频源
+        'currentVideoTitle',     // 当前视频标题
+        'currentEpisodes',       // 当前视频所有集数
+        'currentEpisodeIndex',   // 当前播放的集数索引
+        'currentSourceCode',     // 当前视频源代码
+        'lastPlayTime',          // 最后播放时间
+        'loadBalancerStats'      // 负载均衡统计数据
+    ],
+    // 临时数据的过期时间（毫秒）- 24小时
+    temporaryDataTTL: 24 * 60 * 60 * 1000
+};
+
 // 添加多个自定义API源的配置
 const CUSTOM_API_CONFIG = {
     separator: ',',           // 分隔符
