@@ -247,19 +247,30 @@
                             semanticVersion = window.versionUtils.convertToSemanticVersion(versionNumber);
                         } else if (versionNumber.length >= 12) {
                             // 备用方案：如果versionUtils不可用，使用内置的转换逻辑
-                            // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
-                            // 转换规则：v2.0.YYMMDDHHMM
-                            // 年份前两位
-                            const yearPrefix = versionNumber.substring(2, 4);
-                            // 月份
-                            const month = versionNumber.substring(4, 6);
-                            // 日期
-                            const day = versionNumber.substring(6, 8);
-                            // 时间部分
-                            const time = versionNumber.substring(8, 12);
-                            
-                            // 组合成语义化版本号：v2.0.YYMMDDHHMM
-                            semanticVersion = `v2.0.${yearPrefix}${month}${day}${time}`;
+                        // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
+                        // 转换规则：v1.8.28.1（年、月、日、当天提交次序）
+                        // 年份完整值
+                        const fullYear = versionNumber.substring(0, 4);
+                        // 计算版本年（25年为1，以后递增）
+                        const versionYear = Math.max(1, Math.floor((parseInt(fullYear) - 2025) / 25) + 1);
+                        // 月份
+                        const month = parseInt(versionNumber.substring(4, 6));
+                        // 日期
+                        const day = parseInt(versionNumber.substring(6, 8));
+                        // 时间部分
+                        const hour = parseInt(versionNumber.substring(8, 10));
+                        const minute = parseInt(versionNumber.substring(10, 12));
+                        
+                        // 计算总分钟数
+                        const totalMinutes = hour * 60 + minute;
+                        // 每5分钟一个版本，计算提交次序（从1开始）
+                        const commitOrder = Math.floor(totalMinutes / 5) + 1;
+                        // 设置最大值限制
+                        const maxCommitOrder = 288; // 一天最多288个5分钟间隔 (24*60/5)
+                        const normalizedCommitOrder = Math.min(commitOrder, maxCommitOrder);
+                        
+                        // 组合成新的版本号格式：v1.8.28.1
+                        semanticVersion = `v${versionYear}.${month}.${day}.${normalizedCommitOrder}`;
                         }
                         
                         currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${semanticVersion}</h4>`;

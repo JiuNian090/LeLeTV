@@ -3,7 +3,7 @@
 /**
  * 将数字格式的版本号转换为语义化版本号
  * @param {string} numericVersion - 数字格式的版本号，如"202508270043"
- * @returns {string} 语义化格式的版本号，如"v2.0.2508270043"
+ * @returns {string} 语义化格式的版本号，如"v1.8.28.1"
  */
 function convertToSemanticVersion(numericVersion) {
     // 验证输入
@@ -20,19 +20,30 @@ function convertToSemanticVersion(numericVersion) {
     }
     
     // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
-    // 转换规则：v2.0.YYMMDDHHMM
+    // 转换规则：v1.8.28.1（年、月、日、当天提交次序）
     if (cleanedVersion.length >= 12) {
-        // 年份前两位
-        const yearPrefix = cleanedVersion.substring(2, 4);
+        // 年份完整值
+        const fullYear = cleanedVersion.substring(0, 4);
+        // 计算版本年（25年为1，以后递增）
+        const versionYear = Math.max(1, Math.floor((parseInt(fullYear) - 2025) / 25) + 1);
         // 月份
-        const month = cleanedVersion.substring(4, 6);
+        const month = parseInt(cleanedVersion.substring(4, 6));
         // 日期
-        const day = cleanedVersion.substring(6, 8);
+        const day = parseInt(cleanedVersion.substring(6, 8));
         // 时间部分
-        const time = cleanedVersion.substring(8, 12);
+        const hour = parseInt(cleanedVersion.substring(8, 10));
+        const minute = parseInt(cleanedVersion.substring(10, 12));
         
-        // 组合成语义化版本号：v2.0.YYMMDDHHMM
-        return `v2.0.${yearPrefix}${month}${day}${time}`;
+        // 计算总分钟数
+        const totalMinutes = hour * 60 + minute;
+        // 每5分钟一个版本，计算提交次序（从1开始）
+        const commitOrder = Math.floor(totalMinutes / 5) + 1;
+        // 设置最大值限制
+        const maxCommitOrder = 288; // 一天最多288个5分钟间隔 (24*60/5)
+        const normalizedCommitOrder = Math.min(commitOrder, maxCommitOrder);
+        
+        // 组合成新的版本号格式：v1.8.28.1
+        return `v${versionYear}.${month}.${day}.${normalizedCommitOrder}`;
     }
     
     // 如果无法解析，返回带有v前缀的原始版本
