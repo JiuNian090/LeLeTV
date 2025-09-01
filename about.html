@@ -248,11 +248,11 @@
                         } else if (versionNumber.length >= 12) {
                             // 备用方案：如果versionUtils不可用，使用内置的转换逻辑
                         // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
-                        // 转换规则：v1.8.28.1（年、月、日、当天提交次序）
+                        // 转换规则：vX.Y.Z.N（年偏移值、月、日、当天提交次序）
                         // 年份完整值
                         const fullYear = versionNumber.substring(0, 4);
-                        // 计算版本年（25年为1，以后递增）
-                        const versionYear = Math.max(1, Math.floor((parseInt(fullYear) - 2025) / 25) + 1);
+                        // 计算年份偏移值（2025年为1，以后每年递增）
+                        const versionYear = Math.max(1, (parseInt(fullYear) - 2025) + 1);
                         // 月份
                         const month = parseInt(versionNumber.substring(4, 6));
                         // 日期
@@ -269,7 +269,7 @@
                         const maxCommitOrder = 288; // 一天最多288个5分钟间隔 (24*60/5)
                         const normalizedCommitOrder = Math.min(commitOrder, maxCommitOrder);
                         
-                        // 组合成新的版本号格式：v1.8.28.1
+                        // 组合成新的版本号格式：vX.Y.Z.N
                         semanticVersion = `v${versionYear}.${month}.${day}.${normalizedCommitOrder}`;
                         }
                         

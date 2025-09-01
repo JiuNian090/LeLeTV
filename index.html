@@ -148,8 +148,8 @@
                 <div class="flex flex-col mb-3 pb-3 border-b border-[#222] relative">
                     <div class="flex items-center justify-between">
                         <div>
-                            <label class="text-sm font-medium text-gray-400">成人内容过滤</label>
-                            <p class="text-xs text-gray-500 mt-1 filter-description">过滤"伦理片"等成人内容</p>
+                            <label class="text-sm font-medium text-gray-400">隐藏内容过滤</label>
+                            <p class="text-xs text-gray-500 mt-1 filter-description">过滤隐藏内容</p>
                         </div>
                         <div class="relative inline-block w-12 align-middle select-none">
                             <input type="checkbox" id="yellowFilterToggle" class="opacity-0 absolute w-full h-full cursor-pointer z-10">
@@ -279,7 +279,7 @@
                         <!-- 标题和刷新按钮一行 -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center">
-                                <h2 class="text-xl font-bold text-white mr-4">热门</h2>
+                                <h2 class="text-xl font-bold text-white mr-4">最新</h2>
                                 <!-- 添加电影/电视剧切换开关 -->
                                 <div class="flex items-center bg-[#222] rounded-full p-1">
                                     <button id="douban-movie-toggle" class="px-3 py-1 text-sm rounded-full bg-pink-600 text-white">电影</button>
@@ -397,10 +397,10 @@
                     <strong class="text-blue-400">方便使用：</strong> 用设备自带的浏览器打开本网站，点击这个☞<span id="addToHomeBtn" class="text-green-400 font-semibold underline cursor-pointer transition-all duration-300 hover:text-green-300 hover:underline-offset-2">添加到桌面</span>，这样就能像使用App一样方便地访问啦！。
                 </p>
                  <p>
-                    <strong class="text-blue-400">如何使用：</strong> 右上角设置中可选择视频源；最下方有豆瓣热门推荐按钮（默认关闭，可自行开启）。若视频卡顿，可手动切换源（不同剧集在各源表现不同）。建议先全选视频源，选择剧集后，在播放界面点击切换资源，查看延迟最低的源并选择最快的那个，一般推荐豆瓣资源。
+                    <strong class="text-blue-400">使用指南：</strong> 您可以在右上角设置中选择视频源；页面底部提供豆瓣热门推荐功能（默认关闭，可手动开启）。若遇到视频卡顿问题，可尝试切换不同源（不同剧集在各源的播放效果可能有所差异）。建议您先全选所有视频源，选择剧集后，在播放界面点击切换资源，系统会自动显示各源的延迟情况，请选择延迟最低的源以获得最佳观看体验。
                 </p>
                 <p>
-                    <strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
+                    <strong class="text-blue-400">广告风险提示⚠️：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
                 </p>
                 <p class="text-lg italic">
                     <strong class="text-red-600 font-bold">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！如需分享或者有任何问题建议请<span id="contactLeLe6" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
@@ -534,6 +534,8 @@
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
     <script src="js/index-page.js"></script>
     <script src="js/app.js"></script>
+    
+    <!-- 版本号格式测试脚本 (临时添加，测试完成后可移除) -->
     <script>
         // 初始化邮箱点击处理器
         document.addEventListener('DOMContentLoaded', function() {
