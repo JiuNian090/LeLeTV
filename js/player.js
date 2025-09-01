@@ -1,4 +1,4 @@
-const selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');
+// const selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]'); // 已在其他地方声明
 const customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
 
 // 改进首页跳转功能
