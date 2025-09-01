@@ -204,5 +204,4 @@ class CacheManager {
 // 创建全局缓存管理器实例
 window.cacheManager = new CacheManager();
 
-// 暴露到全局供其他模块使用
-export default CacheManager;
+// CacheManager 已通过 window.cacheManager 暴露到全局，无需使用ES模块语法

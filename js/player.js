@@ -1,4 +1,4 @@
-// const selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]'); // 已在其他地方声明
+// selectedAPIs 已在 app.js 中声明为全局变量，无需在此处重复声明
 const customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
 
 // 改进首页跳转功能
