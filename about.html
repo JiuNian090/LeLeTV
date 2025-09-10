@@ -234,46 +234,14 @@
                     // 创建新条目
                     currentEntry = { content: '' };
 
-                    // 提取版本号（不包含日期）
-                    const versionMatch = line.match(/v(\d+)/);
+                    // 直接提取完整的版本号和日期信息
+                    const versionMatch = line.match(/### (v[\d\.]+) \(([\d\-:\s]+)\)/);
                     if (versionMatch) {
                         const versionNumber = versionMatch[1];
+                        const dateInfo = versionMatch[2];
                         
-                        // 尝试将版本号转换为语义化版本号
-                        let semanticVersion = `v${versionNumber}`;
-                        
-                        // 优先使用versionUtils中的转换函数
-                        if (window.versionUtils && typeof window.versionUtils.convertToSemanticVersion === 'function') {
-                            semanticVersion = window.versionUtils.convertToSemanticVersion(versionNumber);
-                        } else if (versionNumber.length >= 12) {
-                            // 备用方案：如果versionUtils不可用，使用内置的转换逻辑
-                        // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
-                        // 转换规则：v1.8.28.1（年、月、日、当天提交次序）
-                        // 年份完整值
-                        const fullYear = versionNumber.substring(0, 4);
-                        // 计算版本年（25年为1，以后递增）
-                        const versionYear = Math.max(1, Math.floor((parseInt(fullYear) - 2025) / 25) + 1);
-                        // 月份
-                        const month = parseInt(versionNumber.substring(4, 6));
-                        // 日期
-                        const day = parseInt(versionNumber.substring(6, 8));
-                        // 时间部分
-                        const hour = parseInt(versionNumber.substring(8, 10));
-                        const minute = parseInt(versionNumber.substring(10, 12));
-                        
-                        // 计算总分钟数
-                        const totalMinutes = hour * 60 + minute;
-                        // 每5分钟一个版本，计算提交次序（从1开始）
-                        const commitOrder = Math.floor(totalMinutes / 5) + 1;
-                        // 设置最大值限制
-                        const maxCommitOrder = 288; // 一天最多288个5分钟间隔 (24*60/5)
-                        const normalizedCommitOrder = Math.min(commitOrder, maxCommitOrder);
-                        
-                        // 组合成新的版本号格式：v1.8.28.1
-                        semanticVersion = `v${versionYear}.${month}.${day}.${normalizedCommitOrder}`;
-                        }
-                        
-                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${semanticVersion}</h4>`;
+                        // 直接使用CHANGELOG.md中的版本号
+                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${versionNumber} (${dateInfo})</h4>`;
                     } else if (line.includes('初始版本')) {
                         currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
                     }
@@ -298,6 +266,32 @@
             }
 
             return versionEntries;
+        }
+
+        /**
+         * 从已解析的CHANGELOG条目中计算指定日期的提交次序
+         * @param {Array} entries - 已解析的CHANGELOG条目
+         * @param {string} year - 年份
+         * @param {number} month - 月份
+         * @param {number} day - 日期
+         * @returns {number} 提交次序
+         */
+        function calculateCommitOrderFromChangelogEntries(entries, year, month, day) {
+            // 统计相同日期的版本号数量
+            let count = 0;
+            const targetDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            // 遍历已解析的条目，查找相同日期的版本
+            for (const entry of entries) {
+                // 从条目内容中提取日期信息
+                const dateMatch = entry.content.match(/(\d{4}-\d{2}-\d{2})/);
+                if (dateMatch && dateMatch[1] === targetDate) {
+                    count++;
+                }
+            }
+            
+            // 返回计数+1（因为当前条目还未添加到entries中）
+            return count + 1;
         }
 
         // 渲染版本历史，支持内部滚动显示全部内容
