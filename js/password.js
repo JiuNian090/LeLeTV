@@ -129,7 +129,7 @@ function showPasswordModal() {
             const errorMsg = document.getElementById('passwordError');
             if (form) form.style.display = 'none';
             if (errorMsg) {
-                errorMsg.innerHTML = '为确保安全，必须设置 PASSWORD 环境变量才能使用本服务，请<span id="contactLeLe2" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>进行配置';
+                errorMsg.innerHTML = '为确保安全，必须设置 PASSWORD 环境变量才能使用本服务，请☞<span id="contactLeLe2" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>进行配置';
                 errorMsg.classList.remove('hidden');
                 errorMsg.className = 'text-red-500 mt-2 font-medium'; // 改为更醒目的红色
             }
@@ -138,7 +138,7 @@ function showPasswordModal() {
             const title = passwordModal.querySelector('h2');
             const description = passwordModal.querySelector('p');
             if (title) title.textContent = '访问验证';
-            if (description) description.innerHTML = '请输入密码继续访问，进入后请仔细阅读使用说明，包含了使用方法和反诈警告⚠️，如若密码错误可以<span id="contactLeLe7" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码';
+            if (description) description.innerHTML = '请输入密码继续访问，进入后请仔细阅读使用说明，包含了使用方法和反诈警告⚠️，如若密码错误可以☞<span id="contactLeLe7" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码';
             
             const form = passwordModal.querySelector('form');
             if (form) form.style.display = 'block';

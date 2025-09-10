@@ -53,7 +53,7 @@
 					</div>
 					 
 					<p class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
-						LeLeTV 是一个自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以<span id="contactLeLe3" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
+						LeLeTV 是一个自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span id="contactLeLe3" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
 					</p>
 				</div>				<!-- 分割线 -->
 				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
@@ -238,10 +238,8 @@
                     const versionMatch = line.match(/### (v[\d\.]+) \(([\d\-:\s]+)\)/);
                     if (versionMatch) {
                         const versionNumber = versionMatch[1];
-                        const dateInfo = versionMatch[2];
-                        
-                        // 直接使用CHANGELOG.md中的版本号
-                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${versionNumber} (${dateInfo})</h4>`;
+                        // 只显示版本号，不显示时间
+                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${versionNumber}</h4>`;
                     } else if (line.includes('初始版本')) {
                         currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
                     }
