@@ -749,7 +749,7 @@ function setupEventListeners() {
                 if (!isAdminVerified) {
                     // 如果验证失败，恢复开关状态并显示提示
                     e.target.checked = true;
-                    showToast('需要管理员密码才能关闭成人内容过滤', 'warning');
+                    showToast('需要管理员密码才能关闭隐藏内容过滤，密码提示:⟲', 'warning');
                     return;
                 }
             }
@@ -811,11 +811,11 @@ function resetSearchArea() {
     try {
         window.history.pushState(
             {},
-            `LeLeTV - 免费在线视频搜索与观看平台`,
+            `LeLeTV - 乐乐影视`,
             `/`
         );
         // 更新页面标题
-        document.title = `LeLeTV - 免费在线视频搜索与观看平台`;
+        document.title = `LeLeTV - 乐乐影视`;
     } catch (e) {
         console.error('更新浏览器历史失败:', e);
     }
