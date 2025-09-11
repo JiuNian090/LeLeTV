@@ -1,4 +1,5 @@
 // 获取当前URL的参数，并将它们传递给player.html
+
 window.onload = function() {
     // 获取当前URL的查询参数
     const currentParams = new URLSearchParams(window.location.search);

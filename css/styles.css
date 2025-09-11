@@ -225,6 +225,37 @@ button, .card-hover {
     scrollbar-color: #333 #111;
 }
 
+/* 返回按钮专用样式 */
+.cyber-back-button {
+    position: relative;
+    z-index: 1;
+}
+
+.cyber-back-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(0, 204, 255, 0.05), transparent);
+    z-index: -1;
+    transition: all 0.6s ease;
+}
+
+.cyber-back-button:hover::before {
+    animation: backButtonGlow 2s ease infinite;
+}
+
+@keyframes backButtonGlow {
+    0%, 100% {
+        transform: translateX(-100%) rotate(45deg);
+    }
+    50% {
+        transform: translateX(200%) rotate(45deg);
+    }
+}
+
 /* 统一按钮样式组件 */
 /* 通用渐变按钮类 */
 .gradient-btn {

@@ -1,14 +1,27 @@
 /* 添加重定向页面的基本样式 */
-body {
+/* 基础样式重置，确保在所有设备上一致 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #000000;
     color: white;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
+    height: 100%;
+    width: 100%;
+    overflow: hidden !important; /* 重要：防止整个页面滚动 */
+    position: fixed; /* 使用固定定位完全防止滚动 */
+}
+
+body {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
+    min-height: 100vh;
 }
 
 .redirect-container {
@@ -24,6 +37,11 @@ body {
     -moz-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: auto;
 }
 
 
@@ -138,15 +156,12 @@ body {
 @media (max-width: 480px) {
     body {
         font-size: 14px;
-        padding: 0;
     }
     
     .redirect-container {
         padding: 1.5rem;
         width: 85%;
-        min-height: 80vh;
-        flex-direction: column;
-        justify-content: center;
+        max-width: 100%;
     }
     
     .logo-icon {
@@ -156,7 +171,6 @@ body {
     
     .logo-text {
         font-size: 1.5rem;
-        text-align: center;
     }
     
     .loading-animation {
@@ -167,13 +181,11 @@ body {
     
     .redirect-message {
         font-size: 1rem;
-        text-align: center;
     }
     
     #redirect-status {
         font-size: 0.8rem;
         margin-bottom: 1.2rem;
-        text-align: center;
     }
     
     .redirect-hint {
@@ -194,6 +206,7 @@ body {
     .redirect-container {
         padding: 2rem;
         width: 75%;
+        max-width: 500px;
     }
     
     .logo-icon {
@@ -215,7 +228,7 @@ body {
 @media (min-width: 769px) {
     .redirect-container {
         max-width: 500px;
-        margin: 0 auto;
+        width: 500px;
     }
     
     .logo-icon {

@@ -425,6 +425,7 @@ input:checked + .slider:before {
     /* 减小固定头部高度和内边距 */
     .player-header-fixed {
         padding: 0.5rem;
+        justify-content: space-between;
     }
     
     /* 缩小logo尺寸 */
@@ -446,6 +447,18 @@ input:checked + .slider:before {
     /* 优化返回按钮 */
     #goBack {
         padding: 0.25rem 0.75rem;
+    }
+    
+    /* 优化首页按钮位置，确保在移动端显示在右侧 */
+    #goHome {
+        order: 3;
+        margin-left: auto;
+    }
+    
+    /* 为首页按钮添加特定样式，确保对称性 */
+    .home-btn {
+        min-width: auto;
+        white-space: nowrap;
     }
     
     /* 优化播放器容器内边距 */

@@ -10,20 +10,15 @@ function goHome(event) {
     window.location.href = '/';
 }
 
-// 页面加载时保存当前URL到localStorage，作为返回目标
+// 页面加载时保存当前播放状态
 window.addEventListener('load', function () {
-    // 保存前一页面URL
-    if (document.referrer && document.referrer !== window.location.href) {
-        localStorage.setItem('lastPageUrl', document.referrer);
-    }
-
     // 提取当前URL中的重要参数，以便在需要时能够恢复当前页面
     const urlParams = new URLSearchParams(window.location.search);
     const videoId = urlParams.get('id');
     const sourceCode = urlParams.get('source');
 
     if (videoId && sourceCode) {
-        // 保存当前播放状态，以便其他页面可以返回
+        // 保存当前播放状态
         localStorage.setItem('currentPlayingId', videoId);
         localStorage.setItem('currentPlayingSource', sourceCode);
     }
