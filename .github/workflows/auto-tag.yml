@@ -29,60 +29,86 @@ jobs:
         run: |
           COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
           if echo "$COMMIT_MSG" | grep -q "@CHANGELOG.md"; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
             echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Get commit message
+      - name: Extract version and release notes from CHANGELOG.md
         if: steps.check-commit.outputs.skip == 'false'
-        id: commit-info
+        id: extract-info
         run: |
-          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
-          # 使用更安全的转义方法，避免GitHub Actions解析错误
-          COMMIT_MSG_ESCAPED=$(echo "$COMMIT_MSG" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g')
-          echo "message<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMIT_MSG_ESCAPED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 提取最新版本号
+          VERSION=$(grep -m 1 "### v" CHANGELOG.md | sed -E 's/### (v[0-9.]+).*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           
-          # 获取提交作者
-          COMMIT_AUTHOR=$(git log --format=%an -n 1 HEAD)
-          COMMIT_AUTHOR_ESCAPED=$(echo "$COMMIT_AUTHOR" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g')
-          echo "author<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMIT_AUTHOR_ESCAPED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          # 获取提交时间
-          COMMIT_DATE=$(git log --format=%ad --date=iso -n 1 HEAD)
-          COMMIT_DATE_ESCAPED=$(echo "$COMMIT_DATE" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g')
-          echo "date<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMIT_DATE_ESCAPED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 提取版本对应的更新内容
+          # 获取版本行号
+          VERSION_LINE=$(grep -n "### $VERSION" CHANGELOG.md | head -1 | cut -d: -f1)
+          if [ -n "$VERSION_LINE" ]; then
+            # 获取下一个版本的行号，如果没有下一个版本，则获取文件末尾
+            NEXT_VERSION_LINE=$(tail -n +$((VERSION_LINE + 1)) CHANGELOG.md | grep -n "### " | head -1 | cut -d: -f1)
+            if [ -n "$NEXT_VERSION_LINE" ]; then
+              # 计算实际行号
+              NEXT_VERSION_LINE=$((VERSION_LINE + NEXT_VERSION_LINE))
+              # 提取版本内容
+              RELEASE_NOTES=$(sed -n "$((VERSION_LINE + 1)),$((NEXT_VERSION_LINE - 1))p" CHANGELOG.md)
+            else
+              # 如果没有下一个版本，提取到文件末尾
+              RELEASE_NOTES=$(tail -n +$((VERSION_LINE + 1)) CHANGELOG.md)
+            fi
+            
+            # 清理内容，移除空行和多余的空格
+            RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed '/^\s*$/d' | sed 's/^[[:space:]]*//')
+            
+            # 使用EOF方式输出，避免特殊字符问题
+            echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+            echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if tag already exists
+        if: steps.check-commit.outputs.skip == 'false'
+        id: check-tag
+        run: |
+          VERSION=${{ steps.extract-info.outputs.version }}
+          if git ls-remote --tags origin | grep -q "refs/tags/$VERSION$"; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create and push tag
-        if: steps.check-commit.outputs.skip == 'false'
-        id: create-tag
+        if: steps.check-commit.outputs.skip == 'false' && steps.check-tag.outputs.tag_exists == 'false'
         run: |
-          # 运行标签创建脚本
-          node scripts/create-tag.js
+          VERSION=${{ steps.extract-info.outputs.version }}
+          RELEASE_NOTES=${{ steps.extract-info.outputs.release_notes }}
+          
+          # 如果没有提取到更新内容，使用默认消息
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="Release $VERSION"
+          fi
+          
+          # 创建标签
+          git tag -a "$VERSION" -m "$RELEASE_NOTES"
+          echo "Created tag $VERSION"
+          
+          # 推送标签到远程仓库
+          git push origin "$VERSION"
+          echo "Pushed tag $VERSION to origin"
 
       - name: Create Release
-        if: steps.check-commit.outputs.skip == 'false'
+        if: steps.check-commit.outputs.skip == 'false' && steps.check-tag.outputs.tag_exists == 'false'
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.create-tag.outputs.version }}
-          name: ${{ steps.create-tag.outputs.version }}
+          tag: ${{ steps.extract-info.outputs.version }}
+          name: ${{ steps.extract-info.outputs.version }}
           body: |
-            # Release ${{ steps.create-tag.outputs.version }}
+            # Release ${{ steps.extract-info.outputs.version }}
             
-            ## 提交信息
+            ## 更新内容
             
-            ${{ steps.commit-info.outputs.message }}
-            
-            ## 提交详情
-            
-            - 作者: ${{ steps.commit-info.outputs.author }}
-            - 时间: ${{ steps.commit-info.outputs.date }}
+            ${{ steps.extract-info.outputs.release_notes }}
             
             ---
             

@@ -11,7 +11,8 @@
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
     "tag": "node scripts/create-tag.js",
-    "historical-releases": "node scripts/create-historical-releases.js"
+    "historical-releases": "node scripts/create-historical-releases.js",
+    "test-auto-release": "node scripts/test-auto-release.js"
   },
   "dependencies": {
     "axios": "^1.9.0",

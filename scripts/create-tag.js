@@ -6,11 +6,11 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 
-// 检查提交信息是否包含 @CHANGELOG.md，如果包含则跳过打标签
+// 检查提交信息是否包含 @CHANGELOG.md，如果包含则执行打标签
 try {
   const commitMessage = execSync('git log --format=%B -n 1 HEAD', { encoding: 'utf-8' });
-  if (commitMessage.includes('@CHANGELOG.md')) {
-    console.log("Commit message contains '@CHANGELOG.md', skipping tag creation.");
+  if (!commitMessage.includes('@CHANGELOG.md')) {
+    console.log("Commit message does not contain '@CHANGELOG.md', skipping tag creation.");
     process.exit(0);
   }
 } catch (error) {
