@@ -34,6 +34,22 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Get commit message
+        if: steps.check-commit.outputs.skip == 'false'
+        id: commit-info
+        run: |
+          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
+          COMMIT_MSG_ESCAPED=$(echo "$COMMIT_MSG" | sed ':a;N;$!ba;s/\n/%0A/g' | sed 's/"/\\"/g')
+          echo "message=$COMMIT_MSG_ESCAPED" >> $GITHUB_OUTPUT
+          
+          # 获取提交作者
+          COMMIT_AUTHOR=$(git log --format=%an -n 1 HEAD)
+          echo "author=$COMMIT_AUTHOR" >> $GITHUB_OUTPUT
+          
+          # 获取提交时间
+          COMMIT_DATE=$(git log --format=%ad --date=iso -n 1 HEAD)
+          echo "date=$COMMIT_DATE" >> $GITHUB_OUTPUT
+
       - name: Create and push tag
         if: steps.check-commit.outputs.skip == 'false'
         id: create-tag
@@ -44,11 +60,6 @@ jobs:
           # 获取版本号
           VERSION=$(grep -m 1 "### v" CHANGELOG.md | sed -E 's/### (v[0-9.]+).*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
-          # 提取更新日志
-          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
-          awk '/^### v'"$VERSION"'/,/^### v/ { if (!/^### v'"$VERSION"'/ && !/^### v/) print }' CHANGELOG.md | head -n -1 >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: steps.check-commit.outputs.skip == 'false'
@@ -59,9 +70,14 @@ jobs:
           body: |
             # Release ${{ steps.create-tag.outputs.version }}
             
-            ## 更新内容
+            ## 提交信息
             
-            ${{ steps.create-tag.outputs.release_notes }}
+            ${{ steps.commit-info.outputs.message }}
+            
+            ## 提交详情
+            
+            - 作者: ${{ steps.commit-info.outputs.author }}
+            - 时间: ${{ steps.commit-info.outputs.date }}
             
             ---
             
