@@ -1,0 +1,36 @@
+name: Auto Tag
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Check if commit message contains @CHANGELOG.md
+        id: check-commit
+        run: |
+          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
+          if echo "$COMMIT_MSG" | grep -q "@CHANGELOG.md"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.check-commit.outputs.skip == 'false'
+        run: |
+          node scripts/create-tag.js
