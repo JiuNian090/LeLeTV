@@ -162,3 +162,5 @@ jobs:
           # 即使release已存在，也允许更新
           updateOnly: false
           token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

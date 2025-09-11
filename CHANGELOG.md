@@ -13,6 +13,14 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.23 (2025-09-11 19:45)
+- [修复] 解决GitHub Actions工作流权限问题
+
+添加了更明确的权限配置，确保release-action能够正确访问GitHub API
+优化了环境变量配置，确保token能够正确传递给release-action
+改进了工作流触发机制，添加了workflow_dispatch触发器便于手动测试。
+
+
 ### v1.9.11.22 (2025-09-11 19:41)
 - [其他] 修复Release创建配置 @CHANGELOG.md。
 
