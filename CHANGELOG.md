@@ -13,6 +13,13 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.25 (2025-09-11 19:55)
+- [修复] 修复github-script步骤中的GITHUB_TOKEN环境变量配置问题
+
+修正了actions/github-script@v6步骤中GITHUB_TOKEN环境变量的位置
+确保Release检查步骤能正确访问GitHub API
+优化Release创建逻辑以提高稳定性。
+
 ### v1.9.11.24 (2025-09-11 19:50)
 - [修复] 进一步优化GitHub Actions工作流权限配置
 

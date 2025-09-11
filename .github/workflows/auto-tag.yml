@@ -135,10 +135,9 @@ jobs:
             }
           env:
             version: ${{ steps.extract-info.outputs.version }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
         continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 修改Release创建逻辑，确保即使tag已存在也能正确创建release
       - name: Create or Update Release
