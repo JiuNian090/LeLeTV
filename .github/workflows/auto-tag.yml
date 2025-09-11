@@ -6,6 +6,10 @@ on:
       - main
       - master
 
+# 添加权限配置
+permissions:
+  contents: write
+
 jobs:
   auto-tag-and-release:
     runs-on: ubuntu-latest
@@ -48,12 +52,10 @@ jobs:
 
       - name: Create Release
         if: steps.check-commit.outputs.skip == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ steps.create-tag.outputs.version }}
-          release_name: ${{ steps.create-tag.outputs.version }}
+          tag: ${{ steps.create-tag.outputs.version }}
+          name: ${{ steps.create-tag.outputs.version }}
           body: |
             # Release ${{ steps.create-tag.outputs.version }}
             
