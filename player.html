@@ -11,10 +11,75 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <script src="libs/tailwindcss.min.js"></script>
-    <script src="js/version-check.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/player.css">
+    <!-- 关键CSS内联以提高首屏渲染速度 -->
+    <style>
+        /* 关键CSS - 内联以减少首屏渲染阻塞 */
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+        .page-bg { background-color: #000; color: #fff; }
+        .gradient-text { background: linear-gradient(90deg, #00ccff, #0e76a8, #00ccff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .gradient-btn { background: linear-gradient(90deg, #00ccff, #0e76a8); border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .hidden { display: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .text-white { color: #fff; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-500 { color: #6b7280; }
+        .text-xl { font-size: 1.25rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .w-full { width: 100%; }
+        .relative { position: relative; }
+        .fixed { position: fixed; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .z-50 { z-index: 50; }
+        .z-\[65\] { z-index: 65; }
+        .z-\[10000\] { z-index: 10000; }
+        .z-\[10001\] { z-index: 10001; }
+        .bg-black { background-color: #000; }
+        .bg-\[\#111\] { background-color: #111; }
+        .bg-\[\#222\] { background-color: #222; }
+        .hover\:bg-\[\#333\]:hover { background-color: #333; }
+        .border { border: 1px solid; }
+        .border-\[\#333\] { border-color: #333; }
+        .border-t { border-top: 1px solid; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .transition-colors { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 150ms; }
+        .transition-all { transition-property: all; transition-duration: 150ms; }
+        .duration-300 { transition-duration: 300ms; }
+        .w-5 { width: 1.25rem; }
+        .h-5 { height: 1.25rem; }
+        .w-8 { width: 2rem; }
+        .h-8 { height: 2rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .fill-none { fill: none; }
+        .stroke-current { stroke: currentColor; }
+        .hover\:text-white:hover { color: #fff; }
+        /* 播放器关键样式 */
+        .player-header-fixed { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: linear-gradient(90deg, #000, #111); border-bottom: 1px solid #333; }
+        .player-container { background-color: #111; border-radius: 0.5rem; margin-bottom: 1rem; }
+        .player-placeholder { position: relative; width: 100%; height: 0; padding-bottom: 56.25%; /* 16:9 aspect ratio */ background-color: #000; }
+        .loading-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.8); }
+        .loading-spinner { width: 2rem; height: 2rem; border: 4px solid white; border-top: 4px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        .error-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.8); }
+        .error-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .error-message-sub { font-size: 0.875rem; color: #9ca3af; margin-top: 0.5rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    
+    <!-- 非关键CSS异步加载 -->
+    <link rel="preload" href="css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/player.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/styles.css"></noscript>
+    <noscript><link rel="stylesheet" href="css/player.css"></noscript>
     
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -219,26 +284,43 @@
         </div>
     </div>
 
-    <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js"></script>
+    <!-- 异步加载非关键JavaScript -->
     <script>
-        // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
-        window._jsSha256 = window.sha256;
+        // 异步加载非关键JavaScript模块
+        function loadScript(src, callback) {
+            var script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            if (callback) {
+                script.onload = callback;
+            }
+            document.head.appendChild(script);
+        }
+        
+        // 按需加载其他JavaScript模块
+        loadScript('js/config.js');
+        loadScript('js/lazy-loading.js');
+        loadScript('js/proxy-auth.js');
+        loadScript('js/customer_site.js');
+        loadScript('js/loadBalancer.js');
+        loadScript('js/ui.js');
+        loadScript('js/api.js');
+        loadScript('js/password.js');
+        loadScript('js/search.js');
+        loadScript('js/player.js');
+        loadScript('js/version-utils.js');
+        loadScript('js/version-check.js');
+        loadScript('js/cache-manager.js');
+        loadScript('js/multi-level-cache.js');
+        loadScript('js/video-preloader.js');
+        loadScript('js/page-state-manager.js');
+        loadScript('js/performance-monitor.js');
+        loadScript('js/page-transition.js');
+        loadScript('js/user-behavior-tracker.js');
+        loadScript('js/performance-test.js');
+        loadScript('js/benchmark-optimizer.js');
     </script>
     
-    <script src="libs/hls.min.js" crossorigin="anonymous"></script>
-    <script src="libs/artplayer.min.js" crossorigin="anonymous"></script>
-
-    <script src="js/config.js"></script>
-    <script src="js/lazy-loading.js"></script>
-    <script src="js/proxy-auth.js"></script>
-    <script src="js/customer_site.js"></script>
-    <script src="js/password.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/search.js"></script>
-    <script src="js/player.js"></script>
-
     <script>
         // 创建全局环境变量对象
         window.__ENV__ = window.__ENV__ || {};
@@ -266,19 +348,6 @@
         
         // DOM加载完成后再次确保
         document.addEventListener('DOMContentLoaded', ensureGoHome);
-
-
-    </script>
-    <!-- 缓存管理模块 -->
-    <script src="js/cache-manager.js"></script>
-    <script src="js/app.js"></script>
-    <script>
-        // 初始化邮箱点击处理器
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof setupEmailClickHandlers === 'function') {
-                setupEmailClickHandlers();
-            }
-        });
     </script>
 </body>
 </html>

@@ -11,85 +11,175 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="css/watch.css">
-    <link rel="stylesheet" href="css/player.css">
-    <link rel="stylesheet" href="css/controls.css">
-    <link rel="stylesheet" href="css/playlist.css">
-    <link rel="stylesheet" href="css/related.css">
-    <link rel="stylesheet" href="css/comments.css">
-    <link rel="stylesheet" href="css/share.css">
-    <link rel="stylesheet" href="css/settings.css">
-    <link rel="stylesheet" href="css/ads.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="css/print.css">
-    <link rel="stylesheet" href="css/rtl.css">
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/icons.css">
-    <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/typography.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/utility.css">
-    <link rel="stylesheet" href="css/debug.css">
-    <link rel="stylesheet" href="css/legacy.css">
-    <link rel="stylesheet" href="css/legacy-rtl.css">
-    <link rel="stylesheet" href="css/legacy-print.css">
-    <link rel="stylesheet" href="css/legacy-variables.css">
-    <link rel="stylesheet" href="css/legacy-animations.css">
-    <link rel="stylesheet" href="css/legacy-icons.css">
-    <link rel="stylesheet" href="css/legacy-fonts.css">
-    <link rel="stylesheet" href="css/legacy-typography.css">
-    <link rel="stylesheet" href="css/legacy-layout.css">
-    <link rel="stylesheet" href="css/legacy-components.css">
-    <link rel="stylesheet" href="css/legacy-utility.css">
-    <link rel="stylesheet" href="css/legacy-debug.css">
+    <!-- 关键CSS内联以提高首屏渲染速度 -->
+    <style>
+        /* 关键CSS - 内限以减少首屏渲染阻塞 */
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+        .page-bg { background-color: #000; color: #fff; }
+        .gradient-text { background: linear-gradient(90deg, #00ccff, #0e76a8, #00ccff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hidden { display: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .text-white { color: #fff; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-500 { color: #6b7280; }
+        .text-xl { font-size: 1.25rem; }
+        .font-bold { font-weight: 700; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .w-full { width: 100%; }
+        .relative { position: relative; }
+        .fixed { position: fixed; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .z-50 { z-index: 50; }
+        .bg-black { background-color: #000; }
+        .bg-\[\#111\] { background-color: #111; }
+        .border { border: 1px solid; }
+        .border-\[\#333\] { border-color: #333; }
+        .border-t { border-top: 1px solid; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .transition-all { transition-property: all; transition-duration: 150ms; }
+        .duration-300 { transition-duration: 300ms; }
+        /* 重定向页面关键样式 */
+        .redirect-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .logo-container { display: flex; align-items: center; margin-bottom: 2rem; }
+        .logo-icon { width: 3rem; height: 3rem; margin-right: 1rem; color: #00ccff; }
+        .logo-text { font-size: 2rem; font-weight: 700; }
+        .loading-animation { width: 3rem; height: 3rem; border: 4px solid #333; border-top: 4px solid #00ccff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 2rem; }
+        .redirect-message { font-size: 1.25rem; margin-bottom: 1rem; }
+        .redirect-hint { font-size: 0.875rem; color: #9ca3af; }
+        .redirect-hint a { color: #00ccff; text-decoration: underline; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
     
-    <!-- Scripts -->
-    <script src="js/watch.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/controls.js"></script>
-    <script src="js/playlist.js"></script>
-    <script src="js/related.js"></script>
-    <script src="js/comments.js"></script>
-    <script src="js/share.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/ads.js"></script>
-    <script src="js/responsive.js"></script>
-    <script src="js/print.js"></script>
-    <script src="js/rtl.js"></script>
-    <script src="js/variables.js"></script>
-    <script src="js/animations.js"></script>
-    <script src="js/icons.js"></script>
-    <script src="js/fonts.js"></script>
-    <script src="js/typography.js"></script>
-    <script src="js/layout.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/utility.js"></script>
-    <script src="js/debug.js"></script>
-    <script src="js/legacy.js"></script>
-    <script src="js/legacy-rtl.js"></script>
-    <script src="js/legacy-print.js"></script>
-    <script src="js/legacy-variables.js"></script>
-    <script src="js/legacy-animations.js"></script>
-    <script src="js/legacy-icons.js"></script>
-    <script src="js/legacy-fonts.js"></script>
-    <script src="js/legacy-typography.js"></script>
-    <script src="js/legacy-layout.js"></script>
-    <script src="js/legacy-components.js"></script>
-    <script src="js/legacy-utility.js"></script>
-    <script src="js/legacy-debug.js"></script>
-    <!-- 缓存管理模块 -->
-    <script src="js/cache-manager.js"></script>
-    <script src="js/app.js"></script>
+    <!-- 非关键CSS异步加载 -->
+    <link rel="preload" href="css/watch.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/player.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/controls.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/playlist.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/related.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/comments.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/share.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/settings.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/ads.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/responsive.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/print.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/rtl.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/variables.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/fonts.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/typography.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/layout.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/components.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/utility.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/debug.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-rtl.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-print.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-variables.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-fonts.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-typography.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-layout.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-components.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-utility.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/legacy-debug.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="css/watch.css">
+        <link rel="stylesheet" href="css/player.css">
+        <link rel="stylesheet" href="css/controls.css">
+        <link rel="stylesheet" href="css/playlist.css">
+        <link rel="stylesheet" href="css/related.css">
+        <link rel="stylesheet" href="css/comments.css">
+        <link rel="stylesheet" href="css/share.css">
+        <link rel="stylesheet" href="css/settings.css">
+        <link rel="stylesheet" href="css/ads.css">
+        <link rel="stylesheet" href="css/responsive.css">
+        <link rel="stylesheet" href="css/print.css">
+        <link rel="stylesheet" href="css/rtl.css">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/animations.css">
+        <link rel="stylesheet" href="css/icons.css">
+        <link rel="stylesheet" href="css/fonts.css">
+        <link rel="stylesheet" href="css/typography.css">
+        <link rel="stylesheet" href="css/layout.css">
+        <link rel="stylesheet" href="css/components.css">
+        <link rel="stylesheet" href="css/utility.css">
+        <link rel="stylesheet" href="css/debug.css">
+        <link rel="stylesheet" href="css/legacy.css">
+        <link rel="stylesheet" href="css/legacy-rtl.css">
+        <link rel="stylesheet" href="css/legacy-print.css">
+        <link rel="stylesheet" href="css/legacy-variables.css">
+        <link rel="stylesheet" href="css/legacy-animations.css">
+        <link rel="stylesheet" href="css/legacy-icons.css">
+        <link rel="stylesheet" href="css/legacy-fonts.css">
+        <link rel="stylesheet" href="css/legacy-typography.css">
+        <link rel="stylesheet" href="css/legacy-layout.css">
+        <link rel="stylesheet" href="css/legacy-components.css">
+        <link rel="stylesheet" href="css/legacy-utility.css">
+        <link rel="stylesheet" href="css/legacy-debug.css">
+    </noscript>
+    
+    <!-- 异步加载非关键JavaScript -->
     <script>
-        // 初始化邮箱点击处理器
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof setupEmailClickHandlers === 'function') {
-                setupEmailClickHandlers();
+        // 异步加载非关键JavaScript模块
+        function loadScript(src, callback) {
+            var script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            if (callback) {
+                script.onload = callback;
             }
-        });
+            document.head.appendChild(script);
+        }
+        
+        // 按需加载JavaScript模块
+        loadScript('js/watch.js');
+        loadScript('js/player.js');
+        loadScript('js/controls.js');
+        loadScript('js/playlist.js');
+        loadScript('js/related.js');
+        loadScript('js/comments.js');
+        loadScript('js/share.js');
+        loadScript('js/settings.js');
+        loadScript('js/ads.js');
+        loadScript('js/responsive.js');
+        loadScript('js/print.js');
+        loadScript('js/rtl.js');
+        loadScript('js/variables.js');
+        loadScript('js/animations.js');
+        loadScript('js/icons.js');
+        loadScript('js/fonts.js');
+        loadScript('js/typography.js');
+        loadScript('js/layout.js');
+        loadScript('js/components.js');
+        loadScript('js/utility.js');
+        loadScript('js/debug.js');
+        loadScript('js/legacy.js');
+        loadScript('js/legacy-rtl.js');
+        loadScript('js/legacy-print.js');
+        loadScript('js/legacy-variables.js');
+        loadScript('js/legacy-animations.js');
+        loadScript('js/legacy-icons.js');
+        loadScript('js/legacy-fonts.js');
+        loadScript('js/legacy-typography.js');
+        loadScript('js/legacy-layout.js');
+        loadScript('js/legacy-components.js');
+        loadScript('js/legacy-utility.js');
+        loadScript('js/legacy-debug.js');
+        loadScript('js/cache-manager.js');
+        loadScript('js/app.js');
+        loadScript('js/performance-monitor.js');
+        loadScript('js/user-behavior-tracker.js');
+        loadScript('js/performance-test.js');
+        loadScript('js/benchmark-optimizer.js');
     </script>
 </head>
 <body>

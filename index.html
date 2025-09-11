@@ -14,9 +14,80 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <script src="libs/tailwindcss.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/index.css">
+    <!-- 关键CSS内联以提高首屏渲染速度 -->
+    <style>
+        /* 关键CSS - 内联以减少首屏渲染阻塞 */
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+        .page-bg { background-color: #000; color: #fff; }
+        .gradient-text { background: linear-gradient(90deg, #00ccff, #0e76a8, #00ccff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .gradient-btn { background: linear-gradient(90deg, #00ccff, #0e76a8); border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .hidden { display: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .text-white { color: #fff; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-500 { color: #6b7280; }
+        .text-xl { font-size: 1.25rem; }
+        .font-bold { font-weight: 700; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mt-8 { margin-top: 2rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .w-full { width: 100%; }
+        .max-w-4xl { max-width: 56rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .relative { position: relative; }
+        .h-12 { height: 3rem; }
+        .rounded-full { border-radius: 9999px; }
+        .overflow-hidden { overflow: hidden; }
+        .bg-\[\#0a0a0a\] { background-color: #0a0a0a; }
+        .border { border: 1px solid; }
+        .border-\[\#262626\] { border-color: #262626; }
+        .text-6xl { font-size: 3.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .flex-grow { flex-grow: 1; }
+        .transition-all { transition-property: all; transition-duration: 150ms; }
+        .duration-300 { transition-duration: 300ms; }
+        .fixed { position: fixed; }
+        .top-4 { top: 1rem; }
+        .left-4 { left: 1rem; }
+        .right-4 { right: 1rem; }
+        .z-10 { z-index: 10; }
+        .z-40 { z-index: 40; }
+        .z-50 { z-index: 50; }
+        .bg-\[\#222\] { background-color: #222; }
+        .hover\:bg-\[\#333\]:hover { background-color: #333; }
+        .border-\[\#333\] { border-color: #333; }
+        .hover\:border-white:hover { border-color: #fff; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+        .transition-colors { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 150ms; }
+        .w-5 { width: 1.25rem; }
+        .h-5 { height: 1.25rem; }
+        .fill-none { fill: none; }
+        .stroke-current { stroke: currentColor; }
+        .hover\:text-white:hover { color: #fff; }
+        /* 首屏关键样式 */
+        .search-input-container { height: 3rem; background-color: #0a0a0a; border: 1px solid #262626; border-radius: 9999px; overflow: hidden; display: flex; align-items: center; transition: all 300ms; }
+        .search-input-container:hover { border-color: #404040; }
+        .search-input-container:focus-within { border-color: #555555; box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5); }
+        .search-input { flex: 1; background: transparent; color: white; padding: 0 0.5rem; border: none; outline: none; }
+        .search-button { height: 100%; width: 3rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #9ca3af; }
+        .search-button:hover { color: white; }
+        .loading-spinner { width: 2rem; height: 2rem; border: 4px solid white; border-top: 4px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    
+    <!-- 非关键CSS异步加载 -->
+    <link rel="preload" href="css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/index.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/styles.css"></noscript>
+    <noscript><link rel="stylesheet" href="css/index.css"></noscript>
 
     <!-- 桌面端图标声明 -->
     <link rel="icon" href="/image/logo-black.png" sizes="48x48">
@@ -222,10 +293,10 @@
                         <!-- 改进的搜索框容器 - 集成式设计 -->
                         <div class="relative mb-3">
                             <!-- 搜索框外层容器 -->
-                            <div class="h-12 bg-[#0a0a0a] border border-[#262626] rounded-full overflow-hidden flex items-center transition-all duration-300 hover:border-[#404040] focus-within:border-[#555555] focus-within:shadow-lg focus-within:shadow-blue-500/10">
+                            <div class="search-input-container">
                                 <!-- 左侧首页按钮 - 集成在搜索框内 -->
                                 <button onclick="resetToHome()" 
-                                        class="h-full w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white transition-colors" 
+                                        class="search-button" 
                                         aria-label="返回首页" title="返回首页">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -234,14 +305,14 @@
                                 <!-- 搜索输入 - 自适应宽度 -->
                                 <input type="text" 
                                        id="searchInput" 
-                                       class="flex-1 bg-transparent text-white px-2 pr-0 py-0 focus:outline-none transition-colors" 
+                                       class="search-input" 
                                        placeholder="搜索你喜欢的视频..." 
                                        autocomplete="off"
                                        aria-label="视频搜索框"
                                        oninput="toggleClearButton()">
                                 <!-- 清空按钮 - 只在有输入时显示 -->
                                 <button id="clearSearchInput" 
-                                        class="h-full w-10 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white hidden"
+                                        class="search-button hidden"
                                         onclick="clearSearchInput()"
                                         aria-label="清空搜索框"
                                         title="清空搜索框">
@@ -251,7 +322,7 @@
                                 </button>
                                 <!-- 右侧搜索按钮 - 集成在搜索框内 -->
                                 <button onclick="search()" 
-                                        class="h-full w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white transition-colors" 
+                                        class="search-button" 
                                         aria-label="搜索按钮" title="搜索">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -422,7 +493,7 @@
     <!-- 添加 loading 提示框 -->
     <div id="loading" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
         <div class="bg-[#111] p-8 rounded-lg border border-[#333] flex items-center space-x-4">
-            <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div class="loading-spinner"></div>
             <p class="text-white text-lg">加载中...</p>
         </div>
     </div>
@@ -443,27 +514,47 @@
     }
     </script>
 
-    <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js"></script>
+    <!-- 异步加载非关键JavaScript -->
     <script>
-        // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
-        window._jsSha256 = window.sha256;
-    </script>
-    <script src="js/config.js"></script>
-    <script src="js/lazy-loading.js"></script>
-    <script src="js/proxy-auth.js"></script>
-    <script src="js/customer_site.js"></script>
-    <script src="js/loadBalancer.js"></script>
-    <script src="js/loadBalancerUI.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/douban.js"></script>
-    <script src="js/password.js"></script>
-    <script src="js/search.js"></script>
-    <script src="js/app.js"></script>
+        // 异步加载非关键JavaScript模块
+        function loadScript(src, callback) {
+            var script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            if (callback) {
+                script.onload = callback;
+            }
+            document.head.appendChild(script);
+        }
 
-    <!-- PWA 注册 -->
-    <!-- <script src="js/pwa-register.js"></script> -->
+        // 按需加载TailwindCSS
+        loadScript('libs/tailwindcss.min.js');
+        
+        // 按需加载其他JavaScript模块
+        loadScript('js/config.js');
+        loadScript('js/lazy-loading.js');
+        loadScript('js/proxy-auth.js');
+        loadScript('js/customer_site.js');
+        loadScript('js/loadBalancer.js');
+        loadScript('js/loadBalancerUI.js');
+        loadScript('js/ui.js');
+        loadScript('js/api.js');
+        loadScript('js/douban.js');
+        loadScript('js/password.js');
+        loadScript('js/search.js');
+        loadScript('js/app.js');
+        loadScript('js/version-utils.js');
+        loadScript('js/version-check.js');
+        loadScript('js/cache-manager.js');
+        loadScript('js/multi-level-cache.js');
+        loadScript('js/video-preloader.js');
+        loadScript('js/page-state-manager.js');
+        loadScript('js/performance-monitor.js');
+        loadScript('js/page-transition.js');
+        loadScript('js/user-behavior-tracker.js');
+        loadScript('js/performance-test.js');
+        loadScript('js/benchmark-optimizer.js');
+    </script>
 
     <!-- 添加到桌面功能 -->
     <script>
@@ -507,6 +598,10 @@
         // 监听appinstalled事件
         window.addEventListener('appinstalled', () => {
             console.log('应用已添加到桌面');
+            // 发送自定义事件跟踪安装行为
+            document.dispatchEvent(new CustomEvent('appInstalled', {
+                detail: { timestamp: Date.now() }
+            }));
         });
     </script>
 
@@ -520,27 +615,6 @@
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
         // ADMINPASSWORD 变量将在这里被服务器端注入  
         window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";
-    </script>
-
-    <!-- 版本工具脚本 -->
-    <script src="js/version-utils.js"></script>
-    
-    <!-- 版本检测脚本 -->
-    <script src="js/version-check.js"></script>
-
-    <!-- 缓存管理模块 -->
-    <script src="js/cache-manager.js"></script>
-
-    <!-- 添加弹窗和URL搜索参数处理脚本 -->
-    <script src="js/index-page.js"></script>
-    <script src="js/app.js"></script>
-    <script>
-        // 初始化邮箱点击处理器
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof setupEmailClickHandlers === 'function') {
-                setupEmailClickHandlers();
-            }
-        });
     </script>
 </body>
 </html>

@@ -86,9 +86,39 @@ window.onload = function() {
         metaRefresh.content = `3; url=${finalPlayerUrl}`;
     }
     
+    // 预加载视频内容
+    preloadVideoContent(finalPlayerUrl);
+    
     // 重定向到播放器页面
     setTimeout(() => {
         clearInterval(statusInterval);
         window.location.href = finalPlayerUrl;
     }, 2800); // 稍微早于meta refresh的时间，确保我们的JS控制重定向
 };
+
+/**
+ * 预加载视频内容
+ */
+function preloadVideoContent(playerUrl) {
+    // 如果有视频预加载器，使用它来预加载视频内容
+    if (window.videoPreloader) {
+        try {
+            // 从URL中提取视频URL
+            const urlParams = new URLSearchParams(new URL(playerUrl).search);
+            const videoUrl = urlParams.get('url');
+            
+            if (videoUrl) {
+                // 预加载视频源
+                window.videoPreloader.preloadVideoSource(videoUrl)
+                    .then(() => {
+                        console.log('视频内容预加载成功');
+                    })
+                    .catch((error) => {
+                        console.warn('视频内容预加载失败:', error);
+                    });
+            }
+        } catch (error) {
+            console.warn('解析视频URL失败:', error);
+        }
+    }
+}

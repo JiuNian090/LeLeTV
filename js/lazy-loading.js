@@ -1,14 +1,14 @@
 /**
  * LeLeTV 图片懒加载模块
  * 优化页面加载性能，减少初始加载时间
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 class LazyLoader {
     constructor(options = {}) {
         this.options = {
             // 根边距，提前多少像素开始加载
-            rootMargin: '50px 0px',
+            rootMargin: '150px 0px', // 提前150px开始加载（从50px优化为150px）
             // 交叉比例阈值
             threshold: 0.01,
             // 默认占位图片
@@ -23,10 +23,15 @@ class LazyLoader {
             errorClass: 'lazy-error',
             // 观察器配置
             observerConfig: {},
+            // 优先级阈值（可见区域50%以上为高优先级）
+            priorityThreshold: 0.5,
+            // 预加载关键图片的数量
+            preloadCount: 3,
             ...options
         };
 
         this.observer = null;
+        this.priorityObserver = null; // 用于高优先级图片的观察器
         this.init();
     }
 
@@ -40,6 +45,7 @@ class LazyLoader {
             return;
         }
 
+        // 普通优先级观察器配置
         const config = {
             root: null,
             rootMargin: this.options.rootMargin,
@@ -47,6 +53,15 @@ class LazyLoader {
             ...this.options.observerConfig
         };
 
+        // 高优先级观察器配置（更早触发）
+        const priorityConfig = {
+            root: null,
+            rootMargin: '200px 0px', // 比普通观察器更早触发
+            threshold: this.options.priorityThreshold,
+            ...this.options.observerConfig
+        };
+
+        // 普通优先级观察器
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -55,8 +70,21 @@ class LazyLoader {
             });
         }, config);
 
+        // 高优先级观察器
+        this.priorityObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // 高优先级图片立即加载
+                    this.loadImage(entry.target, true);
+                }
+            });
+        }, priorityConfig);
+
         // 观察所有懒加载图片
         this.observeImages();
+        
+        // 预加载关键图片
+        this.preloadCriticalImages();
     }
 
     /**
@@ -66,6 +94,10 @@ class LazyLoader {
         const images = document.querySelectorAll('img[data-lazy-src], img[data-src]');
         images.forEach(img => {
             this.observer.observe(img);
+            // 对于关键区域的图片，同时使用高优先级观察器
+            if (img.hasAttribute('data-priority') || img.closest('.critical-section')) {
+                this.priorityObserver.observe(img);
+            }
             this.setupImagePlaceholder(img);
         });
     }
@@ -83,12 +115,15 @@ class LazyLoader {
     /**
      * 加载图片
      */
-    loadImage(img) {
+    loadImage(img, isHighPriority = false) {
         const src = img.dataset.lazySrc || img.dataset.src;
         if (!src) return;
 
         // 停止观察当前图片
         this.observer.unobserve(img);
+        if (this.priorityObserver) {
+            this.priorityObserver.unobserve(img);
+        }
 
         // 添加加载中状态
         img.classList.add(this.options.loadingClass);
@@ -127,6 +162,7 @@ class LazyLoader {
         // 清理 dataset
         delete img.dataset.lazySrc;
         delete img.dataset.src;
+        delete img.dataset.priority;
         
         // 淡入动画
         requestAnimationFrame(() => {
@@ -145,6 +181,7 @@ class LazyLoader {
         // 清理 dataset
         delete img.dataset.lazySrc;
         delete img.dataset.src;
+        delete img.dataset.priority;
     }
 
     /**
@@ -153,6 +190,10 @@ class LazyLoader {
     observe(img) {
         if (this.observer && img) {
             this.observer.observe(img);
+            // 对于关键区域的图片，同时使用高优先级观察器
+            if (img.hasAttribute('data-priority') || img.closest('.critical-section')) {
+                this.priorityObserver.observe(img);
+            }
             this.setupImagePlaceholder(img);
         }
     }
@@ -164,6 +205,9 @@ class LazyLoader {
         if (this.observer && img) {
             this.observer.unobserve(img);
         }
+        if (this.priorityObserver && img) {
+            this.priorityObserver.unobserve(img);
+        }
     }
 
     /**
@@ -172,8 +216,11 @@ class LazyLoader {
     refresh() {
         if (this.observer) {
             this.observer.disconnect();
-            this.observeImages();
         }
+        if (this.priorityObserver) {
+            this.priorityObserver.disconnect();
+        }
+        this.observeImages();
     }
 
     /**
@@ -183,6 +230,10 @@ class LazyLoader {
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
+        }
+        if (this.priorityObserver) {
+            this.priorityObserver.disconnect();
+            this.priorityObserver = null;
         }
     }
 
@@ -199,8 +250,29 @@ class LazyLoader {
                 img.src = src;
                 delete img.dataset.lazySrc;
                 delete img.dataset.src;
+                delete img.dataset.priority;
             }
         });
+    }
+
+    /**
+     * 预加载关键图片
+     */
+    preloadCriticalImages() {
+        // 获取标记为关键的图片
+        const criticalImages = document.querySelectorAll('img[data-priority], .critical-section img');
+        const preloadCount = Math.min(this.options.preloadCount, criticalImages.length);
+        
+        // 预加载前N个关键图片
+        for (let i = 0; i < preloadCount; i++) {
+            const img = criticalImages[i];
+            if (img && (img.dataset.lazySrc || img.dataset.src)) {
+                // 添加高优先级标记
+                img.dataset.priority = 'true';
+                // 立即开始加载
+                this.loadImage(img, true);
+            }
+        }
     }
 
     /**
@@ -239,8 +311,10 @@ window.LazyLoader = LazyLoader;
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
     window.lazyLoader = new LazyLoader({
-        rootMargin: '100px 0px', // 提前100px开始加载
-        threshold: 0.01
+        rootMargin: '150px 0px', // 提前150px开始加载
+        threshold: 0.01,
+        priorityThreshold: 0.5, // 优先级阈值
+        preloadCount: 3 // 预加载关键图片数量
     });
 });
 

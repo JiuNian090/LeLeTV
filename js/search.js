@@ -1,5 +1,18 @@
 async function searchByAPIAndKeyWord(apiId, query) {
     try {
+        // 如果有负载均衡器，使用负载均衡器的增强搜索功能
+        if (window.loadBalancer) {
+            // 检查API是否过载
+            if (window.loadBalancer.isApiOverloaded(apiId)) {
+                console.warn(`API ${apiId} 当前过载，跳过`);
+                return [];
+            }
+            
+            // 使用负载均衡器执行搜索
+            return await window.loadBalancer.executeSearchRequest(query, [apiId]);
+        }
+        
+        // 如果没有负载均衡器，使用原有逻辑
         let apiUrl, apiName, apiBaseUrl;
         
         // 处理自定义API

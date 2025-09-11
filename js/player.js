@@ -47,6 +47,7 @@ let shortcutHintTimeout = null; // 用于控制快捷键提示显示时间
 let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
+let videoPreloader = null; // 视频预加载器实例
 const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function')
 Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
@@ -65,6 +66,23 @@ document.addEventListener('DOMContentLoaded', function () {
 // 监听密码验证成功事件
 document.addEventListener('passwordVerified', () => {
     document.getElementById('player-loading').style.display = 'block';
+
+    initializePageContent();
+});
+
+// 初始化页面内容
+function initializePageContent() {
+    // 初始化视频预加载器
+    if (window.videoPreloader) {
+        videoPreloader = window.videoPreloader;
+    }
+
+    // 先检查用户是否已通过密码验证
+    if (!isPasswordVerified()) {
+        // 隐藏加载提示
+        document.getElementById('player-loading').style.display = 'none';
+        return;
+    }
 
     initializePageContent();
 });
@@ -393,12 +411,17 @@ function initPlayer(videoUrl) {
         liveDurationInfinity: false
     };
 
+    // 优化：延迟非关键组件初始化
+    setTimeout(() => {
+        initializeNonCriticalComponents();
+    }, 1000);
+
     // Create new ArtPlayer instance
     art = new Artplayer({
         container: '#player',
         url: videoUrl,
         type: 'm3u8',
-        title: videoTitle,
+        title: currentVideoTitle,
         volume: 0.8,
         isLive: false,
         muted: false,
@@ -714,6 +737,49 @@ function initPlayer(videoUrl) {
     }, 10000);
 }
 
+/**
+ * 初始化非关键组件
+ */
+function initializeNonCriticalComponents() {
+    // 初始化移动端长按三倍速播放功能
+    setupLongPressSpeedControl();
+    
+    // 设置进度条准确点击处理
+    setupProgressBarPreciseClicks();
+    
+    // 添加键盘快捷键事件监听
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    
+    // 添加页面离开事件监听，保存播放位置
+    window.addEventListener('beforeunload', saveCurrentProgress);
+    
+    // 新增：页面隐藏（切后台/切标签）时也保存
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') {
+            saveCurrentProgress();
+        }
+    });
+    
+    // 视频暂停时也保存
+    const waitForVideo = setInterval(() => {
+        if (art && art.video) {
+            art.video.addEventListener('pause', saveCurrentProgress);
+
+            // 新增：播放进度变化时节流保存
+            let lastSave = 0;
+            art.video.addEventListener('timeupdate', function() {
+                const now = Date.now();
+                if (now - lastSave > 5000) { // 每5秒最多保存一次
+                    saveCurrentProgress();
+                    lastSave = now;
+                }
+            });
+
+            clearInterval(waitForVideo);
+        }
+    }, 200);
+}
+
 // 自定义M3U8 Loader用于过滤广告
 class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
     constructor(config) {
@@ -904,6 +970,11 @@ function playEpisode(index) {
 
     // 三秒后保存到历史记录
     setTimeout(() => saveToHistory(), 3000);
+    
+    // 预加载下一集
+    if (videoPreloader && currentEpisodes && currentEpisodes.length > 0) {
+        videoPreloader.preloadNextEpisode(index, currentEpisodes);
+    }
 }
 
 // 播放上一集

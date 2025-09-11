@@ -1199,7 +1199,7 @@ function hookInput() {
 }
 document.addEventListener('DOMContentLoaded', hookInput);
 
-// 显示详情 - 修改为支持自定义API
+// 显示详情 - 修改为支持自定义API和使用负载均衡器缓存
 async function showDetails(id, vod_name, sourceCode) {
     // 密码保护校验
     if (window.isPasswordProtected && window.isPasswordVerified) {
@@ -1213,37 +1213,55 @@ async function showDetails(id, vod_name, sourceCode) {
         return;
     }
 
+    // 发送自定义事件跟踪详情查看行为
+    document.dispatchEvent(new CustomEvent('viewDetails', {
+        detail: { 
+            id: id,
+            name: vod_name,
+            source: sourceCode,
+            timestamp: Date.now()
+        }
+    }));
+
     showLoading();
     try {
-        // 构建API参数
-        let apiParams = '';
-
-        // 处理自定义API源
-        if (sourceCode.startsWith('custom_')) {
-            const customIndex = sourceCode.replace('custom_', '');
-            const customApi = getCustomApiInfo(customIndex);
-            if (!customApi) {
-                showToast('自定义API配置无效', 'error');
-                hideLoading();
-                return;
-            }
-            // 传递 detail 字段
-            if (customApi.detail) {
-                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
-            } else {
-                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
-            }
+        let data;
+        
+        // 如果有负载均衡器，使用负载均衡器获取详情
+        if (window.loadBalancer) {
+            data = await window.loadBalancer.getApiDetail(sourceCode, id);
         } else {
-            // 内置API
-            apiParams = '&source=' + sourceCode;
+            // 如果没有负载均衡器，使用原有逻辑
+            // 构建API参数
+            let apiParams = '';
+
+            // 处理自定义API源
+            if (sourceCode.startsWith('custom_')) {
+                const customIndex = sourceCode.replace('custom_', '');
+                const customApi = getCustomApiInfo(customIndex);
+                if (!customApi) {
+                    showToast('自定义API配置无效', 'error');
+                    hideLoading();
+                    return;
+                }
+                // 传递 detail 字段
+                if (customApi.detail) {
+                    apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
+                } else {
+                    apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
+                }
+            } else {
+                // 内置API
+                apiParams = '&source=' + sourceCode;
+            }
+
+            // Add a timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const cacheBuster = `&_t=${timestamp}`;
+            const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
+
+            data = await response.json();
         }
-
-        // Add a timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const cacheBuster = `&_t=${timestamp}`;
-        const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
-
-        const data = await response.json();
 
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modalTitle');
@@ -1350,6 +1368,18 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
             return;
         }
     }
+
+    // 发送自定义事件跟踪播放行为
+    document.dispatchEvent(new CustomEvent('videoPlay', {
+        detail: { 
+            url: url,
+            name: vod_name,
+            source: sourceCode,
+            episodeIndex: episodeIndex,
+            vodId: vodId,
+            timestamp: Date.now()
+        }
+    }));
 
     // 获取当前路径作为返回页面
     let currentPath = window.location.href;
