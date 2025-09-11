@@ -99,6 +99,14 @@ jobs:
           git push origin "$VERSION"
           echo "Pushed tag $VERSION to origin"
 
+      # 新增步骤：即使tag已存在，也要确保推送tag到远程仓库
+      - name: Push tag if exists
+        if: steps.check-commit.outputs.skip == 'false' && steps.check-tag.outputs.tag_exists == 'true'
+        run: |
+          VERSION=${{ steps.extract-info.outputs.version }}
+          # 确保tag已推送到远程仓库
+          git push origin "$VERSION" || echo "Tag $VERSION already exists on remote"
+
       - name: Check if Release already exists
         if: steps.check-commit.outputs.skip == 'false'
         id: check-release
@@ -119,7 +127,9 @@ jobs:
                 console.log(`Release for tag ${version} does not exist`)
                 return 'release_exists=false'
               } else {
-                throw error
+                console.log(`Error checking release: ${error.message}`)
+                // 即使检查失败，我们也尝试创建release
+                return 'release_exists=false'
               }
             }
           env:
@@ -127,8 +137,9 @@ jobs:
           result-encoding: string
         continue-on-error: true
 
-      - name: Create Release
-        if: steps.check-commit.outputs.skip == 'false' && steps.check-release.outputs.result != 'release_exists=true'
+      # 修改Release创建逻辑，确保即使tag已存在也能正确创建release
+      - name: Create or Update Release
+        if: steps.check-commit.outputs.skip == 'false'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.extract-info.outputs.version }}
@@ -147,3 +158,5 @@ jobs:
           prerelease: false
           makeLatest: true
           allowUpdates: true
+          # 即使release已存在，也允许更新
+          updateOnly: false
