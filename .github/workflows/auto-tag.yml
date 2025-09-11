@@ -113,23 +113,23 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { version } = process.env
+            const { version } = process.env;
             try {
               const response = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag: version
-              })
-              console.log(`Release for tag ${version} already exists`)
-              return 'release_exists=true'
+              });
+              console.log(`Release for tag ${version} already exists`);
+              return 'release_exists=true';
             } catch (error) {
               if (error.status === 404) {
-                console.log(`Release for tag ${version} does not exist`)
-                return 'release_exists=false'
+                console.log(`Release for tag ${version} does not exist`);
+                return 'release_exists=false';
               } else {
-                console.log(`Error checking release: ${error.message}`)
+                console.log(`Error checking release: ${error.message}`);
                 // 即使检查失败，我们也尝试创建release
-                return 'release_exists=false'
+                return 'release_exists=false';
               }
             }
           env:

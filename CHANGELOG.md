@@ -13,6 +13,15 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.21 (2025-09-11 19:35)
+- [其他] 修复tag已存在时release创建失败的问题
+
+修改GitHub Actions工作流，确保即使tag已存在也能正确创建release
+优化release检查逻辑，检查失败时仍尝试创建release
+移除release创建的条件限制，允许更新已存在的release
+增加tag推送步骤，确保tag在远程仓库中存在。
+
+
 ### v1.9.11.20 (2025-09-11 20:00)
 - [修复] 解决tag已存在时release无法自动生成的问题 @CHANGELOG.md。
 
