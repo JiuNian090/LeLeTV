@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Check if commit message contains @CHANGELOG.md
         id: check-commit
@@ -111,7 +111,7 @@ jobs:
       - name: Check if Release already exists
         if: steps.check-commit.outputs.skip == 'false'
         id: check-release
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const { version } = process.env;
