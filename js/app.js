@@ -1053,10 +1053,6 @@ async function search() {
 
         resultsDiv.innerHTML = safeResults;
         
-        // 刷新懒加载观察器
-        if (window.lazyLoader) {
-            window.lazyLoader.refresh();
-        }
     } catch (error) {
         console.error('搜索错误:', error);
         if (error.name === 'AbortError') {

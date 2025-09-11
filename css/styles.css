@@ -919,33 +919,6 @@ body {
     text-align: right;
 }
 
-/* 懒加载样式 */
-.lazy-loading {
-    background: linear-gradient(90deg, #222 25%, #333 50%, #222 75%);
-    background-size: 200% 100%;
-    animation: loading-shimmer 1.5s infinite;
-    filter: blur(2px);
-    transition: filter 0.3s ease;
-}
-
-.lazy-loaded {
-    filter: none;
-}
-
-.lazy-error {
-    opacity: 0.6;
-    filter: grayscale(1);
-}
-
-@keyframes loading-shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
-}
-
 /* 图片容器通用样式 */
 .image-container {
     position: relative;

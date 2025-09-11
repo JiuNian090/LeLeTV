@@ -544,12 +544,6 @@ function loadViewingHistory() {
         historyList.classList.add('pb-4');
     }
     
-    // 刷新懒加载观察器
-    if (window.lazyLoader) {
-        setTimeout(() => {
-            window.lazyLoader.refresh();
-        }, 100);
-    }
 }
 
 // 格式化播放时间为 mm:ss 格式
