@@ -13,6 +13,11 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.26 (2025-09-11 19:55)
+- [修复] 修复ncipollo/release-action中GITHUB_TOKEN位置不正确的问题
+- [优化] 确保Release创建步骤能正常访问GitHub API
+- [改进] 优化Release创建逻辑，提高稳定性
+
 ### v1.9.11.25 (2025-09-11 19:55)
 - [修复] 修复github-script步骤中的GITHUB_TOKEN环境变量配置问题
 

@@ -148,13 +148,13 @@ jobs:
           name: Release ${{ steps.extract-info.outputs.version }}
           body: |
             # Release ${{ steps.extract-info.outputs.version }}
-            
+
             ## 更新内容
-            
+
             ${{ steps.extract-info.outputs.release_notes }}
-            
+
             ---
-            
+
             自动发布于 $(date +'%Y-%m-%d %H:%M:%S')
           draft: false
           prerelease: false
@@ -163,5 +163,3 @@ jobs:
           # 即使release已存在，也允许更新
           updateOnly: false
           token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
