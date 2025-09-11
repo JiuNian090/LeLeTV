@@ -1,4 +1,4 @@
-name: Auto Tag
+name: Auto Tag and Release
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  auto-tag:
+  auto-tag-and-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,5 +32,37 @@ jobs:
 
       - name: Create and push tag
         if: steps.check-commit.outputs.skip == 'false'
+        id: create-tag
         run: |
+          # 运行标签创建脚本
           node scripts/create-tag.js
+          
+          # 获取版本号
+          VERSION=$(grep -m 1 "### v" CHANGELOG.md | sed -E 's/### (v[0-9.]+).*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # 提取更新日志
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          awk '/^### v'"$VERSION"'/,/^### v/ { if (!/^### v'"$VERSION"'/ && !/^### v/) print }' CHANGELOG.md | head -n -1 >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.check-commit.outputs.skip == 'false'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create-tag.outputs.version }}
+          release_name: ${{ steps.create-tag.outputs.version }}
+          body: |
+            # Release ${{ steps.create-tag.outputs.version }}
+            
+            ## 更新内容
+            
+            ${{ steps.create-tag.outputs.release_notes }}
+            
+            ---
+            
+            自动发布于 $(date +'%Y-%m-%d %H:%M:%S')
+          draft: false
+          prerelease: false
