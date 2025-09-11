@@ -39,19 +39,25 @@ jobs:
         id: commit-info
         run: |
           COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
-          # 更好的转义处理，避免乱码
-          COMMIT_MSG_ESCAPED=$(echo "$COMMIT_MSG" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g' | sed 's/"/%22/g' | sed "s/'/%27/g")
-          echo "message=$COMMIT_MSG_ESCAPED" >> $GITHUB_OUTPUT
+          # 使用更安全的转义方法，避免GitHub Actions解析错误
+          COMMIT_MSG_ESCAPED=$(echo "$COMMIT_MSG" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g')
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MSG_ESCAPED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           
           # 获取提交作者
           COMMIT_AUTHOR=$(git log --format=%an -n 1 HEAD)
-          COMMIT_AUTHOR_ESCAPED=$(echo "$COMMIT_AUTHOR" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g' | sed 's/"/%22/g' | sed "s/'/%27/g")
-          echo "author=$COMMIT_AUTHOR_ESCAPED" >> $GITHUB_OUTPUT
+          COMMIT_AUTHOR_ESCAPED=$(echo "$COMMIT_AUTHOR" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g')
+          echo "author<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_AUTHOR_ESCAPED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           
           # 获取提交时间
           COMMIT_DATE=$(git log --format=%ad --date=iso -n 1 HEAD)
-          COMMIT_DATE_ESCAPED=$(echo "$COMMIT_DATE" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g' | sed 's/"/%22/g' | sed "s/'/%27/g")
-          echo "date=$COMMIT_DATE_ESCAPED" >> $GITHUB_OUTPUT
+          COMMIT_DATE_ESCAPED=$(echo "$COMMIT_DATE" | sed 's/%/%25/g' | sed 's/\r/%0D/g' | sed 's/\n/%0A/g')
+          echo "date<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_DATE_ESCAPED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create and push tag
         if: steps.check-commit.outputs.skip == 'false'
