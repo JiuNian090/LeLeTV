@@ -13,6 +13,10 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.27 (2025-09-11 21:49)
+- [其他] 移除自动生成tag和release的GitHub Actions工作流。
+
+
 ### v1.9.11.26 (2025-09-11 19:55)
 - [修复] 修复ncipollo/release-action中GITHUB_TOKEN位置不正确的问题
 - [优化] 确保Release创建步骤能正常访问GitHub API
