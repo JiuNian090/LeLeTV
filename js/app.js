@@ -68,7 +68,7 @@ function verifyAdminPassword() {
         // 检查是否设置了管理员密码
         const adminPasswordHash = window.__ENV__ && window.__ENV__.ADMINPASSWORD;
         if (!adminPasswordHash) {
-            showToast('未设置管理员密码，无法修改成人内容过滤设置', 'error');
+            showToast('未设置隐藏内容密码，无法修改成人内容过滤设置', 'error');
             resolve(false);
             return;
         }
@@ -80,17 +80,17 @@ function verifyAdminPassword() {
         modal.innerHTML = `
             <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold gradient-text">管理员验证</h2>
+                    <h2 class="text-xl font-bold gradient-text">隐藏内容验证</h2>
                 </div>
                 <div class="mb-6">
-                    <p class="text-gray-300 mb-4">请输入管理员密码以修改成人内容过滤设置</p>
+                    <p class="text-gray-300 mb-4">请输入隐藏密码以解锁🔓隐藏🈲内容过滤设置，密码提示:⟲</p>
                     <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="管理员密码...">
                     <div class="mt-4 flex space-x-4">
                         <button id="adminPasswordSubmitBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">确认</button>
                         <button id="adminPasswordCancelBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">取消</button>
                     </div>
                 </div>
-                <p id="adminPasswordError" class="text-red-500 mt-2 hidden">管理员密码错误，请重试</p>
+                <p id="adminPasswordError" class="text-red-500 mt-2 hidden">隐藏密码错误，请重试，试试password反过来！</p>
             </div>
         `;
 
@@ -111,7 +111,7 @@ function verifyAdminPassword() {
         const verifyPassword = async () => {
             const inputPassword = passwordInput.value.trim();
             if (!inputPassword) {
-                errorMsg.textContent = '请输入管理员密码';
+                errorMsg.textContent = '请输入隐藏内容密码';
                 errorMsg.classList.remove('hidden');
                 return;
             }
@@ -123,7 +123,7 @@ function verifyAdminPassword() {
                     cleanup();
                     resolve(true);
                 } else {
-                    errorMsg.textContent = '管理员密码错误，请重试';
+                    errorMsg.textContent = '隐藏内容密码错误，请重试';
                     errorMsg.classList.remove('hidden');
                     passwordInput.select();
                 }
@@ -326,7 +326,7 @@ function addAdultAPI() {
         adultdiv.className = 'grid grid-cols-2 gap-2';
         const adultTitle = document.createElement('div');
         adultTitle.className = 'api-group-title adult';
-        adultTitle.innerHTML = `成人资源采集站 <span class="adult-warning">
+        adultTitle.innerHTML = `隐藏资源采集站 <span class="adult-warning">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -386,7 +386,7 @@ function checkAdultAPIsSelected() {
 
         // 修改描述文字
         if (filterDescription) {
-            filterDescription.innerHTML = '<strong class="text-pink-300">选中成人资源站时无法启用此过滤</strong>';
+            filterDescription.innerHTML = '<strong class="text-pink-300">选中隐藏资源站时无法启用此过滤</strong>';
         }
 
         // 移除提示信息（如果存在）
@@ -401,7 +401,7 @@ function checkAdultAPIsSelected() {
 
         // 恢复原来的描述文字
         if (filterDescription) {
-            filterDescription.innerHTML = '过滤"伦理片"等黄色内容';
+            filterDescription.innerHTML = '过滤"伦理片🈲"等隐藏内容';
         }
 
         // 移除提示信息
