@@ -65,10 +65,6 @@ jobs:
         run: |
           # 运行标签创建脚本
           node scripts/create-tag.js
-          
-          # 获取版本号
-          VERSION=$(grep -m 1 "### v" CHANGELOG.md | sed -E 's/### (v[0-9.]+).*/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: steps.check-commit.outputs.skip == 'false'
@@ -93,3 +89,4 @@ jobs:
             自动发布于 $(date +'%Y-%m-%d %H:%M:%S')
           draft: false
           prerelease: false
+          makeLatest: true

@@ -89,20 +89,22 @@ try {
     process.exit(1);
   }
   
-  // 输出版本号供GitHub Actions使用
-  console.log(`::set-output name=version::${version}`);
+  // 输出版本号供GitHub Actions使用（使用新的GITHUB_OUTPUT格式）
+  const githubOutput = process.env.GITHUB_OUTPUT;
+  if (githubOutput) {
+    fs.appendFileSync(githubOutput, `version=${version}\n`);
+  }
   
-  // 输出更新日志内容
+  // 输出更新日志内容（使用新的GITHUB_OUTPUT格式）
   if (messageLines.length > 0) {
     const releaseNotes = messageLines.join('\n').trim();
-    // 转义特殊字符以避免GitHub Actions解析错误
-    const escapedNotes = releaseNotes
-      .replace(/%/g, '%25')
-      .replace(/\r/g, '%0D')
-      .replace(/\n/g, '%0A');
-    console.log(`::set-output name=release_notes::${escapedNotes}`);
+    if (githubOutput) {
+      fs.appendFileSync(githubOutput, `release_notes<<EOF\n${releaseNotes}\nEOF\n`);
+    }
   } else {
-    console.log(`::set-output name=release_notes::Release ${version}`);
+    if (githubOutput) {
+      fs.appendFileSync(githubOutput, `release_notes=Release ${version}\n`);
+    }
   }
 } catch (error) {
   console.error('Error reading CHANGELOG.md:', error);
