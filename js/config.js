@@ -119,6 +119,16 @@ const API_SITES = {
         name: 'kg资源',
         adult: true
     },
+    nxzy: {
+        api: 'https://naixxzy.com/api.php/provide/vod',
+        name: '奶香资源',
+        adult: true
+    },
+    lbzy: {
+        api: 'https://lbapi9.com/api.php/provide/vod',
+        name: 'lb资源',
+        adult: true
+    },
     
 }
 
