@@ -1,0 +1,66 @@
+name: Auto Tag and Release Simple
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  auto-tag-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if commit message contains @CHANGELOG.md
+        id: check-commit
+        run: |
+          COMMIT_MSG=$(git log --format=%B -n 1 HEAD)
+          if echo "$COMMIT_MSG" | grep -q "@CHANGELOG.md"; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract version from CHANGELOG.md
+        if: steps.check-commit.outputs.skip == 'false'
+        id: extract-info
+        run: |
+          # 提取最新版本号
+          VERSION=$(grep -m 1 "### v" CHANGELOG.md | sed -E 's/### (v[0-9.]+).*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # 简单的发布说明
+          echo "release_notes=Release for $VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        if: steps.check-commit.outputs.skip == 'false'
+        run: |
+          VERSION=${{ steps.extract-info.outputs.version }}
+          RELEASE_NOTES=${{ steps.extract-info.outputs.release_notes }}
+          
+          # 创建标签
+          git tag -a "$VERSION" -m "$RELEASE_NOTES"
+          echo "Created tag $VERSION"
+          
+          # 推送标签到远程仓库
+          git push origin "$VERSION"
+          echo "Pushed tag $VERSION to origin"
+
+      - name: Create Release
+        if: steps.check-commit.outputs.skip == 'false'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.extract-info.outputs.version }}
+          name: Release ${{ steps.extract-info.outputs.version }}
+          body: ${{ steps.extract-info.outputs.release_notes }}
+          draft: false
+          prerelease: false
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
