@@ -99,8 +99,36 @@ jobs:
           git push origin "$VERSION"
           echo "Pushed tag $VERSION to origin"
 
+      - name: Check if Release already exists
+        if: steps.check-commit.outputs.skip == 'false'
+        id: check-release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { version } = process.env
+            try {
+              const response = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: version
+              })
+              console.log(`Release for tag ${version} already exists`)
+              return 'release_exists=true'
+            } catch (error) {
+              if (error.status === 404) {
+                console.log(`Release for tag ${version} does not exist`)
+                return 'release_exists=false'
+              } else {
+                throw error
+              }
+            }
+          env:
+            version: ${{ steps.extract-info.outputs.version }}
+          result-encoding: string
+        continue-on-error: true
+
       - name: Create Release
-        if: steps.check-commit.outputs.skip == 'false' && steps.check-tag.outputs.tag_exists == 'false'
+        if: steps.check-commit.outputs.skip == 'false' && steps.check-release.outputs.result != 'release_exists=true'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.extract-info.outputs.version }}
