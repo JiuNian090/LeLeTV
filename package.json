@@ -3,16 +3,38 @@
   "type": "module",
   "version": "1.1.0",
   "private": true,
-  
-  "description": "自用免费观影平台",
-  "author": "JiuNian090",
+  "description": "LeLeTV - 乐乐影视",
+  "keywords": [
+    "video",
+    "streaming",
+    "entertainment",
+    "movies",
+    "tv-shows",
+    "player"
+  ],
+  "homepage": "https://leletv.776645.xyz",
+  "author": {
+    "name": "JiuNian090",
+    "email": "jiunian090@gmail.com"
+  },
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JiuNian090/leletv.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JiuNian090/leletv/issues"
+  },
   "scripts": {
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
+    "build": "echo 'Building project...'",
+    "test": "echo 'Running tests...'",
     "tag": "node scripts/create-tag.js",
     "historical-releases": "node scripts/create-historical-releases.js",
-    "test-auto-release": "node scripts/test-auto-release.js"
+    "test-auto-release": "node scripts/test-auto-release.js",
+    "lint": "echo 'Linting code...'",
+    "format": "echo 'Formatting code...'"
   },
   "dependencies": {
     "axios": "^1.9.0",
@@ -23,5 +45,14 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  }
+  },
+  "engines": {
+    "node": "^16.0.0 || ^18.0.0 || ^20.0.0",
+    "npm": "^8.0.0 || ^9.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }

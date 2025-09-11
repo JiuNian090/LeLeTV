@@ -3,17 +3,19 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
+import { dirname, join } from 'path';
+import fs from 'fs/promises';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
+// 配置对象
 const config = {
-  port: process.env.PORT || 8080,
+  port: parseInt(process.env.PORT || '8080'),
   password: process.env.PASSWORD || '',
   adminPassword: process.env.ADMINPASSWORD || '',
   corsOrigin: process.env.CORS_ORIGIN || '*',
@@ -21,13 +23,19 @@ const config = {
   maxRetries: parseInt(process.env.MAX_RETRIES || '2'),
   cacheMaxAge: process.env.CACHE_MAX_AGE || '1d',
   userAgent: process.env.USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-  debug: process.env.DEBUG === 'false'
+  debug: process.env.DEBUG !== 'false'
 };
 
+// 日志记录函数
 const log = (...args) => {
   if (config.debug) {
-    console.log('[DEBUG]', ...args);
+    console.log('[DEBUG]', new Date().toISOString(), ...args);
   }
+};
+
+// 错误日志函数
+const errorLog = (...args) => {
+  console.error('[ERROR]', new Date().toISOString(), ...args);
 };
 
 const app = express();
@@ -53,24 +61,32 @@ function sha256Hash(input) {
   });
 }
 
+// 渲染页面并注入密码哈希
 async function renderPage(filePath, password, adminPassword = '') {
-  let content = fs.readFileSync(filePath, 'utf8');
-  if (password !== '') {
-    const sha256 = await sha256Hash(password);
-    content = content.replace('{{PASSWORD}}', sha256);
-  } else {
-    content = content.replace('{{PASSWORD}}', '');
+  try {
+    let content = await fs.readFile(filePath, 'utf8');
+    
+    // 注入用户密码
+    if (password !== '') {
+      const sha256 = await sha256Hash(password);
+      content = content.replace('{{PASSWORD}}', sha256);
+    } else {
+      content = content.replace('{{PASSWORD}}', '');
+    }
+    
+    // 注入管理员密码
+    if (adminPassword !== '') {
+      const adminSha256 = await sha256Hash(adminPassword);
+      content = content.replace('{{ADMINPASSWORD}}', adminSha256);
+    } else {
+      content = content.replace('{{ADMINPASSWORD}}', '');
+    }
+    
+    return content;
+  } catch (error) {
+    errorLog('读取文件失败:', filePath, error);
+    throw error;
   }
-  
-  // 注入管理员密码
-  if (adminPassword !== '') {
-    const adminSha256 = await sha256Hash(adminPassword);
-    content = content.replace('{{ADMINPASSWORD}}', adminSha256);
-  } else {
-    content = content.replace('{{ADMINPASSWORD}}', '');
-  }
-  
-  return content;
 }
 
 app.get(['/', '/index.html', '/player.html'], async (req, res) => {
@@ -78,28 +94,28 @@ app.get(['/', '/index.html', '/player.html'], async (req, res) => {
     let filePath;
     switch (req.path) {
       case '/player.html':
-        filePath = path.join(__dirname, 'player.html');
+        filePath = join(__dirname, 'player.html');
         break;
       default: // '/' 和 '/index.html'
-        filePath = path.join(__dirname, 'index.html');
+        filePath = join(__dirname, 'index.html');
         break;
     }
     
     const content = await renderPage(filePath, config.password, config.adminPassword);
     res.send(content);
   } catch (error) {
-    console.error('页面渲染错误:', error);
-    res.status(500).send('读取静态页面失败');
+      errorLog('页面渲染错误:', error);
+      res.status(500).send('读取静态页面失败');
   }
 });
 
 app.get('/s=:keyword', async (req, res) => {
   try {
-    const filePath = path.join(__dirname, 'index.html');
+    const filePath = join(__dirname, 'index.html');
     const content = await renderPage(filePath, config.password, config.adminPassword);
     res.send(content);
   } catch (error) {
-    console.error('搜索页面渲染错误:', error);
+    errorLog('搜索页面渲染错误:', error);
     res.status(500).send('读取静态页面失败');
   }
 });
@@ -231,7 +247,7 @@ app.get('/proxy/:encodedUrl', async (req, res) => {
     // 管道传输响应流
     response.data.pipe(res);
   } catch (error) {
-    console.error('代理请求错误:', error.message);
+    errorLog('代理请求错误:', error.message);
     if (error.response) {
       res.status(error.response.status || 500);
       error.response.data.pipe(res);
@@ -241,7 +257,7 @@ app.get('/proxy/:encodedUrl', async (req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname), {
+app.use(express.static(join(__dirname), {
   maxAge: config.cacheMaxAge,
   setHeaders: function (res, path) {
     if (path.endsWith('.png')) {
@@ -251,9 +267,9 @@ app.use(express.static(path.join(__dirname), {
 }));
 
 app.use((err, req, res, next) => {
-  console.error('服务器错误:', err);
-  res.status(500).send('服务器内部错误');
-});
+    errorLog('服务器错误:', err);
+    res.status(500).send('服务器内部错误');
+  });
 
 app.use((req, res) => {
   res.status(404).send('页面未找到');
