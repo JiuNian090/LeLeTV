@@ -15,6 +15,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.12 (2025-09-11 18:30)
+- [其他] 清理临时脚本和命令
+- 移除了用于创建和更新 GitHub Releases 的临时 PowerShell 和 Bash 脚本
+- 清理了 package.json 中相关的 npm 命令
+- 保留了核心的 create-historical-releases.js 脚本以备将来使用
+
 ### v1.9.11.11 (2025-09-11 17:56)
 - [其他] 添加历史版本及发布脚本命令
 

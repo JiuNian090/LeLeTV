@@ -11,8 +11,7 @@
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
     "tag": "node scripts/create-tag.js",
-    "historical-releases": "node scripts/create-historical-releases.js",
-    "create-releases": "powershell -ExecutionPolicy Bypass -File scripts/create-releases.ps1"
+    "historical-releases": "node scripts/create-historical-releases.js"
   },
   "dependencies": {
     "axios": "^1.9.0",

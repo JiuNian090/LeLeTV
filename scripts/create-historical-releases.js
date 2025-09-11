@@ -22,6 +22,17 @@ if (isGitHubActions && !githubRepository) {
   process.exit(1);
 }
 
+// 更好的字符转义函数
+function escapeForShell(str) {
+  if (!str) return '';
+  return str
+    .replace(/%/g, '%25')
+    .replace(/\r/g, '%0D')
+    .replace(/\n/g, '%0A')
+    .replace(/"/g, '%22')
+    .replace(/'/g, '%27');
+}
+
 // 读取 CHANGELOG.md 文件
 try {
   const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
@@ -79,8 +90,10 @@ try {
     console.log(`标题: ${version}`);
     console.log(`内容:\n${releaseBody}\n`);
     
+    // 使用更好的转义处理
+    const escapedReleaseBody = escapeForShell(releaseBody);
     console.log(`请在GitHub上手动为标签 ${version} 创建Release，或使用GitHub CLI执行以下命令:`);
-    console.log(`gh release create "${version}" --title "${version}" --notes "${releaseBody.replace(/"/g, '\\"')}"\n`);
+    console.log(`gh release create "${version}" --title "${version}" --notes "${escapedReleaseBody}"\n`);
     
     // 添加延迟
     await new Promise(resolve => setTimeout(resolve, 1000));
