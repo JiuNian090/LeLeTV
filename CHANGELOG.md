@@ -15,6 +15,21 @@ npm run tag
 ```
 ## 版本历史
 
+### v1.9.11.16 (2025-09-11 18:53)
+- [其他] 。
+
+
+### v1.9.11.15 (2025-09-11 19:15)
+- [其他] 将最新推送的 Release 自动设置为 latest
+- 在 GitHub Actions 工作流中添加了 makeLatest: true 参数
+- 确保最新创建的 Release 会自动标记为 latest Release
+
+### v1.9.11.14 (2025-09-11 19:00)
+- [修复] 解决了 GitHub Release 在项目页面不显示的问题
+- 修复了 create-tag.js 脚本中的输出格式，使用新的 GITHUB_OUTPUT 格式替代旧的 ::set-output 语法
+- 优化了 GitHub Actions 工作流中的 Release 创建流程
+- 确保 Release 内容正确显示并能在项目页面正常查看
+
 ### v1.9.11.13 (2025-09-11 18:45)
 - [修复] 解决了 GitHub Actions 中 Release 内容乱码问题
 - 修复了 auto-tag.yml 工作流中的字符串转义逻辑
