@@ -1112,30 +1112,6 @@ function setupEmailClickHandlers() {
                 mailtoLink.click();
                 document.body.removeChild(mailtoLink);
                 
-                // 创建一个临时的邮箱地址提示元素，显示实际的邮箱地址并高亮
-                const emailTooltip = document.createElement('div');
-                emailTooltip.className = 'email-tooltip';
-                emailTooltip.textContent = email;
-                emailTooltip.style.position = 'fixed';
-                emailTooltip.style.bottom = '20px';
-                emailTooltip.style.left = '50%';
-                emailTooltip.style.transform = 'translateX(-50%)';
-                emailTooltip.style.backgroundColor = 'rgba(37, 99, 235, 0.9)';
-                emailTooltip.style.color = 'white';
-                emailTooltip.style.padding = '12px 20px';
-                emailTooltip.style.borderRadius = '8px';
-                emailTooltip.style.zIndex = '100';
-                emailTooltip.style.opacity = '0';
-                emailTooltip.style.transition = 'all 0.3s ease';
-                emailTooltip.style.fontWeight = 'bold';
-                document.body.appendChild(emailTooltip);
-                
-                // 触发动画效果
-                setTimeout(() => {
-                    emailTooltip.style.opacity = '1';
-                    emailTooltip.style.transform = 'translateX(-50%) translateY(-10px)';
-                }, 10);
-                
                 // 检查邮件客户端是否成功打开
                 setTimeout(() => {
                     // 如果页面仍然可见，假设邮件客户端没有成功打开
@@ -1155,14 +1131,9 @@ function setupEmailClickHandlers() {
                         // 客户端打开成功，显示原有提示
                         showToast(`邮箱 ${email} 已复制并正在打开邮件客户端`, 'success');
                         
-                        // 3秒后移除高亮效果和临时提示
+                        // 3秒后移除高亮效果
                         setTimeout(() => {
                             this.classList.remove('email-highlight');
-                            emailTooltip.style.opacity = '0';
-                            emailTooltip.style.transform = 'translateX(-50%)';
-                            setTimeout(() => {
-                                document.body.removeChild(emailTooltip);
-                            }, 300);
                         }, 3000);
                     }
                 }, 1000); // 1秒后检查状态
