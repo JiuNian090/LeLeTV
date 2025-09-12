@@ -394,16 +394,30 @@
                     欢迎使用 LeLeTV。在开始使用前，请您了解以下事项：
                 </p>
                 <p>
-                    <strong class="text-blue-400">方便使用：</strong> 用设备自带的浏览器打开本网站，点击这个☞<span id="addToHomeBtn" class="text-green-400 font-semibold underline cursor-pointer transition-all duration-300 hover:text-green-300 hover:underline-offset-2">添加到桌面</span>，这样就能像使用App一样方便地访问啦！。
+                    <strong class="text-blue-400">便捷使用：</strong> 
+                    <ul class="list-disc pl-6 mt-2 space-y-1"></ul>
+                    <br>• 用设备自带的浏览器打开本网站。
+                    <br>• 点击网页菜单（右上角三个点或者右下角三个杠）。
+                    <br>• 点击添加到桌面，这样就能像使用App一样方便地访问啦！
                 </p>
                  <p>
-                    <strong class="text-blue-400">如何使用：</strong> 右上角设置中可选择视频源；最下方有豆瓣热门推荐按钮（默认关闭，可自行开启）。若视频卡顿，可手动切换源（不同剧集在各源表现不同）。建议先全选视频源，选择剧集后，在播放界面点击切换资源，查看延迟最低的源并选择最快的那个，一般推荐豆瓣资源。
+                    <strong class="text-blue-400">如何使用：</strong>
+                    <ul class="list-disc pl-6 mt-2 space-y-1"></ul>
+                    <br>• 右上角设置中可选择视频源
+                    <br>• 若视频卡顿，可手动切换源（不同剧集在各源表现不同）。
+                    <br>• 建议先全选视频源，选择剧集后，在播放界面点击切换资源，可以根据延迟自行选择，一般推荐豆瓣，天涯资源。
+                    <br>• 若视频播放异常，可尝试切换源或刷新页面。
                 </p>
                 <p>
-                    <strong class="text-blue-400">广告风险提示：</strong> 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
+                    <strong class="text-blue-400">广告风险提示：</strong> 
+                    <ul class="list-disc pl-6 mt-2 space-y-1"></ul>
+                    <br>• 本站所有视频均来自第三方采集站，视频中出现的广告与本站无关，请勿相信或点击视频中的任何广告内容，谨防上当受骗。
                 </p>
                 <p class="text-lg italic">
-                    <strong class="text-red-600 font-bold">特别注意：</strong> 请不要将本网站分享给乐乐不认识的人！如需分享或者有任何问题建议请☞<span id="contactLeLe6" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
+                    <strong class="text-red-600 font-bold">特别注意：</strong> 
+                    <ul class="list-disc pl-6 mt-2 space-y-1"></ul>
+                    <br>• 请不要将本网站分享给乐乐不认识的人！
+                    <br>• 如需分享或者有任何问题建议请☞<span id="contactLeLe6" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
                 </p>
             </div>
             <div class="mt-6 flex justify-center">
@@ -460,54 +474,6 @@
     <script src="js/password.js"></script>
     <script src="js/search.js"></script>
     <script src="js/app.js"></script>
-
-    <!-- PWA 注册 -->
-    <!-- <script src="js/pwa-register.js"></script> -->
-
-    <!-- 添加到桌面功能 -->
-    <script>
-        // 获取添加到桌面按钮元素
-        const addToHomeBtn = document.getElementById('addToHomeBtn');
-        let deferredPrompt;
-
-        // 监听beforeinstallprompt事件
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // 阻止浏览器默认的安装提示
-            e.preventDefault();
-            // 保存事件，以便稍后触发
-            deferredPrompt = e;
-            // 使按钮可见（如果之前隐藏）
-            if (addToHomeBtn) {
-                addToHomeBtn.style.display = 'inline';
-            }
-        });
-
-        // 如果找到了添加到桌面按钮，添加点击事件监听
-        if (addToHomeBtn) {
-            addToHomeBtn.addEventListener('click', async () => {
-                // 如果存在deferredPrompt，触发安装提示
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    // 等待用户响应
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`用户${outcome === 'accepted' ? '接受' : '拒绝'}了添加到桌面的请求`);
-                    // 重置deferredPrompt
-                    deferredPrompt = null;
-                } else {
-                    // 如果不支持PWA安装提示，显示手动添加指南
-                    alert('请按照以下步骤手动添加到桌面：\n\n' +
-                          '1. 点击浏览器右上角的菜单按钮\n' +
-                          '2. 选择"添加到桌面"或类似选项\n' +
-                          '3. 确认添加');
-                }
-            });
-        }
-
-        // 监听appinstalled事件
-        window.addEventListener('appinstalled', () => {
-            console.log('应用已添加到桌面');
-        });
-    </script>
 
     <!-- 环境变量注入脚本 -->
     <script>

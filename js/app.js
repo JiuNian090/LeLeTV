@@ -1080,6 +1080,8 @@ function setupEmailClickHandlers() {
         if (element) {
             element.addEventListener('click', function() {
                 const email = 'jiunian929@gmail.com';
+                const originalText = this.textContent; // 保存原始文本
+                let clientOpened = false; // 标记客户端是否打开
                 
                 // 添加高亮效果到点击的元素
                 this.classList.add('email-highlight');
@@ -1134,18 +1136,36 @@ function setupEmailClickHandlers() {
                     emailTooltip.style.transform = 'translateX(-50%) translateY(-10px)';
                 }, 10);
                 
-                // 显示成功提示，包含邮箱地址
-                showToast(`邮箱 ${email} 已复制并正在打开邮件客户端`, 'success');
-                
-                // 3秒后移除高亮效果和临时提示
+                // 检查邮件客户端是否成功打开
                 setTimeout(() => {
-                    this.classList.remove('email-highlight');
-                    emailTooltip.style.opacity = '0';
-                    emailTooltip.style.transform = 'translateX(-50%)';
-                    setTimeout(() => {
-                        document.body.removeChild(emailTooltip);
-                    }, 300);
-                }, 3000);
+                    // 如果页面仍然可见，假设邮件客户端没有成功打开
+                    if (document.visibilityState === 'visible' && !clientOpened) {
+                        // 显示邮箱覆盖"联系乐乐"
+                        this.textContent = email;
+                        
+                        // 显示指定的提示消息
+                        showToast(`'${email}'已复制`, 'success');
+                        
+                        // 3秒后恢复原始文本和移除高亮效果
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                            this.classList.remove('email-highlight');
+                        }, 3000);
+                    } else {
+                        // 客户端打开成功，显示原有提示
+                        showToast(`邮箱 ${email} 已复制并正在打开邮件客户端`, 'success');
+                        
+                        // 3秒后移除高亮效果和临时提示
+                        setTimeout(() => {
+                            this.classList.remove('email-highlight');
+                            emailTooltip.style.opacity = '0';
+                            emailTooltip.style.transform = 'translateX(-50%)';
+                            setTimeout(() => {
+                                document.body.removeChild(emailTooltip);
+                            }, 300);
+                        }, 3000);
+                    }
+                }, 1000); // 1秒后检查状态
             });
         }
     });
