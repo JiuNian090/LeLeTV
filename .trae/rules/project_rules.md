@@ -6,3 +6,5 @@
 使用CSS Modules或Styled Components等样式方案
 组件之间使用Props进行通信，避免使用全局状态管理
 使用React的Context API或Redux等状态管理库时，确保只在必要时才使用
+当我发出要求后，思考是否还有不懂得地方，并创建这个任务，可以使用spec-workflow工作流MCP来完成这个任务。
+在生成代码时，可以使用context7来查询最新文档，来制作代码。
