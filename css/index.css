@@ -418,6 +418,37 @@ header {
         min-width: auto;
     }
     
+    /* 分页按钮移动端适配 */
+    .pagination-buttons {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .pagination-buttons button {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+        border-radius: 4px;
+        min-width: auto;
+    }
+    
+    .pagination-buttons svg {
+        width: 10px;
+        height: 10px;
+    }
+    
+    /* 超小屏幕进一步优化 */
+    @media (max-width: 360px) {
+        .pagination-buttons button {
+            padding: 1px 4px;
+            font-size: 0.65rem;
+        }
+        
+        .pagination-buttons svg {
+            width: 8px;
+            height: 8px;
+        }
+    }
+    
     /* 优化页脚显示 */
     footer {
         padding: 1rem;

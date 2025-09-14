@@ -276,7 +276,7 @@
                 <div class="mx-auto max-w-screen-xl px-2">
                     <!-- 改进标题和标签区域布局 -->
                     <div class="mb-4">
-                        <!-- 标题和刷新按钮一行 -->
+                        <!-- 标题区域 -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center">
                                 <h2 class="text-xl font-bold text-white mr-4">热门</h2>
@@ -285,20 +285,6 @@
                                     <button id="douban-movie-toggle" class="px-3 py-1 text-sm rounded-full bg-pink-600 text-white">电影</button>
                                     <button id="douban-tv-toggle" class="px-3 py-1 text-sm rounded-full text-gray-300 hover:text-white">电视剧</button>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button id="douban-prev-page" class="text-sm px-3 py-1 bg-[#333] hover:bg-[#444] text-white rounded-lg flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    <span>上一页</span>
-                                </button>
-                                <button id="douban-next-page" class="text-sm px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded-lg flex items-center gap-1">
-                                    <span>下一页</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
                             </div>
                         </div>
                         <!-- 分类标签独立成行，添加滚动支持以适应移动设备 -->
@@ -309,6 +295,24 @@
                     
                     <!-- 推荐内容 -->
                     <div id="douban-results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3"></div>
+                    
+                    <!-- 分页按钮区域 - 放置在内容下方 -->
+                    <div class="mt-4 flex justify-center items-center">
+                        <div class="pagination-buttons flex items-center gap-2">
+                            <button id="douban-prev-page" class="text-sm px-3 py-1 bg-[#333] hover:bg-[#444] text-white rounded-lg flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                                <span>上一页</span>
+                            </button>
+                            <button id="douban-next-page" class="text-sm px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded-lg flex items-center gap-1">
+                                <span>下一页</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
