@@ -466,13 +466,27 @@ header {
     
     /* 优化页脚显示 */
     footer {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
     }
     
     footer .container {
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem;
+    }
+    
+    /* 减小页脚各元素之间的间距 */
+    footer .mb-4 {
+        margin-bottom: 0.25rem !important;
+    }
+    
+    footer .mt-2 {
+        margin-top: 0.125rem !important;
+    }
+    
+    /* 移动端隐藏免责声明，降低页脚高度 */
+    footer .text-gray-500.text-sm.max-w-md {
+        display: none;
     }
 }
 
