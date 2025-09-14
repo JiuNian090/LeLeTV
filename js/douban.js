@@ -104,8 +104,8 @@ function initDouban() {
     // 渲染豆瓣标签
     renderDoubanTags();
     
-    // 换一批按钮事件监听
-    setupDoubanRefreshBtn();
+    // 设置分页按钮事件监听
+    setupDoubanPagination();
     
     // 初始加载热门内容
     if (localStorage.getItem('doubanEnabled') !== 'false') {
@@ -280,8 +280,8 @@ function renderDoubanMovieTvSwitch() {
             // 重新加载豆瓣内容
             renderDoubanTags(movieTags);
 
-            // 换一批按钮事件监听
-            setupDoubanRefreshBtn();
+            // 设置分页按钮事件监听
+            setupDoubanPagination();
             
             // 初始加载热门内容
             if (localStorage.getItem('doubanEnabled') === 'true') {
@@ -306,8 +306,8 @@ function renderDoubanMovieTvSwitch() {
             // 重新加载豆瓣内容
             renderDoubanTags(tvTags);
 
-            // 换一批按钮事件监听
-            setupDoubanRefreshBtn();
+            // 设置分页按钮事件监听
+            setupDoubanPagination();
             
             // 初始加载热门内容
             if (localStorage.getItem('doubanEnabled') === 'true') {
@@ -367,20 +367,67 @@ function renderDoubanTags(tags) {
     tagContainer.appendChild(manageBtn);
 }
 
-// 设置换一批按钮事件
-function setupDoubanRefreshBtn() {
-    // 修复ID，使用正确的ID douban-refresh 而不是 douban-refresh-btn
-    const btn = document.getElementById('douban-refresh');
-    if (!btn) return;
+// 设置分页按钮事件
+function setupDoubanPagination() {
+    const prevPageBtn = document.getElementById('douban-prev-page');
+    const nextPageBtn = document.getElementById('douban-next-page');
     
-    btn.onclick = function() {
+    if (!prevPageBtn || !nextPageBtn) return;
+    
+    // 下一页按钮事件 - 类似原来的'换一批'
+    nextPageBtn.onclick = function() {
         doubanPageStart += doubanPageSize;
         if (doubanPageStart > 9 * doubanPageSize) {
             doubanPageStart = 0;
         }
         
         renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+        updatePaginationButtons();
     };
+    
+    // 上一页按钮事件
+    prevPageBtn.onclick = function() {
+        doubanPageStart -= doubanPageSize;
+        if (doubanPageStart < 0) {
+            doubanPageStart = 9 * doubanPageSize;
+        }
+        
+        renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+        updatePaginationButtons();
+    };
+    
+    // 初始更新按钮状态
+    updatePaginationButtons();
+}
+
+// 更新分页按钮状态
+function updatePaginationButtons() {
+    const prevPageBtn = document.getElementById('douban-prev-page');
+    const nextPageBtn = document.getElementById('douban-next-page');
+    
+    if (!prevPageBtn || !nextPageBtn) return;
+    
+    // 由于我们是循环浏览，所以不设置禁用状态
+    // 可以根据需要取消下面的注释，启用真正的禁用逻辑
+    /*
+    // 第一页时，上一页按钮禁用
+    if (doubanPageStart <= 0) {
+        prevPageBtn.disabled = true;
+        prevPageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        prevPageBtn.disabled = false;
+        prevPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    
+    // 最后一页时，下一页按钮禁用
+    if (doubanPageStart >= 9 * doubanPageSize) {
+        nextPageBtn.disabled = true;
+        nextPageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        nextPageBtn.disabled = false;
+        nextPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    */
 }
 
 function fetchDoubanTags() {
