@@ -436,6 +436,12 @@ header {
         height: 10px;
     }
     
+    /* 页码按钮样式 */
+    #douban-page-indicator {
+        display: flex;
+        gap: 4px;
+    }
+    
     /* 超小屏幕进一步优化 */
     @media (max-width: 360px) {
         .pagination-buttons button {
@@ -446,6 +452,15 @@ header {
         .pagination-buttons svg {
             width: 8px;
             height: 8px;
+        }
+        
+        #douban-page-indicator {
+            gap: 2px;
+        }
+        
+        #douban-page-indicator button {
+            padding: 1px 3px !important;
+            font-size: 0.6rem !important;
         }
     }
     

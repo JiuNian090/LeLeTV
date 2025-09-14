@@ -400,6 +400,76 @@ function setupDoubanPagination() {
     updatePaginationButtons();
 }
 
+// 生成页码按钮
+function renderPageNumbers() {
+    const pageIndicator = document.getElementById('douban-page-indicator');
+    if (!pageIndicator) return;
+    
+    // 清空现有内容
+    pageIndicator.innerHTML = '';
+    
+    // 计算总页数 (0-9页，共10页)
+    const totalPages = 10;
+    // 计算当前页码 (从0开始)
+    const currentPage = Math.floor(doubanPageStart / doubanPageSize);
+    
+    // 要显示的页码集合
+    const visiblePages = new Set();
+    
+    // 始终显示第一页
+    visiblePages.add(0);
+    // 始终显示最后一页
+    visiblePages.add(totalPages - 1);
+    // 显示当前页
+    visiblePages.add(currentPage);
+    // 显示当前页的前一页和后一页（如果存在）
+    if (currentPage > 0) visiblePages.add(currentPage - 1);
+    if (currentPage < totalPages - 1) visiblePages.add(currentPage + 1);
+    
+    // 将页码转换为数组并排序
+    const sortedVisiblePages = Array.from(visiblePages).sort((a, b) => a - b);
+    
+    // 创建页码按钮
+    for (let i = 0; i < sortedVisiblePages.length; i++) {
+        const pageNum = sortedVisiblePages[i];
+        
+        // 添加省略号（如果有跳页）
+        if (i > 0 && sortedVisiblePages[i] - sortedVisiblePages[i - 1] > 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'text-xs text-gray-500 px-1';
+            ellipsis.textContent = '...';
+            pageIndicator.appendChild(ellipsis);
+        }
+        
+        // 创建页码按钮
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = (pageNum + 1).toString(); // 显示1-10的页码
+        
+        // 设置样式
+        let btnClass = 'text-xs py-1 px-2 rounded-md transition-all duration-300 ';
+        
+        // 当前页高亮显示
+        if (pageNum === currentPage) {
+            btnClass += 'bg-pink-600 text-white font-medium';
+        } else {
+            btnClass += 'bg-[#333] text-gray-400 hover:bg-[#444] hover:text-white';
+        }
+        
+        pageBtn.className = btnClass;
+        
+        // 添加点击事件
+        pageBtn.onclick = function() {
+            if (pageNum !== currentPage) {
+                doubanPageStart = pageNum * doubanPageSize;
+                renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
+                updatePaginationButtons();
+            }
+        };
+        
+        pageIndicator.appendChild(pageBtn);
+    }
+}
+
 // 更新分页按钮状态
 function updatePaginationButtons() {
     const prevPageBtn = document.getElementById('douban-prev-page');
@@ -428,6 +498,9 @@ function updatePaginationButtons() {
         nextPageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
     */
+    
+    // 更新页码显示
+    renderPageNumbers();
 }
 
 function fetchDoubanTags() {
