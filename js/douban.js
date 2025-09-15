@@ -351,6 +351,7 @@ function renderDoubanTags(tags) {
                 doubanPageStart = 0;
                 renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
                 renderDoubanTags();
+                updatePaginationButtons();
             }
         };
         
