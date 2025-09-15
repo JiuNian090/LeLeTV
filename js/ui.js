@@ -784,8 +784,7 @@ function addToViewingHistory(videoInfo) {
 
         const existingIndex = history.findIndex(item =>
             item.title === videoInfo.title &&
-            item.sourceName === videoInfo.sourceName &&
-            item.showIdentifier === videoInfo.showIdentifier // Strict check using the determined showIdentifier
+            item.showIdentifier === videoInfo.showIdentifier // 只比较标题和标识符，不考虑源，使相同剧集只保留最新源
         );
 
         if (existingIndex !== -1) {
