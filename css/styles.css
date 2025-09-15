@@ -843,14 +843,37 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* 添加组悬停效果，使删除按钮在悬停时显示 */
+/* 优化删除按钮显示 - 始终可见且醒目 */
 .history-item .delete-btn {
-    opacity: 0;
-    transition: opacity 0.2s ease;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 6px;
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .history-item:hover .delete-btn {
     opacity: 1;
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
+}
+
+/* 移动设备优化 */
+@media (max-width: 768px) {
+    .history-item .delete-btn {
+        opacity: 0.9;
+        transform: scale(1.15);
+        padding: 8px;
+    }
+    
+    .history-item .delete-btn:active {
+        transform: scale(0.95);
+        background-color: rgba(239, 68, 68, 0.3);
+    }
 }
 
 .history-info {

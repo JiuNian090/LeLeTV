@@ -1086,50 +1086,50 @@ function saveToHistory() {
     try {
         const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
 
-        // 检查是否已经存在相同的系列记录 (基于标题、来源和 showIdentifier)
+        // 查找相同标题的剧集（不管播放源如何，只保留最新播放源）
         const existingIndex = history.findIndex(item => 
-            item.title === videoInfo.title && 
-            item.sourceName === videoInfo.sourceName && 
-            item.showIdentifier === videoInfo.showIdentifier
+            item.title === videoInfo.title
         );
 
         if (existingIndex !== -1) {
-            // 存在则更新现有记录的当前集数、时间戳、播放进度和URL等
+            // 找到相同标题的剧集：更新为最新播放源的信息
             const existingItem = history[existingIndex];
+            
+            // 强制更新所有信息为最新播放源的
             existingItem.episodeIndex = videoInfo.episodeIndex;
             existingItem.timestamp = videoInfo.timestamp;
-            existingItem.sourceName = videoInfo.sourceName; // Should be consistent, but update just in case
-            existingItem.sourceCode = videoInfo.sourceCode;
-            existingItem.vod_id = videoInfo.vod_id;
+            existingItem.sourceName = videoInfo.sourceName; // 强制更新为最新播放源
+            existingItem.sourceCode = videoInfo.sourceCode; // 强制更新为最新播放源
+            existingItem.vod_id = videoInfo.vod_id; // 强制更新为最新播放源
             
-            // Update URLs to reflect the current episode being watched
-            existingItem.directVideoUrl = videoInfo.directVideoUrl; // Current episode's direct URL
-            existingItem.url = videoInfo.url; // Player link for the current episode
+            // 强制更新URL信息
+            existingItem.directVideoUrl = videoInfo.directVideoUrl;
+            existingItem.url = videoInfo.url;
 
             // 更新播放进度信息
             existingItem.playbackPosition = videoInfo.playbackPosition > 10 ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
             
-            // 更新封面信息（如果有的话）
+            // 更新showIdentifier为最新播放源的标识符
+            if (videoInfo.sourceName && videoInfo.vod_id) {
+                existingItem.showIdentifier = `${videoInfo.sourceName}_${videoInfo.vod_id}`;
+            }
+            
+            // 更新封面信息
             if (videoInfo.cover) {
                 existingItem.cover = videoInfo.cover;
             }
             
-            // 更新集数列表（如果新的集数列表与存储的不同，例如集数增加了）
+            // 更新集数列表
             if (videoInfo.episodes && videoInfo.episodes.length > 0) {
-                if (!existingItem.episodes || 
-                    !Array.isArray(existingItem.episodes) || 
-                    existingItem.episodes.length !== videoInfo.episodes.length || 
-                    !videoInfo.episodes.every((ep, i) => ep === existingItem.episodes[i])) { // Basic check for content change
-                    existingItem.episodes = [...videoInfo.episodes]; // Deep copy
-                }
+                existingItem.episodes = [...videoInfo.episodes];
             }
             
             // 移到最前面
-            const updatedItem = history.splice(existingIndex, 1)[0];
-            history.unshift(updatedItem);
+            history.splice(existingIndex, 1);
+            history.unshift(existingItem);
         } else {
-            // 添加新记录到最前面
+            // 没有找到相同标题：添加为新记录
             history.unshift(videoInfo);
         }
 

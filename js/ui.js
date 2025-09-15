@@ -782,23 +782,30 @@ function addToViewingHistory(videoInfo) {
             }
         }
 
+        // 查找相同标题的剧集（不管播放源如何）
         const existingIndex = history.findIndex(item =>
-            item.title === videoInfo.title &&
-            item.showIdentifier === videoInfo.showIdentifier // 只比较标题和标识符，不考虑源，使相同剧集只保留最新源
+            item.title === videoInfo.title
         );
 
         if (existingIndex !== -1) {
-            // Exact match with showIdentifier: Update existing series entry
+            // 找到相同标题的剧集：更新为最新播放源的信息
             const existingItem = history[existingIndex];
+            
+            // 更新所有关键信息为最新播放源的
             existingItem.episodeIndex = videoInfo.episodeIndex;
             existingItem.timestamp = Date.now();
-            existingItem.sourceName = videoInfo.sourceName || existingItem.sourceName;
-            existingItem.sourceCode = videoInfo.sourceCode || existingItem.sourceCode;
-            existingItem.vod_id = videoInfo.vod_id || existingItem.vod_id;
-            existingItem.directVideoUrl = videoInfo.directVideoUrl || existingItem.directVideoUrl;
-            existingItem.url = videoInfo.url || existingItem.url;
+            existingItem.sourceName = videoInfo.sourceName; // 强制更新为最新播放源
+            existingItem.sourceCode = videoInfo.sourceCode; // 强制更新为最新播放源
+            existingItem.vod_id = videoInfo.vod_id; // 强制更新为最新播放源
+            existingItem.directVideoUrl = videoInfo.directVideoUrl; // 强制更新为最新播放源
+            existingItem.url = videoInfo.url; // 强制更新为最新播放源
             existingItem.playbackPosition = videoInfo.playbackPosition > 10 ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
+            
+            // 更新showIdentifier为最新播放源的标识符
+            if (videoInfo.sourceName && videoInfo.vod_id) {
+                existingItem.showIdentifier = `${videoInfo.sourceName}_${videoInfo.vod_id}`;
+            }
 
             if (videoInfo.episodes && Array.isArray(videoInfo.episodes) && videoInfo.episodes.length > 0) {
                 if (!existingItem.episodes ||
@@ -810,13 +817,14 @@ function addToViewingHistory(videoInfo) {
                 }
             }
 
+            // 移到最前面
             history.splice(existingIndex, 1);
             history.unshift(existingItem);
-            // console.log(`更新历史记录 (addToViewingHistory): "${videoInfo.title}", 第 ${videoInfo.episodeIndex !== undefined ? videoInfo.episodeIndex + 1 : 'N/A'} 集`);
+            // console.log(`更新历史记录 (addToViewingHistory): "${videoInfo.title}", 播放源更新为: ${videoInfo.sourceName}`);
         } else {
-            // No exact match: Add as a new entry
+            // 没有找到相同标题：添加为新记录
             const newItem = {
-                ...videoInfo, // Includes the showIdentifier we ensured is present
+                ...videoInfo,
                 timestamp: Date.now()
             };
 
@@ -827,7 +835,7 @@ function addToViewingHistory(videoInfo) {
             }
 
             history.unshift(newItem);
-            // console.log(`创建新的历史记录 (addToViewingHistory): "${videoInfo.title}", Episode: ${videoInfo.episodeIndex !== undefined ? videoInfo.episodeIndex + 1 : 'N/A'}`);
+            // console.log(`创建新的历史记录 (addToViewingHistory): "${videoInfo.title}", 播放源: ${videoInfo.sourceName}`);
         }
 
         // 限制历史记录数量为50条
