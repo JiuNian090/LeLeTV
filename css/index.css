@@ -464,9 +464,15 @@ header {
         }
     }
     
-    /* 优化页脚显示 */
+    /* 优化页脚显示 - 进一步减小页脚高度 */
     footer {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 1rem;
+        border-top: 1px solid #333;
+    }
+    
+    /* 移除原有的border-t，使用自定义的边框样式 */
+    footer.border-t {
+        border-top-width: 0;
     }
     
     footer .container {
