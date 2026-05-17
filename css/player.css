@@ -9,25 +9,61 @@ body, html {
 }
 
 /* ========== 下一集按钮 ========== */
+/* 匹配 ArtPlayer 原生控件的样式 */
 .art-control-next-episode {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    opacity: 0.9;
-    transition: opacity 0.2s, transform 0.15s;
-    color: #fff;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    cursor: pointer !important;
+    opacity: 0.9 !important;
+    transition: opacity 0.2s !important;
+    color: #fff !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 10 !important;
 }
 
 .art-control-next-episode:hover {
-    opacity: 1;
-    transform: scale(1.1);
+    opacity: 1 !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 50% !important;
 }
 
-.art-control-next-episode:active {
-    transform: scale(0.95);
+.art-control-next-episode svg {
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3)) !important;
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+}
+
+/* 自定义下一集按钮 */
+.custom-next-episode-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    cursor: pointer !important;
+    color: white !important;
+    opacity: 0.9 !important;
+    transition: opacity 0.2s !important;
+    z-index: 9999 !important;
+    position: relative !important;
+}
+
+.custom-next-episode-btn:hover {
+    opacity: 1 !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 50% !important;
+}
+
+.custom-next-episode-btn svg {
+    width: 24px !important;
+    height: 24px !important;
+    display: block !important;
 }
 
 /* ========== Window Controls Overlay ==========
