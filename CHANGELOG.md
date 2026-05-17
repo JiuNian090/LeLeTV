@@ -13,6 +13,16 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.17.7 (2026-05-17 23:27)
+- [其他] rewrite next episode button implementation to 修复 rendering issues
+
+1. 改用 ArtPlayer 官方控件 接口 注册原生下一集控件
+2. 新增直接注入 网页元素 的备用方案适配控件重建场景
+3. 为全屏切换、页面重启等场景添加自动重绘逻辑
+4. 拆分出独立的按钮添加函数提升可维护性
+5. 优化控件样式并支持悬停效果。
+
+
 ### v2.5.17.6 (2026-05-17 23:06)
 - [其他] add next episode control button
 
