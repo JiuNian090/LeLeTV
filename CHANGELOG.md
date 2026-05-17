@@ -13,6 +13,13 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.17.4 (2026-05-17 22:52)
+- [其他] 调整全局变量与缓存暴露逻辑
+
+1. 移除cache-manager.js中重复的导出语句，调整全局挂载方式
+2. 修复selectedAPIs和customAPIs的全局变量冲突问题，改为从localStorage实时读取或通过window挂载共享。
+
+
 ### v2.5.17.3 (2026-05-17 22:46)
 - [新增] add browser media session support for video player
 
