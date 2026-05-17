@@ -21,19 +21,6 @@
     <meta http-equiv="Expires" content="0">
 </head>
 <body>
-    <header class="player-header-fixed p-4 flex items-center border-b border-[#333] gap-2 bg-gradient-to-r from-black to-gray-900">
-        <div class="flex items-center min-w-0">
-            <h1 class="text-xl font-bold gradient-text logo-text">LeLeTV</h1>
-        </div>
-        <h2 id="videoTitle" class="text-xl font-semibold flex-1 text-center overflow-x-auto whitespace-nowrap truncate custom-title-scroll"></h2>
-        <a href="#" id="goHome" onclick="goHome(event)" class="px-4 py-2 gradient-btn flex items-center min-w-0 home-btn">
-            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-            </svg>
-            <span class="home-btn-text">首页</span>
-        </a>
-    </header>
-
     <!-- 密码验证弹窗 -->
     <div id="passwordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
         <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333] max-h-[90vh] flex flex-col">
@@ -56,7 +43,12 @@
         <div class="player-layout">
             <!-- 左栏：视频播放区 -->
             <div class="player-layout-left">
-                <div id="playerContainer" class="player-container mb-4">
+                <button onclick="goHome(event)" class="player-back-btn" title="返回首页">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div id="playerContainer" class="player-container">
                     <div class="relative">
                         <div id="player" class="player-placeholder">
                             <!-- Initial loading state before JavaScript loads -->
@@ -78,13 +70,17 @@
                 </div>
             </div>
 
-            <!-- 右栏：视频标题 + 选集 + 资源信息 + 控制按钮 -->
+            <!-- 右栏：标题+详情 + 选集 + 资源信息 + 控制按钮 -->
             <div class="player-layout-right">
-                <!-- 视频标题 -->
-                <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
-
-                <!-- 视频详情信息 -->
-                <div class="player-detail-info" id="playerDetailInfo" style="display:none;">
+                <!-- 视频标题 + 详情（合并） -->
+                <div class="player-detail-info" id="playerDetailInfo">
+                    <div class="detail-toggle-header" onclick="toggleDetailInfo()">
+                        <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
+                        <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <div class="detail-collapse-body"></div>
                 </div>
 
                 <!-- 集数网格 -->

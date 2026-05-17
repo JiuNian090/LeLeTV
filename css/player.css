@@ -5,7 +5,7 @@ body, html {
     height: 100%;
     background-color: #000000;
     color: white;
-    padding-top: 37px;
+    overflow: hidden;
 }
 
 /* ========== 下一集按钮 ========== */
@@ -66,57 +66,7 @@ body, html {
     display: block !important;
 }
 
-/* ========== Window Controls Overlay ==========
-   仅对安装到桌面的 PWA 生效。让播放器顶栏融入标题栏区域，
-   视频内容向上延伸。浏览器中打开网页不受影响。 */
-@media (display-mode: window-controls-overlay) {
-    body, html {
-        padding-top: env(titlebar-area-height, 37px);
-        /* 标题栏背景延伸，避免内容与窗口按钮之间出现白缝 */
-        background-color: #000;
-    }
 
-    .player-header-fixed {
-        height: env(titlebar-area-height, 48px);
-        /* p-4 的 Tailwind 对应 1rem ≈ 16px */
-        padding: 0 env(titlebar-area-x, 16px);
-        background: #111;
-        border-bottom: 1px solid #333;
-    }
-
-    .player-header-fixed .gradient-btn.home-btn {
-        /* 窗口控制按钮占据右上角约 138px（Windows），
-           确保首页按钮不被遮挡 */
-        margin-right: 138px;
-    }
-}
-
-/* Critical header and navigation styles */
-.player-header {
-    position: relative;
-    z-index: 2147483647 !important;
-    pointer-events: auto !important;
-}
-
-.player-header-fixed {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    z-index: 9000 !important;
-    pointer-events: auto !important;
-    background: #111;
-}
-
-#homeButton { 
-    pointer-events: auto !important; 
-}
-
-.home-button {
-    background: none !important;
-    border: none !important;
-    padding: 0 !important;
-}
 
 /* Critical loading styles to prevent FOUC */
 .player-placeholder {
@@ -505,6 +455,39 @@ input:checked + .slider:before {
     overflow-y: auto;
 }
 
+.detail-toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    gap: 8px;
+}
+
+.detail-toggle-arrow {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    color: #888;
+}
+
+.detail-collapsed .detail-toggle-arrow {
+    transform: rotate(-90deg);
+}
+
+.detail-collapse-body {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.detail-collapsed .detail-collapse-body {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+}
+
 /* 资源信息卡片区 */
 #resourceInfoBarContainer {
     align-items: center;
@@ -815,54 +798,115 @@ input:checked + .slider:before {
     }
 }
 
+/* ==================== 固定视口布局（通用） ==================== */
+main.container {
+    height: 100vh;
+    overflow: hidden;
+    max-width: none;
+    padding: 0;
+}
+
+.player-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.player-layout-left {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.player-layout-right {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0.75rem;
+    min-height: 0;
+}
+
 /* ==================== 横屏/宽屏两栏布局 ==================== */
+
+/* ========== 返回按钮 ========== */
+.player-back-btn {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.player-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.player-back-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
 @media (min-width: 900px) {
-    main.container {
-        max-width: none;
-        padding: 1rem 1.5rem;
-    }
-
     .player-layout {
-        display: flex;
+        flex-direction: row;
         gap: 1.5rem;
-        align-items: flex-start;
-        min-height: calc(100vh - 100px);
     }
 
-    /* 左栏：播放器占 2/3，内容上下居中 */
+    /* 左栏：播放器占 2/3，进度条和控制栏在左栏底部，返回按钮绝对定位左上角 */
     .player-layout-left {
         flex: 2;
         min-width: 0;
         display: flex;
-        align-items: center;
-        min-height: calc(100vh - 100px);
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+        padding: 0.75rem 0 0 0.75rem;
     }
 
     .player-layout-left #playerContainer {
         max-width: none;
         margin: 0;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .player-layout-left #playerContainer .relative {
         position: relative;
+        flex: 1;
+        min-height: 0;
     }
 
     .player-layout-left #player {
-        height: auto;
-        aspect-ratio: 16/9;
+        height: 100% !important;
         width: 100%;
     }
 
-    /* 右栏：控制元素占 1/3，可滚动 */
+    /* 右栏：占 1/3，栏内可滚动 */
     .player-layout-right {
         flex: 1;
         min-width: 320px;
         max-width: 480px;
-        max-height: calc(100vh - 100px);
+        height: 100%;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        padding: 0.75rem 0.75rem 0.75rem 0;
     }
 
     .player-right-title {
@@ -873,6 +917,8 @@ input:checked + .slider:before {
         line-height: 1.4;
         word-break: break-word;
         padding-bottom: 4px;
+        flex: 1;
+        min-width: 0;
     }
 
     .player-layout-right .player-right-item {

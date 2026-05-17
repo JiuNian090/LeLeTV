@@ -1053,7 +1053,7 @@ async function search() {
 
             return `
                 <div class="card-hover bg-[#111] rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
-                     onclick="showDetails('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
+                     onclick="playDirectly('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
                     <div class="flex h-full">
                         ${hasCover ? `
                         <div class="relative flex-shrink-0 search-card-img-container image-container">
@@ -1238,6 +1238,85 @@ function hookInput() {
     input.value = '';
 }
 document.addEventListener('DOMContentLoaded', hookInput);
+
+// 点击搜索结果直接跳转播放器
+async function playDirectly(id, vod_name, sourceCode) {
+    if (window.isPasswordProtected && window.isPasswordVerified) {
+        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+            showPasswordModal && showPasswordModal();
+            return;
+        }
+    }
+    if (!id) {
+        showToast('视频ID无效', 'error');
+        return;
+    }
+
+    showLoading();
+    try {
+        let apiParams = '';
+        if (sourceCode.startsWith('custom_')) {
+            const customIndex = sourceCode.replace('custom_', '');
+            const customApi = getCustomApiInfo(customIndex);
+            if (!customApi) {
+                showToast('自定义API配置无效', 'error');
+                hideLoading();
+                return;
+            }
+            if (customApi.detail) {
+                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
+            } else {
+                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
+            }
+        } else {
+            apiParams = '&source=' + sourceCode;
+        }
+
+        const timestamp = new Date().getTime();
+        const cacheBuster = `&_t=${timestamp}`;
+        const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
+        const data = await response.json();
+
+        if (!data.episodes || data.episodes.length === 0) {
+            showToast('没有可用的视频资源', 'error');
+            hideLoading();
+            return;
+        }
+
+        currentEpisodes = data.episodes;
+        currentVideoTitle = vod_name || '未知视频';
+
+        let episodeIndex = 0;
+        try {
+            const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
+            const historyItem = history.find(item => item.title === currentVideoTitle);
+            if (historyItem && historyItem.episodeIndex >= 0 && historyItem.episodeIndex < data.episodes.length) {
+                episodeIndex = historyItem.episodeIndex;
+            }
+        } catch (e) {}
+
+        const episodeUrl = data.episodes[episodeIndex];
+
+        try {
+            localStorage.setItem('currentVideoTitle', currentVideoTitle);
+            localStorage.setItem('currentEpisodes', JSON.stringify(data.episodes));
+            localStorage.setItem('currentEpisodeIndex', episodeIndex);
+            localStorage.setItem('currentSourceCode', sourceCode || '');
+            localStorage.setItem('lastPlayTime', Date.now());
+            if (data.videoInfo) {
+                localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
+            }
+        } catch (e) {
+            console.error('保存播放状态失败:', e);
+        }
+
+        const playerUrl = `player.html?url=${encodeURIComponent(episodeUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceCode)}&index=${episodeIndex}&id=${encodeURIComponent(id)}`;
+        window.location.href = playerUrl;
+    } catch (e) {
+        showToast('获取视频详情失败，请重试', 'error');
+        hideLoading();
+    }
+}
 
 // 显示详情 - 修改为支持自定义API
 async function showDetails(id, vod_name, sourceCode) {

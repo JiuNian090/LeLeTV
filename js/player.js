@@ -167,7 +167,8 @@ function initializePageContent() {
 
     // 设置页面标题
     document.title = currentVideoTitle + ' - LeLeTV播放器';
-    document.getElementById('videoTitle').textContent = currentVideoTitle;
+    const videoTitle = document.getElementById('videoTitle');
+    if (videoTitle) videoTitle.textContent = currentVideoTitle;
     const videoTitleRight = document.getElementById('videoTitleRight');
     if (videoTitleRight) videoTitleRight.textContent = currentVideoTitle;
 
@@ -1797,6 +1798,10 @@ function renderPlayerDetailInfo() {
     const container = document.getElementById('playerDetailInfo');
     if (!container) return;
 
+    const body = container.querySelector('.detail-collapse-body');
+    const arrow = container.querySelector('.detail-toggle-arrow');
+    if (!body) return;
+
     let videoInfo = null;
     try {
         const stored = localStorage.getItem('currentVideoInfo');
@@ -1807,18 +1812,19 @@ function renderPlayerDetailInfo() {
         // ignore
     }
 
-    if (!videoInfo) {
-        container.style.display = 'none';
-        return;
-    }
+    const descriptionText = videoInfo && videoInfo.desc ? videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';
+    const hasMeta = videoInfo && (videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.actor || videoInfo.remarks);
 
-    const descriptionText = videoInfo.desc ? videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';
-    const hasMeta = videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.actor || videoInfo.remarks;
+    container.style.display = 'block';
 
     if (!hasMeta && !descriptionText) {
-        container.style.display = 'none';
+        body.innerHTML = '';
+        if (arrow) arrow.style.display = 'none';
+        container.classList.remove('detail-collapsed');
         return;
     }
+
+    if (arrow) arrow.style.display = '';
 
     let html = '';
 
@@ -1850,8 +1856,22 @@ function renderPlayerDetailInfo() {
         html += `<div class="detail-desc-content">${descriptionText}</div>`;
     }
 
-    container.innerHTML = html;
-    container.style.display = 'block';
+    body.innerHTML = html;
+
+    // 根据屏幕宽度决定默认折叠状态：移动端默认折叠
+    if (window.innerWidth >= 900) {
+        container.classList.remove('detail-collapsed');
+    } else {
+        container.classList.add('detail-collapsed');
+    }
+}
+
+function toggleDetailInfo() {
+    const container = document.getElementById('playerDetailInfo');
+    if (!container) return;
+    const body = container.querySelector('.detail-collapse-body');
+    if (!body || !body.innerHTML.trim()) return;
+    container.classList.toggle('detail-collapsed');
 }
 
 function renderResourceInfoBar() {
