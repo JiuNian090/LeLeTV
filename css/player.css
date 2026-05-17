@@ -401,6 +401,16 @@ input:checked + .slider:before {
     height: 40px;
 }
 
+/* 自动连播容器hover效果 */
+.autoplay-container:hover {
+    background-color: #333 !important;
+}
+
+/* 确保switch高度合适 */
+.autoplay-container .switch {
+    margin: 0;
+}
+
 /* 添加快捷键提示样式 */
 .shortcut-hint {
     position: fixed;
@@ -661,6 +671,27 @@ input:checked + .slider:before {
     #player {
         height: 70vh;
     }
+}
+
+/* ArtPlayer 控制栏样式优化 */
+.art-controls {
+    /* 确保控制栏左对齐 */
+    justify-content: flex-start !important;
+}
+
+.art-controls-left {
+    /* 左侧控制区占据更多空间 */
+    flex: 1 !important;
+}
+
+.art-controls-right {
+    /* 右侧控制区保持原样 */
+    flex-shrink: 0 !important;
+}
+
+/* 确保我们的自定义下一集按钮位置正确 */
+.art-control-next-episode {
+    order: 2 !important;
 }
 
 /* 隐藏用户名输入框 */

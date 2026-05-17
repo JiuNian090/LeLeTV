@@ -419,21 +419,6 @@ function initPlayer(videoUrl) {
         moreVideoAttr: {
             crossOrigin: 'anonymous',
         },
-        // 自定义控件 - 下一集按钮
-        controls: [
-            {
-                name: 'next-episode',
-                position: 'right',
-                index: 10,
-                html: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>',
-                tooltip: '下一集 (Alt+→)',
-                click: function () {
-                    if (typeof playNextEpisode === 'function') {
-                        playNextEpisode();
-                    }
-                }
-            }
-        ],
         customType: {
             m3u8: function (video, url) {
                 // 清理之前的HLS实例
@@ -675,10 +660,7 @@ function initPlayer(videoUrl) {
         // 更新 Media Session 信息
         updateMediaSession();
         
-        // 确保下一集按钮存在
-        setTimeout(() => addNextEpisodeControl(art), 800);
-        setTimeout(() => addNextEpisodeControl(art), 1500);
-        setTimeout(() => addNextEpisodeControl(art), 3000);
+
     })
 
     // 错误处理
@@ -1552,73 +1534,53 @@ function addNextEpisodeDirectly(art) {
         return;
     }
     
-    console.log('播放器元素:', playerEl);
-    console.log('播放器内部结构:', playerEl.innerHTML.substring(0, 1000));
-    
-    // 查找所有可能包含控制栏的元素
-    const allSelectors = [
-        '.art-controls',
-        '.art-bottom',
-        '.artplayer-controls',
-        '.art-control-bar',
-        '[class*="control"]'
-    ];
-    
-    let targetContainer = null;
-    
-    for (const selector of allSelectors) {
-        const elements = playerEl.querySelectorAll(selector);
-        if (elements.length > 0) {
-            console.log(`找到 ${elements.length} 个 ${selector} 元素`);
-            // 取第一个找到的
-            targetContainer = elements[0];
-            break;
-        }
-    }
-    
-    // 如果在播放器内没找到，试试整个文档
-    if (!targetContainer) {
-        for (const selector of allSelectors) {
-            const elements = document.querySelectorAll(selector);
-            if (elements.length > 0) {
-                console.log(`在文档中找到 ${elements.length} 个 ${selector} 元素`);
-                targetContainer = elements[0];
-                break;
-            }
-        }
-    }
-    
-    if (!targetContainer) {
-        console.log('完全找不到控制栏，输出播放器所有子元素');
-        console.log(playerEl.children);
+    // 查找控制栏
+    const controlsContainer = playerEl.querySelector('.art-controls') || document.querySelector('.art-controls');
+    if (!controlsContainer) {
+        console.log('找不到控制栏');
         return;
     }
     
-    console.log('选择的目标容器:', targetContainer);
+    // 查找左侧控制区
+    const leftControls = controlsContainer.querySelector('.art-controls-left');
+    const targetContainer = leftControls || controlsContainer;
+    
+    // 查找播放按钮（暂停按钮）
+    const playBtn = targetContainer.querySelector('.art-control-playAndPause');
+    
+    console.log('播放按钮:', playBtn);
+    console.log('目标容器:', targetContainer);
     
     // 创建按钮
     const nextBtn = document.createElement('div');
-    nextBtn.className = 'custom-next-episode-btn';
+    nextBtn.className = 'custom-next-episode-btn art-control';
     nextBtn.title = '下一集 (Alt+→)';
-    nextBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
+    nextBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
     
-    // 应用内联样式，确保能显示
+    // 应用样式，和其他控制按钮一致
     nextBtn.style.cssText = `
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 44px !important;
-        height: 44px !important;
+        width: 40px !important;
+        height: 40px !important;
         cursor: pointer !important;
         color: white !important;
         opacity: 0.9 !important;
         transition: opacity 0.2s !important;
-        z-index: 9999 !important;
+        padding: 8px !important;
+        box-sizing: border-box !important;
         position: relative !important;
     `;
     
     nextBtn.addEventListener('mouseenter', function() {
         this.style.opacity = '1 !important';
+        this.style.backgroundColor = 'rgba(255, 255, 255, 0.1) !important';
+        this.style.borderRadius = '50% !important';
+    });
+    
+    nextBtn.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = 'transparent !important';
     });
     
     nextBtn.addEventListener('click', function (e) {
@@ -1630,8 +1592,19 @@ function addNextEpisodeDirectly(art) {
         }
     });
     
-    // 插入到容器的第一个位置
-    targetContainer.insertBefore(nextBtn, targetContainer.firstChild);
+    // 插入到播放按钮后面
+    if (playBtn && playBtn.nextSibling) {
+        targetContainer.insertBefore(nextBtn, playBtn.nextSibling);
+        console.log('已插入到播放按钮后面');
+    } else if (playBtn) {
+        // 如果播放按钮是最后一个元素
+        targetContainer.appendChild(nextBtn);
+        console.log('已添加到播放按钮后面');
+    } else {
+        // 如果找不到播放按钮，就插到开头
+        targetContainer.insertBefore(nextBtn, targetContainer.firstChild);
+        console.log('已插入到开头');
+    }
     console.log('已成功添加自定义下一集按钮');
 }
 
