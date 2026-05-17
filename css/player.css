@@ -764,3 +764,68 @@ input:checked + .slider:before {
         gap: 2rem !important;
     }
 }
+
+/* ==================== 横屏/宽屏两栏布局 ==================== */
+@media (min-width: 900px) {
+    main.container {
+        max-width: none;
+        padding: 1rem 1.5rem;
+    }
+
+    .player-layout {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+
+    /* 左栏：播放器占 2/3 */
+    .player-layout-left {
+        flex: 2;
+        min-width: 0;
+        position: sticky;
+        top: 60px;
+    }
+
+    .player-layout-left #playerContainer {
+        max-width: none;
+        margin: 0;
+    }
+
+    .player-layout-left #playerContainer .relative {
+        position: relative;
+    }
+
+    .player-layout-left #player {
+        height: auto;
+        aspect-ratio: 16/9;
+        width: 100%;
+    }
+
+    /* 右栏：控制元素占 1/3，可滚动 */
+    .player-layout-right {
+        flex: 1;
+        min-width: 320px;
+        max-width: 480px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .player-layout-right .player-right-item {
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .player-layout-right .episode-grid {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    /* 右栏中集数网格适配 */
+    .player-layout-right #episodesList {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
+}
