@@ -1,5 +1,9 @@
 // 全局变量
-let selectedAPIs = []; // 初始化为空，稍后在initAPICheckboxes中处理
+// 只在未声明时定义（避免与 player.js 冲突）
+if (typeof window.selectedAPIs === 'undefined') {
+    window.selectedAPIs = [];
+}
+var selectedAPIs = window.selectedAPIs; // 全局引用
 let customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
 
 // 添加当前播放的集数索引

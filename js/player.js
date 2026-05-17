@@ -1,6 +1,3 @@
-const selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');
-const customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]'); // 存储自定义API列表
-
 // 改进首页跳转功能
 function goHome(event) {
     // 防止默认链接行为
@@ -1702,13 +1699,15 @@ async function showSwitchResourceModal() {
     modal.classList.remove('hidden');
 
     // 搜索
-    const resourceOptions = selectedAPIs.map((curr) => {
+    const localSelectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');
+    const localCustomAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]');
+    const resourceOptions = localSelectedAPIs.map((curr) => {
         if (API_SITES[curr]) {
             return { key: curr, name: API_SITES[curr].name };
         }
         const customIndex = parseInt(curr.replace('custom_', ''), 10);
-        if (customAPIs[customIndex]) {
-            return { key: curr, name: customAPIs[customIndex].name || '自定义资源' };
+        if (localCustomAPIs[customIndex]) {
+            return { key: curr, name: localCustomAPIs[customIndex].name || '自定义资源' };
         }
         return { key: curr, name: '未知资源' };
     });
