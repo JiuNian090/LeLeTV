@@ -393,7 +393,7 @@ function initPlayer(videoUrl) {
         container: '#player',
         url: videoUrl,
         type: 'm3u8',
-        title: videoTitle,
+        title: currentVideoTitle,
         volume: 0.8,
         isLive: false,
         muted: false,
@@ -640,6 +640,9 @@ function initPlayer(videoUrl) {
 
         // 启动定期保存播放进度
         startProgressSaveInterval();
+        
+        // 更新 Media Session 信息
+        updateMediaSession();
     })
 
     // 错误处理
@@ -661,6 +664,13 @@ function initPlayer(videoUrl) {
     // 添加移动端长按三倍速播放功能
     setupLongPressSpeedControl();
 
+    // 同步暂停状态到 Media Session
+    art.on('video:pause', () => {
+        if (navigator.mediaSession) {
+            navigator.mediaSession.playbackState = 'paused';
+        }
+    });
+
     // 视频播放结束事件
     art.on('video:ended', function () {
         videoHasEnded = true;
@@ -680,8 +690,12 @@ function initPlayer(videoUrl) {
         }
     });
 
-    // 添加双击全屏支持
+    // 同步播放状态到 Media Session + 添加双击全屏支持
     art.on('video:playing', () => {
+        // 更新 Media Session（容错：如果 loadedmetadata 没触发）
+        if (navigator.mediaSession) {
+            navigator.mediaSession.playbackState = 'playing';
+        }
         // 绑定双击事件到视频容器
         if (art.video) {
             art.video.addEventListener('dblclick', () => {
@@ -893,6 +907,9 @@ function playEpisode(index) {
     updateEpisodeInfo();
     updateButtonStates();
     renderEpisodes();
+    
+    // 更新 Media Session 信息
+    updateMediaSession();
 
     // 重置用户点击位置记录
     userClickedPosition = null;
@@ -1427,6 +1444,59 @@ function getVideoId() {
         return `${encodeURIComponent(currentVideoUrl)}`;
     }
     return `${encodeURIComponent(currentVideoTitle)}_${currentEpisodeIndex}`;
+}
+
+// ========== Media Session API ==========
+function getVideoCover() {
+    try {
+        const stored = localStorage.getItem('currentVideoInfo');
+        if (stored) {
+            const info = JSON.parse(stored);
+            if (info.cover && info.cover.startsWith('http')) return info.cover;
+        }
+    } catch (e) {}
+    return '/image/logo-black.png';
+}
+
+function updateMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+
+    const coverUrl = getVideoCover();
+    const episodeStr = currentEpisodes.length > 1
+        ? `第${currentEpisodeIndex + 1}/${currentEpisodes.length}集`
+        : '';
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentVideoTitle,
+        artist: 'LeLeTV',
+        album: episodeStr || '乐乐影视',
+        artwork: [
+            { src: coverUrl, sizes: '256x256', type: 'image/png' },
+            { src: coverUrl, sizes: '512x512', type: 'image/png' },
+        ]
+    });
+
+    // 只在第一次设置 action handlers
+    if (window._mediaSessionHandlersSet) return;
+    window._mediaSessionHandlersSet = true;
+
+    const handlers = {
+        play() { if (art) art.play(); },
+        pause() { if (art) art.pause(); },
+        previoustrack() { playPreviousEpisode(); },
+        nexttrack() { playNextEpisode(); },
+        seekforward() { if (art) art.currentTime = Math.min(art.duration, art.currentTime + 30); },
+        seekbackward() { if (art) art.currentTime = Math.max(0, art.currentTime - 10); },
+        seekto(details) { if (art && details.seekTime != null) art.currentTime = details.seekTime; },
+    };
+
+    for (const [action, handler] of Object.entries(handlers)) {
+        try {
+            navigator.mediaSession.setActionHandler(action, handler);
+        } catch (e) {
+            // 某些浏览器不支持所有 action，静默跳过
+        }
+    }
 }
 
 let controlsLocked = false;
