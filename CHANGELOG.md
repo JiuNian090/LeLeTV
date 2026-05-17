@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.17.6 (2026-05-17 23:06)
+- [其他] add next episode control button
+
+add a next episode button to the player control bar, with hover/active effects and keyboard shortcut hint, and call playNextEpisode when clicked。
+
+
 ### v2.5.17.5 (2026-05-17 23:03)
 - [其他] add window controls overlay support for desktop PWA
 
