@@ -28,7 +28,7 @@
   "scripts": {
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
-    "build": "echo 'Building project...'",
+    "build": "tailwindcss -i ./css/tailwind.css -o ./css/output.css --minify && echo 'Build complete'",
     "test": "echo 'Running tests...'",
     "tag": "node scripts/create-tag.js",
     "historical-releases": "node scripts/create-historical-releases.js",
@@ -44,7 +44,10 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "autoprefixer": "^10.5.0",
+    "nodemon": "^3.1.10",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^3.4.19"
   },
   "engines": {
     "node": "^16.0.0 || ^18.0.0 || ^20.0.0",
