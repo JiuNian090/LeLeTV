@@ -8,6 +8,28 @@ body, html {
     padding-top: 37px;
 }
 
+/* ========== 下一集按钮 ========== */
+.art-control-next-episode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity 0.2s, transform 0.15s;
+    color: #fff;
+}
+
+.art-control-next-episode:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.art-control-next-episode:active {
+    transform: scale(0.95);
+}
+
 /* ========== Window Controls Overlay ==========
    仅对安装到桌面的 PWA 生效。让播放器顶栏融入标题栏区域，
    视频内容向上延伸。浏览器中打开网页不受影响。 */

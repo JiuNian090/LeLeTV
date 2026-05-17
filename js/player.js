@@ -582,9 +582,25 @@ function initPlayer(videoUrl) {
         }
     }
 
-    // 播放器加载完成后初始隐藏工具栏
+    // 播放器加载完成后初始隐藏工具栏，并添加下一集按钮
     art.on('ready', () => {
         hideControls();
+        
+        // 添加下一集按钮到控制栏（暂停按钮旁边）
+        // 检查是否已添加，避免重复
+        const existingBtn = document.querySelector('.art-control-next-episode');
+        if (!existingBtn) {
+            art.controls.add({
+                name: 'next-episode',
+                html: '<div class="art-control-next-episode" title="下一集 (Alt+→)"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></div>',
+                position: 'left',
+                click: function () {
+                    if (typeof playNextEpisode === 'function') {
+                        playNextEpisode();
+                    }
+                }
+            });
+        }
     });
 
     // 全屏 Web 模式处理
