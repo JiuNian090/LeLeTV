@@ -455,6 +455,56 @@ input:checked + .slider:before {
     width: 100%; height: 100%;
 }
 
+/* 视频详情信息区域 */
+.player-detail-info {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    color: #ccc;
+    line-height: 1.6;
+}
+
+.player-detail-info .detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.player-detail-info .detail-meta-item {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.player-detail-info .detail-meta-label {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.player-detail-info .detail-meta-value {
+    color: #ddd;
+    font-size: 0.85rem;
+}
+
+.player-detail-info .detail-desc-label {
+    color: #888;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.player-detail-info .detail-desc-content {
+    color: #bbb;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
 /* 资源信息卡片区 */
 #resourceInfoBarContainer {
     align-items: center;
@@ -776,14 +826,16 @@ input:checked + .slider:before {
         display: flex;
         gap: 1.5rem;
         align-items: flex-start;
+        min-height: calc(100vh - 100px);
     }
 
-    /* 左栏：播放器占 2/3 */
+    /* 左栏：播放器占 2/3，内容上下居中 */
     .player-layout-left {
         flex: 2;
         min-width: 0;
-        position: sticky;
-        top: 60px;
+        display: flex;
+        align-items: center;
+        min-height: calc(100vh - 100px);
     }
 
     .player-layout-left #playerContainer {
@@ -810,7 +862,17 @@ input:checked + .slider:before {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0;
+        gap: 12px;
+    }
+
+    .player-right-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        text-align: left;
+        line-height: 1.4;
+        word-break: break-word;
+        padding-bottom: 4px;
     }
 
     .player-layout-right .player-right-item {

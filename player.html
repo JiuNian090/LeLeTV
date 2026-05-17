@@ -78,34 +78,32 @@
                 </div>
             </div>
 
-            <!-- 右栏：资源信息 + 集数导航 + 控制按钮 + 集数网格 -->
+            <!-- 右栏：视频标题 + 选集 + 资源信息 + 控制按钮 -->
             <div class="player-layout-right">
-                <!-- 源信息 -->
-                <div class="player-container player-right-item flex justify-between py-2 px-4 mb-2 bg-[#222] border border-[#333] rounded-lg" id="resourceInfoBarContainer">
-                    <!-- 资源信息卡片、切换按钮、视频数将由JS动态渲染 -->
+                <!-- 视频标题 -->
+                <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
+
+                <!-- 视频详情信息 -->
+                <div class="player-detail-info" id="playerDetailInfo" style="display:none;">
                 </div>
 
-                <!-- 集数导航 -->
+                <!-- 集数网格 -->
                 <div class="player-container player-right-item">
-                    <div class="flex justify-between items-center my-4">
-                        <button onclick="playPreviousEpisode()" id="prevButton" class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors">
-                            <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                            上一集
-                        </button>
-                        <span class="text-gray-400" id="episodeInfo">加载中...</span>
-                        <button onclick="playNextEpisode()" id="nextButton" class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors">
-                            下一集
-                            <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
+                    <div class="episode-grid" id="episodesGrid">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2" id="episodesList">
+                            <!-- 集数将在这里动态加载 -->
+                            <div class="col-span-full text-center text-gray-400 py-8">加载中...</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 添加自动播放开关和排序按钮 -->
-                <div class="player-container player-right-item mb-4">
+                <!-- 源信息 -->
+                <div class="player-container player-right-item flex justify-between py-2 px-4 bg-[#222] border border-[#333] rounded-lg" id="resourceInfoBarContainer">
+                    <!-- 资源信息卡片、切换按钮、视频数将由JS动态渲染 -->
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="player-container player-right-item">
                     <div class="flex items-center justify-between gap-2 control-buttons-container">
                         <!-- 左侧组：自动连播 + 锁定控制 + 复制链接 -->
                         <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -129,7 +127,6 @@
                             <button id="lockToggle" onclick="toggleControlsLock()" title="锁定控制"
                                     class="bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition flex-shrink-0 flex items-center justify-center control-btn icon-btn">
                                 <svg id="lockIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <!-- 默认状态：未锁图标 -->
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 11V7a3 3 0 00-6 0v4m-3 4h12v6H6v-6z" />
                                 </svg>
@@ -138,23 +135,12 @@
 
                         <!-- 右侧组：倒序排列按钮 -->
                         <div class="flex items-center flex-shrink-0 right-buttons-group">
-                            <!-- 倒序排列按钮 -->
                             <button onclick="toggleEpisodeOrder()" class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0 control-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" id="orderIcon" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
                                 </svg>
                                 <span id="orderText">倒序排列</span>
                             </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 集数网格 -->
-                <div class="player-container player-right-item">
-                    <div class="episode-grid" id="episodesGrid">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2" id="episodesList">
-                            <!-- 集数将在这里动态加载 -->
-                            <div class="col-span-full text-center text-gray-400 py-8">加载中...</div>
                         </div>
                     </div>
                 </div>
@@ -169,34 +155,6 @@
         </svg>
         <span id="shortcutText"></span>
     </div>
-
-    <!-- 页脚区域 -->
-    <footer class="footer mt-2 py-6 border-t border-[#333] bg-[#0a0a0a]">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <div class="flex items-center justify-center md:justify-start">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <span class="gradient-text font-bold">LeLeTV</span>
-                    </div>
-                    <p class="text-gray-500 text-sm mt-2 text-center md:text-left">© 2025 LeLeTV - 自由观影，畅享精彩</p>
-                </div>
-                
-                <div class="text-center md:text-right">
-                    <p class="text-gray-500 text-sm max-w-md">
-                        免责声明：本站仅为视频搜索工具，不存储、上传或分发任何视频内容。
-                        所有视频均来自第三方API接口。如有侵权，请联系相关内容提供方。
-                    </p>
-                    <div class="mt-2 flex justify-center md:justify-end space-x-4">
-                        <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">关于我们</a>
-                        <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors">隐私政策</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
 
     <!-- 换源模态框 -->
     <div id="modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center transition-opacity duration-300 z-[10000]">

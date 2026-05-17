@@ -263,6 +263,11 @@ app.use(express.static(join(__dirname), {
     if (path.endsWith('.png')) {
       res.setHeader('Content-Type', 'image/png');
     }
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    } else if (path.endsWith('.css') || path.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
   }
 }));
 

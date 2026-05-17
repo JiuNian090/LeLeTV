@@ -168,6 +168,11 @@ function initializePageContent() {
     // 设置页面标题
     document.title = currentVideoTitle + ' - LeLeTV播放器';
     document.getElementById('videoTitle').textContent = currentVideoTitle;
+    const videoTitleRight = document.getElementById('videoTitleRight');
+    if (videoTitleRight) videoTitleRight.textContent = currentVideoTitle;
+
+    // 渲染视频详情信息
+    renderPlayerDetailInfo();
 
     // 初始化播放器
     if (videoUrl) {
@@ -802,10 +807,12 @@ function showError(message) {
 
 // 更新集数信息
 function updateEpisodeInfo() {
+    const el = document.getElementById('episodeInfo');
+    if (!el) return;
     if (currentEpisodes.length > 0) {
-        document.getElementById('episodeInfo').textContent = `第 ${currentEpisodeIndex + 1}/${currentEpisodes.length} 集`;
+        el.textContent = `第 ${currentEpisodeIndex + 1}/${currentEpisodes.length} 集`;
     } else {
-        document.getElementById('episodeInfo').textContent = '无集数信息';
+        el.textContent = '无集数信息';
     }
 }
 
@@ -813,27 +820,30 @@ function updateEpisodeInfo() {
 function updateButtonStates() {
     const prevButton = document.getElementById('prevButton');
     const nextButton = document.getElementById('nextButton');
+    if (!prevButton && !nextButton) return;
 
-    // 处理上一集按钮
-    if (currentEpisodeIndex > 0) {
-        prevButton.classList.remove('bg-gray-700', 'cursor-not-allowed');
-        prevButton.classList.add('bg-[#222]', 'hover:bg-[#333]');
-        prevButton.removeAttribute('disabled');
-    } else {
-        prevButton.classList.add('bg-gray-700', 'cursor-not-allowed');
-        prevButton.classList.remove('bg-[#222]', 'hover:bg-[#333]');
-        prevButton.setAttribute('disabled', '');
+    if (prevButton) {
+        if (currentEpisodeIndex > 0) {
+            prevButton.classList.remove('bg-gray-700', 'cursor-not-allowed');
+            prevButton.classList.add('bg-[#222]', 'hover:bg-[#333]');
+            prevButton.removeAttribute('disabled');
+        } else {
+            prevButton.classList.add('bg-gray-700', 'cursor-not-allowed');
+            prevButton.classList.remove('bg-[#222]', 'hover:bg-[#333]');
+            prevButton.setAttribute('disabled', '');
+        }
     }
 
-    // 处理下一集按钮
-    if (currentEpisodeIndex < currentEpisodes.length - 1) {
-        nextButton.classList.remove('bg-gray-700', 'cursor-not-allowed');
-        nextButton.classList.add('bg-[#222]', 'hover:bg-[#333]');
-        nextButton.removeAttribute('disabled');
-    } else {
-        nextButton.classList.add('bg-gray-700', 'cursor-not-allowed');
-        nextButton.classList.remove('bg-[#222]', 'hover:bg-[#333]');
-        nextButton.setAttribute('disabled', '');
+    if (nextButton) {
+        if (currentEpisodeIndex < currentEpisodes.length - 1) {
+            nextButton.classList.remove('bg-gray-700', 'cursor-not-allowed');
+            nextButton.classList.add('bg-[#222]', 'hover:bg-[#333]');
+            nextButton.removeAttribute('disabled');
+        } else {
+            nextButton.classList.add('bg-gray-700', 'cursor-not-allowed');
+            nextButton.classList.remove('bg-[#222]', 'hover:bg-[#333]');
+            nextButton.setAttribute('disabled', '');
+        }
     }
 }
 
@@ -1781,6 +1791,67 @@ function closeEmbeddedPlayer() {
         console.error('尝试关闭嵌入式播放器失败:', e);
     }
     return false;
+}
+
+function renderPlayerDetailInfo() {
+    const container = document.getElementById('playerDetailInfo');
+    if (!container) return;
+
+    let videoInfo = null;
+    try {
+        const stored = localStorage.getItem('currentVideoInfo');
+        if (stored) {
+            videoInfo = JSON.parse(stored);
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    if (!videoInfo) {
+        container.style.display = 'none';
+        return;
+    }
+
+    const descriptionText = videoInfo.desc ? videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';
+    const hasMeta = videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.actor || videoInfo.remarks;
+
+    if (!hasMeta && !descriptionText) {
+        container.style.display = 'none';
+        return;
+    }
+
+    let html = '';
+
+    if (hasMeta) {
+        html += '<div class="detail-meta">';
+        if (videoInfo.type) {
+            html += `<div class="detail-meta-item"><span class="detail-meta-label">类型:</span><span class="detail-meta-value">${videoInfo.type}</span></div>`;
+        }
+        if (videoInfo.year) {
+            html += `<div class="detail-meta-item"><span class="detail-meta-label">年份:</span><span class="detail-meta-value">${videoInfo.year}</span></div>`;
+        }
+        if (videoInfo.area) {
+            html += `<div class="detail-meta-item"><span class="detail-meta-label">地区:</span><span class="detail-meta-value">${videoInfo.area}</span></div>`;
+        }
+        if (videoInfo.director) {
+            html += `<div class="detail-meta-item"><span class="detail-meta-label">导演:</span><span class="detail-meta-value">${videoInfo.director}</span></div>`;
+        }
+        if (videoInfo.actor) {
+            html += `<div class="detail-meta-item"><span class="detail-meta-label">主演:</span><span class="detail-meta-value">${videoInfo.actor}</span></div>`;
+        }
+        if (videoInfo.remarks) {
+            html += `<div class="detail-meta-item"><span class="detail-meta-label">备注:</span><span class="detail-meta-value">${videoInfo.remarks}</span></div>`;
+        }
+        html += '</div>';
+    }
+
+    if (descriptionText) {
+        html += `<div class="detail-desc-label">简介</div>`;
+        html += `<div class="detail-desc-content">${descriptionText}</div>`;
+    }
+
+    container.innerHTML = html;
+    container.style.display = 'block';
 }
 
 function renderResourceInfoBar() {
