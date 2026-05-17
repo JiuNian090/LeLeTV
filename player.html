@@ -99,42 +99,45 @@
         </div>
 
         <!-- 添加自动播放开关和排序按钮 -->
-        <div class="player-container mb-2">
-            <div class="flex flex-wrap justify-end items-center gap-2">
-                <!-- 自动连播开关 - 分组到左边 -->
-                <div class="flex items-center gap-1 flex-shrink-0 mr-auto">
-                    <span class="text-gray-400 text-sm whitespace-nowrap">自动连播</span>
-                    <label class="switch">
-                        <input type="checkbox" id="autoplayToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
-                <!-- 把各种功能按钮放在右侧 - 在小屏幕上各自占一行 -->
-                <div class="flex flex-wrap justify-end gap-2">
-                    <!-- 倒序排列按钮 -->
-                    <button onclick="toggleEpisodeOrder()" class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" id="orderIcon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
-                        </svg>
-                        <span id="orderText">倒序排列</span>
-                    </button>
+        <div class="player-container mb-4">
+            <div class="flex items-center justify-between gap-2 control-buttons-container">
+                <!-- 左侧组：自动连播 + 锁定控制 + 复制链接 -->
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <!-- 自动连播开关 -->
+                    <div class="flex items-center gap-1 flex-shrink-0 autoplay-container">
+                        <span class="text-gray-400 text-sm whitespace-nowrap">自动连播</span>
+                        <label class="switch">
+                            <input type="checkbox" id="autoplayToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     
                     <!-- 复制链接按钮 -->
-                    <button title="复制播放链接" onclick="copyLinks()" class="px-2 py-1 bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition">
+                    <button title="复制播放链接" onclick="copyLinks()" class="bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition flex-shrink-0 flex items-center justify-center control-btn icon-btn">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                         </svg>
                     </button>
                     
-                    <!-- 锁定控制按钮 - 始终显示在最右侧 -->
+                    <!-- 锁定控制按钮 -->
                     <button id="lockToggle" onclick="toggleControlsLock()" title="锁定控制" 
-                            class="px-2 py-1 bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition flex-shrink-0">
+                            class="bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition flex-shrink-0 flex items-center justify-center control-btn icon-btn">
                         <svg id="lockIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <!-- 默认状态：未锁图标 -->
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 11V7a3 3 0 00-6 0v4m-3 4h12v6H6v-6z" />
                         </svg>
+                    </button>
+                </div>
+                
+                <!-- 右侧组：倒序排列按钮 -->
+                <div class="flex items-center flex-shrink-0 right-buttons-group">
+                    <!-- 倒序排列按钮 -->
+                    <button onclick="toggleEpisodeOrder()" class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0 control-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" id="orderIcon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
+                        </svg>
+                        <span id="orderText">倒序排列</span>
                     </button>
                 </div>
             </div>

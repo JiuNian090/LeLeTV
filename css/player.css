@@ -394,6 +394,13 @@ input:checked + .slider:before {
     transform: translateX(22px);
 }
 
+/* 自动连播容器高度统一 */
+.autoplay-container {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
 /* 添加快捷键提示样式 */
 .shortcut-hint {
     position: fixed;
@@ -566,25 +573,28 @@ input:checked + .slider:before {
         grid-template-columns: repeat(3, 1fr) !important;
     }
     
-    /* 优化功能按钮布局 */
+    /* 优化功能按钮布局 - 保持横向排列 */
     .player-container .flex-wrap {
         margin-bottom: 0.5rem;
-        flex-direction: column;
-        align-items: flex-start !important;
+        flex-direction: row;
+        align-items: center !important;
         gap: 0.5rem;
+        flex-wrap: nowrap !important;
+    }
+    
+    /* 左侧组保持横向排列 */
+    .player-container .flex-wrap > div:first-child {
+        flex: 1;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
     }
     
     /* 优化自动连播开关位置 */
     .player-container .flex-wrap .flex-shrink-0:first-child {
         margin-right: 0;
-        margin-bottom: 0.5rem;
-        align-self: stretch;
-    }
-    
-    /* 功能按钮区域在小屏幕上堆叠显示 */
-    .player-container .flex-wrap > div:last-child {
-        width: 100%;
-        justify-content: space-between;
+        margin-bottom: 0;
+        align-self: center;
     }
     
     /* 调整按钮大小和间距 */
@@ -656,4 +666,70 @@ input:checked + .slider:before {
 /* 隐藏用户名输入框 */
 #username {
     display: none !important;
+}
+
+/* 功能按钮统一样式 */
+.control-btn {
+    height: 40px;
+    min-height: 40px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 图标按钮固定宽度 */
+.icon-btn {
+    width: 44px;
+    min-width: 44px;
+    padding: 0 !important;
+}
+
+/* 控制按钮容器上下内边距 */
+.control-buttons-container {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: nowrap !important;
+}
+
+/* 左侧按钮组也不换行 */
+.control-buttons-container > div:first-child {
+    flex-wrap: nowrap !important;
+}
+
+/* 响应式间距调整 - 超小屏幕 */
+@media (max-width: 480px) {
+    .control-buttons-container {
+        gap: 0.25rem !important;
+    }
+    
+    /* 超小屏幕下缩小按钮间距 */
+    .control-buttons-container > div:first-child {
+        gap: 0.25rem !important;
+    }
+    
+    /* 超小屏幕下自动连播文字稍小 */
+    .autoplay-container span {
+        font-size: 0.75rem !important;
+    }
+}
+
+/* 响应式间距调整 - 小屏幕 */
+@media (min-width: 481px) and (max-width: 768px) {
+    .control-buttons-container {
+        gap: 0.5rem !important;
+    }
+}
+
+/* 响应式间距调整 - 中等屏幕 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .control-buttons-container {
+        gap: 1rem !important;
+    }
+}
+
+/* 响应式间距调整 - 大屏幕 */
+@media (min-width: 1025px) {
+    .control-buttons-container {
+        gap: 2rem !important;
+    }
 }
