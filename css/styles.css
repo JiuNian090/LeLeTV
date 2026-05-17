@@ -1399,3 +1399,18 @@ img.loading-fade.loaded {
         z-index: 70 !important;
     }
 }
+
+/* ========== Window Controls Overlay (首页) ==========
+   仅对安装到桌面的 PWA 生效 */
+@media (display-mode: window-controls-overlay) {
+    /* 右上角设置按钮，避开窗口控制按钮区域 */
+    button[aria-label="打开设置"] {
+        margin-right: 140px;
+    }
+
+    /* 首页内容区域顶部留出标题栏空间（搜索结果模式下也生效） */
+    .home-layout,
+    #resultsArea {
+        padding-top: env(titlebar-area-height, 0px);
+    }
+}

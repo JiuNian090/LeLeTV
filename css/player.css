@@ -8,6 +8,31 @@ body, html {
     padding-top: 37px;
 }
 
+/* ========== Window Controls Overlay ==========
+   仅对安装到桌面的 PWA 生效。让播放器顶栏融入标题栏区域，
+   视频内容向上延伸。浏览器中打开网页不受影响。 */
+@media (display-mode: window-controls-overlay) {
+    body, html {
+        padding-top: env(titlebar-area-height, 37px);
+        /* 标题栏背景延伸，避免内容与窗口按钮之间出现白缝 */
+        background-color: #000;
+    }
+
+    .player-header-fixed {
+        height: env(titlebar-area-height, 48px);
+        /* p-4 的 Tailwind 对应 1rem ≈ 16px */
+        padding: 0 env(titlebar-area-x, 16px);
+        background: #111;
+        border-bottom: 1px solid #333;
+    }
+
+    .player-header-fixed .gradient-btn.home-btn {
+        /* 窗口控制按钮占据右上角约 138px（Windows），
+           确保首页按钮不被遮挡 */
+        margin-right: 138px;
+    }
+}
+
 /* Critical header and navigation styles */
 .player-header {
     position: relative;

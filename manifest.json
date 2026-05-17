@@ -4,6 +4,7 @@
     "description": "自用免费观影平台",
     "start_url": ".",
     "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
     "background_color": "#0f1622",
     "theme_color": "#000000",
     "apple-mobile-web-app-capable": "yes",
