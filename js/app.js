@@ -830,8 +830,42 @@ function getCustomApiInfo(customApiIndex) {
     return customAPIs[index];
 }
 
+// ========== 骨架屏辅助 ==========
+function generateSkeletonCards(count = 8) {
+    const cols = window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 4;
+    const cards = [];
+    for (let i = 0; i < Math.max(count, cols * 2); i++) {
+        cards.push(`
+            <div class="skeleton-card">
+                <div class="skeleton-card-img"></div>
+                <div class="skeleton-card-body">
+                    <div class="skeleton-line" style="width: 85%"></div>
+                    <div class="skeleton-line" style="width: 55%"></div>
+                    <div class="skeleton-tags">
+                        <div class="skeleton-tag"></div>
+                        <div class="skeleton-tag"></div>
+                    </div>
+                    <div class="skeleton-line-sm" style="margin-top: auto;"></div>
+                    <div class="skeleton-line-xs"></div>
+                </div>
+            </div>
+        `);
+    }
+    return cards.join('');
+}
+
+// 搜索功能节流锁
+let _searchThrottled = false;
+
 // 搜索功能 - 修改为支持多选API和多页结果
 async function search() {
+    // 防重复搜索节流
+    if (_searchThrottled) {
+        showToast('请等待当前搜索完成', 'info');
+        return;
+    }
+    _searchThrottled = true;
+    const releaseThrottle = () => { _searchThrottled = false; };
     // 强化的密码保护校验 - 防止绕过
     try {
         if (window.ensurePasswordProtection) {
@@ -841,24 +875,38 @@ async function search() {
             if (window.isPasswordProtected && window.isPasswordVerified) {
                 if (window.isPasswordProtected() && !window.isPasswordVerified()) {
                     showPasswordModal && showPasswordModal();
+                    releaseThrottle();
                     return;
                 }
             }
         }
     } catch (error) {
         console.warn('Password protection check failed:', error.message);
+        releaseThrottle();
         return;
     }
     const query = document.getElementById('searchInput').value.trim();
 
     if (!query) {
         showToast('请输入搜索内容', 'info');
+        releaseThrottle();
         return;
     }
 
     if (selectedAPIs.length === 0) {
         showToast('请至少选择一个API源', 'warning');
+        releaseThrottle();
         return;
+    }
+
+    // 在搜索前加入骨架屏
+    const resultsDiv = document.getElementById('results');
+    const resultsArea = document.getElementById('resultsArea');
+    if (resultsDiv) {
+        resultsDiv.innerHTML = generateSkeletonCards();
+    }
+    if (resultsArea) {
+        resultsArea.classList.remove('hidden');
     }
 
     showLoading();
@@ -938,8 +986,6 @@ async function search() {
             doubanArea.classList.add('hidden');
         }
 
-        const resultsDiv = document.getElementById('results');
-
         // 如果没有结果
         if (!allResults || allResults.length === 0) {
             resultsDiv.innerHTML = `
@@ -1007,9 +1053,10 @@ async function search() {
                     <div class="flex h-full">
                         ${hasCover ? `
                         <div class="relative flex-shrink-0 search-card-img-container image-container">
-                            <img src="${item.vod_pic}" alt="${safeName}" 
-                                 class="h-full w-full object-cover transition-transform hover:scale-110" 
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');">
+                            <img src="${item.vod_pic}" alt="${safeName}" loading="lazy"
+                                 class="h-full w-full object-cover transition-transform hover:scale-110 loading-fade" 
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');"
+                                 onload="this.classList.add('loaded')">
                             <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
                         </div>` : ''}
                         
@@ -1062,6 +1109,8 @@ async function search() {
         }
     } finally {
         hideLoading();
+        // 释放节流锁（延迟释放，防止短暂连点）
+        setTimeout(releaseThrottle, 500);
     }
 }
 
