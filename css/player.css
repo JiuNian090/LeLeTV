@@ -433,6 +433,25 @@ input:checked + .slider:before {
     line-height: 1.6;
 }
 
+.detail-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.detail-title-row .player-right-title {
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .detail-meta-container .detail-meta {
     display: flex;
     flex-wrap: wrap;
@@ -462,12 +481,6 @@ input:checked + .slider:before {
 /* 简介部分样式 */
 .detail-desc-section {
     margin-top: 4px;
-}
-
-.detail-desc-section .detail-desc-label {
-    color: #888;
-    font-size: 0.8rem;
-    margin-bottom: 0;
 }
 
 /* 折叠区域中的主演信息样式 */
@@ -504,14 +517,21 @@ input:checked + .slider:before {
     overflow-y: auto;
 }
 
-.detail-desc-section .detail-toggle-header {
+.detail-title-row .detail-toggle-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     cursor: pointer;
     user-select: none;
-    gap: 8px;
-    padding-top: 8px;
+    gap: 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.detail-title-row .detail-desc-label {
+    color: #888;
+    font-size: 0.8rem;
+    margin-bottom: 0;
 }
 
 .detail-toggle-arrow {
@@ -523,7 +543,7 @@ input:checked + .slider:before {
     color: #888;
 }
 
-.detail-desc-section.detail-collapsed .detail-toggle-arrow {
+.player-detail-info.detail-collapsed .detail-toggle-arrow {
     transform: rotate(-90deg);
 }
 
@@ -533,10 +553,11 @@ input:checked + .slider:before {
     padding-top: 4px;
 }
 
-.detail-desc-section.detail-collapsed .detail-collapse-body {
+.player-detail-info.detail-collapsed .detail-collapse-body {
     max-height: 0;
     opacity: 0;
     padding-top: 0;
+    margin: 0;
 }
 
 /* 默认视频标题样式 */

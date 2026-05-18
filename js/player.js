@@ -1848,7 +1848,6 @@ function renderPlayerDetailInfo() {
 
     const metaContainer = document.getElementById('detailMetaContainer');
     const descBody = document.getElementById('detailDescBody');
-    const descSection = document.getElementById('detailDescSection');
     const arrow = container.querySelector('.detail-toggle-arrow');
 
     let videoInfo = null;
@@ -1909,31 +1908,29 @@ function renderPlayerDetailInfo() {
 
         if (detailHtml) {
             descBody.innerHTML = detailHtml;
-            if (descSection) descSection.style.display = 'block';
             if (arrow) arrow.style.display = '';
         } else {
             descBody.innerHTML = '';
-            if (descSection) descSection.style.display = 'none';
             if (arrow) arrow.style.display = 'none';
         }
     }
 
     // 根据屏幕宽度决定默认折叠状态：移动端默认折叠
-    if (descSection && hasActorOrDesc) {
+    if (hasActorOrDesc) {
         if (window.innerWidth >= 900) {
-            descSection.classList.remove('detail-collapsed');
+            container.classList.remove('detail-collapsed');
         } else {
-            descSection.classList.add('detail-collapsed');
+            container.classList.add('detail-collapsed');
         }
     }
 }
 
 function toggleDetailInfo() {
-    const descSection = document.getElementById('detailDescSection');
-    if (!descSection) return;
-    const body = descSection.querySelector('.detail-collapse-body');
+    const container = document.getElementById('playerDetailInfo');
+    if (!container) return;
+    const body = container.querySelector('.detail-collapse-body');
     if (!body || !body.innerHTML.trim()) return;
-    descSection.classList.toggle('detail-collapsed');
+    container.classList.toggle('detail-collapsed');
 }
 
 // 选集区域折叠切换
