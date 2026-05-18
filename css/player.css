@@ -671,13 +671,19 @@ input:checked + .slider:before {
     
     /* 优化播放器容器内边距 */
     main {
-        padding: 0.5rem;
+        padding: 0;
     }
     
-    /* 视频播放器自适应高度 */
+    /* 视频播放器自适应宽高，消除上下黑边 */
     #player {
-        height: 50vh !important;
-        min-height: 200px;
+        aspect-ratio: 16 / 9;
+        height: auto !important;
+        max-height: 70vh;
+    }
+
+    /* 视频画面铺满播放器，不留黑边 */
+    .art-video-player video {
+        object-fit: cover !important;
     }
     
     /* 集数网格优化 */
@@ -913,24 +919,28 @@ main.container {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-.player-back-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.4);
+.player-back-btn.show {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .player-back-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
+    stroke: #fff;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.6));
+}
+
+.player-back-btn:hover {
+    opacity: 0.7;
 }
 
 @media (min-width: 900px) {

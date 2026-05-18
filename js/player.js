@@ -546,12 +546,31 @@ function initPlayer(videoUrl) {
     // 但有一个 bug： 在副屏全屏时，鼠标移出副屏后不会自动隐藏工具栏
     // 下面进一并重构和修复：
     let hideTimer;
+    let backBtnHideTimer;
 
-    // 隐藏控制栏
+    // 隐藏控制栏和返回按钮
     function hideControls() {
         if (art && art.controls) {
             art.controls.show = false;
         }
+        hideBackBtn();
+    }
+
+    // 显示返回按钮
+    function showBackBtn() {
+        const btn = document.querySelector('.player-back-btn');
+        if (btn) btn.classList.add('show');
+        clearTimeout(backBtnHideTimer);
+        backBtnHideTimer = setTimeout(() => {
+            hideBackBtn();
+        }, Artplayer.CONTROL_HIDE_TIME);
+    }
+
+    // 隐藏返回按钮
+    function hideBackBtn() {
+        const btn = document.querySelector('.player-back-btn');
+        if (btn) btn.classList.remove('show');
+        clearTimeout(backBtnHideTimer);
     }
 
     // 重置计时器，计时器超时时间与 artplayer 保持一致
@@ -578,6 +597,7 @@ function initPlayer(videoUrl) {
             document.removeEventListener('mouseout', handleMouseOut);
             // 退出全屏时清理计时器
             clearTimeout(hideTimer);
+            clearTimeout(backBtnHideTimer);
         }
 
         if (!isWeb) {
@@ -595,6 +615,13 @@ function initPlayer(videoUrl) {
     art.on('ready', () => {
         hideControls();
         console.log('ArtPlayer 已准备好');
+
+        // 鼠标滑过播放区域时显示返回按钮
+        const playerArea = document.querySelector('.player-layout-left');
+        if (playerArea) {
+            playerArea.addEventListener('mousemove', showBackBtn);
+        }
+
         // 直接尝试添加按钮
         addNextEpisodeDirectly(art);
         // 延迟后再次尝试
