@@ -240,7 +240,15 @@ async function fillAndSearchWithDouban(title) {
     const input = document.getElementById('searchInput');
     if (input) {
         input.value = safeTitle;
+        if (typeof toggleClearButton === 'function') {
+            toggleClearButton();
+        }
         await search(); // 使用已有的search函数执行搜索
+
+        // 切换到首页显示搜索结果
+        if (typeof switchPage === 'function') {
+            switchPage('home');
+        }
         
         // 更新浏览器URL，使其反映当前的搜索状态
         try {
@@ -690,7 +698,7 @@ function renderDoubanCards(data, container) {
                     </div>
                 </div>
                 <div class="p-2 text-center bg-[#111] card-body">
-                    <button onclick="fillAndSearchWithDouban('${safeTitle}")" 
+                    <button onclick="fillAndSearchWithDouban('${safeTitle}')" 
                             class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition card-title-text"
                             title="${safeTitle}">
                         ${safeTitle}
@@ -929,38 +937,6 @@ function resetTagsToDefault() {
     renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
     
     showToast('已恢复默认标签', 'success');
-}
-
-function fillAndSearchWithDouban(keyword) {
-    // 阻止事件冒泡
-    event.stopPropagation();
-    
-    // 更新URL，但不刷新页面
-    try {
-        window.history.replaceState(
-            { search: keyword }, 
-            `搜索: ${keyword} - LeLeTV`, 
-            `/s=${encodeURIComponent(keyword)}`
-        );
-    } catch (e) {
-        console.error('更新浏览器历史失败:', e);
-    }
-    
-    // 设置搜索框的值
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) { 
-        searchInput.value = keyword;
-        toggleClearButton();
-    }
-    
-    // 滚动到搜索区域
-    const searchArea = document.getElementById('searchArea');
-    if (searchArea) {
-        searchArea.scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    // 执行搜索
-    search();
 }
 
 function fillAndSearch(keyword, event) {
