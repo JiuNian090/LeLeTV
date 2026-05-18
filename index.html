@@ -181,14 +181,11 @@
 
         <!-- 历史记录页面 -->
         <div id="page-history" class="page-content">
-            <div class="history-page-header">
-                <h2 class="text-2xl font-bold gradient-text mb-6">观看历史</h2>
-                <button onclick="clearViewingHistory()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white rounded-xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                    清空历史记录
-                </button>
+            <div class="history-page-layout">
+                <div class="history-content-container">
+                    <div id="historyList"></div>
+                </div>
             </div>
-            
-            <div id="historyList"></div>
         </div>
 
         <!-- 设置页面 -->

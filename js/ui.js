@@ -530,8 +530,15 @@ function renderHistoryCard(item) {
 
     const episodeText = item.episodeIndex !== undefined ? `第${item.episodeIndex + 1}集` : '';
     const safeURL = encodeURIComponent(item.url);
-    const hasThumbnail = item.cover && item.cover.startsWith('http');
-    const thumbnailUrl = hasThumbnail ? item.cover : '';
+
+    let episodeInfoHtml = '';
+    if (item.episodes && Array.isArray(item.episodes) && item.episodes.length > 0) {
+        const totalEpisodes = item.episodes.length;
+        const syncStatus = item.lastSyncTime ?
+            `<span class="text-green-400 text-xs" title="剧集列表已同步">✓</span>` :
+            `<span class="text-yellow-400 text-xs" title="使用缓存数据">↻</span>`;
+        episodeInfoHtml = `<span class="text-xs text-gray-400">共${totalEpisodes}集${syncStatus}</span>`;
+    }
 
     let progressHtml = '';
     if (item.playbackPosition && item.duration && item.playbackPosition > 10 && item.playbackPosition < item.duration * 0.95) {
@@ -539,51 +546,44 @@ function renderHistoryCard(item) {
         const formattedTime = formatPlaybackTime(item.playbackPosition);
         const formattedDuration = formatPlaybackTime(item.duration);
         progressHtml = `
-            <div class="history-card-progress">
-                <div class="history-card-progress-bar">
-                    <div class="history-card-progress-filled" style="width:${percent}%"></div>
+            <div class="history-progress">
+                <div class="progress-bar">
+                    <div class="progress-filled" style="width:${percent}%"></div>
                 </div>
-                <div class="history-card-progress-text">${formattedTime} / ${formattedDuration}</div>
+                <div class="progress-text">${formattedTime} / ${formattedDuration}</div>
             </div>
         `;
     }
 
-    const timeStr = formatTimestamp(item.timestamp);
-    const totalEpisodes = item.episodes && Array.isArray(item.episodes) ? item.episodes.length : 0;
+    const hasThumbnail = item.cover && item.cover.startsWith('http');
+    const thumbnailUrl = hasThumbnail ? item.cover : '';
 
     return `
-        <div class="history-card" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
-            <div class="history-card-thumb">
-                ${hasThumbnail ? `
-                    <img src="${thumbnailUrl}" alt="${safeTitle}" loading="lazy"
-                         onerror="this.style.display='none'">
-                ` : `
-                    <div class="w-full h-full flex items-center justify-center text-gray-600">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                `}
-                <button onclick="deleteHistoryItemWithAnim(event, '${safeURL}')" class="history-card-delete" title="删除记录">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="history-card-info">
-                <div>
-                    <div class="history-card-title">${safeTitle}</div>
-                    <div class="history-card-meta">
-                        ${episodeText ? `<span class="history-card-episode">${episodeText}</span>` : ''}
-                        ${episodeText ? '<span class="text-gray-600">·</span>' : ''}
-                        <span class="history-card-source">${safeSource}</span>
-                        ${totalEpisodes > 1 ? `<span class="text-gray-600">·</span><span class="text-gray-500">共${totalEpisodes}集</span>` : ''}
-                    </div>
+        <div class="history-item cursor-pointer relative group flex" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
+            <button onclick="event.stopPropagation(); deleteHistoryItem('${safeURL}')"
+                    class="absolute right-2 top-2 opacity-100 delete-btn text-gray-400 hover:text-red-400 p-1 rounded-full hover:bg-gray-800 z-10"
+                    title="删除记录">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            ${hasThumbnail ? `
+            <div class="history-thumbnail flex-shrink-0 image-container">
+                <img src="${thumbnailUrl}" alt="${safeTitle}"
+                     class="w-full h-full object-cover"
+                     onerror="this.style.display='none'; this.parentElement.classList.add('hidden');">
+            </div>` : ''}
+            <div class="history-info flex-grow ${hasThumbnail ? 'ml-3' : ''}">
+                <div class="history-title">${safeTitle}</div>
+                <div class="history-meta">
+                    <span class="history-episode">${episodeText}</span>
+                    ${episodeText ? '<span class="history-separator mx-1">·</span>' : ''}
+                    <span class="history-source">${safeSource}</span>
+                    ${episodeInfoHtml ? '<span class="history-separator mx-1">·</span>' : ''}
+                    ${episodeInfoHtml}
                 </div>
-                <div>
-                    ${progressHtml}
-                    <div class="history-card-time">${timeStr}</div>
-                </div>
+                ${progressHtml}
+                <div class="history-time">${formatTimestamp(item.timestamp)}</div>
             </div>
         </div>
     `;
@@ -592,7 +592,7 @@ function renderHistoryCard(item) {
 // 带动画的删除
 function deleteHistoryItemWithAnim(event, encodedUrl) {
     event.stopPropagation();
-    const card = event.currentTarget.closest('.history-card');
+    const card = event.currentTarget.closest('.history-item');
     if (card) {
         card.classList.add('removing');
         setTimeout(() => {

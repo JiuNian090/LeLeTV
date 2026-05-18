@@ -1507,15 +1507,24 @@ function showVideoPlayer(url) {
     }
     // 临时隐藏搜索结果和豆瓣区域，防止高度超出播放器而出现滚动条
     document.getElementById('resultsArea').classList.add('hidden');
-    document.getElementById('doubanArea').classList.add('hidden');
+    const doubanArea = document.getElementById('doubanArea');
+    if (doubanArea) {
+        doubanArea.classList.add('hidden');
+    }
     // 在框架中打开播放页面
     videoPlayerFrame = document.createElement('iframe');
     videoPlayerFrame.id = 'VideoPlayerFrame';
-    videoPlayerFrame.className = 'fixed w-full h-screen z-40';
+    videoPlayerFrame.className = 'fixed w-full h-screen z-50';
     videoPlayerFrame.src = url;
     document.body.appendChild(videoPlayerFrame);
     // 将焦点移入iframe
     videoPlayerFrame.focus();
+
+    // 隐藏顶部导航栏
+    const topNav = document.querySelector('.top-nav-bar');
+    if (topNav) {
+        topNav.style.display = 'none';
+    }
 }
 
 // 关闭播放器页面
@@ -1523,6 +1532,12 @@ function closeVideoPlayer(home = false) {
     videoPlayerFrame = document.getElementById('VideoPlayerFrame');
     if (videoPlayerFrame) {
         videoPlayerFrame.remove();
+
+        // 恢复顶部导航栏显示
+        const topNav = document.querySelector('.top-nav-bar');
+        if (topNav) {
+            topNav.style.display = '';
+        }
         // 恢复搜索结果显示
         document.getElementById('resultsArea').classList.remove('hidden');
         // 关闭播放器时也隐藏详情弹窗
@@ -1532,7 +1547,10 @@ function closeVideoPlayer(home = false) {
         }
         // 如果启用豆瓣区域则显示豆瓣区域
         if (localStorage.getItem('doubanEnabled') === 'true') {
-            document.getElementById('doubanArea').classList.remove('hidden');
+            const doubanArea = document.getElementById('doubanArea');
+            if (doubanArea) {
+                doubanArea.classList.remove('hidden');
+            }
         }
     }
     if (home) {
