@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.19.5 (2026-05-19 01:56)
+- [其他] rewrite version update logic, add version formatting
+
+重构了版本更新相关的代码逻辑，新增版本号格式化显示功能，优化了缓存注销、错误处理等流程，新增页脚更新按钮交互和service worker更新监听。
+
+
 ### v2.5.19.4 (2026-05-19 01:55)
 - [新增] add version update detection and 优化 category page style
 
