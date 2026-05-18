@@ -1846,9 +1846,10 @@ function renderPlayerDetailInfo() {
     const container = document.getElementById('playerDetailInfo');
     if (!container) return;
 
-    const body = container.querySelector('.detail-collapse-body');
+    const metaContainer = document.getElementById('detailMetaContainer');
+    const descBody = document.getElementById('detailDescBody');
+    const descSection = document.getElementById('detailDescSection');
     const arrow = container.querySelector('.detail-toggle-arrow');
-    if (!body) return;
 
     let videoInfo = null;
     try {
@@ -1861,65 +1862,78 @@ function renderPlayerDetailInfo() {
     }
 
     const descriptionText = videoInfo && videoInfo.desc ? videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';
-    const hasMeta = videoInfo && (videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.actor || videoInfo.remarks);
+    const hasMeta = videoInfo && (videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.remarks);
+    const hasActorOrDesc = videoInfo && (videoInfo.actor || descriptionText);
 
     container.style.display = 'block';
 
-    if (!hasMeta && !descriptionText) {
-        body.innerHTML = '';
-        if (arrow) arrow.style.display = 'none';
-        container.classList.remove('detail-collapsed');
-        return;
-    }
-
-    if (arrow) arrow.style.display = '';
-
-    let html = '';
-
-    if (hasMeta) {
-        html += '<div class="detail-meta">';
+    // 渲染基本信息（始终显示）- 不含主演
+    if (metaContainer && hasMeta) {
+        let metaHtml = '<div class="detail-meta">';
         if (videoInfo.type) {
-            html += `<div class="detail-meta-item"><span class="detail-meta-label">类型:</span><span class="detail-meta-value">${videoInfo.type}</span></div>`;
+            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">类型:</span><span class="detail-meta-value">${videoInfo.type}</span></div>`;
         }
         if (videoInfo.year) {
-            html += `<div class="detail-meta-item"><span class="detail-meta-label">年份:</span><span class="detail-meta-value">${videoInfo.year}</span></div>`;
+            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">年份:</span><span class="detail-meta-value">${videoInfo.year}</span></div>`;
         }
         if (videoInfo.area) {
-            html += `<div class="detail-meta-item"><span class="detail-meta-label">地区:</span><span class="detail-meta-value">${videoInfo.area}</span></div>`;
+            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">地区:</span><span class="detail-meta-value">${videoInfo.area}</span></div>`;
         }
         if (videoInfo.director) {
-            html += `<div class="detail-meta-item"><span class="detail-meta-label">导演:</span><span class="detail-meta-value">${videoInfo.director}</span></div>`;
-        }
-        if (videoInfo.actor) {
-            html += `<div class="detail-meta-item"><span class="detail-meta-label">主演:</span><span class="detail-meta-value">${videoInfo.actor}</span></div>`;
+            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">导演:</span><span class="detail-meta-value">${videoInfo.director}</span></div>`;
         }
         if (videoInfo.remarks) {
-            html += `<div class="detail-meta-item"><span class="detail-meta-label">备注:</span><span class="detail-meta-value">${videoInfo.remarks}</span></div>`;
+            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">备注:</span><span class="detail-meta-value">${videoInfo.remarks}</span></div>`;
         }
-        html += '</div>';
+        metaHtml += '</div>';
+        metaContainer.innerHTML = metaHtml;
+    } else if (metaContainer) {
+        metaContainer.innerHTML = '';
     }
 
-    if (descriptionText) {
-        html += `<div class="detail-desc-label">简介</div>`;
-        html += `<div class="detail-desc-content">${descriptionText}</div>`;
-    }
+    // 渲染详情部分（可折叠）- 包含主演和简介
+    if (descBody) {
+        let detailHtml = '';
+        
+        // 先添加主演
+        if (videoInfo.actor) {
+            detailHtml += '<div class="detail-meta detail-meta-collapsible">';
+            detailHtml += `<div class="detail-meta-item"><span class="detail-meta-label">主演:</span><span class="detail-meta-value">${videoInfo.actor}</span></div>`;
+            detailHtml += '</div>';
+        }
+        
+        // 再添加简介
+        if (descriptionText) {
+            detailHtml += `<div class="detail-desc-content">${descriptionText}</div>`;
+        }
 
-    body.innerHTML = html;
+        if (detailHtml) {
+            descBody.innerHTML = detailHtml;
+            if (descSection) descSection.style.display = 'block';
+            if (arrow) arrow.style.display = '';
+        } else {
+            descBody.innerHTML = '';
+            if (descSection) descSection.style.display = 'none';
+            if (arrow) arrow.style.display = 'none';
+        }
+    }
 
     // 根据屏幕宽度决定默认折叠状态：移动端默认折叠
-    if (window.innerWidth >= 900) {
-        container.classList.remove('detail-collapsed');
-    } else {
-        container.classList.add('detail-collapsed');
+    if (descSection && hasActorOrDesc) {
+        if (window.innerWidth >= 900) {
+            descSection.classList.remove('detail-collapsed');
+        } else {
+            descSection.classList.add('detail-collapsed');
+        }
     }
 }
 
 function toggleDetailInfo() {
-    const container = document.getElementById('playerDetailInfo');
-    if (!container) return;
-    const body = container.querySelector('.detail-collapse-body');
+    const descSection = document.getElementById('detailDescSection');
+    if (!descSection) return;
+    const body = descSection.querySelector('.detail-collapse-body');
     if (!body || !body.innerHTML.trim()) return;
-    container.classList.toggle('detail-collapsed');
+    descSection.classList.toggle('detail-collapsed');
 }
 
 // 选集区域折叠切换

@@ -433,13 +433,14 @@ input:checked + .slider:before {
     line-height: 1.6;
 }
 
-.player-detail-info .detail-meta {
+.detail-meta-container .detail-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 6px 14px;
     margin-bottom: 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid #2a2a2a;
+    margin-top: 8px;
 }
 
 .player-detail-info .detail-meta-item {
@@ -458,10 +459,41 @@ input:checked + .slider:before {
     font-size: 0.85rem;
 }
 
-.player-detail-info .detail-desc-label {
+/* 简介部分样式 */
+.detail-desc-section {
+    margin-top: 4px;
+}
+
+.detail-desc-section .detail-desc-label {
     color: #888;
     font-size: 0.8rem;
-    margin-bottom: 4px;
+    margin-bottom: 0;
+}
+
+/* 折叠区域中的主演信息样式 */
+.detail-meta-collapsible {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.detail-meta-collapsible .detail-meta-item {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.detail-meta-collapsible .detail-meta-label {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.detail-meta-collapsible .detail-meta-value {
+    color: #ddd;
+    font-size: 0.85rem;
 }
 
 .player-detail-info .detail-desc-content {
@@ -472,13 +504,14 @@ input:checked + .slider:before {
     overflow-y: auto;
 }
 
-.detail-toggle-header {
+.detail-desc-section .detail-toggle-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
     gap: 8px;
+    padding-top: 8px;
 }
 
 .detail-toggle-arrow {
@@ -490,19 +523,35 @@ input:checked + .slider:before {
     color: #888;
 }
 
-.detail-collapsed .detail-toggle-arrow {
+.detail-desc-section.detail-collapsed .detail-toggle-arrow {
     transform: rotate(-90deg);
 }
 
-.detail-collapse-body {
+.detail-desc-section .detail-collapse-body {
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease;
+    padding-top: 4px;
 }
 
-.detail-collapsed .detail-collapse-body {
+.detail-desc-section.detail-collapsed .detail-collapse-body {
     max-height: 0;
     opacity: 0;
     padding-top: 0;
+}
+
+/* 默认视频标题样式 */
+.player-right-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    text-align: left;
+    line-height: 1.4;
+    word-break: break-word;
+    padding: 4px 0;
+    flex: 1;
+    min-width: 0;
+    letter-spacing: 0.2px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 /* 选集区域（可折叠卡片） */
@@ -513,18 +562,36 @@ input:checked + .slider:before {
     padding: 12px 14px;
 }
 
-.episode-section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    margin: 0;
-    line-height: 1.4;
+.episode-section .detail-toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    gap: 8px;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
 .episode-title-group {
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    flex: 1;
+    flex-shrink: 1;
+}
+
+.episode-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
     min-width: 0;
 }
 
@@ -539,20 +606,33 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    background: none;
-    border: none;
-    border-radius: 4px;
-    color: #888;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #ccc;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    padding: 0;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    padding: 4px;
+    box-sizing: border-box;
+    z-index: 10;
+    position: relative;
 }
 
 .episode-order-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
     color: #fff;
+}
+
+.episode-order-btn svg {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
 }
 
 .episode-collapsed .episode-order-btn {
@@ -633,6 +713,43 @@ input:checked + .slider:before {
 /* 响应式样式优化 */
 /* 小屏幕设备优化 (手机) */
 @media (max-width: 640px) {
+    /* 确保选集排列按钮在竖屏模式下正常显示 */
+    .episode-order-btn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        color: #ddd !important;
+    }
+    
+    .episode-collapsed .episode-order-btn {
+        display: none !important;
+    }
+    
+    /* 增大视频标题字号和加粗 */
+    .player-right-title {
+        font-size: 1.3rem !important;
+        font-weight: 800 !important;
+        line-height: 1.4 !important;
+        padding: 4px 0 !important;
+        letter-spacing: 0.2px !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    }
+    
+    /* 竖屏模式下详情信息区域优化 */
+    .player-detail-info {
+        padding: 14px 16px !important;
+    }
+    
+    /* 竖屏模式下增加播放器和标题之间的间隔 */
+    .player-layout-right {
+        padding-top: 1rem !important;
+    }
+    
+    .player-layout-left {
+        padding-bottom: 0.5rem !important;
+    }
     /* 浏览器已自动处理状态栏安全区域，不再添加额外间距 */
     body, html {
         padding-top: 0;
@@ -1006,15 +1123,17 @@ main.container {
     }
 
     .player-right-title {
-        font-size: 1.1rem;
-        font-weight: 600;
+        font-size: 1.3rem;
+        font-weight: 800;
         color: #fff;
         text-align: left;
         line-height: 1.4;
         word-break: break-word;
-        padding-bottom: 4px;
+        padding: 4px 0;
         flex: 1;
         min-width: 0;
+        letter-spacing: 0.2px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
     .player-layout-right .player-right-item {

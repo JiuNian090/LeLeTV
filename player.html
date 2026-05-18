@@ -74,13 +74,17 @@
             <div class="player-layout-right">
                 <!-- 视频标题 + 详情（合并） -->
                 <div class="player-detail-info" id="playerDetailInfo">
-                    <div class="detail-toggle-header" onclick="toggleDetailInfo()">
-                        <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
-                        <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
+                    <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
+                    <div class="detail-meta-container" id="detailMetaContainer"></div>
+                    <div class="detail-desc-section" id="detailDescSection">
+                        <div class="detail-toggle-header" onclick="toggleDetailInfo()">
+                            <span class="detail-desc-label">详情</span>
+                            <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        <div class="detail-collapse-body" id="detailDescBody"></div>
                     </div>
-                    <div class="detail-collapse-body"></div>
                 </div>
 
                 <!-- 选集区域（可折叠） -->
