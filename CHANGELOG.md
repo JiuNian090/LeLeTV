@@ -13,6 +13,15 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.18.8 (2026-05-18 16:56)
+- [重构] 优化localStorage中currentVideoInfo的存储逻辑
+
+1. 移除多处冗余的localStorage.removeItem('currentVideoInfo')调用
+2. 在playFromHistory中新增视频详情信息的主动存储逻辑
+3. 清理无用的调试日志和冗余代码
+4. 调整错误处理中的存储清理时机。
+
+
 ### v2.5.18.7 (2026-05-18 12:37)
 - [修复] 解决了切换资源和进入详情页时清理旧的视频缓存信息
 
