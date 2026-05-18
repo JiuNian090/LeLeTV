@@ -164,23 +164,206 @@
     }
 }
 
-/* 历史记录页面布局 */
-.history-page-layout {
-    padding-top: 2rem;
-}
-
 .history-page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
 }
 
-.history-list-container {
-    max-width: 100%;
+@media (max-width: 640px) {
+    .history-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
 }
 
-/* 历史记录卡片样式 */
+/* 日期分组标题 */
+.history-group {
+    margin-bottom: 1.5rem;
+}
+
+.history-group:last-child {
+    margin-bottom: 0;
+}
+
+.history-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #a0aec0;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #2d2d2d;
+}
+
+/* 历史记录网格 */
+.history-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .history-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 历史记录横向卡片 */
+.history-card {
+    display: flex;
+    background: #1a1a1a;
+    border: 1px solid #2d2d2d;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.history-card:hover {
+    border-color: #404040;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.history-card:active {
+    transform: translateY(0);
+}
+
+/* 卡片缩略图 */
+.history-card-thumb {
+    width: 100px;
+    min-width: 100px;
+    height: 140px;
+    background: #222;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.history-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.history-card:hover .history-card-thumb img {
+    transform: scale(1.08);
+}
+
+/* 删除按钮（悬停显示） */
+.history-card-delete {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    border: none;
+    border-radius: 50%;
+    color: #9ca3af;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.history-card:hover .history-card-delete {
+    opacity: 1;
+}
+
+.history-card-delete:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+/* 卡片信息区域 */
+.history-card-info {
+    flex: 1;
+    padding: 0.75rem 0.75rem 0.75rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.history-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+    transition: color 0.2s ease;
+}
+
+.history-card:hover .history-card-title {
+    color: #f472b6;
+}
+
+/* 卡片元信息 */
+.history-card-meta {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.history-card-episode {
+    color: #60a5fa;
+}
+
+.history-card-source {
+    color: #34d399;
+}
+
+/* 进度条 */
+.history-card-progress {
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.history-card-progress-bar {
+    height: 3px;
+    background: #333;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.history-card-progress-filled {
+    height: 100%;
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.history-card-progress-text {
+    font-size: 0.65rem;
+    color: #6b7280;
+    text-align: right;
+    margin-top: 0.1rem;
+}
+
+/* 时间戳 */
+.history-card-time {
+    font-size: 0.7rem;
+    color: #6b7280;
+}
+
+/* 空状态（增强） */
 .empty-state {
     max-width: 400px;
     margin: 0 auto;
@@ -199,28 +382,12 @@
     }
 }
 
-.history-card {
-    position: relative;
-}
-
-.history-card-thumb {
-    position: relative;
-}
-
-.history-card-thumb img {
-    transition: transform 0.5s ease;
-}
-
-.history-card:hover .history-card-thumb img {
-    transform: scale(1.05);
-}
-
-.history-card-overlay {
+/* 删除动画 */
+.history-card.removing {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: all 0.3s ease;
     pointer-events: none;
-}
-
-.history-card:hover .history-card-overlay {
-    opacity: 1;
 }
 
 .line-clamp-2 {

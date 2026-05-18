@@ -181,16 +181,14 @@
 
         <!-- 历史记录页面 -->
         <div id="page-history" class="page-content">
-            <div class="history-page-layout">
-                <div class="history-page-header">
-                    <h2 class="text-2xl font-bold gradient-text mb-6">观看历史</h2>
-                    <button onclick="clearViewingHistory()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white rounded-xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                        清空历史记录
-                    </button>
-                </div>
-                
-                <div id="historyList" class="history-list-container"></div>
+            <div class="history-page-header">
+                <h2 class="text-2xl font-bold gradient-text mb-6">观看历史</h2>
+                <button onclick="clearViewingHistory()" class="px-5 py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white rounded-xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
+                    清空历史记录
+                </button>
             </div>
+            
+            <div id="historyList"></div>
         </div>
 
         <!-- 设置页面 -->
@@ -566,9 +564,8 @@
                     break;
                     
                 case 'history':
-                    // 渲染历史记录
-                    if (typeof renderHistory === 'function') {
-                        renderHistory();
+                    if (typeof loadViewingHistory === 'function') {
+                        loadViewingHistory();
                     }
                     break;
                     
@@ -576,95 +573,6 @@
                     // 设置页面不需要特殊操作
                     break;
             }
-        }
-        
-        // 渲染历史记录（新增函数）
-        function renderHistory() {
-            const historyList = document.getElementById('historyList');
-            if (!historyList) return;
-            
-            const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
-            
-            if (history.length === 0) {
-                historyList.innerHTML = `
-                    <div class="empty-state text-center py-20">
-                        <div class="empty-icon text-8xl mb-6">📺</div>
-                        <h3 class="text-xl text-gray-300 mb-2">暂无观看记录</h3>
-                        <p class="text-gray-500">开始搜索并观看视频吧！</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // 渲染历史记录 - 卡片网格形式
-            historyList.innerHTML = `
-                <div class="history-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    ${history.map((item, index) => `
-                        <div class="history-card bg-gradient-to-br from-[#1a1a1a] to-[#151515] rounded-2xl shadow-xl border border-[#333] overflow-hidden hover:border-pink-500/50 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer" onclick="playFromHistory(${index})">
-                            <div class="history-card-thumb relative aspect-[2/3] bg-[#222] overflow-hidden">
-                                ${item.pic ? `<img src="${item.pic}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">` : `
-                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-pink-900/30">
-                                        <svg class="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                        </svg>
-                                    </div>
-                                `}
-                                <div class="history-card-overlay absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
-                                    <div class="play-icon w-14 h-14 bg-gradient-to-r from-pink-600 to-purple-600 rounded-full flex items-center justify-center shadow-xl">
-                                        <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="history-card-content p-5">
-                                <h4 class="text-lg font-semibold text-white mb-2 line-clamp-2 leading-snug">${item.name}</h4>
-                                ${item.episode ? `
-                                    <p class="text-sm text-pink-400 mb-2 font-medium">
-                                        <span class="inline-flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            ${item.episode}
-                                        </span>
-                                    </p>
-                                ` : ''}
-                                <div class="flex items-center justify-between">
-                                    <p class="text-xs text-gray-500 flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                        </svg>
-                                        ${item.date ? new Date(item.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
-                                    </p>
-                                    <button onclick="event.stopPropagation(); removeFromHistory(${index})" class="text-gray-400 hover:text-red-400 p-2 -mr-2 rounded-lg hover:bg-red-500/10 transition-all duration-200 group">
-                                        <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-        
-        // 从历史记录播放
-        function playFromHistory(index) {
-            const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
-            const item = history[index];
-            if (item) {
-                // 这里需要触发播放逻辑，根据现有代码结构
-                showToast('即将播放: ' + item.name);
-            }
-        }
-        
-        // 从历史记录删除
-        function removeFromHistory(index) {
-            let history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
-            history.splice(index, 1);
-            localStorage.setItem('viewingHistory', JSON.stringify(history));
-            renderHistory();
         }
         
         // 重写toggleHistory和toggleSettings函数

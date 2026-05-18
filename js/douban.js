@@ -51,7 +51,14 @@ function saveUserTags() {
 let doubanMovieTvCurrentSwitch = 'movie';
 let doubanCurrentTag = '热门';
 let doubanPageStart = 0;
-const doubanPageSize = 16; // 一次显示的项目数量
+let doubanPageSize = 16; // 一次显示的项目数量（动态计算）
+
+// 根据屏幕方向获取每页显示数量
+function updateDoubanPageSize() {
+    // 横屏模式（桌面端/宽屏 >= 1024px）：每页显示两行（6列 × 2行 = 12条）
+    // 竖屏模式（移动端/窄屏 < 1024px）：保持原有行为（16条）
+    doubanPageSize = window.innerWidth >= 1024 ? 12 : 16;
+}
 
 // 初始化豆瓣功能
 function initDouban() {
@@ -107,6 +114,9 @@ function initDouban() {
     // 设置分页按钮事件监听
     setupDoubanPagination();
     
+    // 根据屏幕方向确定每页显示数量
+    updateDoubanPageSize();
+
     // 初始加载热门内容
     if (localStorage.getItem('doubanEnabled') !== 'false') {
         renderRecommend(doubanCurrentTag, doubanPageSize, doubanPageStart);
@@ -531,6 +541,9 @@ function fetchDoubanTags() {
 
 // 渲染热门推荐内容
 function renderRecommend(tag, pageLimit, pageStart) {
+    // 每次渲染前更新每页显示数量，以适应当前屏幕方向
+    updateDoubanPageSize();
+
     const container = document.getElementById("douban-results");
     if (!container) return;
 
