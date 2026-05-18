@@ -78,6 +78,13 @@
     min-height: calc(100vh - 120px);
 }
 
+/* 历史记录 & 设置页面：取消最小高度，让内容自然撑开 */
+.main-container[data-page="history"],
+.main-container[data-page="settings"] {
+    min-height: auto;
+    padding-bottom: 1rem;
+}
+
 /* 页面内容样式 */
 .page-content {
     display: none;

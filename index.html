@@ -521,6 +521,12 @@
                 targetPage.classList.add('active');
             }
             
+            // 更新主容器的 data-page 属性（用于各页面差异化样式）
+            const mainContainer = document.querySelector('.main-container');
+            if (mainContainer) {
+                mainContainer.setAttribute('data-page', pageName);
+            }
+            
             // 更新导航栏按钮状态
             updateNavButtons(pageName);
             
