@@ -78,9 +78,10 @@
     min-height: calc(100vh - 120px);
 }
 
-/* 历史记录 & 设置页面：取消最小高度，让内容自然撑开 */
+/* 历史记录 & 设置 & 分类页面：取消最小高度，让内容自然撑开 */
 .main-container[data-page="history"],
-.main-container[data-page="settings"] {
+.main-container[data-page="settings"],
+.main-container[data-page="category"] {
     min-height: auto;
     padding-bottom: 1rem;
 }

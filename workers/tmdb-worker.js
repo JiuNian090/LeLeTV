@@ -12,7 +12,11 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 async function handleRequest(request) {
   const url = new URL(request.url);
 
-  if (url.pathname === '/health' || url.pathname === '/') {
+  if (url.pathname === '/health') {
+    return healthCheck();
+  }
+
+  if (url.pathname === '/' && !url.searchParams.has('endpoint')) {
     return healthCheck();
   }
 
