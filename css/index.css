@@ -86,6 +86,11 @@
     padding-bottom: 1rem;
 }
 
+.main-container[data-page="category"] {
+    padding-left: 0;
+    padding-right: 0;
+}
+
 /* 页面内容样式 */
 .page-content {
     display: none;
@@ -194,6 +199,8 @@
 .category-content-container {
     width: 100%;
     max-width: 100%;
+    padding: 0 1rem;
+    box-sizing: border-box;
 }
 
 /* 分类页面头部 */
@@ -265,6 +272,25 @@
     flex-wrap: wrap;
     gap: 0.375rem;
     flex: 1;
+}
+
+@media (max-width: 639px) {
+    .tmdb-filter-section {
+        overflow: hidden;
+    }
+    .tmdb-genre-list {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        min-width: 0;
+    }
+    .tmdb-genre-list::-webkit-scrollbar {
+        display: none;
+    }
+    .tmdb-genre-list .tmdb-genre-btn {
+        flex-shrink: 0;
+    }
 }
 
 .tmdb-genre-btn {
