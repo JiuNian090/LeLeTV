@@ -1,12 +1,21 @@
-const VERSION_CHECK_INTERVAL = 30 * 60 * 1000;
 const LAST_VERSION_KEY = 'leletv_last_version';
 const UPDATING_KEY = 'leletv_updating';
 
 let currentVersion = window.__LELETV_VERSION__ || '0';
-let lastKnownVersion = localStorage.getItem(LAST_VERSION_KEY) || currentVersion;
+let lastKnownVersion = localStorage.getItem(LAST_VERSION_KEY) || '0';
+let hasNewVersion = currentVersion !== '0' && currentVersion !== lastKnownVersion;
 
-function isNewVersion() {
-  return currentVersion && currentVersion !== '0' && currentVersion !== lastKnownVersion;
+function formatDisplayVersion(rawVersion) {
+  if (!rawVersion || rawVersion === '0') return '';
+  if (rawVersion.length >= 12) {
+    const y = rawVersion.substring(0, 4);
+    const m = parseInt(rawVersion.substring(4, 6));
+    const d = parseInt(rawVersion.substring(6, 8));
+    const vYear = Math.max(1, (parseInt(y) - 2025) + 1);
+    return `v${vYear}.${m}.${d}`;
+  }
+  if (rawVersion.startsWith('v')) return rawVersion;
+  return `v${rawVersion}`;
 }
 
 async function clearAllCaches() {
@@ -14,9 +23,7 @@ async function clearAllCaches() {
     try {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
-    } catch (e) {
-      // 缓存清理失败时继续执行
-    }
+    } catch (e) {}
   }
 }
 
@@ -24,13 +31,8 @@ async function unregisterServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map(reg => {
-        reg.unregister();
-        return true;
-      }));
-    } catch (e) {
-      // 注销失败时继续
-    }
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    } catch (e) {}
   }
 }
 
@@ -56,9 +58,7 @@ async function performUpdate() {
   if (localStorage.getItem(UPDATING_KEY) === 'true') return;
   localStorage.setItem(UPDATING_KEY, 'true');
 
-  if (typeof showToast === 'function') {
-    showToast('发现新版本，正在更新...', 'info');
-  }
+  updateFooterBtn('更新中...');
 
   localStorage.setItem(LAST_VERSION_KEY, currentVersion);
 
@@ -72,48 +72,96 @@ async function performUpdate() {
   }, 800);
 }
 
-function checkVersionOnPageLoad() {
-  if (isNewVersion()) {
-    performUpdate();
-  } else {
-    localStorage.setItem(LAST_VERSION_KEY, currentVersion);
-  }
+function updateFooterBtn(text) {
+  const btn = document.getElementById('checkUpdateBtn');
+  if (btn) btn.textContent = text;
 }
 
-async function checkVersionFromApi() {
+async function checkUpdateFromApi() {
   try {
     const resp = await fetch('/api/version?_t=' + Date.now(), {
       method: 'GET',
       cache: 'no-store'
     });
-    if (!resp.ok) return;
-    const data = await resp.json();
-    if (data.success && data.version && data.version !== lastKnownVersion) {
-      currentVersion = data.version;
-      performUpdate();
+    if (!resp.ok) {
+      updateFooterBtn('检查失败');
+      return false;
     }
+    const data = await resp.json();
+    if (data.success && data.version && data.version !== lastKnownVersion && data.version !== '0') {
+      currentVersion = data.version;
+      hasNewVersion = true;
+      updateFooterBtn(formatDisplayVersion(currentVersion));
+      return true;
+    }
+    hasNewVersion = false;
+    updateFooterBtn('已是最新');
+    return false;
   } catch (e) {
-    // 网络不可用时忽略
+    updateFooterBtn('检查失败');
+    return false;
   }
 }
 
-function startPeriodicCheck() {
-  setInterval(() => {
-    checkVersionFromApi();
-  }, VERSION_CHECK_INTERVAL);
-}
+function initFooterBtn() {
+  var linkEl = document.querySelector('.footer a[href="about.html#changelog"]');
+  if (!linkEl) return;
 
-function manualCheckUpdate() {
-  checkVersionFromApi().then(() => {
-    if (!isNewVersion() && typeof showToast === 'function') {
-      showToast('已是最新版本', 'success');
+  if (hasNewVersion) {
+    linkEl.insertAdjacentHTML('beforebegin',
+      '<button id="checkUpdateBtn" class="text-blue-400 hover:text-blue-300 text-sm transition-colors bg-transparent border-0 cursor-pointer">' +
+      formatDisplayVersion(currentVersion) +
+      '</button>'
+    );
+  } else if (lastKnownVersion && lastKnownVersion !== '0') {
+    linkEl.insertAdjacentHTML('beforebegin',
+      '<button id="checkUpdateBtn" class="text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer">已是最新</button>'
+    );
+  } else {
+    linkEl.insertAdjacentHTML('beforebegin',
+      '<button id="checkUpdateBtn" class="text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer">检查更新</button>'
+    );
+  }
+
+  var btn = document.getElementById('checkUpdateBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', function() {
+    updateFooterBtn('检查中...');
+    if (hasNewVersion) {
+      performUpdate();
+    } else {
+      checkUpdateFromApi().then(function(found) {
+        if (found) {
+          performUpdate();
+        }
+      });
     }
   });
 }
 
-window.checkLeLeTVUpdate = manualCheckUpdate;
+function setupSwUpdateListener() {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SW_UPDATED' && !hasNewVersion) {
+        currentVersion = event.data.version;
+        hasNewVersion = true;
+        updateFooterBtn(formatDisplayVersion(currentVersion));
+      }
+    });
+  }
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-  checkVersionOnPageLoad();
-  startPeriodicCheck();
+window.checkLeLeTVUpdate = function() {
+  updateFooterBtn('检查中...');
+  checkUpdateFromApi().then(function(found) {
+    if (found) {
+      performUpdate();
+    }
+  });
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  initFooterBtn();
+  setupSwUpdateListener();
 });
