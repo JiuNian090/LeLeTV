@@ -896,6 +896,7 @@ main.container {
 .player-layout-left {
     position: relative;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .player-layout-right {
@@ -906,6 +907,8 @@ main.container {
     gap: 12px;
     padding: 0.75rem;
     min-height: 0;
+    position: relative;
+    z-index: 1;
 }
 
 /* ==================== 横屏/宽屏两栏布局 ==================== */
