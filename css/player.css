@@ -895,8 +895,8 @@ main.container {
 
 .player-layout-left {
     position: relative;
+    z-index: 0;
     flex-shrink: 0;
-    overflow: hidden;
 }
 
 .player-layout-right {
