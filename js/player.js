@@ -2249,7 +2249,6 @@ async function switchToResource(sourceKey, vodId) {
             localStorage.setItem('lastPlayTime', Date.now());
             
             // 保存视频详细信息，包括封面
-            localStorage.removeItem('currentVideoInfo');
             if (data.videoInfo) {
                 localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
             }

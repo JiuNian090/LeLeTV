@@ -1303,7 +1303,6 @@ async function playDirectly(id, vod_name, sourceCode) {
             localStorage.setItem('currentEpisodeIndex', episodeIndex);
             localStorage.setItem('currentSourceCode', sourceCode || '');
             localStorage.setItem('lastPlayTime', Date.now());
-            localStorage.removeItem('currentVideoInfo');
             if (data.videoInfo) {
                 localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
             }
@@ -1415,7 +1414,6 @@ async function showDetails(id, vod_name, sourceCode) {
             // 保存视频详细信息到localStorage
             try {
                 localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
-                localStorage.removeItem('currentVideoInfo');
                 if (data.videoInfo) {
                     localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
                 }
