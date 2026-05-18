@@ -264,6 +264,15 @@ div.player-loading-text {
     overflow-y: auto;
 }
 
+#episodesList {
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+}
+
+.episode-btn {
+    min-width: 0;
+    white-space: nowrap;
+}
+
 /* 恢复播放位置提示样式 */
 .position-restore-hint {
     position: fixed;
@@ -677,9 +686,9 @@ input:checked + .slider:before {
         overflow-y: auto;
     }
     
-    /* 优化集数显示网格 - 小屏幕显示3列 */
+    /* 优化集数显示网格 - 小屏幕自适应 */
     #episodesList {
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)) !important;
     }
     
     /* 优化功能按钮布局 - 保持横向排列 */
@@ -930,9 +939,9 @@ main.container {
         gap: 1.5rem;
     }
 
-    /* 左栏：播放器占 2/3，进度条和控制栏在左栏底部，返回按钮绝对定位左上角 */
+    /* 左栏：播放器占 3/4，进度条和控制栏在左栏底部，返回按钮绝对定位左上角 */
     .player-layout-left {
-        flex: 2;
+        flex: 3;
         min-width: 0;
         display: flex;
         flex-direction: column;
@@ -998,8 +1007,21 @@ main.container {
         overflow-y: visible;
     }
 
-    /* 右栏中集数网格适配 */
+    /* 右栏中集数网格适配 - 根据宽度自动填充列数 */
     .player-layout-right #episodesList {
-        grid-template-columns: repeat(5, 1fr) !important;
+        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)) !important;
+    }
+
+    /* 右栏选集展开后不溢出容器 */
+    .player-layout-right .episode-section {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .player-layout-right .episode-collapse-body {
+        max-height: 45vh;
+        overflow-y: auto;
     }
 }
