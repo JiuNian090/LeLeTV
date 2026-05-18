@@ -4,6 +4,11 @@ const PROXY_URL = '/proxy/';    // 适用于 Cloudflare, Netlify (带重写), Ve
 const SEARCH_HISTORY_KEY = 'videoSearchHistory';
 const MAX_HISTORY_ITEMS = 5;
 
+// TMDB Worker URL
+// 部署 Cloudflare Worker (workers/tmdb-worker.js) 后填入自定义域名
+// 留空则使用本地 Node.js 代理 /api/tmdb
+const TMDB_WORKER_URL = (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.TMDB_WORKER_URL) || '';
+
 // 密码保护配置
 // 注意：PASSWORD 环境变量是必需的，所有部署都必须设置密码以确保安全
 const PASSWORD_CONFIG = {

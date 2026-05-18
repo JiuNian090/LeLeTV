@@ -190,9 +190,19 @@
         <div id="page-category" class="page-content">
             <div class="category-page-layout">
                 <div class="category-content-container">
-                    <div class="flex items-center justify-center min-h-[60vh]">
-                        <p class="text-gray-400 text-lg">敬请期待</p>
+                    <div class="category-page-header">
+                        <h2 class="text-xl font-bold gradient-text">分类浏览</h2>
+                        <p class="text-gray-500 text-sm mt-1">基于 TMDB 数据，点击卡片即可在采集站中搜索</p>
                     </div>
+
+                    <!-- 筛选区域 -->
+                    <div id="tmdb-filters" class="mt-4"></div>
+
+                    <!-- 结果区域 -->
+                    <div id="tmdb-results" class="tmdb-results-grid mt-6"></div>
+
+                    <!-- 分页 -->
+                    <div id="tmdb-pagination" class="mt-6"></div>
                 </div>
             </div>
         </div>
@@ -470,6 +480,7 @@
     <script src="js/douban.js" defer></script>
     <script src="js/password.js" defer></script>
     <script src="js/search.js" defer></script>
+    <script src="js/tmdb.js" defer></script>
     <script src="js/app.js" defer></script>
 
     <!-- 环境变量注入脚本 -->
@@ -477,6 +488,7 @@
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
         window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";
+        window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
     </script>
 
     <!-- 版本工具脚本 -->
@@ -559,7 +571,9 @@
                     break;
                     
                 case 'category':
-                    // 分类页面暂无功能
+                    if (typeof initTmdbCategory === 'function') {
+                        initTmdbCategory();
+                    }
                     break;
                     
                 case 'history':

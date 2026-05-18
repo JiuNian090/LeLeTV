@@ -1,0 +1,19 @@
+name = "leletv-tmdb-proxy"
+main = "workers/tmdb-worker.js"
+compatibility_date = "2025-05-19"
+
+# TMDB API Key (通过 Cloudflare Dashboard 或 --secret 设置)
+# wrangler secret put TMDB_API_KEY
+
+[vars]
+# 部署后，将 Worker 的自定义域名填入下方
+# 此变量会注入到 wrangler dev 本地开发环境
+# TMDB_WORKER_URL = "https://tmdb-proxy.example.com"
+
+[env.production]
+# 生产环境可在此覆盖
+
+[[routes]]
+# 如果通过自定义域名访问，可以绑定路由
+# pattern = "tmdb-proxy.example.com"
+# zone_id = "your-zone-id"

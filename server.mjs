@@ -18,6 +18,8 @@ const config = {
   port: parseInt(process.env.PORT || '8080'),
   password: process.env.PASSWORD || '',
   adminPassword: process.env.ADMINPASSWORD || '',
+  tmdbApiKey: process.env.TMDB_API_KEY || '',
+  tmdbWorkerUrl: process.env.TMDB_WORKER_URL || '',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   timeout: parseInt(process.env.REQUEST_TIMEOUT || '5000'),
   maxRetries: parseInt(process.env.MAX_RETRIES || '2'),
@@ -61,7 +63,7 @@ function sha256Hash(input) {
   });
 }
 
-// 渲染页面并注入密码哈希
+// 渲染页面并注入密码哈希和 Worker URL
 async function renderPage(filePath, password, adminPassword = '') {
   try {
     let content = await fs.readFile(filePath, 'utf8');
@@ -81,6 +83,9 @@ async function renderPage(filePath, password, adminPassword = '') {
     } else {
       content = content.replace('{{ADMINPASSWORD}}', '');
     }
+
+    // 注入 TMDB Worker URL
+    content = content.replace('{{TMDB_WORKER_URL}}', config.tmdbWorkerUrl);
     
     return content;
   } catch (error) {
@@ -257,6 +262,86 @@ app.get('/proxy/:encodedUrl', async (req, res) => {
   }
 });
 
+// TMDB API 代理
+app.get('/api/tmdb', async (req, res) => {
+  try {
+    const endpoint = req.query.endpoint || '';
+    if (!endpoint) {
+      return res.status(400).json({ success: false, error: '缺少 TMDB 端点参数' });
+    }
+
+    // 如果配置了 Worker URL，则通过 Worker 转发请求
+    if (config.tmdbWorkerUrl) {
+      const workerUrl = new URL(config.tmdbWorkerUrl);
+      for (const [key, value] of Object.entries(req.query)) {
+        workerUrl.searchParams.set(key, value);
+      }
+      log(`TMDB 通过 Worker 代理: ${endpoint}`);
+
+      const workerRes = await axios({
+        method: 'get',
+        url: workerUrl.toString(),
+        timeout: config.timeout,
+        headers: {
+          'User-Agent': config.userAgent,
+          'Accept': 'application/json'
+        }
+      });
+
+      return res.json(workerRes.data);
+    }
+
+    // 没有 Worker URL 时，直接调用 TMDB API
+    if (!config.tmdbApiKey) {
+      return res.status(500).json({ success: false, error: 'TMDB API Key 未配置' });
+    }
+
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(req.query)) {
+      if (key !== 'endpoint') {
+        queryParams.set(key, value);
+      }
+    }
+    queryParams.set('api_key', config.tmdbApiKey);
+    if (!queryParams.has('language')) {
+      queryParams.set('language', 'zh-CN');
+    }
+
+    const targetUrl = `https://api.themoviedb.org/3/${endpoint}?${queryParams.toString()}`;
+    log(`TMDB 直接代理: ${endpoint}`);
+
+    const response = await axios({
+      method: 'get',
+      url: targetUrl,
+      timeout: config.timeout,
+      headers: {
+        'User-Agent': config.userAgent,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (endpoint === 'configuration' && response.data) {
+      response.data.image_base_url = 'https://image.tmdb.org/t/p';
+    }
+
+    res.json(response.data);
+  } catch (error) {
+    errorLog('TMDB 代理请求错误:', error.message);
+    if (error.response) {
+      res.status(error.response.status).json({
+        success: false,
+        error: `TMDB API 错误: ${error.response.statusText}`,
+        details: error.response.data
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: `TMDB 请求失败: ${error.message}`
+      });
+    }
+  }
+});
+
 app.use(express.static(join(__dirname), {
   maxAge: config.cacheMaxAge,
   setHeaders: function (res, path) {
@@ -283,10 +368,13 @@ app.use((req, res) => {
 // 启动服务器
 app.listen(config.port, () => {
   console.log(`服务器运行在 http://localhost:${config.port}`);
-  if (config.password !== '') {
-    console.log('用户登录密码已设置');
+  console.log('密码验证：用户登录密码' + (config.password !== '' ? '已设置' : '未设置'));
+  if (config.tmdbWorkerUrl) {
+    console.log('TMDB 代理：通过 Worker (' + config.tmdbWorkerUrl + ')');
+  } else if (config.tmdbApiKey) {
+    console.log('TMDB 代理：本地直连 (已配置 API Key)');
   } else {
-    console.log('警告: 未设置 PASSWORD 环境变量，用户将被要求设置密码');
+    console.log('TMDB 代理：未配置，请设置 TMDB_API_KEY 环境变量');
   }
   if (config.debug) {
     console.log('调试模式已启用');

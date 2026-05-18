@@ -25,6 +25,11 @@ export async function onRequest(context) {
     }
     html = html.replace('window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";', 
       `window.__ENV__.ADMINPASSWORD = "${adminPasswordHash}";`);
+
+    // 注入 TMDB Worker URL
+    const tmdbWorkerUrl = env.TMDB_WORKER_URL || "";
+    html = html.replace('window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";',
+      `window.__ENV__.TMDB_WORKER_URL = "${tmdbWorkerUrl}";`);
     
     return new Response(html, {
       headers: response.headers,
