@@ -183,6 +183,18 @@
     max-width: 100%;
 }
 
+/* 分类页面布局 - 与历史记录保持一致 */
+.category-page-layout {
+    padding-top: 2rem;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.category-content-container {
+    width: 100%;
+    max-width: 100%;
+}
+
 /* 日期分组标题 */
 .history-group {
     margin-bottom: 1.5rem;
