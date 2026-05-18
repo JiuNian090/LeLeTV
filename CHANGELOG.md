@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.19.1 (2026-05-19 00:05)
+- [新增] add category page skeleton and navigation button
+
+add category page layout styles, navigation button and basic page structure, add switch logic for category page。
+
+
 ### v2.5.18.27 (2026-05-18 23:51)
 - [其他] 优化性能。
 
