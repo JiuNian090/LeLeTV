@@ -625,9 +625,9 @@ input:checked + .slider:before {
 /* 响应式样式优化 */
 /* 小屏幕设备优化 (手机) */
 @media (max-width: 640px) {
-    /* 调整页面顶部内边距，适应移动设备状态栏 */
+    /* 浏览器已自动处理状态栏安全区域，不再添加额外间距 */
     body, html {
-        padding-top: 27px;
+        padding-top: 0;
     }
     
     /* 减小固定头部高度和内边距 */
