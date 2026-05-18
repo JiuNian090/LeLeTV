@@ -1308,13 +1308,14 @@ function startProgressSaveInterval() {
 }
 
 // 保存当前播放进度
+let _lastHistoryWriteTime = 0;
 function saveCurrentProgress() {
     if (!art || !art.video) return;
     const currentTime = art.video.currentTime;
     const duration = art.video.duration;
     if (!duration || currentTime < 1) return;
 
-    // 在localStorage中保存进度
+    // 在localStorage中保存进度（轻量操作，每次执行）
     const progressKey = `videoProgress_${getVideoId()}`;
     const progressData = {
         position: currentTime,
@@ -1324,7 +1325,12 @@ function saveCurrentProgress() {
     try {
         localStorage.setItem(progressKey, JSON.stringify(progressData));
         
-        // 更新 viewingHistory 中的进度，确保播放进度在历史记录中保存
+        // 防抖：viewingHistory 写入最多每30秒一次
+        const now = Date.now();
+        if (now - _lastHistoryWriteTime < 30000) return;
+        _lastHistoryWriteTime = now;
+
+        // 更新 viewingHistory 中的进度
         try {
             const historyRaw = localStorage.getItem('viewingHistory');
             if (historyRaw) {

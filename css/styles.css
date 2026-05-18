@@ -13,9 +13,9 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
-    transition: all 0.2s ease;
+    -webkit-transition: background-color 0.2s ease, border-color 0.2s ease;
+    -moz-transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
     z-index: 10;
 }
 
@@ -53,9 +53,9 @@
 }
 
 button, .card-hover {
-    -webkit-transition: all 0.3s ease;
-    -moz-transition: all 0.3s ease;
-    transition: all 0.3s ease;
+    -webkit-transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    -moz-transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* 改进卡片适应不同内容长度 */
@@ -213,7 +213,7 @@ button, .card-hover {
 ::-webkit-scrollbar-thumb {
     background: #333;
     border-radius: 4px;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -240,7 +240,7 @@ button, .card-hover {
     bottom: 0;
     background: linear-gradient(45deg, transparent, rgba(0, 204, 255, 0.05), transparent);
     z-index: -1;
-    transition: all 0.6s ease;
+    transition: opacity 0.6s ease;
 }
 
 .cyber-back-button:hover::before {
@@ -266,7 +266,7 @@ button, .card-hover {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -282,7 +282,7 @@ button, .card-hover {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: relative;
     overflow: hidden;

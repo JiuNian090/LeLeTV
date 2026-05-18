@@ -1,4 +1,41 @@
+// 搜索缓存
+const _searchCache = new Map();
+const SEARCH_CACHE_TTL = 5 * 60 * 1000; // 缓存5分钟
+
+function _getCacheKey(apiId, query) {
+    return `${apiId}_${query.toLowerCase()}`;
+}
+
+function _getCachedResult(apiId, query) {
+    const key = _getCacheKey(apiId, query);
+    const cached = _searchCache.get(key);
+    if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_TTL) {
+        return cached.results;
+    }
+    _searchCache.delete(key);
+    return null;
+}
+
+function _setCachedResult(apiId, query, results) {
+    const key = _getCacheKey(apiId, query);
+    _searchCache.set(key, { results, timestamp: Date.now() });
+    // 缓存超过100条时清理过期项
+    if (_searchCache.size > 100) {
+        const now = Date.now();
+        for (const [k, v] of _searchCache) {
+            if (now - v.timestamp > SEARCH_CACHE_TTL) _searchCache.delete(k);
+        }
+    }
+}
+
 async function searchByAPIAndKeyWord(apiId, query) {
+    // 检查缓存
+    const cached = _getCachedResult(apiId, query);
+    if (cached) {
+        console.log(`[缓存] ${apiId} 命中缓存，共 ${cached.length} 条结果`);
+        return cached;
+    }
+
     try {
         let apiUrl, apiName, apiBaseUrl;
         
@@ -138,6 +175,8 @@ async function searchByAPIAndKeyWord(apiId, query) {
             window.loadBalancer.recordApiResult(apiId, true, responseTime);
         }
         
+        // 写入缓存
+        _setCachedResult(apiId, query, results);
         return results;
     } catch (error) {
         console.warn(`API ${apiId} 搜索失败:`, error);

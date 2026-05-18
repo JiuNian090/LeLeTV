@@ -919,65 +919,9 @@ async function search() {
         // 保存搜索历史
         saveSearchHistory(query);
 
-        // 从所有选中的API源搜索，使用负载均衡器
+        // 从所有选中的API源搜索（渐进式渲染）
         let allResults = [];
-        
-        if (window.loadBalancer) {
-            console.log('使用负载均衡器进行搜索');
-            try {
-                // 使用负载均衡器并行搜索多个API源
-                const searchPromises = selectedAPIs.map(async (apiId) => {
-                    try {
-                        // 检查API是否过载
-                        if (window.loadBalancer.isApiOverloaded(apiId)) {
-                            console.warn(`API ${apiId} 当前过载，跳过`);
-                            return [];
-                        }
-                        
-                        // 使用负载均衡器执行搜索
-                        return await searchByAPIAndKeyWord(apiId, query);
-                    } catch (error) {
-                        console.warn(`API ${apiId} 搜索失败:`, error);
-                        return [];
-                    }
-                });
-                
-                // 等待所有搜索请求完成
-                const resultsArray = await Promise.all(searchPromises);
-                
-                // 合并所有结果
-                resultsArray.forEach(results => {
-                    if (Array.isArray(results) && results.length > 0) {
-                        allResults = allResults.concat(results);
-                    }
-                });
-                
-            } catch (error) {
-                console.error('负载均衡器搜索失败，降级到传统搜索:', error);
-                // 降级到传统搜索方式
-                allResults = await performTraditionalSearch(query);
-            }
-        } else {
-            console.log('负载均衡器不可用，使用传统搜索方式');
-            // 降级到传统搜索方式
-            allResults = await performTraditionalSearch(query);
-        }
-
-        // 对搜索结果进行排序：按名称优先，名称相同时按接口源排序
-        allResults.sort((a, b) => {
-            // 首先按照视频名称排序
-            const nameCompare = (a.vod_name || '').localeCompare(b.vod_name || '');
-            if (nameCompare !== 0) return nameCompare;
-            
-            // 如果名称相同，则按照来源排序
-            return (a.source_name || '').localeCompare(b.source_name || '');
-        });
-
-        // 更新搜索结果计数
-        const searchResultsCount = document.getElementById('searchResultsCount');
-        if (searchResultsCount) {
-            searchResultsCount.textContent = allResults.length;
-        }
+        const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
 
         // 显示结果区域，调整搜索区域
         document.getElementById('searchArea').classList.remove('flex-1');
@@ -986,12 +930,77 @@ async function search() {
 
         // 隐藏豆瓣推荐区域（如果存在）
         const doubanArea = document.getElementById('doubanArea');
-        if (doubanArea) {
-            doubanArea.classList.add('hidden');
+        if (doubanArea) doubanArea.classList.add('hidden');
+
+        // 更新URL
+        try {
+            const encodedQuery = encodeURIComponent(query);
+            window.history.pushState(
+                { search: query },
+                `搜索: ${query} - LeLeTV`,
+                `/s=${encodedQuery}`
+            );
+            document.title = `搜索: ${query} - LeLeTV`;
+        } catch (e) {}
+
+        const searchCountEl = document.getElementById('searchResultsCount');
+
+        // 构建搜索任务：每个API独立执行，结果立即追加
+        const searchTasks = selectedAPIs.map(async (apiId) => {
+            try {
+                if (window.loadBalancer && window.loadBalancer.isApiOverloaded(apiId)) {
+                    return;
+                }
+                const results = await searchByAPIAndKeyWord(apiId, query);
+                if (!results || results.length === 0) return;
+
+                let filtered = results;
+                if (yellowFilterEnabled) {
+                    const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
+                    filtered = results.filter(item => {
+                        const typeName = item.type_name || '';
+                        return !banned.some(keyword => typeName.includes(keyword));
+                    });
+                }
+                if (filtered.length === 0) return;
+
+                allResults = allResults.concat(filtered);
+
+                resultsDiv.insertAdjacentHTML('beforeend', _buildSearchCardsHtml(filtered));
+                if (searchCountEl) searchCountEl.textContent = allResults.length;
+            } catch (e) {
+                console.warn(`API ${apiId} 搜索失败:`, e);
+            }
+        });
+
+        if (!window.loadBalancer) {
+            const fallbackResults = await performTraditionalSearch(query);
+            if (fallbackResults.length > 0) {
+                let filtered = fallbackResults;
+                if (yellowFilterEnabled) {
+                    const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
+                    filtered = fallbackResults.filter(item => {
+                        const typeName = item.type_name || '';
+                        return !banned.some(keyword => typeName.includes(keyword));
+                    });
+                }
+                allResults = filtered;
+                resultsDiv.innerHTML = _buildSearchCardsHtml(filtered);
+                if (searchCountEl) searchCountEl.textContent = filtered.length;
+            }
+        } else {
+            await Promise.allSettled(searchTasks);
         }
 
-        // 如果没有结果
-        if (!allResults || allResults.length === 0) {
+        if (allResults.length > 0) {
+            allResults.sort((a, b) => {
+                const nameCompare = (a.vod_name || '').localeCompare(b.vod_name || '');
+                if (nameCompare !== 0) return nameCompare;
+                return (a.source_name || '').localeCompare(b.source_name || '');
+            });
+            resultsDiv.innerHTML = _buildSearchCardsHtml(allResults);
+            if (searchCountEl) searchCountEl.textContent = allResults.length;
+        } else {
             resultsDiv.innerHTML = `
                 <div class="col-span-full text-center py-16">
                     <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1006,104 +1015,6 @@ async function search() {
             return;
         }
 
-        // 有搜索结果时，才更新URL
-        try {
-            // 使用URI编码确保特殊字符能够正确显示
-            const encodedQuery = encodeURIComponent(query);
-            // 使用HTML5 History API更新URL，不刷新页面
-            window.history.pushState(
-                { search: query },
-                `搜索: ${query} - LeLeTV`,
-                `/s=${encodedQuery}`
-            );
-            // 更新页面标题
-            document.title = `搜索: ${query} - LeLeTV`;
-        } catch (e) {
-            console.error('更新浏览器历史失败:', e);
-            // 如果更新URL失败，继续执行搜索
-        }
-
-        // 处理搜索结果过滤：如果启用了黄色内容过滤，则过滤掉分类含有敏感内容的项目
-        const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
-        if (yellowFilterEnabled) {
-            const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
-            allResults = allResults.filter(item => {
-                const typeName = item.type_name || '';
-                return !banned.some(keyword => typeName.includes(keyword));
-            });
-        }
-
-        // 添加XSS保护，使用textContent和属性转义
-        const safeResults = allResults.map(item => {
-            const safeId = item.vod_id ? item.vod_id.toString().replace(/[^\w-]/g, '') : '';
-            const safeName = (item.vod_name || '').toString()
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-            const sourceInfo = item.source_name ?
-                `<span class="bg-[#222] text-xs px-1.5 py-0.5 rounded-full">${item.source_name}</span>` : '';
-            const sourceCode = item.source_code || '';
-
-            // 添加API URL属性，用于详情获取
-            const apiUrlAttr = item.api_url ?
-                `data-api-url="${item.api_url.replace(/"/g, '&quot;')}"` : '';
-
-            // 修改为水平卡片布局，图片在左侧，文本在右侧，并优化样式
-            const hasCover = item.vod_pic && item.vod_pic.startsWith('http');
-
-            return `
-                <div class="card-hover bg-[#111] rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
-                     onclick="playDirectly('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
-                    <div class="flex h-full">
-                        ${hasCover ? `
-                        <div class="relative flex-shrink-0 search-card-img-container image-container">
-                            <img src="${item.vod_pic}" alt="${safeName}" loading="lazy"
-                                 class="h-full w-full object-cover transition-transform hover:scale-110 loading-fade" 
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');"
-                                 onload="this.classList.add('loaded')">
-                            <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
-                        </div>` : ''}
-                        
-                        <div class="p-2 flex flex-col flex-grow">
-                            <div class="flex-grow">
-                                <h3 class="font-semibold mb-2 break-words line-clamp-2 ${hasCover ? '' : 'text-center'}" title="${safeName}">${safeName}</h3>
-                                
-                                <div class="flex flex-wrap ${hasCover ? '' : 'justify-center'} gap-1 mb-2">
-                                    ${(item.type_name || '').toString().replace(/</g, '&lt;') ?
-                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-blue-500 text-blue-300">
-                                          ${(item.type_name || '').toString().replace(/</g, '&lt;')}
-                                      </span>` : ''}
-                                    ${(item.vod_year || '') ?
-                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-purple-500 text-purple-300">
-                                          ${item.vod_year}
-                                      </span>` : ''}
-                                </div>
-                                <p class="text-gray-400 line-clamp-2 overflow-hidden ${hasCover ? '' : 'text-center'} mb-2">
-                                    ${(item.vod_remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
-                                </p>
-                            </div>
-                            
-                            <div class="flex justify-between items-center mt-1 pt-1 border-t border-gray-800">
-                                ${sourceInfo ? `<div>${sourceInfo}</div>` : '<div></div>'}
-                                <!-- 接口名称过长会被挤变形
-                                <div>
-                                    <span class="text-gray-500 flex items-center hover:text-blue-400 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        </svg>
-                                        播放
-                                    </span>
-                                </div>
-                                -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        resultsDiv.innerHTML = safeResults;
-        
     } catch (error) {
         console.error('搜索错误:', error);
         if (error.name === 'AbortError') {
@@ -1116,6 +1027,63 @@ async function search() {
         // 释放节流锁（延迟释放，防止短暂连点）
         setTimeout(releaseThrottle, 500);
     }
+}
+
+// 生成搜索卡片HTML（带XSS保护）
+function _buildSearchCardsHtml(items) {
+    return items.map(item => {
+        const safeId = item.vod_id ? item.vod_id.toString().replace(/[^\w-]/g, '') : '';
+        const safeName = (item.vod_name || '').toString()
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        const sourceInfo = item.source_name ?
+            `<span class="bg-[#222] text-xs px-1.5 py-0.5 rounded-full">${item.source_name}</span>` : '';
+        const sourceCode = item.source_code || '';
+        const apiUrlAttr = item.api_url ?
+            `data-api-url="${item.api_url.replace(/"/g, '&quot;')}"` : '';
+        const hasCover = item.vod_pic && item.vod_pic.startsWith('http');
+
+        return `
+            <div class="card-hover bg-[#111] rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
+                 onclick="playDirectly('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
+                <div class="flex h-full">
+                    ${hasCover ? `
+                    <div class="relative flex-shrink-0 search-card-img-container image-container">
+                        <img src="${item.vod_pic}" alt="${safeName}" loading="lazy"
+                             class="h-full w-full object-cover transition-transform hover:scale-110 loading-fade" 
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');"
+                             onload="this.classList.add('loaded')">
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+                    </div>` : ''}
+                    
+                    <div class="p-2 flex flex-col flex-grow">
+                        <div class="flex-grow">
+                            <h3 class="font-semibold mb-2 break-words line-clamp-2 ${hasCover ? '' : 'text-center'}" title="${safeName}">${safeName}</h3>
+                            
+                            <div class="flex flex-wrap ${hasCover ? '' : 'justify-center'} gap-1 mb-2">
+                                ${(item.type_name || '').toString().replace(/</g, '&lt;') ?
+                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-blue-500 text-blue-300">
+                                      ${(item.type_name || '').toString().replace(/</g, '&lt;')}
+                                  </span>` : ''}
+                                ${(item.vod_year || '') ?
+                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-purple-500 text-purple-300">
+                                      ${item.vod_year}
+                                  </span>` : ''}
+                            </div>
+                            <p class="text-gray-400 line-clamp-2 overflow-hidden ${hasCover ? '' : 'text-center'} mb-2">
+                                ${(item.vod_remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
+                            </p>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-1 pt-1 border-t border-gray-800">
+                            ${sourceInfo ? `<div>${sourceInfo}</div>` : '<div></div>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // 设置邮箱点击事件处理器
