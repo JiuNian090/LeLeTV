@@ -1,9 +1,22 @@
-// 改进首页跳转功能
+// 全屏时退出全屏返回播放页，非全屏时返回首页
 function goHome(event) {
-    // 防止默认链接行为
     if (event) event.preventDefault();
-    
-    // 直接跳转到首页
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+        autoFullscreened = false;
+        return;
+    }
+
+    if (art) {
+        art.destroy();
+        art = null;
+    }
+    if (currentHls) {
+        try { currentHls.destroy(); } catch (e) {}
+        currentHls = null;
+    }
+
     window.location.href = '/';
 }
 
@@ -36,6 +49,7 @@ let autoplayEnabled = true; // 默认开启自动连播
 let videoHasEnded = false; // 跟踪视频是否已经自然结束
 let userClickedPosition = null; // 记录用户点击的位置
 let shortcutHintTimeout = null; // 用于控制快捷键提示显示时间
+let autoFullscreened = false; // 标记是否由自动全屏进入
 let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
@@ -598,16 +612,7 @@ function initPlayer(videoUrl) {
             // 退出全屏时清理计时器
             clearTimeout(hideTimer);
             clearTimeout(backBtnHideTimer);
-        }
-
-        if (!isWeb) {
-            if (window.screen.orientation && window.screen.orientation.lock) {
-                window.screen.orientation.lock('landscape')
-                    .then(() => {
-                    })
-                    .catch((error) => {
-                    });
-            }
+            autoFullscreened = false;
         }
     }
 
@@ -620,6 +625,21 @@ function initPlayer(videoUrl) {
         const playerArea = document.querySelector('.player-layout-left');
         if (playerArea) {
             playerArea.addEventListener('mousemove', showBackBtn);
+        }
+
+        // 手机横屏自动全屏
+        if (window.screen && window.screen.orientation) {
+            window.screen.orientation.addEventListener('change', function onOrientationChange() {
+                if (window.innerWidth > 640 || window.innerHeight > 640) return;
+                const isLandscape = window.screen.orientation.type.includes('landscape');
+                if (isLandscape && !art.fullscreen) {
+                    autoFullscreened = true;
+                    art.fullscreen = true;
+                } else if (!isLandscape && art.fullscreen && autoFullscreened) {
+                    art.fullscreen = false;
+                    autoFullscreened = false;
+                }
+            });
         }
 
         // 直接尝试添加按钮

@@ -194,6 +194,7 @@ div.player-loading-text {
     width: 100%;
     max-width: 1000px;
     margin: 0 auto;
+    position: relative;
 }
 
 #player {
@@ -412,6 +413,13 @@ input:checked + .slider:before {
 .player-container:-moz-full-screen #player,
 .player-container:fullscreen #player {
     width: 100%; height: 100%;
+}
+
+/* 全屏/横屏时视频铺满画面，不留黑边 */
+.player-container:-webkit-full-screen .art-video-player video,
+.player-container:-moz-full-screen .art-video-player video,
+.player-container:fullscreen .art-video-player video {
+    object-fit: cover !important;
 }
 
 /* 视频详情信息区域 */
