@@ -63,11 +63,22 @@ function sha256Hash(input) {
   });
 }
 
-// 渲染页面并注入密码哈希和 Worker URL
+// 读取当前版本号
+async function getVersion() {
+  try {
+    const versionPath = join(__dirname, 'VERSION.txt');
+    const version = await fs.readFile(versionPath, 'utf8');
+    return version.trim();
+  } catch {
+    return '0';
+  }
+}
+
+// 渲染页面并注入密码哈希、Worker URL、版本号
 async function renderPage(filePath, password, adminPassword = '') {
   try {
     let content = await fs.readFile(filePath, 'utf8');
-    
+
     // 注入用户密码
     if (password !== '') {
       const sha256 = await sha256Hash(password);
@@ -75,7 +86,7 @@ async function renderPage(filePath, password, adminPassword = '') {
     } else {
       content = content.replace('{{PASSWORD}}', '');
     }
-    
+
     // 注入管理员密码
     if (adminPassword !== '') {
       const adminSha256 = await sha256Hash(adminPassword);
@@ -86,7 +97,11 @@ async function renderPage(filePath, password, adminPassword = '') {
 
     // 注入 TMDB Worker URL
     content = content.replace('{{TMDB_WORKER_URL}}', config.tmdbWorkerUrl);
-    
+
+    // 注入版本号
+    const version = await getVersion();
+    content = content.replace('{{LELETV_VERSION}}', version);
+
     return content;
   } catch (error) {
     errorLog('读取文件失败:', filePath, error);
@@ -339,6 +354,20 @@ app.get('/api/tmdb', async (req, res) => {
         error: `TMDB 请求失败: ${error.message}`
       });
     }
+  }
+});
+
+// 版本号 API
+app.get('/api/version', async (req, res) => {
+  try {
+    const version = await getVersion();
+    res.json({
+      success: true,
+      version,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: '无法读取版本号' });
   }
 });
 

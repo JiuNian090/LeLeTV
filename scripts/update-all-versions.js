@@ -125,18 +125,42 @@ function updatePackageJson(version) {
   const packageJsonPath = path.join(__dirname, '..', 'package.json');
   if (fs.existsSync(packageJsonPath)) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    
+
     // 转换版本号为语义化格式
     const fullYear = version.substring(0, 4);
     const versionYear = Math.max(1, (parseInt(fullYear) - 2025) + 1);
     const month = parseInt(version.substring(4, 6));
     const day = parseInt(version.substring(6, 8));
     const commitOrder = 1; // 简化处理，实际应根据提交次数计算
-    
+
     packageJson.version = `${versionYear}.${month}.${day}`;
-    
+
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2), 'utf8');
     console.log(`已更新 package.json 版本号: ${packageJson.version}`);
+  }
+}
+
+// 更新 service-worker.js 中的 CACHE_VERSION
+function updateServiceWorkerCacheVersion(version) {
+  const swPath = path.join(__dirname, '..', 'service-worker.js');
+  if (fs.existsSync(swPath)) {
+    let content = fs.readFileSync(swPath, 'utf8');
+    const fullYear = version.substring(0, 4);
+    const versionYear = Math.max(1, (parseInt(fullYear) - 2025) + 1);
+    const month = parseInt(version.substring(4, 6));
+    const day = parseInt(version.substring(6, 8));
+    const hours = parseInt(version.substring(8, 10));
+    const minutes = parseInt(version.substring(10, 12));
+    const commitOrder = Math.floor((hours * 60 + minutes) / 5) + 1;
+    const cacheVersion = `v${versionYear}.${month}.${day}.${commitOrder}`;
+
+    content = content.replace(
+      /const CACHE_VERSION = '[^']*'/,
+      `const CACHE_VERSION = '${cacheVersion}'`
+    );
+
+    fs.writeFileSync(swPath, content, 'utf8');
+    console.log(`已更新 service-worker.js CACHE_VERSION: ${cacheVersion}`);
   }
 }
 
@@ -153,6 +177,9 @@ function main() {
     
     // 更新package.json
     updatePackageJson(version);
+
+    // 更新 service-worker.js 缓存版本
+    updateServiceWorkerCacheVersion(version);
     
     console.log('所有版本号相关内容已更新完成。');
   } catch (error) {
@@ -170,5 +197,6 @@ module.exports = {
   generateVersionNumber,
   updateVersionFile,
   updateHtmlFiles,
-  updatePackageJson
+  updatePackageJson,
+  updateServiceWorkerCacheVersion
 };

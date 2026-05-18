@@ -191,7 +191,7 @@
 
 /* 分类页面布局 - 与历史记录保持一致 */
 .category-page-layout {
-    padding-top: 2rem;
+    padding-top: 0;
     width: 100%;
     overflow-x: hidden;
 }
@@ -201,11 +201,6 @@
     max-width: 100%;
     padding: 0 1rem;
     box-sizing: border-box;
-}
-
-/* 分类页面头部 */
-.category-page-header {
-    margin-bottom: 0.5rem;
 }
 
 /* TMDB 筛选区域 */
@@ -225,15 +220,6 @@
 
 .tmdb-filter-row:last-child {
     margin-bottom: 0;
-}
-
-.tmdb-filter-label {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: #9ca3af;
-    white-space: nowrap;
-    padding-top: 0.375rem;
-    min-width: 3rem;
 }
 
 /* 类型切换 */
@@ -278,6 +264,13 @@
     .tmdb-filter-section {
         overflow: hidden;
     }
+    .tmdb-genre-row {
+        flex-wrap: nowrap;
+    }
+    .tmdb-filter-label {
+        flex-shrink: 0;
+        padding-top: 0.125rem;
+    }
     .tmdb-genre-list {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -314,42 +307,6 @@
     background: linear-gradient(135deg, #9333ea, #ec4899);
     border-color: transparent;
     color: white;
-}
-
-/* 次要筛选行 */
-.tmdb-filter-secondary {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.tmdb-filter-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.tmdb-select {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    color: #e2e8f0;
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.8125rem;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s ease;
-    min-width: 7rem;
-}
-
-.tmdb-select:hover,
-.tmdb-select:focus {
-    border-color: #ec4899;
-}
-
-.tmdb-select option {
-    background: #1a1a1a;
-    color: #e2e8f0;
 }
 
 /* 结果网格 */
@@ -568,24 +525,6 @@
         gap: 0.5rem;
     }
 
-    .tmdb-filter-label {
-        padding-top: 0;
-    }
-
-    .tmdb-filter-secondary {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .tmdb-filter-item {
-        width: 100%;
-    }
-
-    .tmdb-select {
-        flex: 1;
-        min-width: 0;
-    }
-
     .tmdb-type-btn {
         padding: 0.375rem 1rem;
         font-size: 0.75rem;
@@ -627,123 +566,6 @@
     }
 }
 
-/* 高级筛选折叠 */
-.tmdb-advanced-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.75rem;
-    margin-top: 0.5rem;
-    cursor: pointer;
-    font-size: 0.75rem;
-    color: #6b7280;
-    border-top: 1px solid #2d2d2d;
-    transition: color 0.2s ease;
-    user-select: none;
-}
-
-.tmdb-advanced-toggle:hover {
-    color: #a0aec0;
-}
-
-.tmdb-advanced-toggle.expanded {
-    color: #a0aec0;
-}
-
-.tmdb-chevron {
-    transition: transform 0.25s ease;
-}
-
-.tmdb-chevron.rotated {
-    transform: rotate(180deg);
-}
-
-.tmdb-advanced-filters {
-    display: none;
-    padding: 0.75rem 0.75rem 0;
-    border-top: 1px solid #2d2d2d;
-    margin-top: 0;
-}
-
-.tmdb-advanced-filters.visible {
-    display: block;
-}
-
-/* 输入框 */
-.tmdb-input {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    color: #e2e8f0;
-    padding: 0.375rem 0.625rem;
-    border-radius: 0.5rem;
-    font-size: 0.8125rem;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.tmdb-input:focus {
-    border-color: #ec4899;
-}
-
-.tmdb-input-short {
-    width: 5rem;
-}
-
-.tmdb-filter-sep {
-    color: #6b7280;
-    font-size: 0.8125rem;
-}
-
-/* 关键词搜索 */
-.tmdb-keyword-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    flex: 1;
-}
-
-.tmdb-keyword-wrap .tmdb-input {
-    flex: 1;
-    min-width: 8rem;
-}
-
-.tmdb-keyword-btn {
-    padding: 0.375rem 0.75rem;
-    background: linear-gradient(135deg, #9333ea, #ec4899);
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-    white-space: nowrap;
-}
-
-.tmdb-keyword-btn:hover {
-    opacity: 0.85;
-}
-
-.tmdb-keyword-clear {
-    padding: 0.25rem 0.5rem;
-    background: transparent;
-    color: #6b7280;
-    border: 1px solid #333;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.tmdb-keyword-clear:hover {
-    color: #ef4444;
-    border-color: #ef4444;
-}
-
-.tmdb-filter-item-wide {
-    flex: 1;
-}
-
 /* 卡片语言标签 */
 .tmdb-card-lang {
     position: absolute;
@@ -775,19 +597,6 @@
 @media (max-width: 639px) {
     .tmdb-card-votes {
         display: none;
-    }
-
-    .tmdb-keyword-wrap {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .tmdb-keyword-btn {
-        text-align: center;
-    }
-
-    .tmdb-input-short {
-        width: 4rem;
     }
 }
 

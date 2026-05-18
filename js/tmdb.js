@@ -7,7 +7,6 @@ const TMDB_STATE = {
   selectedSort: 'popularity.desc',
   voteRating: '',
   originalLanguage: '',
-  keyword: '',
   originCountry: '',
   tvStatus: '',
   isLoaded: false,
@@ -192,7 +191,6 @@ function resetTmdbFilters() {
   TMDB_STATE.selectedSort = 'popularity.desc';
   TMDB_STATE.voteRating = '';
   TMDB_STATE.originalLanguage = '';
-  TMDB_STATE.keyword = '';
   TMDB_STATE.originCountry = '';
   TMDB_STATE.tvStatus = '';
 
@@ -225,7 +223,6 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">分类</span>
         <div class="tmdb-genre-list">
           <button class="tmdb-genre-btn${!TMDB_STATE.selectedGenre ? ' active' : ''}" data-genre="">全部</button>
           ${genres.map(g => `
@@ -235,7 +232,6 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">地区</span>
         <div class="tmdb-genre-list">
           ${COUNTRIES.map(c => `
             <button class="tmdb-genre-btn${TMDB_STATE.originCountry === c.value ? ' active' : ''}" data-country="${c.value}">${c.label}</button>
@@ -245,7 +241,6 @@ function renderTmdbFilters() {
 
       ${!isMovie ? `
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">状态</span>
         <div class="tmdb-genre-list">
           ${TV_STATUSES.map(s => `
             <button class="tmdb-genre-btn${TMDB_STATE.tvStatus === s.value ? ' active' : ''}" data-status="${s.value}">${s.label}</button>
@@ -254,7 +249,6 @@ function renderTmdbFilters() {
       </div>` : ''}
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">语言</span>
         <div class="tmdb-genre-list">
           ${LANGUAGES.map(l => `
             <button class="tmdb-genre-btn${TMDB_STATE.originalLanguage === l.value ? ' active' : ''}" data-language="${l.value}">${l.label}</button>
@@ -263,7 +257,6 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">年份</span>
         <div class="tmdb-genre-list">
           ${getYears().map(y => `
             <button class="tmdb-genre-btn${TMDB_STATE.selectedYear === y.value ? ' active' : ''}" data-year="${y.value}">${y.label}</button>
@@ -272,7 +265,6 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">评分</span>
         <div class="tmdb-genre-list">
           <button class="tmdb-genre-btn${TMDB_STATE.voteRating === '' ? ' active' : ''}" data-rating="">全部评分</button>
           <button class="tmdb-genre-btn${TMDB_STATE.voteRating === '9' ? ' active' : ''}" data-rating="9">9分以上</button>
@@ -284,22 +276,10 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <span class="tmdb-filter-label">排序</span>
         <div class="tmdb-genre-list">
           ${sortOptions.map(s => `
             <button class="tmdb-genre-btn${TMDB_STATE.selectedSort === s.value ? ' active' : ''}" data-sort="${s.value}">${s.label}</button>
           `).join('')}
-        </div>
-      </div>
-
-      <div class="tmdb-filter-row">
-        <div class="tmdb-filter-item tmdb-filter-item-wide">
-          <span class="tmdb-filter-label">关键词</span>
-          <div class="tmdb-keyword-wrap">
-            <input type="text" class="tmdb-input" id="tmdb-keyword-input" placeholder="输入关键词搜索分类内容..." value="${TMDB_STATE.keyword}" autocomplete="off">
-            <button class="tmdb-keyword-btn" id="tmdb-keyword-btn">搜索</button>
-            ${TMDB_STATE.keyword ? `<button class="tmdb-keyword-clear" id="tmdb-keyword-clear">✕</button>` : ''}
-          </div>
         </div>
       </div>
     </div>
@@ -307,7 +287,6 @@ function renderTmdbFilters() {
 
   bindTypeSwitch();
   bindFilterTags();
-  bindKeywordSearch();
 }
 
 function bindTypeSwitch() {
@@ -362,32 +341,6 @@ function bindFilterTags() {
 
     TMDB_STATE.page = 1;
     renderTmdbFilters();
-    loadTmdbResults();
-  });
-}
-
-function bindKeywordSearch() {
-  const keywordInput = document.getElementById('tmdb-keyword-input');
-  const keywordBtn = document.getElementById('tmdb-keyword-btn');
-  const keywordClear = document.getElementById('tmdb-keyword-clear');
-
-  const applyKeyword = () => {
-    const val = keywordInput ? keywordInput.value.trim() : '';
-    if (val !== TMDB_STATE.keyword) {
-      TMDB_STATE.keyword = val;
-      TMDB_STATE.page = 1;
-      loadTmdbResults();
-    }
-  };
-
-  if (keywordInput) keywordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') applyKeyword();
-  });
-  if (keywordBtn) keywordBtn.addEventListener('click', applyKeyword);
-  if (keywordClear) keywordClear.addEventListener('click', () => {
-    if (keywordInput) keywordInput.value = '';
-    TMDB_STATE.keyword = '';
-    TMDB_STATE.page = 1;
     loadTmdbResults();
   });
 }
@@ -455,21 +408,6 @@ async function loadTmdbResults() {
 
     if (!isMovie && TMDB_STATE.tvStatus) {
       params.with_status = TMDB_STATE.tvStatus;
-    }
-
-    if (TMDB_STATE.keyword) {
-      try {
-        const kwData = await tmdbFetch('search/keyword', {
-          query: TMDB_STATE.keyword,
-          language: 'zh-CN',
-          page: 1
-        });
-        if (kwData.results && kwData.results.length > 0) {
-          params.with_keywords = kwData.results.map(k => k.id).join(',');
-        }
-      } catch (e) {
-        console.warn('关键词搜索失败，忽略关键词筛选:', e);
-      }
     }
 
     const endpoint = isMovie ? 'discover/movie' : 'discover/tv';

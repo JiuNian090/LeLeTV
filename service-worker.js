@@ -1,8 +1,10 @@
 // Service Worker 版本
-const CACHE_VERSION = 'v1.1.0';
+const CACHE_VERSION = 'v2.0.0';
 const CACHE_NAME = `leletv-cache-${CACHE_VERSION}`;
 const CACHE_API = `leletv-api-${CACHE_VERSION}`;
 const CACHE_IMAGES = `leletv-images-${CACHE_VERSION}`;
+
+const CURRENT_CACHE_NAMES = [CACHE_NAME, CACHE_API, CACHE_IMAGES];
 
 // 需要缓存的关键静态资源
 const STATIC_ASSETS = [
@@ -41,19 +43,29 @@ self.addEventListener('install', event => {
   );
 });
 
-// 激活事件 - 清理旧缓存
+// 激活事件 - 清理旧缓存并通知客户端
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          // 清理过期缓存命名空间
-          if (cacheName !== CACHE_NAME && cacheName !== CACHE_API && cacheName !== CACHE_IMAGES) {
+          if (!CURRENT_CACHE_NAMES.includes(cacheName)) {
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      return self.clients.claim();
+    }).then(() => {
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: CACHE_VERSION
+          });
+        });
+      });
+    })
   );
 });
 
@@ -208,3 +220,25 @@ function isStaticAsset(request) {
 
   return false;
 }
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'CLEAR_ALL_CACHES') {
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(name => caches.delete(name))
+        );
+      }).then(() => {
+        if (event.source && event.source.postMessage) {
+          event.source.postMessage({
+            type: 'CACHES_CLEARED'
+          });
+        }
+      })
+    );
+  }
+
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

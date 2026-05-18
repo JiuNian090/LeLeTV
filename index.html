@@ -190,11 +190,6 @@
         <div id="page-category" class="page-content">
             <div class="category-page-layout">
                 <div class="category-content-container">
-                    <div class="category-page-header">
-                        <h2 class="text-xl font-bold gradient-text">分类浏览</h2>
-                        <p class="text-gray-500 text-sm mt-1">基于 TMDB 数据，点击卡片即可在采集站中搜索</p>
-                    </div>
-
                     <!-- 筛选区域 -->
                     <div id="tmdb-filters" class="mt-4"></div>
 
@@ -489,6 +484,7 @@
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
         window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
+        window.__LELETV_VERSION__ = "{{LELETV_VERSION}}";
     </script>
 
     <!-- 版本工具脚本 -->
@@ -496,6 +492,9 @@
     
     <!-- 版本检测脚本 -->
     <script src="js/version-check.js" defer></script>
+
+    <!-- 版本更新检测模块 -->
+    <script src="js/version-updater.js" defer></script>
 
     <!-- 缓存管理模块 -->
     <script src="js/cache-manager.js" defer></script>
