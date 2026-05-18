@@ -1915,13 +1915,9 @@ function renderPlayerDetailInfo() {
         }
     }
 
-    // 根据屏幕宽度决定默认折叠状态：移动端默认折叠
+    // 详情默认收起
     if (hasActorOrDesc) {
-        if (window.innerWidth >= 900) {
-            container.classList.remove('detail-collapsed');
-        } else {
-            container.classList.add('detail-collapsed');
-        }
+        container.classList.add('detail-collapsed');
     }
 }
 
@@ -1940,15 +1936,11 @@ function toggleEpisodeSection() {
     section.classList.toggle('episode-collapsed');
 }
 
-// 根据屏幕宽度设置选集区域默认折叠状态
+// 选集默认展开
 function updateEpisodeCollapseState() {
     const section = document.getElementById('episodeSection');
     if (!section) return;
-    if (window.innerWidth >= 900) {
-        section.classList.remove('episode-collapsed');
-    } else {
-        section.classList.add('episode-collapsed');
-    }
+    section.classList.remove('episode-collapsed');
 }
 
 function renderResourceInfoBar() {
