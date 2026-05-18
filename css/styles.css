@@ -461,52 +461,45 @@ body {
     box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
 }
 
-#yellowFilterToggle:checked + .toggle-bg {
+#yellowFilterToggle.dash-switch-input:checked ~ .dash-switch-track {
     background-color: var(--primary-color);
 }
 
-#yellowFilterToggle:checked ~ .toggle-dot {
-    -webkit-transform: translateX(1.5rem);
-    -moz-transform: translateX(1.5rem);
-    transform: translateX(1.5rem);
+#yellowFilterToggle.dash-switch-input:checked ~ .dash-switch-dot {
+    -webkit-transform: translateX(1.25rem);
+    -moz-transform: translateX(1.25rem);
+    transform: translateX(1.25rem);
+    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
 }
 
-#yellowFilterToggle:focus + .toggle-bg,
-#yellowFilterToggle:hover + .toggle-bg {
+#yellowFilterToggle.dash-switch-input:focus ~ .dash-switch-track,
+#yellowFilterToggle.dash-switch-input:hover ~ .dash-switch-track {
     -webkit-box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
     -moz-box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
     box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
 }
 
-/* 添加广告过滤开关的CSS */
-#adFilterToggle:checked + .toggle-bg {
+#adFilterToggle.dash-switch-input:checked ~ .dash-switch-track {
     background-color: var(--primary-color);
 }
 
-#adFilterToggle:checked ~ .toggle-dot {
-    transform: translateX(1.5rem);
+#adFilterToggle.dash-switch-input:checked ~ .dash-switch-dot {
+    transform: translateX(1.25rem);
+    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
 }
 
-#adFilterToggle:focus + .toggle-bg,
-#adFilterToggle:hover + .toggle-bg {
+#adFilterToggle.dash-switch-input:focus ~ .dash-switch-track,
+#adFilterToggle.dash-switch-input:hover ~ .dash-switch-track {
     box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
 }
 
-.toggle-dot {
-    transition: transform 0.3s ease-in-out;
+.dash-switch-dot {
+    transition: transform 0.25s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.toggle-bg {
-    transition: background-color 0.3s ease-in-out;
-}
-
-#yellowFilterToggle:checked ~ .toggle-dot {
-    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
-}
-
-#adFilterToggle:checked ~ .toggle-dot {
-    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
+.dash-switch-track {
+    transition: background-color 0.25s ease;
 }
 
 /* 添加API复选框样式 */
@@ -683,11 +676,11 @@ body {
     opacity: 0.7;
 }
 
-.filter-disabled .toggle-bg {
+.filter-disabled .dash-switch-track {
     background-color: #333 !important;
 }
 
-.filter-disabled .toggle-dot {
+.filter-disabled .dash-switch-dot {
     -webkit-transform: translateX(0) !important;
     -moz-transform: translateX(0) !important;
     transform: translateX(0) !important;
@@ -732,12 +725,12 @@ body {
 }
 
 /* 开关的禁用样式 */
-.filter-disabled .toggle-bg {
+.filter-disabled .dash-switch-track {
     background-color: #444 !important;
     opacity: 0.8;
 }
 
-.filter-disabled .toggle-dot {
+.filter-disabled .dash-switch-dot {
     -webkit-transform: translateX(0);
     -moz-transform: translateX(0);
     transform: translateX(0);

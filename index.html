@@ -192,136 +192,110 @@
         <div id="page-settings" class="page-content">
             <div class="settings-page-layout">
                 <div class="settings-container">
-                    <h2 class="text-3xl font-bold gradient-text mb-10 text-center">设置</h2>
-                    
-                    <div class="settings-sections space-y-8">
-                        <!-- 数据源设置卡片 -->
-                        <div class="settings-card bg-gradient-to-br from-[#1a1a1a] to-[#151515] rounded-2xl shadow-xl border border-[#333] overflow-hidden">
-                            <div class="settings-card-header p-6 border-b border-[#333] bg-[#181818]">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-xl font-semibold text-white flex items-center gap-3">
-                                        <span class="text-2xl">🎬</span>
-                                        数据源设置
-                                    </h3>
-                                    <button id="loadBalancerTrigger" onclick="toggleLoadBalancer()" class="bg-[#333] hover:bg-[#444] border border-[#333] hover:border-white rounded-lg px-3 py-2 transition-colors" aria-label="查看负载均衡状态" title="查看负载均衡状态">
-                                        <span class="text-base">📶</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="settings-card-body p-6">
-                                <div class="flex space-x-3 mb-6 flex-wrap gap-3">
-                                    <button onclick="selectAllAPIs(true, true)" class="px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-md">全选</button>
-                                    <button onclick="selectAllAPIs(false)" class="px-4 py-2.5 bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-md">全不选</button>
-                                    <button onclick="resetDataSourceLogic()" class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-md">重置</button>
-                                </div>
+                    <div class="settings-dashboard-header">
+                        <h2 class="settings-dashboard-title">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            设置
+                        </h2>
+                    </div>
 
-                                <div class="max-h-64 overflow-y-auto bg-[#0f0f0f] p-5 rounded-xl mb-4 border border-[#333]">
-                                    <div id="apiCheckboxes" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <div class="settings-dashboard-grid">
+                        <!-- 数据源设置 -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <span class="dash-card-icon">🎬</span>
+                                <h3 class="dash-card-title">数据源</h3>
+                                <button id="loadBalancerTrigger" onclick="toggleLoadBalancer()" class="dash-card-badge" aria-label="查看负载均衡状态" title="查看负载均衡状态">
+                                    <span>📶</span>
+                                </button>
+                            </div>
+                            <div class="dash-card-body">
+                                <div class="flex gap-2 mb-3 flex-wrap">
+                                    <button onclick="selectAllAPIs(true, true)" class="dash-btn dash-btn-green">全选</button>
+                                    <button onclick="selectAllAPIs(false)" class="dash-btn dash-btn-gray">全不选</button>
+                                    <button onclick="resetDataSourceLogic()" class="dash-btn dash-btn-blue">重置</button>
                                 </div>
-                                
-                                <div class="text-sm text-gray-400 flex justify-between items-center">
-                                    <span>已选API数量：<span id="selectedApiCount" class="text-white font-semibold">0</span></span>
-                                    <span id="siteStatus" class="ml-2"></span>
+                                <div class="dash-list-box">
+                                    <div id="apiCheckboxes" class="dash-api-grid"></div>
+                                </div>
+                                <div class="dash-stats">
+                                    <span>已选 <span id="selectedApiCount" class="text-white font-semibold">0</span></span>
+                                    <span id="siteStatus"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 自定义API管理卡片 -->
-                        <div class="settings-card bg-gradient-to-br from-[#1a1a1a] to-[#151515] rounded-2xl shadow-xl border border-[#333] overflow-hidden">
-                            <div class="settings-card-header p-6 border-b border-[#333] bg-[#181818]">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-xl font-semibold text-white flex items-center gap-3">
-                                        <span class="text-2xl">🔗</span>
-                                        自定义API
-                                    </h3>
-                                    <button onclick="showAddCustomApiForm()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white w-10 h-10 rounded-full text-center leading-none text-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg">+</button>
-                                </div>
+                        <!-- 自定义API管理 -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <span class="dash-card-icon">🔗</span>
+                                <h3 class="dash-card-title">自定义API</h3>
+                                <button onclick="showAddCustomApiForm()" class="dash-add-btn" title="添加">+</button>
                             </div>
-                            <div class="settings-card-body p-6">
-                                <div id="customApisList" class="max-h-48 overflow-y-auto mb-4"></div>
-                                
-                                <div id="addCustomApiForm" class="hidden mt-4 p-5 bg-[#0f0f0f] rounded-xl border border-[#333]">
-                                    <input type="text" id="customApiName" placeholder="API名称" class="w-full bg-[#1a1a1a] border border-[#333] text-white px-4 py-3 rounded-lg mb-4 focus:outline-none focus:border-pink-500 transition-all duration-300" autocomplete="off">
-                                    <input type="text" id="customApiUrl" placeholder="https://abc.com" class="w-full bg-[#1a1a1a] border border-[#333] text-white px-4 py-3 rounded-lg mb-4 focus:outline-none focus:border-pink-500 transition-all duration-300" autocomplete="off">
-                                    <input type="text" id="customApiDetail" placeholder="detail地址（可选）" class="w-full bg-[#1a1a1a] border border-[#333] text-white px-4 py-3 rounded-lg mb-4 focus:outline-none focus:border-pink-500 transition-all duration-300" autocomplete="off">
-                                    <div class="flex items-center mb-5">
-                                        <input type="checkbox" id="customApiIsAdult" class="form-checkbox h-5 w-5 text-pink-500 bg-[#222] border border-[#333]">
-                                        <label for="customApiIsAdult" class="ml-3 text-sm text-pink-400">隐藏资源站</label>
+                            <div class="dash-card-body">
+                                <div id="customApisList" class="dash-list-box max-h-32"></div>
+                                <div id="addCustomApiForm" class="hidden mt-3 p-3 bg-[#0f0f0f] rounded-lg border border-[#333]">
+                                    <input type="text" id="customApiName" placeholder="API名称" class="dash-input mb-2" autocomplete="off">
+                                    <input type="text" id="customApiUrl" placeholder="https://abc.com" class="dash-input mb-2" autocomplete="off">
+                                    <input type="text" id="customApiDetail" placeholder="detail地址（可选）" class="dash-input mb-2" autocomplete="off">
+                                    <div class="flex items-center mb-3">
+                                        <input type="checkbox" id="customApiIsAdult" class="dash-checkbox">
+                                        <label for="customApiIsAdult" class="ml-2 text-xs text-pink-400">隐藏资源站</label>
                                     </div>
-                                    <div class="flex space-x-4">
-                                        <button onclick="addCustomApi()" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-md flex-1">添加</button>
-                                        <button onclick="cancelAddCustomApi()" class="bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-md flex-1">取消</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 功能开关设置卡片 -->
-                        <div class="settings-card bg-gradient-to-br from-[#1a1a1a] to-[#151515] rounded-2xl shadow-xl border border-[#333] overflow-hidden">
-                            <div class="settings-card-header p-6 border-b border-[#333] bg-[#181818]">
-                                <h3 class="text-xl font-semibold text-white flex items-center gap-3">
-                                    <span class="text-2xl">⚙️</span>
-                                    功能开关
-                                </h3>
-                            </div>
-                            <div class="settings-card-body p-6">
-                                <div class="switch-item flex flex-col mb-7 pb-7 border-b border-[#333] last:border-0 last:mb-0 last:pb-0">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <label class="text-lg font-medium text-white">🈲隐藏内容过滤</label>
-                                            <p class="text-sm text-gray-500 mt-2">过滤"伦理片"等隐藏内容，密码提示:⟲</p>
-                                        </div>
-                                        <div class="relative inline-block w-14 h-8 align-middle select-none flex-shrink-0">
-                                            <input type="checkbox" id="yellowFilterToggle" class="opacity-0 absolute w-full h-full cursor-pointer z-10">
-                                            <div class="toggle-bg bg-[#333] w-14 h-8 rounded-full transition-colors duration-300 ease-in-out"></div>
-                                            <div class="toggle-dot absolute w-7 h-7 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-300 ease-in-out"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="switch-item flex flex-col mb-7 pb-7 border-b border-[#333] last:border-0 last:mb-0 last:pb-0">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <label class="text-lg font-medium text-white">分片广告过滤</label>
-                                            <p class="text-sm text-gray-500 mt-2">关闭可减少旧版浏览器卡顿</p>
-                                        </div>
-                                        <div class="relative inline-block w-14 h-8 align-middle select-none flex-shrink-0">
-                                            <input type="checkbox" id="adFilterToggle" class="opacity-0 absolute w-full h-full cursor-pointer z-10">
-                                            <div class="toggle-bg bg-[#333] w-14 h-8 rounded-full transition-colors duration-300 ease-in-out"></div>
-                                            <div class="toggle-dot absolute w-7 h-7 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-300 ease-in-out"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="switch-item flex flex-col">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <label class="text-lg font-medium text-white">豆瓣热门推荐</label>
-                                            <p class="text-sm text-gray-500 mt-2">首页显示豆瓣热门影视内容</p>
-                                        </div>
-                                        <div class="relative inline-block w-14 h-8 align-middle select-none flex-shrink-0">
-                                            <input type="checkbox" id="doubanToggle" class="opacity-0 absolute w-full h-full cursor-pointer z-10">
-                                            <div class="toggle-bg bg-[#333] w-14 h-8 rounded-full transition-colors duration-300 ease-in-out"></div>
-                                            <div class="toggle-dot absolute w-7 h-7 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-300 ease-in-out"></div>
-                                        </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="addCustomApi()" class="dash-btn dash-btn-green flex-1">添加</button>
+                                        <button onclick="cancelAddCustomApi()" class="dash-btn dash-btn-gray flex-1">取消</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 一般功能卡片 -->
-                        <div class="settings-card bg-gradient-to-br from-[#1a1a1a] to-[#151515] rounded-2xl shadow-xl border border-[#333] overflow-hidden">
-                            <div class="settings-card-header p-6 border-b border-[#333] bg-[#181818]">
-                                <h3 class="text-xl font-semibold text-white flex items-center gap-3">
-                                    <span class="text-2xl">🔧</span>
-                                    一般功能
-                                </h3>
+                        <!-- 功能开关 -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <span class="dash-card-icon">⚙️</span>
+                                <h3 class="dash-card-title">功能开关</h3>
                             </div>
-                            <div class="settings-card-body p-6">
-                                <div class="space-y-4">
-                                    <button onclick="importConfig()" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white px-6 py-4 rounded-xl text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">导入配置</button>
-                                    <button onclick="exportConfig()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-4 rounded-xl text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">导出配置</button>
-                                    <button onclick="clearLocalStorage()" class="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-6 py-4 rounded-xl text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">清除Cookie</button>
+                            <div class="dash-card-body dash-switch-body">
+                                <label class="dash-switch-row">
+                                    <div class="dash-switch-info">
+                                        <span class="dash-switch-label">🈲 隐藏内容过滤</span>
+                                        <span class="dash-switch-desc">过滤"伦理片"等，密码提示:⟲</span>
+                                    </div>
+                                    <div class="dash-switch-toggle">
+                                        <input type="checkbox" id="yellowFilterToggle" class="dash-switch-input">
+                                        <div class="dash-switch-track"></div>
+                                        <div class="dash-switch-dot"></div>
+                                    </div>
+                                </label>
+                                <label class="dash-switch-row">
+                                    <div class="dash-switch-info">
+                                        <span class="dash-switch-label">分片广告过滤</span>
+                                        <span class="dash-switch-desc">关闭可减少旧版浏览器卡顿</span>
+                                    </div>
+                                    <div class="dash-switch-toggle">
+                                        <input type="checkbox" id="adFilterToggle" class="dash-switch-input">
+                                        <div class="dash-switch-track"></div>
+                                        <div class="dash-switch-dot"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 一般功能 -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <span class="dash-card-icon">🔧</span>
+                                <h3 class="dash-card-title">一般功能</h3>
+                            </div>
+                            <div class="dash-card-body">
+                                <div class="dash-action-grid">
+                                    <button onclick="importConfig()" class="dash-action-btn dash-action-btn-import">导入配置</button>
+                                    <button onclick="exportConfig()" class="dash-action-btn dash-action-btn-export">导出配置</button>
+                                    <button onclick="clearLocalStorage()" class="dash-action-btn dash-action-btn-danger">清除Cookie</button>
                                 </div>
                             </div>
                         </div>
