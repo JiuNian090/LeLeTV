@@ -667,7 +667,7 @@ function renderDoubanCards(data, container) {
                         referrerpolicy="no-referrer"
                         onload="this.classList.add('loaded')">
                     <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
-                    <div class="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-sm">
+                    <div class="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-sm rating-badge-text">
                         <span class="text-yellow-400">★</span> ${safeRate}
                     </div>
                     <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-sm hover:bg-[#333] transition-colors">
@@ -676,9 +676,9 @@ function renderDoubanCards(data, container) {
                         </a>
                     </div>
                 </div>
-                <div class="p-2 text-center bg-[#111]">
-                    <button onclick="fillAndSearchWithDouban('${safeTitle}')" 
-                            class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition"
+                <div class="p-2 text-center bg-[#111] card-body">
+                    <button onclick="fillAndSearchWithDouban('${safeTitle}")" 
+                            class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition card-title-text"
                             title="${safeTitle}">
                         ${safeTitle}
                     </button>
