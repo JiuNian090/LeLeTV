@@ -83,12 +83,29 @@
                     <div class="detail-collapse-body"></div>
                 </div>
 
-                <!-- 集数网格 -->
-                <div class="player-container player-right-item">
-                    <div class="episode-grid" id="episodesGrid">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2" id="episodesList">
-                            <!-- 集数将在这里动态加载 -->
-                            <div class="col-span-full text-center text-gray-400 py-8">加载中...</div>
+                <!-- 选集区域（可折叠） -->
+                <div class="player-container player-right-item episode-section" id="episodeSection">
+                    <div class="detail-toggle-header" onclick="toggleEpisodeSection()">
+                        <div class="episode-title-group">
+                            <h3 class="episode-section-title">选集</h3>
+                            <button onclick="event.stopPropagation(); toggleEpisodeOrder()" class="episode-order-btn" title="切换排序">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" id="orderIcon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="episode-header-right">
+                            <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="episode-collapse-body">
+                        <div class="episode-grid" id="episodesGrid">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2" id="episodesList">
+                                <!-- 集数将在这里动态加载 -->
+                                <div class="col-span-full text-center text-gray-400 py-8">加载中...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,16 +143,6 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 11V7a3 3 0 00-6 0v4m-3 4h12v6H6v-6z" />
                                 </svg>
-                            </button>
-                        </div>
-
-                        <!-- 右侧组：倒序排列按钮 -->
-                        <div class="flex items-center flex-shrink-0 right-buttons-group">
-                            <button onclick="toggleEpisodeOrder()" class="px-3 py-1 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors flex items-center space-x-1 flex-shrink-0 control-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" id="orderIcon" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
-                                </svg>
-                                <span id="orderText">倒序排列</span>
                             </button>
                         </div>
                     </div>

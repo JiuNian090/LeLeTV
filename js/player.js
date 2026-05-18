@@ -191,6 +191,9 @@ function initializePageContent() {
     // 渲染集数列表
     renderEpisodes();
 
+    // 初始化选集区域折叠状态（横屏展开，移动端折叠）
+    updateEpisodeCollapseState();
+
     // 更新按钮状态
     updateButtonStates();
 
@@ -991,11 +994,9 @@ function toggleEpisodeOrder() {
 
 // 更新排序按钮状态
 function updateOrderButton() {
-    const orderText = document.getElementById('orderText');
     const orderIcon = document.getElementById('orderIcon');
 
-    if (orderText && orderIcon) {
-        orderText.textContent = episodesReversed ? '正序排列' : '倒序排列';
+    if (orderIcon) {
         orderIcon.style.transform = episodesReversed ? 'rotate(180deg)' : '';
     }
 }
@@ -1872,6 +1873,24 @@ function toggleDetailInfo() {
     const body = container.querySelector('.detail-collapse-body');
     if (!body || !body.innerHTML.trim()) return;
     container.classList.toggle('detail-collapsed');
+}
+
+// 选集区域折叠切换
+function toggleEpisodeSection() {
+    const section = document.getElementById('episodeSection');
+    if (!section) return;
+    section.classList.toggle('episode-collapsed');
+}
+
+// 根据屏幕宽度设置选集区域默认折叠状态
+function updateEpisodeCollapseState() {
+    const section = document.getElementById('episodeSection');
+    if (!section) return;
+    if (window.innerWidth >= 900) {
+        section.classList.remove('episode-collapsed');
+    } else {
+        section.classList.add('episode-collapsed');
+    }
 }
 
 function renderResourceInfoBar() {

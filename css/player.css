@@ -488,6 +488,72 @@ input:checked + .slider:before {
     padding-top: 0;
 }
 
+/* 选集区域（可折叠卡片） */
+.episode-section {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.episode-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.episode-title-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.episode-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.episode-order-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: #888;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    padding: 0;
+}
+
+.episode-order-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.episode-collapsed .episode-order-btn {
+    display: none;
+}
+
+.episode-collapse-body {
+    padding-top: 12px;
+}
+
+.episode-collapsed .episode-collapse-body {
+    display: none;
+}
+
+.episode-collapsed .detail-toggle-arrow {
+    transform: rotate(-90deg);
+}
+
 /* 资源信息卡片区 */
 #resourceInfoBarContainer {
     align-items: center;
