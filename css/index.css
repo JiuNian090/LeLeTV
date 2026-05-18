@@ -264,8 +264,6 @@
     font-size: 1rem;
     font-weight: 600;
     color: #a0aec0;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #2d2d2d;
 }
 
 .settings-dashboard-grid {
@@ -619,9 +617,17 @@
     }
 }
 
-/* 超宽屏幕搜索框更宽 */
+/* 超宽屏幕搜索框更宽 - 占屏幕一半宽度，居中 */
 @media (min-width: 1024px) {
     #searchArea .w-full {
-        max-width: 96rem !important; /* even wider on large screens */
+        max-width: 50vw !important;
+        width: 50vw;
+    }
+}
+
+@media (min-width: 1920px) {
+    #searchArea .w-full {
+        max-width: 960px !important;
+        width: 50vw;
     }
 }
