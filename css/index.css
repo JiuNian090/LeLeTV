@@ -1043,3 +1043,75 @@
         width: 50vw;
     }
 }
+
+/* 竖屏下设置页优化 */
+@media (max-width: 639px) {
+    .settings-page-layout {
+        padding-top: 0.5rem;
+    }
+
+    .settings-container {
+        padding: 0 0.75rem;
+    }
+
+    .settings-dashboard-grid {
+        gap: 1rem;
+    }
+
+    .dash-card-body {
+        padding: 1rem;
+    }
+
+    .dash-card-header {
+        padding: 0.875rem 1rem;
+    }
+
+    .dash-card-title {
+        font-size: 0.9375rem;
+    }
+
+    .dash-switch-body {
+        padding: 0.25rem 0.75rem;
+    }
+
+    .dash-switch-row {
+        padding: 0.75rem 0;
+    }
+
+    .dash-switch-label {
+        font-size: 0.875rem;
+    }
+
+    .dash-switch-desc {
+        font-size: 0.75rem;
+    }
+
+    .dash-btn {
+        font-size: 0.8125rem;
+        padding: 0.375rem 0.875rem;
+    }
+
+    .dash-action-btn {
+        font-size: 0.875rem;
+        padding: 0.625rem 0.875rem;
+    }
+
+    .dash-input {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .dash-stats {
+        font-size: 0.75rem;
+    }
+
+    .dash-add-btn {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 1.125rem;
+    }
+
+    .dash-api-grid {
+        gap: 0.5rem;
+    }
+}
