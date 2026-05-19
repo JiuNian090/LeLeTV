@@ -56,6 +56,75 @@ let currentVideoUrl = ''; // 记录当前实际的视频URL
 const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function')
 Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
+// TMDB 影片详情配置（TMDB优先，视频源API兜底）
+const PLAYER_TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
+
+function getPlayerTmdbBaseUrl() {
+  if (typeof TMDB_WORKER_URL !== 'undefined' && TMDB_WORKER_URL) {
+    return TMDB_WORKER_URL;
+  }
+  return '/api/tmdb';
+}
+
+async function fetchTmdbPlayerDetail(title) {
+  try {
+    const baseUrl = getPlayerTmdbBaseUrl();
+    if (!baseUrl) return null;
+
+    const multiUrl = `${baseUrl}?endpoint=search/multi&query=${encodeURIComponent(title)}&language=zh-CN&page=1`;
+    const res = await fetch(multiUrl);
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) return null;
+
+    const result = data.results.find(r => r.media_type === 'movie' || r.media_type === 'tv');
+    if (!result) return null;
+
+    const mediaType = result.media_type;
+    const id = result.id;
+
+    const [detailRes, creditsRes] = await Promise.all([
+      fetch(`${baseUrl}?endpoint=${mediaType}/${id}&language=zh-CN`),
+      fetch(`${baseUrl}?endpoint=${mediaType}/${id}/credits&language=zh-CN`)
+    ]);
+
+    if (!detailRes.ok) return null;
+
+    const [detail, credits] = await Promise.all([
+      detailRes.json(),
+      creditsRes.ok ? creditsRes.json() : Promise.resolve({ crew: [], cast: [] })
+    ]);
+
+    const isMovie = mediaType === 'movie';
+    const director = credits.crew?.find(c => c.job === 'Director')?.name || '';
+    const actors = credits.cast?.slice(0, 5).map(c => c.name).join(' / ') || '';
+    const genres = detail.genres?.map(g => g.name).join(' / ') || '';
+    const countries = detail.production_countries?.map(c => c.name).join(' / ') || '';
+    const year = isMovie
+      ? (detail.release_date?.split('-')[0] || '')
+      : (detail.first_air_date?.split('-')[0] || '');
+    const posterPath = detail.poster_path
+      ? `${PLAYER_TMDB_IMAGE_BASE}/w342${detail.poster_path}`
+      : '';
+
+    return {
+      title: isMovie ? detail.title : detail.name,
+      cover: posterPath,
+      desc: detail.overview || '',
+      type: genres,
+      year: year,
+      area: countries,
+      director: director,
+      actor: actors,
+      fromTmdb: true
+    };
+  } catch (e) {
+    console.warn('获取TMDB详情失败，使用视频源API数据:', e);
+    return null;
+  }
+}
+
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
     // 先检查用户是否已通过密码验证
@@ -186,8 +255,30 @@ function initializePageContent() {
     const videoTitleRight = document.getElementById('videoTitleRight');
     if (videoTitleRight) videoTitleRight.textContent = currentVideoTitle;
 
-    // 渲染视频详情信息
+    // 渲染视频详情信息（先用视频源API数据）
     renderPlayerDetailInfo();
+
+    // 异步获取TMDB数据增强详情（TMDB优先，API源数据兜底）
+    fetchTmdbPlayerDetail(currentVideoTitle).then(tmdbInfo => {
+      if (tmdbInfo) {
+        let existingInfo = null;
+        try {
+          const stored = localStorage.getItem('currentVideoInfo');
+          if (stored) existingInfo = JSON.parse(stored);
+        } catch (e) {}
+
+        const mergedInfo = {
+          ...(existingInfo || {}),
+          ...tmdbInfo,
+          remarks: existingInfo?.remarks || '',
+          source_name: existingInfo?.source_name || '',
+          source_code: existingInfo?.source_code || ''
+        };
+
+        localStorage.setItem('currentVideoInfo', JSON.stringify(mergedInfo));
+        renderPlayerDetailInfo();
+      }
+    });
 
     // 初始化播放器
     if (videoUrl) {

@@ -363,24 +363,8 @@ body {
     min-height: 100vh;
 }
 
-.container {
+.main-container {
     flex: 1;
-}
-
-@media screen and (min-height: 800px) {
-    body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-    }
-    
-    .container {
-        flex: 1;
-    }
-    
-    .footer {
-        margin-top: auto;
-    }
 }
 
 @media screen and (max-width: 640px) {
