@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.20.7 (2026-05-20 01:24)
+- [其他] add controls auto-hide and click/double-click behavior
+
+实现播放区域单击切换控制栏显隐、双击启停播放，以及鼠标空闲2秒自动收起控制栏的功能。
+
+
 ### v2.5.20.6 (2026-05-20 01:15)
 - [其他] add progress bar thumbnail preview 功能
 
