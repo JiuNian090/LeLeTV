@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 检查用户是否已经看过声明以及上次查看时间
     const lastAcceptedDisclaimer = localStorage.getItem('lastAcceptedDisclaimer');
     const now = new Date().getTime();
-    const oneDayInMs = 24 * 60 * 60 * 1000; // 24小时的毫秒数
+    const oneDayInMs = 30 * 24 * 60 * 60 * 1000; // 30天的毫秒数
     
-    // 如果上次接受时间超过24小时或从未接受过，则显示弹窗
+    // 如果上次接受时间超过30天或从未接受过，则显示弹窗
     if (!lastAcceptedDisclaimer || (now - parseInt(lastAcceptedDisclaimer)) > oneDayInMs) {
         // 显示弹窗
         const disclaimerModal = document.getElementById('disclaimerModal');
