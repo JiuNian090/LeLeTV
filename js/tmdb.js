@@ -4,7 +4,7 @@ const TMDB_STATE = {
   totalPages: 1,
   selectedGenre: null,
   selectedYear: '',
-  selectedSort: 'popularity.desc',
+  selectedSort: 'primary_release_date.desc',
   voteRating: '',
   originalLanguage: '',
   originCountry: '',
@@ -188,7 +188,7 @@ function resetTmdbFilters() {
   TMDB_STATE.page = 1;
   TMDB_STATE.selectedGenre = null;
   TMDB_STATE.selectedYear = '';
-  TMDB_STATE.selectedSort = 'popularity.desc';
+  TMDB_STATE.selectedSort = isMovieLike(TMDB_STATE.type) ? 'primary_release_date.desc' : 'first_air_date.desc';
   TMDB_STATE.voteRating = '';
   TMDB_STATE.originalLanguage = '';
   TMDB_STATE.originCountry = '';
@@ -200,6 +200,27 @@ function resetTmdbFilters() {
   } else if (TMDB_STATE.type === 'variety') {
     TMDB_STATE.selectedGenre = 10764;
   }
+}
+
+function renderYearFilter() {
+  const MAX_VISIBLE = 7;
+  const years = getYears();
+  const selectedIdx = years.findIndex(y => y.value === TMDB_STATE.selectedYear);
+  const hasHiddenYears = years.length > MAX_VISIBLE;
+  const expanded = TMDB_STATE._yearExpanded || (hasHiddenYears && selectedIdx >= MAX_VISIBLE);
+
+  return `
+    <div class="tmdb-genre-list year-filter-list${!expanded ? ' year-filter-collapsed' : ''}">
+      ${years.map((y, i) => `
+        <button class="tmdb-genre-btn${TMDB_STATE.selectedYear === y.value ? ' active' : ''}${i >= MAX_VISIBLE ? ' year-btn-extra' : ''}" data-year="${y.value}">${y.label}</button>
+      `).join('')}
+      ${hasHiddenYears ? `
+        <button class="tmdb-genre-btn year-toggle-btn" data-year-toggle>
+          ${expanded ? '收起' : `更多年份...`}
+        </button>
+      ` : ''}
+    </div>
+  `;
 }
 
 function renderTmdbFilters() {
@@ -257,11 +278,7 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <div class="tmdb-genre-list">
-          ${getYears().map(y => `
-            <button class="tmdb-genre-btn${TMDB_STATE.selectedYear === y.value ? ' active' : ''}" data-year="${y.value}">${y.label}</button>
-          `).join('')}
-        </div>
+        ${renderYearFilter()}
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
@@ -326,6 +343,10 @@ function bindFilterTags() {
     } else if (btn.hasAttribute('data-language')) {
       if (btn.dataset.language === TMDB_STATE.originalLanguage) return;
       TMDB_STATE.originalLanguage = btn.dataset.language;
+    } else if (btn.hasAttribute('data-year-toggle')) {
+      TMDB_STATE._yearExpanded = !TMDB_STATE._yearExpanded;
+      renderTmdbFilters();
+      return;
     } else if (btn.hasAttribute('data-year')) {
       if (btn.dataset.year === TMDB_STATE.selectedYear) return;
       TMDB_STATE.selectedYear = btn.dataset.year;

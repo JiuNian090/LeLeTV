@@ -252,40 +252,18 @@
     color: white;
 }
 
-/* 结果网格 */
+/* 结果网格 - 自适应卡片大小 */
 .tmdb-results-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 0.75rem;
-}
-
-@media (min-width: 640px) {
-    .tmdb-results-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 768px) {
-    .tmdb-results-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .tmdb-results-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
-}
-
-@media (min-width: 1280px) {
-    .tmdb-results-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
 }
 
 /* 卡片样式 */
 .tmdb-card {
     position: relative;
+    height: 100%;
+    min-width: 0;
 }
 
 .tmdb-card-inner {
@@ -297,6 +275,8 @@
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    width: 100%;
 }
 
 .tmdb-card-inner:hover {
@@ -311,6 +291,7 @@
     aspect-ratio: 2/3;
     overflow: hidden;
     background: #0f0f0f;
+    flex-shrink: 0;
 }
 
 .tmdb-card-img {
@@ -399,6 +380,7 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.3;
+    min-height: calc(0.6875rem * 1.3 * 2);
 }
 
 /* 分页 */
@@ -500,7 +482,6 @@
 /* 移动端横屏适配 */
 @media (orientation: landscape) and (max-height: 500px) {
     .tmdb-results-grid {
-        grid-template-columns: repeat(4, 1fr);
         gap: 0.5rem;
     }
 
@@ -971,6 +952,31 @@
         padding: 0 0.75rem 1.5rem;
     }
     
+}
+
+/* 年份筛选折叠样式 */
+.year-filter-list {
+  flex-wrap: wrap !important;
+}
+
+.year-filter-collapsed {
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+}
+
+.year-filter-collapsed .year-btn-extra {
+  display: none;
+}
+
+.year-toggle-btn {
+  flex-shrink: 0;
+  color: #93c5fd !important;
+  border-color: rgba(147, 197, 253, 0.3) !important;
+}
+
+.year-toggle-btn:hover {
+  border-color: #93c5fd !important;
+  background: rgba(147, 197, 253, 0.1) !important;
 }
 
 /* 超宽屏幕搜索框更宽 - 占屏幕一半宽度，居中 */
