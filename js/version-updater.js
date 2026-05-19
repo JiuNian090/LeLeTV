@@ -1,9 +1,8 @@
 const LAST_VERSION_KEY = 'leletv_last_version';
 const UPDATING_KEY = 'leletv_updating';
 
-let currentVersion = window.__LELETV_VERSION__ || '0';
-let lastKnownVersion = localStorage.getItem(LAST_VERSION_KEY) || '0';
-let hasNewVersion = currentVersion !== '0' && currentVersion !== lastKnownVersion;
+var hasNewVersion = false;
+var latestChangelogVersion = null;
 
 function formatDisplayVersion(rawVersion) {
   if (!rawVersion || rawVersion === '0') return '';
@@ -64,7 +63,9 @@ async function performUpdate() {
 
   updateFooterBtn('更新中...');
 
-  localStorage.setItem(LAST_VERSION_KEY, currentVersion);
+  if (latestChangelogVersion) {
+    localStorage.setItem(LAST_VERSION_KEY, latestChangelogVersion);
+  }
 
   await sendClearCacheMessage();
   await clearAllCaches();
@@ -95,52 +96,46 @@ function setStatusDot(color) {
   dot.className = 'status-dot status-dot-' + color;
 }
 
-async function checkUpdateFromApi() {
+/** 从 CHANGELOG.md 获取最新版本号 */
+async function getChangelogVersion() {
   try {
-    const resp = await fetch('/api/version?_t=' + Date.now(), {
-      method: 'GET',
-      cache: 'no-store'
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data.success && data.version && data.version !== '0') {
-        return compareAndUpdate(data.version);
-      }
-    }
-  } catch (e) {}
-
-  try {
-    const resp = await fetch('/VERSION.txt?_t=' + Date.now(), {
-      cache: 'no-store'
-    });
-    if (resp.ok) {
-      const version = (await resp.text()).trim();
-      if (version && version.length >= 12) {
-        return compareAndUpdate(version);
-      }
-    }
-  } catch (e) {}
-
-  updateFooterBtn('检查失败');
-  setStatusDot('red');
-  return false;
+    var resp = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+    if (!resp.ok) return null;
+    var text = await resp.text();
+    var match = text.match(/### (v[\d\.]+) \(/);
+    return match ? match[1] : null;
+  } catch (e) {
+    return null;
+  }
 }
 
-function compareAndUpdate(serverVersion) {
-  const loadedVersion = window.__LELETV_VERSION__ || '0';
-  if (loadedVersion.startsWith('{{')) {
+/** 核心：对比 CHANGELOG 版本与 localStorage 记录 */
+async function checkForUpdates() {
+  var changelogVersion = await getChangelogVersion();
+  if (!changelogVersion) {
+    updateFooterBtn('检查失败');
+    setStatusDot('red');
+    return false;
+  }
+
+  latestChangelogVersion = changelogVersion;
+  var lastVersion = localStorage.getItem(LAST_VERSION_KEY);
+
+  if (!lastVersion) {
+    localStorage.setItem(LAST_VERSION_KEY, changelogVersion);
     hasNewVersion = false;
     updateFooterBtn('最新版本');
     setStatusDot('green');
     return false;
   }
-  if (serverVersion !== loadedVersion) {
-    currentVersion = serverVersion;
+
+  if (changelogVersion !== lastVersion) {
     hasNewVersion = true;
     updateFooterBtn('立即更新');
     setStatusDot('red');
     return true;
   }
+
   hasNewVersion = false;
   updateFooterBtn('最新版本');
   setStatusDot('green');
@@ -171,7 +166,7 @@ function initFooterBtn() {
   var btn = document.createElement('button');
   btn.id = 'checkUpdateBtn';
   btn.className = 'text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer max-sm:text-xs';
-  btn.textContent = hasNewVersion ? '立即更新' : '检测中...';
+  btn.textContent = '检测中...';
   displayEl.appendChild(btn);
 
   var dot = document.createElement('span');
@@ -184,20 +179,19 @@ function initFooterBtn() {
       performUpdate();
     } else {
       btn.textContent = '检测中...';
-      checkUpdateFromApi().then(function(found) {
+      checkForUpdates().then(function(found) {
         if (found) performUpdate();
       });
     }
   });
 
-  checkUpdateFromApi();
+  checkForUpdates();
 }
 
 function setupSwUpdateListener() {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.addEventListener('message', function(event) {
       if (event.data && event.data.type === 'SW_UPDATED' && !hasNewVersion) {
-        currentVersion = event.data.version;
         hasNewVersion = true;
         updateFooterBtn('立即更新');
         setStatusDot('red');
@@ -208,10 +202,8 @@ function setupSwUpdateListener() {
 
 window.checkLeLeTVUpdate = function() {
   updateFooterBtn('检测中...');
-  checkUpdateFromApi().then(function(found) {
-    if (found) {
-      performUpdate();
-    }
+  checkForUpdates().then(function(found) {
+    if (found) performUpdate();
   });
 };
 

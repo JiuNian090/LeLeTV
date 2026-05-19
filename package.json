@@ -28,7 +28,7 @@
   "scripts": {
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
-    "build": "tailwindcss -i ./css/tailwind.css -o ./css/output.css --minify && echo 'Build complete'",
+    "build": "node scripts/generate-version.mjs && tailwindcss -i ./css/tailwind.css -o ./css/output.css --minify",
     "test": "echo 'Running tests...'",
     "tag": "node scripts/create-tag.js",
     "historical-releases": "node scripts/create-historical-releases.js",

@@ -99,6 +99,9 @@ pnpm-lock.yaml
 .storybook-out
 storybook-static
 
+# Generated build artifacts
+VERSION.txt
+
 # Deployment platforms
 .netlify
 .vercel
