@@ -91,7 +91,7 @@ async function checkUpdateFromApi() {
     if (data.success && data.version && data.version !== lastKnownVersion && data.version !== '0') {
       currentVersion = data.version;
       hasNewVersion = true;
-      updateFooterBtn(formatDisplayVersion(currentVersion));
+      updateFooterBtn('点击更新');
       return true;
     }
     hasNewVersion = false;
@@ -109,9 +109,7 @@ function initFooterBtn() {
 
   if (hasNewVersion) {
     linkEl.insertAdjacentHTML('beforebegin',
-      '<button id="checkUpdateBtn" class="text-blue-400 hover:text-blue-300 text-sm transition-colors bg-transparent border-0 cursor-pointer">' +
-      formatDisplayVersion(currentVersion) +
-      '</button>'
+      '<button id="checkUpdateBtn" class="text-blue-400 hover:text-blue-300 text-sm transition-colors bg-transparent border-0 cursor-pointer">点击更新</button>'
     );
   } else if (lastKnownVersion && lastKnownVersion !== '0') {
     linkEl.insertAdjacentHTML('beforebegin',
@@ -146,7 +144,7 @@ function setupSwUpdateListener() {
       if (event.data && event.data.type === 'SW_UPDATED' && !hasNewVersion) {
         currentVersion = event.data.version;
         hasNewVersion = true;
-        updateFooterBtn(formatDisplayVersion(currentVersion));
+        updateFooterBtn('点击更新');
       }
     });
   }
