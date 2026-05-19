@@ -113,6 +113,9 @@ function updateHtmlFiles(version) {
         /(<script[^>]*src="[^"]*\.js)(\?v=[^"]*)?"([^>]*>)/g,
         `$1?v=${semanticVersion}"$3`
       );
+
+      // 替换 {{LELETV_VERSION}} 占位符为原始版本号（YYYYMMDDHHMM）
+      content = content.replace(/{{LELETV_VERSION}}/g, version);
       
       fs.writeFileSync(filePath, content, 'utf8');
       console.log(`已更新 ${fileName} 中的版本引用: ${semanticVersion}`);

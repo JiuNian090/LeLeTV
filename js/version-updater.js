@@ -7,7 +7,10 @@ let hasNewVersion = currentVersion !== '0' && currentVersion !== lastKnownVersio
 
 function formatDisplayVersion(rawVersion) {
   if (!rawVersion || rawVersion === '0') return '';
+  if (rawVersion.startsWith('{{')) return '';
   if (rawVersion.length >= 12) {
+    const digits = parseInt(rawVersion.substring(0, 4));
+    if (isNaN(digits)) return '';
     const y = rawVersion.substring(0, 4);
     const m = parseInt(rawVersion.substring(4, 6));
     const d = parseInt(rawVersion.substring(6, 8));
@@ -98,31 +101,50 @@ async function checkUpdateFromApi() {
       method: 'GET',
       cache: 'no-store'
     });
-    if (!resp.ok) {
-      updateFooterBtn('检查失败');
-      setStatusDot('red');
-      return false;
-    }
-    const data = await resp.json();
-    if (data.success && data.version && data.version !== '0') {
-      const loadedVersion = window.__LELETV_VERSION__ || '0';
-      if (data.version !== loadedVersion) {
-        currentVersion = data.version;
-        hasNewVersion = true;
-        updateFooterBtn('立即更新');
-        setStatusDot('red');
-        return true;
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.success && data.version && data.version !== '0') {
+        return compareAndUpdate(data.version);
       }
     }
+  } catch (e) {}
+
+  try {
+    const resp = await fetch('/VERSION.txt?_t=' + Date.now(), {
+      cache: 'no-store'
+    });
+    if (resp.ok) {
+      const version = (await resp.text()).trim();
+      if (version && version.length >= 12) {
+        return compareAndUpdate(version);
+      }
+    }
+  } catch (e) {}
+
+  updateFooterBtn('检查失败');
+  setStatusDot('red');
+  return false;
+}
+
+function compareAndUpdate(serverVersion) {
+  const loadedVersion = window.__LELETV_VERSION__ || '0';
+  if (loadedVersion.startsWith('{{')) {
     hasNewVersion = false;
     updateFooterBtn('最新版本');
     setStatusDot('green');
     return false;
-  } catch (e) {
-    updateFooterBtn('检查失败');
-    setStatusDot('red');
-    return false;
   }
+  if (serverVersion !== loadedVersion) {
+    currentVersion = serverVersion;
+    hasNewVersion = true;
+    updateFooterBtn('立即更新');
+    setStatusDot('red');
+    return true;
+  }
+  hasNewVersion = false;
+  updateFooterBtn('最新版本');
+  setStatusDot('green');
+  return false;
 }
 
 function initFooterBtn() {
