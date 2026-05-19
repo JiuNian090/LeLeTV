@@ -277,6 +277,18 @@ function initializePageContent() {
 
         localStorage.setItem('currentVideoInfo', JSON.stringify(mergedInfo));
         renderPlayerDetailInfo();
+
+        // 同步封面到观看历史记录
+        if (tmdbInfo.cover) {
+          try {
+            const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
+            const idx = history.findIndex(item => item.title === currentVideoTitle);
+            if (idx !== -1) {
+              history[idx].cover = tmdbInfo.cover;
+              localStorage.setItem('viewingHistory', JSON.stringify(history));
+            }
+          } catch (e) {}
+        }
       }
     });
 
@@ -1241,14 +1253,12 @@ function saveToHistory() {
     // 尝试获取当前视频的封面信息
     let currentVideoCover = '';
     try {
-        // 从localStorage中获取可能存在的视频详细信息
         const storedVideoInfo = localStorage.getItem('currentVideoInfo');
         if (storedVideoInfo) {
             const parsedInfo = JSON.parse(storedVideoInfo);
-            currentVideoCover = parsedInfo.cover || '';
+            currentVideoCover = parsedInfo.cover || parsedInfo.vod_pic || '';
         }
     } catch (e) {
-        // 忽略解析错误
     }
 
     // 构建要保存的视频信息对象

@@ -517,12 +517,13 @@ function loadViewingHistory() {
     historyList.innerHTML = html;
 }
 
-// 渲染单个历史卡片
+// 渲染单个历史卡片 - 左1/4封面 + 右3/4信息
 function renderHistoryCard(item) {
     const safeTitle = item.title
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, "\\'");
 
     const safeSource = item.sourceName ?
         item.sourceName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') :
@@ -531,13 +532,9 @@ function renderHistoryCard(item) {
     const episodeText = item.episodeIndex !== undefined ? `第${item.episodeIndex + 1}集` : '';
     const safeURL = encodeURIComponent(item.url);
 
-    let episodeInfoHtml = '';
+    let totalsHtml = '';
     if (item.episodes && Array.isArray(item.episodes) && item.episodes.length > 0) {
-        const totalEpisodes = item.episodes.length;
-        const syncStatus = item.lastSyncTime ?
-            `<span class="text-green-400 text-xs" title="剧集列表已同步">✓</span>` :
-            `<span class="text-yellow-400 text-xs" title="使用缓存数据">↻</span>`;
-        episodeInfoHtml = `<span class="text-xs text-gray-400">共${totalEpisodes}集${syncStatus}</span>`;
+        totalsHtml = `共${item.episodes.length}集`;
     }
 
     let progressHtml = '';
@@ -555,35 +552,43 @@ function renderHistoryCard(item) {
         `;
     }
 
-    const hasThumbnail = item.cover && item.cover.startsWith('http');
-    const thumbnailUrl = hasThumbnail ? item.cover : '';
+    const hasCover = item.cover && item.cover.startsWith('http');
+    const coverUrl = hasCover ? item.cover : '';
+
+    const coverHtml = hasCover ? `
+            <img src="${coverUrl}" alt="${safeTitle}"
+                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'history-cover-placeholder\\'><svg class=\\'w-6 h-6\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'1.5\\' d=\\'M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z\\'/></svg></div>';">` : `
+            <div class="history-cover-placeholder">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                </svg>
+            </div>`;
 
     return `
-        <div class="history-item cursor-pointer relative group flex" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
+        <div class="history-item" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
             <button onclick="event.stopPropagation(); deleteHistoryItem('${safeURL}')"
-                    class="absolute right-2 top-2 opacity-100 delete-btn text-gray-400 hover:text-red-400 p-1 rounded-full hover:bg-gray-800 z-10"
+                    class="delete-btn"
                     title="删除记录">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
-            ${hasThumbnail ? `
-            <div class="history-thumbnail flex-shrink-0 image-container">
-                <img src="${thumbnailUrl}" alt="${safeTitle}"
-                     class="w-full h-full object-cover"
-                     onerror="this.style.display='none'; this.parentElement.classList.add('hidden');">
-            </div>` : ''}
-            <div class="history-info flex-grow ${hasThumbnail ? 'ml-3' : ''}">
+            <div class="history-cover">
+                ${coverHtml}
+            </div>
+            <div class="history-content">
                 <div class="history-title">${safeTitle}</div>
-                <div class="history-meta">
-                    <span class="history-episode">${episodeText}</span>
-                    ${episodeText ? '<span class="history-separator mx-1">·</span>' : ''}
-                    <span class="history-source">${safeSource}</span>
-                    ${episodeInfoHtml ? '<span class="history-separator mx-1">·</span>' : ''}
-                    ${episodeInfoHtml}
+                <div class="history-meta-row">
+                    <div class="history-meta-left">
+                        ${episodeText ? `<span class="history-episode">${episodeText}</span>` : ''}
+                        ${episodeText ? '<span class="history-separator">·</span>' : ''}
+                        <span class="history-source">${safeSource}</span>
+                        ${totalsHtml ? '<span class="history-separator">·</span>' : ''}
+                        ${totalsHtml ? `<span class="history-episode-total">${totalsHtml}</span>` : ''}
+                    </div>
+                    <span class="history-time">${formatTimestamp(item.timestamp)}</span>
                 </div>
                 ${progressHtml}
-                <div class="history-time">${formatTimestamp(item.timestamp)}</div>
             </div>
         </div>
     `;

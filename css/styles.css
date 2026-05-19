@@ -801,155 +801,181 @@ body {
     padding-right: 6px; /* 为滚动条预留空间，确保内容不被挤压 */
 }
 
-/* 历史记录项样式优化 */
+/* 历史记录卡片 - 鸿蒙深色模式风格 */
 .history-item {
-    background: #1a1a1a;
-    border-radius: 6px; /* 减小圆角 */
+    display: flex;
+    background: #1e1e1e;
+    border-radius: 12px;
     border: 1px solid #333;
     overflow: hidden;
-    transition: all 0.2s ease;
-    padding: 10px 14px;
+    transition: all 0.3s ease;
     position: relative;
-    margin-bottom: 8px; /* 减小底部间距 */
-    width: 100%; /* 确保宽度一致 */
+    margin-bottom: 8px;
+    width: 100%;
+    cursor: pointer;
 }
 
 .history-item:hover {
-    -webkit-transform: translateY(-2px);
-    -moz-transform: translateY(-2px);
     transform: translateY(-2px);
-    border-color: #444;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border-color: #555;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 204, 255, 0.08);
 }
 
-/* 优化删除按钮显示 - 始终可见且醒目 */
-.history-item .delete-btn {
-    opacity: 0.8;
-    transition: all 0.2s ease;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    padding: 6px;
-    backdrop-filter: blur(2px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.history-item:hover .delete-btn {
-    opacity: 1;
-    color: #ef4444;
-    background-color: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.3);
-    transform: scale(1.05);
-}
-
-/* 移动设备优化 */
-@media (max-width: 768px) {
-    .history-item .delete-btn {
-        opacity: 0.9;
-        transform: scale(1.15);
-        padding: 8px;
-    }
-    
-    .history-item .delete-btn:active {
-        transform: scale(0.95);
-        background-color: rgba(239, 68, 68, 0.3);
-    }
-}
-
-.history-info {
-    padding: 0; /* 移除额外的内边距 */
-    min-height: 70px;
-}
-
-.history-title {
-    font-weight: 500;
-    font-size: 0.95rem; /* 减小字体大小 */
-    margin-bottom: 2px; /* 减小底部边距 */
+/* 封面区域 - 左侧1/4宽度 */
+.history-cover {
+    width: 25%;
+    min-width: 25%;
+    aspect-ratio: 2 / 3;
+    background: #161616;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    flex-shrink: 0;
+    position: relative;
 }
 
-.history-meta {
-    color: #bbb;
-    font-size: 0.75rem; /* 减小字体大小 */
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 1px; /* 减小边距 */
-}
-
-.history-episode {
-    color: #3b82f6;
-}
-
-.history-source {
-    color: #10b981;
-}
-
-.history-time {
-    color: #888;
-    font-size: 0.7rem; /* 减小字体大小 */
-    margin-top: 1px; /* 减小顶部边距 */
-}
-
-.history-separator {
-    color: #666;
-}
-
-.history-thumbnail {
-    display: none;
-    width: 60px;
-    min-width: 60px;
-    height: 90px;
-    background-color: #222;
-    overflow: hidden;
-}
-
-.history-thumbnail img {
+.history-cover img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
 }
 
-.history-info {
-    padding: 10px;
+.history-item:hover .history-cover img {
+    transform: scale(1.05);
 }
 
-.history-time {
-    color: #888;
-    font-size: 0.8rem;
-    margin-top: 4px;
+.history-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #161616;
+    color: rgba(255, 255, 255, 0.15);
+}
+
+/* 右侧内容区 */
+.history-content {
+    flex: 1;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    gap: 6px;
 }
 
 .history-title {
-    font-weight: 500;
-    white-space: nowrap;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-color);
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.4;
 }
 
-/* 添加播放进度条样式 */
+.history-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.history-meta-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.history-meta-left > * {
+    flex-shrink: 0;
+}
+
+.history-episode {
+    color: #60a5fa;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.history-source {
+    color: #34d399;
+    font-size: 0.75rem;
+}
+
+.history-episode-total {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+.history-separator {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+}
+
+.history-time {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* 进度条 */
 .history-progress {
-    margin: 5px 0;
+    margin-top: auto;
 }
 
 .progress-bar {
     height: 3px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.08);
     border-radius: 2px;
     overflow: hidden;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
 .progress-filled {
     height: 100%;
     background: linear-gradient(to right, #00ccff, #3b82f6);
     border-radius: 2px;
+    transition: width 0.3s ease;
 }
 
 .progress-text {
-    font-size: 10px;
-    color: #888;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.3);
     text-align: right;
+}
+
+/* 删除按钮 */
+.history-item .delete-btn {
+    opacity: 0.5;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    z-index: 10;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    background: none;
+    border: none;
+    padding: 4px;
+}
+
+.history-item:hover .delete-btn {
+    opacity: 1;
+    color: #ef4444;
+}
+
+@media (max-width: 768px) {
+    .history-item .delete-btn {
+        opacity: 0.7;
+        padding: 6px;
+    }
+    
+    .history-item .delete-btn:active {
+        color: #ef4444;
+    }
 }
 
 /* 图片容器通用样式 */
