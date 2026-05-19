@@ -24,8 +24,7 @@ const STATIC_ASSETS = [
   '/js/app.js',
   '/js/player.js',
   '/js/search.js',
-  '/js/password.js',
-  '/js/pwa-register.js'
+  '/js/password.js'
 ];
 
 // 最大缓存条目数限制

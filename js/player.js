@@ -722,7 +722,6 @@ function initPlayer(videoUrl) {
     // 播放器加载完成后初始隐藏工具栏，并添加下一集按钮
     art.on('ready', () => {
         hideControls();
-        console.log('ArtPlayer 已准备好');
 
         // 鼠标滑过播放区域时显示返回按钮
         const playerArea = document.querySelector('.player-layout-left');
@@ -1685,25 +1684,21 @@ function updateMediaSession() {
 
 // ========== 下一集按钮（直接 DOM 注入） ==========
 function addNextEpisodeDirectly(art) {
-    console.log('addNextEpisodeDirectly 被调用');
     
     // 检查是否已存在
     if (document.querySelector('.custom-next-episode-btn')) {
-        console.log('自定义下一集按钮已存在');
         return;
     }
     
     // 获取播放器容器
     const playerEl = document.getElementById('player');
     if (!playerEl) {
-        console.log('找不到 #player 元素');
         return;
     }
     
     // 查找控制栏
     const controlsContainer = playerEl.querySelector('.art-controls') || document.querySelector('.art-controls');
     if (!controlsContainer) {
-        console.log('找不到控制栏');
         return;
     }
     
@@ -1713,9 +1708,6 @@ function addNextEpisodeDirectly(art) {
     
     // 查找播放按钮（暂停按钮）
     const playBtn = targetContainer.querySelector('.art-control-playAndPause');
-    
-    console.log('播放按钮:', playBtn);
-    console.log('目标容器:', targetContainer);
     
     // 创建按钮
     const nextBtn = document.createElement('div');
@@ -1752,7 +1744,6 @@ function addNextEpisodeDirectly(art) {
     nextBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
-        console.log('下一集按钮被点击');
         if (typeof playNextEpisode === 'function') {
             playNextEpisode();
         }
@@ -1761,164 +1752,13 @@ function addNextEpisodeDirectly(art) {
     // 插入到播放按钮后面
     if (playBtn && playBtn.nextSibling) {
         targetContainer.insertBefore(nextBtn, playBtn.nextSibling);
-        console.log('已插入到播放按钮后面');
     } else if (playBtn) {
         // 如果播放按钮是最后一个元素
         targetContainer.appendChild(nextBtn);
-        console.log('已添加到播放按钮后面');
     } else {
         // 如果找不到播放按钮，就插到开头
         targetContainer.insertBefore(nextBtn, targetContainer.firstChild);
-        console.log('已插入到开头');
     }
-    console.log('已成功添加自定义下一集按钮');
-}
-
-// ========== 下一集按钮（DOM 注入到 ArtPlayer 控制栏） - 保留原函数作为备用 ==========
-function addNextEpisodeControl(art) {
-    console.log('开始添加下一集按钮...');
-    console.log('当前 art 实例:', art);
-    
-    // 避免重复添加
-    if (document.querySelector('.art-control-next-episode')) {
-        console.log('下一集按钮已存在');
-        return;
-    }
-
-    // 尝试多种方式添加按钮
-    let added = false;
-    
-    // 方法 1: 尝试通过 ArtPlayer 的 controls API
-    if (art && art.controls && art.controls.add) {
-        try {
-            console.log('尝试使用 ArtPlayer controls API');
-            art.controls.add({
-                name: 'next-episode',
-                position: 'right',
-                index: 10,
-                html: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>',
-                click: function () {
-                    if (typeof playNextEpisode === 'function') {
-                        playNextEpisode();
-                    }
-                },
-                tooltip: '下一集 (Alt+→)'
-            });
-            added = true;
-            console.log('通过 ArtPlayer API 添加下一集按钮成功');
-        } catch (e) {
-            console.log('ArtPlayer controls API 方式失败:', e);
-        }
-    }
-    
-    if (added) return;
-
-    // 方法 2: 用重试机制找到播放按钮（ready 后 DOM 可能还没渲染完）
-    let retries = 0;
-    const maxRetries = 20;
-
-    function tryInsert() {
-        console.log(`尝试插入按钮，重试 ${retries}/${maxRetries}`);
-        
-        // 输出所有可能的元素
-        console.log('所有 .art-control 元素:', document.querySelectorAll('.art-control'));
-        console.log('所有 .art-controls 元素:', document.querySelectorAll('.art-controls'));
-        console.log('所有 .art-bottom 元素:', document.querySelectorAll('.art-bottom'));
-        
-        // 更多的选择器组合来找到播放按钮或控制栏
-        let playBtn = null;
-        let controlsContainer = null;
-        
-        // 尝试多种可能的选择器
-        const playBtnSelectors = [
-            '.art-control-play',
-            '[data-name="play"]',
-            '.art-controls .art-control-play',
-            '.art-controls-right .art-control-play',
-            '.art-bottom .art-control-play',
-            '.art-control-left .art-control-play',
-            '.artplayer-controls .art-control-play',
-            '.artplayer-control-play'
-        ];
-        
-        for (const selector of playBtnSelectors) {
-            const btn = document.querySelector(selector);
-            if (btn) {
-                console.log(`找到播放按钮，选择器: ${selector}`, btn);
-                playBtn = btn;
-                break;
-            }
-        }
-        
-        // 如果直接找不到播放按钮，尝试通过 art 实例
-        if (!playBtn && art.template && art.template.$play) {
-            playBtn = art.template.$play;
-            console.log('通过 art.template.$play 找到播放按钮');
-        }
-        
-        // 如果还是找不到，尝试找到控制栏容器
-        if (!playBtn) {
-            const controlSelectors = [
-                '.art-controls',
-                '.art-controls-right',
-                '.art-bottom',
-                '.art-control-bar',
-                '.artplayer-controls',
-                '.art-control-left',
-                '.art-control-right'
-            ];
-            
-            for (const selector of controlSelectors) {
-                const container = document.querySelector(selector);
-                if (container) {
-                    console.log(`找到控制栏容器，选择器: ${selector}`, container);
-                    controlsContainer = container;
-                    break;
-                }
-            }
-        }
-
-        if (playBtn && playBtn.parentNode) {
-            const nextBtn = document.createElement('div');
-            nextBtn.className = 'art-control art-control-next-episode';
-            nextBtn.title = '下一集 (Alt+→)';
-            nextBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
-            nextBtn.style.cssText = 'display: flex !important; align-items: center !important; justify-content: center !important; width: 40px !important; height: 40px !important; cursor: pointer !important;';
-            nextBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                if (typeof playNextEpisode === 'function') {
-                    playNextEpisode();
-                }
-            });
-            playBtn.parentNode.insertBefore(nextBtn, playBtn.nextSibling);
-            console.log('下一集按钮已添加到播放按钮旁边');
-            added = true;
-        } else if (controlsContainer) {
-            // 如果找到了控制栏但没有播放按钮，直接追加到控制栏
-            const nextBtn = document.createElement('div');
-            nextBtn.className = 'art-control art-control-next-episode';
-            nextBtn.title = '下一集 (Alt+→)';
-            nextBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
-            nextBtn.style.cssText = 'display: flex !important; align-items: center !important; justify-content: center !important; width: 40px !important; height: 40px !important; cursor: pointer !important;';
-            nextBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                if (typeof playNextEpisode === 'function') {
-                    playNextEpisode();
-                }
-            });
-            controlsContainer.appendChild(nextBtn);
-            console.log('下一集按钮已添加到控制栏');
-            added = true;
-        } else if (retries < maxRetries) {
-            retries++;
-            setTimeout(tryInsert, 150);
-        } else {
-            console.error('无法找到 ArtPlayer 控制栏，下一集按钮添加失败');
-            console.log('整个 document 的 body:', document.body.innerHTML);
-        }
-    }
-
-    tryInsert();
 }
 
 let controlsLocked = false;
@@ -1931,22 +1771,6 @@ function toggleControlsLock() {
     icon.innerHTML = controlsLocked
         ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d=\"M12 15v2m0-8V7a4 4 0 00-8 0v2m8 0H4v8h16v-8H6v-6z\"/>'
         : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d=\"M15 11V7a3 3 0 00-6 0v4m-3 4h12v6H6v-6z\"/>';
-}
-
-// 支持在iframe中关闭播放器
-function closeEmbeddedPlayer() {
-    try {
-        if (window.self !== window.top) {
-            // 如果在iframe中，尝试调用父窗口的关闭方法
-            if (window.parent && typeof window.parent.closeVideoPlayer === 'function') {
-                window.parent.closeVideoPlayer();
-                return true;
-            }
-        }
-    } catch (e) {
-        console.error('尝试关闭嵌入式播放器失败:', e);
-    }
-    return false;
 }
 
 function renderPlayerDetailInfo() {

@@ -187,9 +187,6 @@ function initAPICheckboxes() {
     updateSelectedApiCount();
     
     // 确保UI反映最新的数据源配置
-    console.log('初始化API复选框，当前API_SITES数量：', Object.keys(API_SITES).length);
-    console.log('当前选中的API数量：', selectedAPIs.length);
-    console.log('当前API_SITES配置：', JSON.stringify(Object.keys(API_SITES)));
 
 // 从当前版本开始，对所有用户应用新的数据源选择逻辑
 function applyNewDataSourceLogic() {
@@ -208,7 +205,6 @@ function applyNewDataSourceLogic() {
         localStorage.setItem('hasUserSelectedAPIs', 'false');
         localStorage.setItem('dataSourceLogicVersion', DATA_SOURCE_LOGIC_VERSION);
         
-        console.log('应用新版本的数据源选择逻辑，已重置用户的选择');
     } else {
         // 检查是否需要刷新（每24小时）
         const lastRefreshTime = localStorage.getItem('lastRefreshTime');
@@ -689,21 +685,7 @@ function removeCustomApi(index) {
     showToast('已移除自定义API: ' + apiName, 'info');
 }
 
-function toggleSettings(e) {
-    const settingsPanel = document.getElementById('settingsPanel');
-    if (!settingsPanel) return;
 
-    if (settingsPanel.classList.contains('show')) {
-        settingsPanel.classList.remove('show');
-    } else {
-        settingsPanel.classList.add('show');
-    }
-
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-}
 
 // 设置事件监听器
 function setupEventListeners() {
@@ -716,29 +698,6 @@ function setupEventListeners() {
     
     // 初始化邮箱点击事件处理器
     setupEmailClickHandlers();
-
-    // 点击外部关闭设置面板和历史记录面板
-    document.addEventListener('click', function (e) {
-        // 关闭设置面板
-        const settingsPanel = document.querySelector('#settingsPanel.show');
-        const settingsButton = document.querySelector('#settingsPanel .close-btn');
-
-        if (settingsPanel && settingsButton &&
-            !settingsPanel.contains(e.target) &&
-            !settingsButton.contains(e.target)) {
-            settingsPanel.classList.remove('show');
-        }
-
-        // 关闭历史记录面板
-        const historyPanel = document.querySelector('#historyPanel.show');
-        const historyButton = document.querySelector('#historyPanel .close-btn');
-
-        if (historyPanel && historyButton &&
-            !historyPanel.contains(e.target) &&
-            !historyButton.contains(e.target)) {
-            historyPanel.classList.remove('show');
-        }
-    });
 
     // 黄色内容过滤开关事件绑定
     const yellowFilterToggle = document.getElementById('yellowFilterToggle');
@@ -1522,11 +1481,6 @@ function playNextEpisode(sourceCode) {
     }
 }
 
-// 处理播放器加载错误
-function handlePlayerError() {
-    hideLoading();
-    showToast('视频播放加载失败，请尝试其他视频源', 'error');
-}
 
 // 辅助函数用于渲染剧集按钮（使用当前的排序状态）
 function renderEpisodes(vodName, sourceCode, vodId) {
@@ -1793,7 +1747,6 @@ function saveStringAsFile(content, fileName) {
 
 // 传统搜索方式（作为降级选项）
 async function performTraditionalSearch(query) {
-    console.log('执行传统搜索方式');
     const searchPromises = selectedAPIs.map(apiId => 
         searchByAPIAndKeyWord(apiId, query)
     );

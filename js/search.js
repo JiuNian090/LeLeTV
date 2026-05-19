@@ -32,7 +32,6 @@ async function searchByAPIAndKeyWord(apiId, query) {
     // 检查缓存
     const cached = _getCachedResult(apiId, query);
     if (cached) {
-        console.log(`[缓存] ${apiId} 命中缓存，共 ${cached.length} 条结果`);
         return cached;
     }
 

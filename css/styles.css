@@ -1,35 +1,5 @@
 /* LeLeTV 全局样式 */
 
-.close-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 6px;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    -webkit-transition: background-color 0.2s ease, border-color 0.2s ease;
-    -moz-transition: background-color 0.2s ease, border-color 0.2s ease;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    z-index: 10;
-}
-
-.close-btn:hover {
-    background: #333;
-    border-color: #555;
-}
-
-.close-btn svg {
-    width: 16px;
-    height: 16px;
-    stroke: currentColor;
-}
-
 :root {
     /* === HarmonyOS 深色模式色彩体系 === */
     --color-bg:               #000000;
@@ -142,52 +112,9 @@ button, .card-hover {
 }
 
 /* 渐变按钮悬停效果 */
-.gradient-btn:hover,
-.btn-primary:hover {
+.gradient-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
-}
-
-/* 改进设置面板样式 */
-.settings-panel {
-    scrollbar-width: thin;
-    scrollbar-color: #444 #222;
-    -webkit-transform: translateX(100%);
-    -moz-transform: translateX(100%);
-    transform: translateX(100%);
-    -webkit-transition: -webkit-transform 0.3s ease;
-    -moz-transition: -moz-transform 0.3s ease;
-    transition: transform 0.3s ease;
-    background: var(--card-bg);
-    border-left: 1px solid var(--color-border);
-}
-
-.settings-panel.show {
-    -webkit-transform: translateX(0);
-    -moz-transform: translateX(0);
-    transform: translateX(0);
-}
-
-.settings-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.settings-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.settings-panel::-webkit-scrollbar-thumb {
-    background-color: #444;
-    border-radius: 4px;
-}
-
-.search-button {
-    background: var(--primary-color);
-    color: var(--text-color);
-}
-
-.search-button:hover {
-    background: var(--primary-light);
 }
 
 ::-webkit-scrollbar {
@@ -215,37 +142,6 @@ button, .card-hover {
     scrollbar-color: #333 #111;
 }
 
-/* 返回按钮专用样式 */
-.cyber-back-button {
-    position: relative;
-    z-index: 1;
-}
-
-.cyber-back-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, transparent, rgba(236, 72, 153, 0.05), transparent);
-    z-index: -1;
-    transition: opacity 0.6s ease;
-}
-
-.cyber-back-button:hover::before {
-    animation: backButtonGlow 2s ease infinite;
-}
-
-@keyframes backButtonGlow {
-    0%, 100% {
-        transform: translateX(-100%) rotate(45deg);
-    }
-    50% {
-        transform: translateX(200%) rotate(45deg);
-    }
-}
-
 /* 统一按钮样式组件 */
 /* 通用渐变按钮类 */
 .gradient-btn {
@@ -259,59 +155,6 @@ button, .card-hover {
     cursor: pointer;
     position: relative;
     overflow: hidden;
-}
-
-/* 主按钮样式 */
-.btn-primary {
-    background: #ec4899;
-    border: none;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
-}
-
-.btn-primary:hover::before {
-    left: 100%;
-}
-
-.btn-secondary {
-    background: rgba(34, 34, 34, 0.8);
-    border: 1px solid #333;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-}
-
-.btn-secondary:hover {
-    background: rgba(51, 51, 51, 0.9);
-    border-color: var(--color-accent);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .search-tag {
@@ -579,25 +422,6 @@ body {
     border-radius: 4px;
 }
 
-/* 设置面板滚动样式 */
-.settings-panel {
-    scrollbar-width: thin;
-    scrollbar-color: #444 #222;
-}
-
-.settings-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.settings-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.settings-panel::-webkit-scrollbar-thumb {
-    background-color: #444;
-    border-radius: 4px;
-}
-
 /* 添加自定义API表单动画 */
 #addCustomApiForm {
     transition: all 0.3s ease;
@@ -657,45 +481,6 @@ body {
 
 .api-group-title.adult {
     color: #ff6b8b;
-}
-
-/* 过滤器禁用样式 - 改进版本 */
-.filter-disabled {
-    position: relative;
-}
-
-.filter-disabled::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.4);
-    border-radius: 0.5rem;
-    z-index: 5;
-}
-
-.filter-disabled > * {
-    opacity: 0.7;
-}
-
-.filter-disabled .dash-switch-track {
-    background-color: #333 !important;
-}
-
-.filter-disabled .dash-switch-dot {
-    -webkit-transform: translateX(0) !important;
-    -moz-transform: translateX(0) !important;
-    transform: translateX(0) !important;
-    background-color: #666 !important;
-}
-
-/* 改进过滤器禁用样式 */
-.filter-disabled .filter-description {
-    color: #ff6b8b !important;
-    font-style: italic;
-    font-weight: 500;
 }
 
 /* 修改过滤器禁用样式，确保文字清晰可见 */
@@ -764,16 +549,6 @@ body {
     margin-right: 0.35rem;
 }
 
-/* 编辑按钮样式 */
-.custom-api-edit {
-    color: #3b82f6;
-    transition: color 0.2s ease;
-}
-
-.custom-api-edit:hover {
-    color: #2563eb;
-}
-
 /* 自定义API条目样式改进 */
 #customApisList .api-item {
     display: flex;
@@ -788,35 +563,6 @@ body {
 
 #customApisList .api-item:hover {
     background-color: #2a2a2a;
-}
-
-/* 成人内容标签样式 */
-.adult-tag {
-    display: inline-flex;
-    align-items: center;
-    color: #ff6b8b;
-    font-size: 0.7rem;
-    font-weight: 500;
-    margin-right: 0.35rem;
-}
-
-/* 历史记录面板样式 */
-.history-panel {
-    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-    transition: transform 0.3s ease-in-out;
-    overflow-y: scroll; /* 始终显示滚动条，防止宽度变化 */
-    overflow-x: hidden; /* 防止水平滚动 */
-    width: 320px; /* 固定宽度 */
-    box-sizing: border-box; /* 确保padding不影响总宽度 */
-    scrollbar-gutter: stable; /* 现代浏览器：为滚动条预留空间 */
-}
-
-.history-panel.show {
-    transform: translateX(0);
-}
-
-#historyList {
-    padding-right: 6px; /* 为滚动条预留空间，确保内容不被挤压 */
 }
 
 /* 历史记录卡片 - 鸿蒙深色模式风格 */
@@ -1014,31 +760,6 @@ body {
     transform: scale(1.05);
 }
 
-/* 添加恢复播放提示样式 */
-.position-restore-hint {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    -webkit-transform: translateX(-50%) translateY(20px);
-    -moz-transform: translateX(-50%) translateY(20px);
-    transform: translateX(-50%) translateY(20px);
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    z-index: 100;
-    opacity: 0;
-    transition: all 0.3s ease;
-}
-
-.position-restore-hint.show {
-    opacity: 1;
-    -webkit-transform: translateX(-50%) translateY(0);
-    -moz-transform: translateX(-50%) translateY(0);
-    transform: translateX(-50%) translateY(0);
-}
-
 /* 锁定控制时屏蔽交互 */
 .player-container.controls-locked .dplayer-controller,
 .player-container.controls-locked .dplayer-mask,
@@ -1058,27 +779,11 @@ body {
 .player-header {
     gap: 0.5rem;
 }
-.custom-title-scroll {
-    overflow-x: auto;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-}
-.custom-title-scroll::-webkit-scrollbar {
-    display: none;
-}
 .logo-text {
-    display: inline;
-}
-.home-btn-text {
     display: inline;
 }
 @media (max-width: 640px) {
     .logo-text {
-        display: none;
-    }
-    .home-btn-text {
         display: none;
     }
     .logo-icon {
@@ -1090,9 +795,6 @@ body {
     .player-header {
         padding-left: 2px !important;
         padding-right: 2px !important;
-    }
-    .custom-title-scroll {
-        font-size: 1rem;
     }
 }
 

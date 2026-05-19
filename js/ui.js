@@ -1,27 +1,4 @@
-// UI相关函数
-function toggleSettings(e) {
-    // 强化的密码保护校验 - 防止绕过
-    try {
-        if (window.ensurePasswordProtection) {
-            window.ensurePasswordProtection();
-        } else {
-            // 兼容性检查
-            if (window.isPasswordProtected && window.isPasswordVerified) {
-                if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                    showPasswordModal && showPasswordModal();
-                    return;
-                }
-            }
-        }
-    } catch (error) {
-        console.warn('Password protection check failed:', error.message);
-        return;
-    }
-    // 阻止事件冒泡，防止触发document的点击事件
-    e && e.stopPropagation();
-    const panel = document.getElementById('settingsPanel');
-    panel.classList.toggle('show');
-}
+
 
 // 优化的Toast显示函数 - 支持队列显示多个Toast、自定义时长和更流畅的动画
 const toastQueue = [];
@@ -193,14 +170,6 @@ function hideLoading() {
     loading.style.display = 'none';
 }
 
-function updateSiteStatus(isAvailable) {
-    const statusEl = document.getElementById('siteStatus');
-    if (isAvailable) {
-        statusEl.innerHTML = '<span class="text-green-500">●</span> 可用';
-    } else {
-        statusEl.innerHTML = '<span class="text-red-500">●</span> 不可用';
-    }
-}
 
 function closeModal() {
     document.getElementById('modal').classList.add('hidden');
@@ -346,7 +315,6 @@ function deleteSingleSearchHistory(query) {
         let history = getSearchHistory();
         // 过滤掉要删除的记录
         history = history.filter(item => item.text !== query);
-        console.log('更新后的搜索历史:', history);
         localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
     } catch (e) {
         console.error('删除单条搜索历史失败:', e);
@@ -373,33 +341,7 @@ function clearSearchHistory() {
     }
 }
 
-// 历史面板相关函数
-function toggleHistory(e) {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
-    }
-    if (e) e.stopPropagation();
 
-    const panel = document.getElementById('historyPanel');
-    if (panel) {
-        panel.classList.toggle('show');
-
-        // 如果打开了历史记录面板，则加载历史数据
-        if (panel.classList.contains('show')) {
-            loadViewingHistory();
-        }
-
-        // 如果设置面板是打开的，则关闭它
-        const settingsPanel = document.getElementById('settingsPanel');
-        if (settingsPanel && settingsPanel.classList.contains('show')) {
-            settingsPanel.classList.remove('show');
-        }
-    }
-}
 
 // 格式化时间戳为友好的日期时间格式
 function formatTimestamp(timestamp) {
@@ -594,17 +536,6 @@ function renderHistoryCard(item) {
     `;
 }
 
-// 带动画的删除
-function deleteHistoryItemWithAnim(event, encodedUrl) {
-    event.stopPropagation();
-    const card = event.currentTarget.closest('.history-item');
-    if (card) {
-        card.classList.add('removing');
-        setTimeout(() => {
-            deleteHistoryItem(encodedUrl);
-        }, 300);
-    }
-}
 
 // 格式化播放时间为 mm:ss 格式
 function formatPlaybackTime(seconds) {
@@ -911,21 +842,6 @@ function clearViewingHistory() {
         showToast('清除观看历史失败', 'error');
     }
 }
-
-// 更新toggleSettings函数以处理历史面板互动
-const originalToggleSettings = toggleSettings;
-toggleSettings = function(e) {
-    if (e) e.stopPropagation();
-
-    // 原始设置面板切换逻辑
-    originalToggleSettings(e);
-
-    // 如果历史记录面板是打开的，则关闭它
-    const historyPanel = document.getElementById('historyPanel');
-    if (historyPanel && historyPanel.classList.contains('show')) {
-        historyPanel.classList.remove('show');
-    }
-};
 
 // 点击外部关闭历史面板
 document.addEventListener('DOMContentLoaded', function() {
