@@ -53,7 +53,6 @@ let autoFullscreened = false; // 标记是否由自动全屏进入
 let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
-const isWebkit = (typeof window.webkitConvertPointFromNodeToPage === 'function')
 Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
 // TMDB 影片详情配置（TMDB优先，视频源API兜底）
@@ -540,7 +539,7 @@ function initPlayer(videoUrl) {
         autoPlayback: false,
         airplay: true,
         hotkey: false,
-        theme: '#23ade5',
+        theme: '#ec4899',
         lang: navigator.language.toLowerCase(),
         moreVideoAttr: {
             crossOrigin: 'anonymous',
@@ -840,6 +839,9 @@ function initPlayer(videoUrl) {
     // 添加移动端长按三倍速播放功能
     setupLongPressSpeedControl();
 
+    // 添加缩略图预览功能（从播放中视频渐进抓帧）
+    setupThumbnailCapture();
+
     // 同步暂停状态到 Media Session
     art.on('video:pause', () => {
         if (navigator.mediaSession) {
@@ -1078,11 +1080,8 @@ function playEpisode(index) {
     currentUrl.searchParams.delete('position');
     window.history.replaceState({}, '', currentUrl.toString());
 
-    if (isWebkit) {
-        initPlayer(url);
-    } else {
-        art.switch = url;
-    }
+    // 使用 switchUrl 实现无缝切换，不销毁重建播放器
+    art.switchUrl = url;
 
     // 更新UI
     updateEpisodeInfo();
@@ -1568,6 +1567,74 @@ function setupLongPressSpeedControl() {
             longPressTimer = null;
         }
     });
+}
+
+// 从播放中的视频渐进抓帧，构建进度条缩略图预览（兼容 HLS）
+function setupThumbnailCapture() {
+    if (!art || !art.video) return;
+
+    const CAPTURE_INTERVAL = 1;
+    const THUMBNAIL_WIDTH = 160;
+    const TOTAL_THUMBNAILS = 100;
+    const COLUMNS = 10;
+
+    let lastCapture = 0;
+    let captured = 0;
+    let canvas = null;
+    let ctx = null;
+    let frameH = 90;
+    let thumbnailUrl = null;
+
+    function ensureCanvas() {
+        if (canvas) return true;
+        const vh = art.video.videoHeight || art.video.height || 90;
+        const vw = art.video.videoWidth || art.video.width || 160;
+        if (!vh || !vw) return false;
+
+        frameH = Math.round(THUMBNAIL_WIDTH * vh / vw);
+        const rows = Math.ceil(TOTAL_THUMBNAILS / COLUMNS);
+        canvas = document.createElement('canvas');
+        canvas.width = THUMBNAIL_WIDTH * COLUMNS;
+        canvas.height = frameH * rows;
+        ctx = canvas.getContext('2d');
+        return true;
+    }
+
+    function flushSprite() {
+        if (!canvas || captured === 0) return;
+        canvas.toBlob(function (blob) {
+            if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+            thumbnailUrl = URL.createObjectURL(blob);
+            art.thumbnails = {
+                url: thumbnailUrl,
+                number: captured,
+                column: COLUMNS,
+                width: THUMBNAIL_WIDTH,
+                height: frameH,
+            };
+        }, 'image/jpeg');
+    }
+
+    function onTimeUpdate() {
+        if (!art || !art.video || captured >= TOTAL_THUMBNAILS) return;
+        const ct = art.video.currentTime;
+        if (ct - lastCapture < CAPTURE_INTERVAL) return;
+        if (!ensureCanvas() || !ctx) return;
+        lastCapture = ct;
+
+        const col = captured % COLUMNS;
+        const row = Math.floor(captured / COLUMNS);
+        try {
+            ctx.drawImage(art.video, col * THUMBNAIL_WIDTH, row * frameH, THUMBNAIL_WIDTH, frameH);
+            captured++;
+            // 每抓满一行（10帧）或全部抓完才刷新雪碧图
+            if (captured % COLUMNS === 0 || captured >= TOTAL_THUMBNAILS) {
+                flushSprite();
+            }
+        } catch (e) {}
+    }
+
+    art.video.addEventListener('timeupdate', onTimeUpdate);
 }
 
 // 清除视频进度记录
