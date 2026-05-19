@@ -144,7 +144,9 @@
 .category-page-layout {
     padding-top: 0;
     width: 100%;
+    max-width: 100%;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .category-content-container {
@@ -152,6 +154,7 @@
     max-width: 100%;
     padding: 0 clamp(1rem, 3vw, 2rem);
     box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 @media (orientation: landscape) {
@@ -166,6 +169,9 @@
     border: 1px solid #2d2d2d;
     border-radius: 0.75rem;
     padding: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .tmdb-filter-row {
@@ -173,6 +179,9 @@
     align-items: flex-start;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .tmdb-filter-row:last-child {
@@ -223,6 +232,8 @@
     }
     .tmdb-genre-row {
         flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     .tmdb-filter-label {
         flex-shrink: 0;
@@ -234,6 +245,7 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         min-width: 0;
+        max-width: 100%;
     }
     .tmdb-genre-list::-webkit-scrollbar {
         display: none;
@@ -269,8 +281,16 @@
 /* 结果网格 - 自适应卡片大小 */
 .tmdb-results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 0.75rem;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+@media (min-width: 640px) {
+    .tmdb-results-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
 }
 
 /* 卡片样式 */
