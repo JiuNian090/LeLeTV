@@ -1,7 +1,39 @@
-# 设置 PNG 文件的正确 MIME 类型
-/image/*.png
-  Content-Type: image/png
+# Cloudflare Pages 缓存策略
+#
+# 注意：_headers 的规则按路径匹配，只影响命中的请求路径。
+# 数据源代理请求（/proxy/...、/api/...）不匹配下列任何规则，
+# 走 Cloudflare Pages 默认缓存行为，不受影响。
 
-# 确保 manifest.json 有正确的 MIME 类型
-/manifest.json
-  Content-Type: application/manifest+json
+# HTML 文件：允许缓存，但使用前必须回源校验
+# 部署新版本后，Cloudflare 检测到文件变化，自动返回新内容
+/*.html
+  Cache-Control: no-cache
+
+# 根路径（同 HTML）
+/
+  Cache-Control: no-cache
+
+# 版本相关文件：必须实时校验
+/CHANGELOG.md
+  Cache-Control: no-cache
+/VERSION.txt
+  Cache-Control: no-cache
+
+# 静态资源：缓存 7 天 + immutable（配合 ?v= 参数做缓存失效）
+# 构建脚本 generate-version.mjs 每次部署都会更新 ?v= 值
+*.css
+  Cache-Control: public, max-age=604800, immutable
+*.js
+  Cache-Control: public, max-age=604800, immutable
+*.png
+  Cache-Control: public, max-age=604800, immutable
+*.jpg
+  Cache-Control: public, max-age=604800, immutable
+*.jpeg
+  Cache-Control: public, max-age=604800, immutable
+*.webp
+  Cache-Control: public, max-age=604800, immutable
+*.svg
+  Cache-Control: public, max-age=604800, immutable
+*.ico
+  Cache-Control: public, max-age=604800, immutable

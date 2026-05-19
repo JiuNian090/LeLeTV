@@ -73,7 +73,8 @@ async function performUpdate() {
 
   setTimeout(() => {
     localStorage.removeItem(UPDATING_KEY);
-    window.location.reload();
+    // 带时间戳重新加载，穿透所有缓存层（浏览器、SW、CDN）
+    window.location.href = '/?_=' + Date.now();
   }, 800);
 }
 
