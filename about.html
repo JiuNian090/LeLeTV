@@ -11,12 +11,12 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <link rel="stylesheet" href="css/output.css">
+    <link rel="stylesheet" href="css/output.css?v=v2.5.20.2">
     <!-- 缓存管理模块 -->
-    <script src="js/cache-manager.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/version-utils.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/cache-manager.js?v=v2.5.20.2"></script>
+    <script src="js/app.js?v=v2.5.20.2"></script>
+    <script src="js/version-utils.js?v=v2.5.20.2"></script>
+    <link rel="stylesheet" href="css/styles.css?v=v2.5.20.2">
     
 
 </head>
@@ -44,102 +44,99 @@
                 </a>
             </div>
         </div>
-    </header>	<main class="flex-grow container mx-auto px-4 sm:px-6 py-8 sm:py-16">
-		<div class="max-w-5xl mx-auto">
-			<!-- 主要内容区域 -->
-			<div class="bg-[#1e1e1e] border border-[#333] rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-12 shadow-2xl">
+    </header>	<main class="flex-grow container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+		<div class="about-dashboard-container" style="max-width: 900px; margin: 0 auto;">
+			<div class="about-dashboard-header" style="margin-bottom: 1rem;">
+				<h2 class="about-dashboard-title" style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 600; color: #a0aec0;">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+					关于
+				</h2>
+			</div>
+
+			<div class="about-dashboard-grid" style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;">
 				<!-- 项目介绍 -->
-				 <div class="text-center mb-8 sm:mb-16">
-					<div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl mb-6 sm:mb-8">
-						<img src="image/logo-black.png" alt="LeLeTV Logo" class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl">
+				<div class="dash-card" style="grid-column: 1 / -1;">
+					<div class="dash-card-body">
+						<div class="text-center">
+							<div class="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4">
+								<img src="image/logo-black.png" alt="LeLeTV Logo" class="w-14 h-14 rounded-xl">
+							</div>
+							<p class="text-gray-300 text-sm sm:text-base mb-5 leading-relaxed">
+								LeLeTV 是自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span id="contactLeLe3" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
+							</p>
+							<div class="flex flex-col sm:flex-row justify-center gap-3">
+								<a href="https://letvport.776645.xyz/" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 bg-[#ec4899] hover:bg-[#db2777] text-white rounded-lg transition-all duration-300 flex items-center justify-center font-semibold text-sm">
+									访问我的网站
+									<svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+										<path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</a>
+								<a href="https://github.com/JiuNian090/LeLeTV" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center justify-center text-sm">
+									<svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+										<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+									</svg>
+									GitHub 仓库
+								</a>
+							</div>
+						</div>
 					</div>
-					 
-					<p class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
-						LeLeTV 是自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span id="contactLeLe3" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
-					</p>
-					
-					<div class="flex justify-center mb-6">
-						<a href="https://letvport.776645.xyz/" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-[#ec4899] hover:bg-[#db2777] text-white rounded-lg transition-all duration-300 flex items-center font-semibold">
-							访问我的网站
-							<svg class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-								<path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-						</a>
-					</div>
-					
-					<div class="flex justify-center">
-						<a href="https://github.com/JiuNian090/LeLeTV" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center">
-							<svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-								<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-							</svg>
-							GitHub 仓库
-						</a>
-					</div>
-				</div>				<!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
+				</div>
 
 				<!-- 隐私政策 -->
-				<div class="mb-8 sm:mb-16">
-					<h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[#ec4899]">隐私政策</h2>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
-						<div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-center mb-3 sm:mb-4">
-								<div class="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
-								<h3 class="text-lg sm:text-xl font-semibold text-gray-200">数据保护</h3>
-							</div>
-							<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-								LeLeTV 尊重并保护您的隐私。LeLeTV 不收集任何个人数据，还请不要相信出现的任何广告，且不要随便分享给别人，如要分享一定和乐乐说一声。
-							</p>
-						</div>
-						<div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-center mb-3 sm:mb-4">
-								<div class="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
-								<h3 class="text-lg sm:text-xl font-semibold text-gray-200">服务说明</h3>
-							</div>
-							<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
+				<div id="privacy" class="dash-card">
+					<div class="dash-card-header">
+						<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+						</svg>
+						<h3 class="dash-card-title">隐私政策</h3>
+					</div>
+					<div class="dash-card-body">
+						<p class="text-gray-300 text-sm leading-relaxed mb-3">
+							LeLeTV 尊重并保护您的隐私。LeLeTV 不收集任何个人数据，还请不要相信出现的任何广告，且不要随便分享给别人，如要分享一定和乐乐说一声。
+						</p>
+						<div class="pt-3 border-t border-[#333]">
+							<p class="text-gray-300 text-sm leading-relaxed">
 								本平台仅用于提供在线视频搜索与播放服务。所有数据均由第三方接口提供，我不会存储或追踪用户信息。
 							</p>
 						</div>
 					</div>
 				</div>
 
-				<!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>				<!-- 版权声明与投诉机制 -->
-				<div>
-					<h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[#ec4899]">版权声明与投诉机制</h2>
-					<div class="space-y-6 sm:space-y-8">
-						<div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
-							<div class="flex items-start">
-								<div class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1">
-									<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-									</svg>
-								</div>
-								<div>
-									<h3 class="text-lg sm:text-xl font-semibold text-gray-200 mb-3 sm:mb-4">免责声明</h3>
-									<p class="text-gray-300 text-base sm:text-lg leading-relaxed">
-										LeLeTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。
-									</p>
-								</div>
+				<!-- 版权声明与投诉机制 -->
+				<div class="dash-card">
+					<div class="dash-card-header">
+						<div class="w-2.5 h-2.5 bg-yellow-500 rounded-full mr-2"></div>
+						<h3 class="dash-card-title">版权声明与投诉机制</h3>
+					</div>
+					<div class="dash-card-body">
+						<div class="flex items-start gap-3">
+							<div class="flex-shrink-0 w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center mt-0.5">
+								<svg class="w-3.5 h-3.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+								</svg>
 							</div>
+							<p class="text-gray-300 text-sm leading-relaxed">
+								LeLeTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。
+							</p>
 						</div>
 					</div>
 				</div>
-
-				<!-- 分割线 -->
-				<div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
 
 				<!-- 更新日志 -->
-				<div id="changelog" class="mb-8 sm:mb-16">
-					<h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[#ec4899]">更新日志</h2>
-					<div class="space-y-6">
-						<div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
-							<h3 class="text-xl font-bold mb-4 gradient-text">版本历史</h3>
-							<!-- 内容将由JavaScript自动加载 -->
-						</div>
+				<div id="changelog" class="dash-card" style="grid-column: 1 / -1;">
+					<div class="dash-card-header">
+						<svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2" />
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
+						</svg>
+						<h3 class="dash-card-title">更新日志</h3>
+					</div>
+					<div class="dash-card-body">
+						<div id="aboutChangelogContent"></div>
 					</div>
 				</div>
-			</div>
 			</div>
 		</div>
 	</main>
@@ -172,157 +169,75 @@
 
     <!-- 自动加载更新日志的脚本 -->
     <script>
-        // 页面加载完成后尝试自动加载更新日志
-        document.addEventListener('DOMContentLoaded', function() {
-            const changelogContainer = document.getElementById('changelog');
-            if (!changelogContainer) return;
-            
-            // 获取版本历史容器
-            const versionHistoryContainer = changelogContainer.querySelector('div.space-y-6 > div');
-            if (!versionHistoryContainer) {
-                console.error('无法找到版本历史容器');
-                return;
-            }
-            console.log('版本历史容器找到成功');
-            
-            // 创建一个占位符，用于在加载完成前显示
-            const loadingPlaceholder = document.createElement('div');
-            loadingPlaceholder.className = 'text-center py-8';
-            loadingPlaceholder.innerHTML = `
-                <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p class="mt-4 text-gray-400">加载更新日志中...</p>
-            `;
-            
-            // 保存原始内容，以便在加载失败时恢复
-            const originalContent = versionHistoryContainer.innerHTML;
-            
-            // 清空容器并显示加载占位符
-            versionHistoryContainer.innerHTML = '';
-            versionHistoryContainer.appendChild(loadingPlaceholder);
-            
-            // 尝试加载CHANGELOG.md文件
+        function loadAboutPageChangelog() {
+            var container = document.getElementById('aboutChangelogContent');
+            if (!container || container.getAttribute('data-loaded') === 'true') return;
+            container.setAttribute('data-loaded', 'true');
+
+            var loadingHtml = '<div class="text-center py-6">' +
+                '<svg class="animate-spin h-6 w-6 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">' +
+                '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>' +
+                '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>' +
+                '</svg>' +
+                '<p class="mt-3 text-gray-400 text-xs">加载更新日志中...</p>' +
+                '</div>';
+            container.innerHTML = loadingHtml;
+
             fetch('/CHANGELOG.md', { cache: 'no-store' })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('获取更新日志失败');
-                    }
+                .then(function(response) {
+                    if (!response.ok) throw new Error('获取更新日志失败');
                     return response.text();
                 })
-                .then(markdownContent => {
-                    // 将Markdown解析为版本条目数组
-                        const versionEntries = parseChangelogMarkdown(markdownContent);
-
-                        // 渲染版本历史，支持折叠功能
-                        versionHistoryContainer.innerHTML = '';
-                        versionHistoryContainer.appendChild(renderVersionHistory(versionEntries));
+                .then(function(markdownContent) {
+                    var entries = parseChangelogMarkdown(markdownContent);
+                    container.innerHTML = '';
+                    container.appendChild(renderVersionHistory(entries));
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('加载更新日志出错:', error);
-                    
-                    // 加载失败时，恢复原始内容并显示错误提示
-                    versionHistoryContainer.innerHTML = originalContent;
-                    
-                    // 添加错误提示
-                    const errorMessage = document.createElement('div');
-                    errorMessage.className = 'bg-red-900/30 border border-red-800/50 rounded-lg p-4 text-center mt-4';
-                    errorMessage.innerHTML = `
-                        <p class="text-red-400 text-sm">自动加载更新日志失败，显示缓存内容</p>
-                    `;
-                    versionHistoryContainer.insertBefore(errorMessage, versionHistoryContainer.firstChild);
+                    container.innerHTML = '<div class="bg-red-900/30 border border-red-800/50 rounded-lg p-4 text-center mt-4"><p class="text-red-400 text-sm">加载更新日志失败</p></div>';
                 });
-        });
-        
-        // 解析CHANGELOG.md内容为版本历史条目数组
+        }
+
         function parseChangelogMarkdown(markdownContent) {
-            const versionEntries = [];
-            let currentEntry = null;
+            var versionEntries = [];
+            var currentEntry = null;
+            var lines = markdownContent.split('\n');
 
-            // 将Markdown按行分割
-            const lines = markdownContent.split('\n');
-
-            lines.forEach((line) => {
-                // 处理标题
+            lines.forEach(function(line) {
                 if (line.startsWith('### ')) {
-                    // 如果已有当前条目，先保存
-                    if (currentEntry) {
-                        versionEntries.push(currentEntry);
-                    }
-
-                    // 创建新条目
+                    if (currentEntry) versionEntries.push(currentEntry);
                     currentEntry = { content: '' };
-
-                    // 直接提取完整的版本号和日期信息
-                    const versionMatch = line.match(/### (v[\d\.]+) \(([\d\-:\s]+)\)/);
+                    var versionMatch = line.match(/### (v[\d\.]+) \(([\d\-:\s]+)\)/);
                     if (versionMatch) {
-                        const versionNumber = versionMatch[1];
-                        // 只显示版本号，不显示时间
-                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">${versionNumber}</h4>`;
+                        currentEntry.content += '<h4 class="text-lg font-semibold mb-2 text-blue-400">' + versionMatch[1] + '</h4>';
                     } else if (line.includes('初始版本')) {
-                        currentEntry.content += `<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>`;
+                        currentEntry.content += '<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>';
                     }
                 } else if (line.startsWith('- ') && currentEntry) {
-                    // 处理列表项
-                    // 提取标签和内容
-                    const tagMatch = line.match(/- \[(.*?)\] (.*?)$/);
+                    var tagMatch = line.match(/- \[(.*?)\] (.*?)$/);
                     if (tagMatch) {
-                        currentEntry.content += `<p class="ml-4 mb-1"><span class="text-green-400">[${tagMatch[1]}]</span> ${tagMatch[2]}</p>`;
+                        currentEntry.content += '<p class="ml-4 mb-1"><span class="text-green-400">[' + tagMatch[1] + ']</span> ' + tagMatch[2] + '</p>';
                     } else {
-                        currentEntry.content += `<p class="ml-4 mb-1">${line.substring(2)}</p>`;
+                        currentEntry.content += '<p class="ml-4 mb-1">' + line.substring(2) + '</p>';
                     }
                 } else if (line.trim() !== '' && currentEntry) {
-                    // 处理普通文本（描述）
-                    currentEntry.content += `<p class="text-gray-400 text-sm mt-2 ml-4">${line}</p>`;
+                    currentEntry.content += '<p class="text-gray-400 text-sm mt-2 ml-4">' + line + '</p>';
                 }
             });
 
-            // 处理最后一个条目
-            if (currentEntry) {
-                versionEntries.push(currentEntry);
-            }
-
+            if (currentEntry) versionEntries.push(currentEntry);
             return versionEntries;
         }
 
-        /**
-         * 从已解析的CHANGELOG条目中计算指定日期的提交次序
-         * @param {Array} entries - 已解析的CHANGELOG条目
-         * @param {string} year - 年份
-         * @param {number} month - 月份
-         * @param {number} day - 日期
-         * @returns {number} 提交次序
-         */
-        function calculateCommitOrderFromChangelogEntries(entries, year, month, day) {
-            // 统计相同日期的版本号数量
-            let count = 0;
-            const targetDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
-            // 遍历已解析的条目，查找相同日期的版本
-            for (const entry of entries) {
-                // 从条目内容中提取日期信息
-                const dateMatch = entry.content.match(/(\d{4}-\d{2}-\d{2})/);
-                if (dateMatch && dateMatch[1] === targetDate) {
-                    count++;
-                }
-            }
-            
-            // 返回计数+1（因为当前条目还未添加到entries中）
-            return count + 1;
-        }
-
-        // 渲染版本历史，支持内部滚动显示全部内容
         function renderVersionHistory(versionEntries) {
-            const container = document.createElement('div');
-            // 添加固定高度和滚动样式
+            var container = document.createElement('div');
             container.className = 'space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent';
             container.style.scrollbarWidth = 'thin';
             container.style.scrollbarColor = '#4B5563 transparent';
 
-            // 渲染所有版本条目
-            versionEntries.forEach((entry) => {
-                const entryDiv = document.createElement('div');
+            versionEntries.forEach(function(entry) {
+                var entryDiv = document.createElement('div');
                 entryDiv.className = 'mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10';
                 entryDiv.innerHTML = entry.content;
                 container.appendChild(entryDiv);
@@ -330,10 +245,9 @@
 
             return container;
         }
-    </script>
-    <script>
-        // 页面加载完成后初始化邮箱点击处理器
+
         document.addEventListener('DOMContentLoaded', function() {
+            loadAboutPageChangelog();
             if (typeof setupEmailClickHandlers === 'function') {
                 setupEmailClickHandlers();
             }

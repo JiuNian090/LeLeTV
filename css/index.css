@@ -1116,24 +1116,55 @@
     }
 }
 
-/* 关于页面布局 */
+/* 关于页面 - 仪表盘布局 */
 .about-page-layout {
-    padding-top: 2rem;
+    padding-top: 1rem;
     width: 100%;
     overflow-x: hidden;
 }
 
-.about-content-container {
-    width: 100%;
+.about-dashboard-container {
     max-width: 900px;
     margin: 0 auto;
     padding: 0 clamp(1rem, 3vw, 2rem);
     box-sizing: border-box;
-    overflow-x: hidden;
+}
+
+.about-dashboard-header {
+    margin-bottom: 1rem;
+}
+
+.about-dashboard-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #a0aec0;
+}
+
+.about-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .about-dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.about-intro-card {
+    grid-column: 1 / -1;
+}
+
+.about-changelog-card {
+    grid-column: 1 / -1;
 }
 
 @media (max-width: 639px) {
     .about-page-layout {
-        padding-top: 1rem;
+        padding-top: 0.5rem;
     }
 }
