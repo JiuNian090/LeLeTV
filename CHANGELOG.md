@@ -13,6 +13,16 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.19.23 (2026-05-19 22:39)
+- [其他] rewrite version check logic and add template placeholder support
+
+1. extract version compare logic to separate compareAndUpdate function
+2. add handling for template placeholder {{LELETV_VERSION}}
+3. adjust 接口 version check flow and add fallback to VERSION.txt
+4. add version string validity check in formatDisplayVersion
+5. update version replacement script to handle template placeholder。
+
+
 ### v2.5.19.22 (2026-05-19 22:24)
 - [其他] 。
 
