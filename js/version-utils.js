@@ -168,7 +168,7 @@ window.versionUtils = {
     convertToSemanticVersion,
     formatVersionToSemantic,
     convertTextVersionNumbers,
-    getFormattedVersion,
+    getLatestVersionFromChangelog,
     updateFooterVersion,
     updateChangelogVersions
 };
