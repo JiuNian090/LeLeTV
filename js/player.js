@@ -1150,73 +1150,73 @@ function updateOrderButton() {
     }
 }
 
-// 设置进度条准确点击处理
+// 设置进度条准确点击和拖动处理（桌面点击 + 移动端触摸滑动）
 function setupProgressBarPreciseClicks() {
-    // 查找DPlayer的进度条元素
-    const progressBar = document.querySelector('.dplayer-bar-wrap');
+    // 查找ArtPlayer的进度条元素（.art-progress 在 .art-bottom 内部）
+    const progressBar = document.querySelector('.art-progress');
     if (!progressBar || !art || !art.video) return;
 
-    // 移除可能存在的旧事件监听器
-    progressBar.removeEventListener('mousedown', handleProgressBarClick);
+    let isDragging = false;
 
-    // 添加新的事件监听器
-    progressBar.addEventListener('mousedown', handleProgressBarClick);
-
-    // 在移动端也添加触摸事件支持
-    progressBar.removeEventListener('touchstart', handleProgressBarTouch);
-    progressBar.addEventListener('touchstart', handleProgressBarTouch);
-
-    // 处理进度条点击
-    function handleProgressBarClick(e) {
+    // 统一的跳转处理函数
+    function seekByClientX(clientX, target) {
         if (!art || !art.video) return;
-
-        // 计算点击位置相对于进度条的比例
-        const rect = e.currentTarget.getBoundingClientRect();
-        const percentage = (e.clientX - rect.left) / rect.width;
-
-        // 计算点击位置对应的视频时间
+        const rect = target.getBoundingClientRect();
+        const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         const duration = art.video.duration;
-        let clickTime = percentage * duration;
-
-        // 处理视频接近结尾的情况
-        if (duration - clickTime < 1) {
-            // 如果点击位置非常接近结尾，稍微往前移一点
-            clickTime = Math.min(clickTime, duration - 1.5);
-
+        let seekTime = percentage * duration;
+        // 处理视频接近结尾的情况：离结尾1秒内则跳到结尾前1.5秒
+        if (duration - seekTime < 1) {
+            seekTime = Math.max(0, duration - 1.5);
         }
-
-        // 记录用户点击的位置
-        userClickedPosition = clickTime;
-
-        // 阻止默认事件传播，避免DPlayer内部逻辑将视频跳至末尾
-        e.stopPropagation();
-
-        // 直接设置视频时间
-        art.seek(clickTime);
+        userClickedPosition = seekTime;
+        art.seek = seekTime;
     }
 
-    // 处理移动端触摸事件
-    function handleProgressBarTouch(e) {
+    // --- 桌面端：mousedown 点击跳转 + 拖动 ---
+    function handleMouseDown(e) {
+        if (!art || !art.video) return;
+        isDragging = true;
+        e.preventDefault();
+        e.stopPropagation();
+        seekByClientX(e.clientX, e.currentTarget);
+    }
+
+    function handleMouseMove(e) {
+        if (!isDragging) return;
+        seekByClientX(e.clientX, progressBar);
+    }
+
+    function handleMouseUp() {
+        isDragging = false;
+    }
+
+    progressBar.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    // --- 移动端：touchstart 点击 + touchmove 滑动 ---
+    function handleTouchStart(e) {
         if (!art || !art.video || !e.touches[0]) return;
-
-        const touch = e.touches[0];
-        const rect = e.currentTarget.getBoundingClientRect();
-        const percentage = (touch.clientX - rect.left) / rect.width;
-
-        const duration = art.video.duration;
-        let clickTime = percentage * duration;
-
-        // 处理视频接近结尾的情况
-        if (duration - clickTime < 1) {
-            clickTime = Math.min(clickTime, duration - 1.5);
-        }
-
-        // 记录用户点击的位置
-        userClickedPosition = clickTime;
-
+        isDragging = true;
         e.stopPropagation();
-        art.seek(clickTime);
+        seekByClientX(e.touches[0].clientX, e.currentTarget);
     }
+
+    function handleTouchMove(e) {
+        if (!isDragging || !e.touches[0]) return;
+        e.preventDefault();
+        seekByClientX(e.touches[0].clientX, progressBar);
+    }
+
+    function handleTouchEnd() {
+        isDragging = false;
+    }
+
+    progressBar.addEventListener('touchstart', handleTouchStart, { passive: false });
+    progressBar.addEventListener('touchmove', handleTouchMove, { passive: false });
+    progressBar.addEventListener('touchend', handleTouchEnd);
+    progressBar.addEventListener('touchcancel', handleTouchEnd);
 }
 
 // 在播放器初始化后添加视频到历史记录
@@ -1495,7 +1495,7 @@ function saveCurrentProgress() {
     }
 }
 
-// 设置移动端长按三倍速播放功能
+// 设置长按二倍速播放功能（桌面鼠标长按 + 移动端触摸长按）
 function setupLongPressSpeedControl() {
     if (!art || !art.video) return;
 
@@ -1504,96 +1504,57 @@ function setupLongPressSpeedControl() {
     let originalPlaybackRate = 1.0;
     let isLongPress = false;
 
-    // 显示快速提示
+    // 显示倍速提示
     function showSpeedHint(speed) {
         showShortcutHint(`${speed}倍速`, 'right');
     }
 
-    // 禁用右键
-    playerElement.oncontextmenu = () => {
-        // 检测是否为移动设备
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // 移动端禁用右键菜单（防止长按弹出原生菜单）
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        playerElement.oncontextmenu = () => false;
+    }
 
-        // 只在移动设备上禁用右键
-        if (isMobile) {
-            const dplayerMenu = document.querySelector(".dplayer-menu");
-            const dplayerMask = document.querySelector(".dplayer-mask");
-            if (dplayerMenu) dplayerMenu.style.display = "none";
-            if (dplayerMask) dplayerMask.style.display = "none";
-            return false;
-        }
-        return true; // 在桌面设备上允许右键菜单
-    };
-
-    // 触摸开始事件
-    playerElement.addEventListener('touchstart', function (e) {
-        // 检查视频是否正在播放，如果没有播放则不触发长按功能
-        if (art.video.paused) {
-            return; // 视频暂停时不触发长按功能
-        }
-
-        // 保存原始播放速度
+    // 核心：开始长按倒计时
+    function startLongPress() {
+        if (art.video.paused) return;
         originalPlaybackRate = art.video.playbackRate;
-
-        // 设置长按计时器
+        clearTimeout(longPressTimer);
         longPressTimer = setTimeout(() => {
-            // 再次检查视频是否仍在播放
-            if (art.video.paused) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-                return;
-            }
-
-            // 长按超过500ms，设置为3倍速
-            art.video.playbackRate = 3.0;
+            if (art.video.paused) return;
+            art.video.playbackRate = 2.0;
             isLongPress = true;
-            showSpeedHint(3.0);
-
-            // 只在确认为长按时阻止默认行为
-            e.preventDefault();
+            showSpeedHint(2.0);
         }, 500);
-    }, { passive: false });
+    }
 
-    // 触摸结束事件
-    playerElement.addEventListener('touchend', function (e) {
-        // 清除长按计时器
+    // 核心：结束长按，恢复速度
+    function endLongPress(e) {
         if (longPressTimer) {
             clearTimeout(longPressTimer);
             longPressTimer = null;
         }
-
-        // 如果是长按状态，恢复原始播放速度
         if (isLongPress) {
             art.video.playbackRate = originalPlaybackRate;
             isLongPress = false;
             showSpeedHint(originalPlaybackRate);
-
-            // 阻止长按后的点击事件
-            e.preventDefault();
+            if (e) e.preventDefault();
         }
-        // 如果不是长按，则允许正常的点击事件（暂停/播放）
-    });
+    }
 
-    // 触摸取消事件
-    playerElement.addEventListener('touchcancel', function () {
-        // 清除长按计时器
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
+    // --- 桌面端：鼠标长按 ---
+    playerElement.addEventListener('mousedown', startLongPress);
+    playerElement.addEventListener('mouseup', endLongPress);
+    playerElement.addEventListener('mouseleave', endLongPress);
 
-        // 如果是长按状态，恢复原始播放速度
-        if (isLongPress) {
-            art.video.playbackRate = originalPlaybackRate;
-            isLongPress = false;
-        }
-    });
+    // --- 移动端：触摸长按 ---
+    playerElement.addEventListener('touchstart', startLongPress, { passive: true });
+    playerElement.addEventListener('touchend', endLongPress);
+    playerElement.addEventListener('touchcancel', endLongPress);
 
-    // 触摸移动事件 - 防止在长按时触发页面滚动
+    // 触摸移动时，如果处于长按状态则阻止页面滚动
     playerElement.addEventListener('touchmove', function (e) {
-        if (isLongPress) {
-            e.preventDefault();
-        }
+        if (isLongPress) e.preventDefault();
     }, { passive: false });
 
     // 视频暂停时取消长按状态
@@ -1602,7 +1563,6 @@ function setupLongPressSpeedControl() {
             art.video.playbackRate = originalPlaybackRate;
             isLongPress = false;
         }
-
         if (longPressTimer) {
             clearTimeout(longPressTimer);
             longPressTimer = null;
