@@ -75,6 +75,9 @@
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 1rem 2rem;
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .main-container[data-page="category"] {
@@ -94,6 +97,8 @@
     display: block;
     opacity: 1;
     transform: translateY(0);
+    width: 100%;
+    overflow-x: hidden;
 }
 
 /* 首页布局 */
@@ -132,6 +137,7 @@
     max-width: 100%;
     padding: 0 clamp(1rem, 3vw, 2rem);
     box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 @media (orientation: landscape) {
@@ -233,7 +239,6 @@
     .tmdb-genre-row {
         flex-wrap: nowrap;
         max-width: 100%;
-        overflow-x: hidden;
     }
     .tmdb-filter-label {
         flex-shrink: 0;
@@ -285,6 +290,12 @@
     gap: 0.75rem;
     max-width: 100%;
     overflow-x: hidden;
+}
+
+@media (orientation: portrait) {
+    .tmdb-results-grid {
+        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+    }
 }
 
 @media (min-width: 640px) {
