@@ -64,9 +64,9 @@ const GENRE_MAP = {
 
 const SORT_OPTIONS = {
   movie: [
+    { value: 'primary_release_date.desc', label: '最近上映' },
     { value: 'popularity.desc', label: '最热门' },
     { value: 'vote_average.desc', label: '评分最高' },
-    { value: 'primary_release_date.desc', label: '最近上映' },
     { value: 'revenue.desc', label: '最高票房' },
     { value: 'vote_count.desc', label: '评价最多' },
     { value: 'title.asc', label: '名称A-Z' },
@@ -74,25 +74,25 @@ const SORT_OPTIONS = {
     { value: 'original_title.asc', label: '原名A-Z' }
   ],
   tv: [
+    { value: 'first_air_date.desc', label: '最近开播' },
     { value: 'popularity.desc', label: '最热门' },
     { value: 'vote_average.desc', label: '评分最高' },
-    { value: 'first_air_date.desc', label: '最近开播' },
     { value: 'vote_count.desc', label: '评价最多' },
     { value: 'name.asc', label: '名称A-Z' },
     { value: 'name.desc', label: '名称Z-A' }
   ],
   anime: [
+    { value: 'first_air_date.desc', label: '最近开播' },
     { value: 'popularity.desc', label: '最热门' },
     { value: 'vote_average.desc', label: '评分最高' },
-    { value: 'first_air_date.desc', label: '最近开播' },
     { value: 'vote_count.desc', label: '评价最多' },
     { value: 'name.asc', label: '名称A-Z' },
     { value: 'name.desc', label: '名称Z-A' }
   ],
   variety: [
+    { value: 'first_air_date.desc', label: '最近开播' },
     { value: 'popularity.desc', label: '最热门' },
     { value: 'vote_average.desc', label: '评分最高' },
-    { value: 'first_air_date.desc', label: '最近开播' },
     { value: 'vote_count.desc', label: '评价最多' },
     { value: 'name.asc', label: '名称A-Z' },
     { value: 'name.desc', label: '名称Z-A' }
