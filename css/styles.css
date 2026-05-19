@@ -43,6 +43,7 @@
     --page-gradient-end: #000000;   /* 纯黑色结束色 */
     --card-gradient-start: #121b29; /* 卡片起始色 */
     --card-gradient-end: #1c2939;   /* 卡片结束色 */
+    --card-bg: #1e1e1e;            /* 卡片纯色背景（鸿蒙深灰） */
     --card-accent: rgba(0, 204, 255, 0.12); /* 霓虹蓝卡片强调色 */
     --card-hover-border: rgba(0, 204, 255, 0.5); /* 悬停边框颜色 */
 }
@@ -61,13 +62,13 @@ button, .card-hover {
 /* 改进卡片适应不同内容长度 */
 .card-hover {
     border: 1px solid var(--border-color);
-    background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+    background: var(--card-bg);
     -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     position: relative;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -341,7 +342,7 @@ button, .card-hover {
 }
 
 .search-tag:hover {
-    background: linear-gradient(135deg, var(--card-gradient-end), var(--card-gradient-start));
+    background: var(--card-bg);
     border-color: var(--primary-color);
 }
 

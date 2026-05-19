@@ -194,9 +194,7 @@
                                     <button onclick="selectAllAPIs(false)" class="dash-btn dash-btn-gray">全不选</button>
                                     <button onclick="resetDataSourceLogic()" class="dash-btn dash-btn-blue">重置</button>
                                 </div>
-                                <div class="dash-list-box">
-                                    <div id="apiCheckboxes" class="dash-api-grid"></div>
-                                </div>
+                            <div id="apiCheckboxes" class="dash-api-grid"></div>
                                 <div class="dash-stats">
                                     <span>已选 <span id="selectedApiCount" class="text-white font-semibold">0</span></span>
                                     <span id="siteStatus"></span>
@@ -212,8 +210,8 @@
                                 <button onclick="showAddCustomApiForm()" class="dash-add-btn" title="添加">+</button>
                             </div>
                             <div class="dash-card-body">
-                                <div id="customApisList" class="dash-list-box max-h-32"></div>
-                                <div id="addCustomApiForm" class="hidden mt-3 p-3 bg-[#0f0f0f] rounded-lg border border-[#333]">
+                                <div id="customApisList" class="custom-apis-list"></div>
+                                <div id="addCustomApiForm" class="hidden mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#333]">
                                     <input type="text" id="customApiName" placeholder="API名称" class="dash-input mb-2" autocomplete="off">
                                     <input type="text" id="customApiUrl" placeholder="https://abc.com" class="dash-input mb-2" autocomplete="off">
                                     <input type="text" id="customApiDetail" placeholder="detail地址（可选）" class="dash-input mb-2" autocomplete="off">

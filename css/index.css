@@ -267,7 +267,7 @@
     font-size: 0.75rem;
     font-weight: 400;
     color: #a0aec0;
-    background: #1a1a1a;
+    background: var(--card-bg);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -312,7 +312,7 @@
 }
 
 .tmdb-card-inner {
-    background: #151515;
+    background: var(--card-bg);
     border: 1px solid #2d2d2d;
     border-radius: 0.75rem;
     overflow: hidden;
@@ -336,7 +336,7 @@
     width: 100%;
     aspect-ratio: 2/3;
     overflow: hidden;
-    background: #0f0f0f;
+    background: #161616;
     flex-shrink: 0;
 }
 
@@ -359,7 +359,7 @@
     align-items: center;
     justify-content: center;
     color: #4a4a4a;
-    background: #0f0f0f;
+    background: #161616;
     padding: 1rem;
 }
 
@@ -444,7 +444,7 @@
     justify-content: center;
     border: 1px solid #333;
     border-radius: 0.5rem;
-    background: #1a1a1a;
+    background: var(--card-bg);
     color: #a0aec0;
     font-size: 0.8125rem;
     cursor: pointer;
@@ -664,24 +664,24 @@
 }
 
 .dash-card {
-    background: #151515;
-    border: 1px solid #2d2d2d;
+    background: var(--card-bg);
+    border: 1px solid #333;
     border-radius: 0.75rem;
     overflow: hidden;
     transition: border-color 0.2s ease;
 }
 
 .dash-card:hover {
-    border-color: #404040;
+    border-color: #555;
 }
 
 .dash-card-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    background: #181818;
-    border-bottom: 1px solid #2d2d2d;
+    padding: 0.75rem;
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
 }
 
 .dash-card-icon {
@@ -777,10 +777,10 @@
 .dash-list-box {
     max-height: 10rem;
     overflow-y: auto;
-    background: #0f0f0f;
-    padding: 0.35rem;
-    border-radius: 0.375rem;
-    border: 1px solid #2d2d2d;
+    background: #1a1a1a;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #333;
     margin-bottom: 0.5rem;
 }
 
@@ -797,10 +797,16 @@
     border-radius: 2px;
 }
 
+.custom-apis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .dash-api-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 0.2rem;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.375rem;
 }
 
 .dash-stats {
@@ -847,7 +853,7 @@
 }
 
 .dash-switch-row + .dash-switch-row {
-    border-top: 1px solid #2d2d2d;
+    border-top: 1px solid #333;
 }
 
 .dash-switch-info {
