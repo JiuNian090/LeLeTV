@@ -842,6 +842,9 @@ function initPlayer(videoUrl) {
     // 添加缩略图预览功能（从播放中视频渐进抓帧）
     setupThumbnailCapture();
 
+    // 添加点击/双击控制行为（单击切换控制栏，双击暂停/播放）
+    setupControlsBehavior();
+
     // 同步暂停状态到 Media Session
     art.on('video:pause', () => {
         if (navigator.mediaSession) {
@@ -868,18 +871,11 @@ function initPlayer(videoUrl) {
         }
     });
 
-    // 同步播放状态到 Media Session + 添加双击全屏支持
+    // 同步播放状态到 Media Session
     art.on('video:playing', () => {
         // 更新 Media Session（容错：如果 loadedmetadata 没触发）
         if (navigator.mediaSession) {
             navigator.mediaSession.playbackState = 'playing';
-        }
-        // 绑定双击事件到视频容器
-        if (art.video) {
-            art.video.addEventListener('dblclick', () => {
-                art.fullscreen = !art.fullscreen;
-                art.play();
-            });
         }
     });
 
@@ -1635,6 +1631,81 @@ function setupThumbnailCapture() {
     }
 
     art.video.addEventListener('timeupdate', onTimeUpdate);
+}
+
+// 设置点击/双击控制行为：单击切换控制栏（含返回按钮+进度条），双击切换暂停/播放，2秒自动收起
+function setupControlsBehavior() {
+    if (!art) return;
+
+    const container = document.getElementById('playerContainer');
+    const playerEl = document.getElementById('player');
+    if (!container || !playerEl) return;
+
+    let controlsVisible = true;
+    let hideTimer = null;
+    let clickTimer = null;
+
+    function showControls(resetTimer) {
+        controlsVisible = true;
+        container.classList.remove('controls-hidden');
+        if (resetTimer !== false) resetAutoHide();
+    }
+
+    function hideControls() {
+        controlsVisible = false;
+        container.classList.add('controls-hidden');
+        if (hideTimer) {
+            clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+    }
+
+    function toggleControls() {
+        if (controlsVisible) hideControls();
+        else showControls();
+    }
+
+    function resetAutoHide() {
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(hideControls, 2000);
+    }
+
+    // 在视频元素上方覆盖透明点击层（仅覆盖视频区域，不遮挡控件）
+    const videoWrapper = art.video && art.video.parentElement;
+    if (!videoWrapper) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'player-click-overlay';
+    overlay.style.cssText = 'position:absolute;inset:0;z-index:5;cursor:pointer';
+    videoWrapper.style.position = 'relative';
+    videoWrapper.appendChild(overlay);
+
+    overlay.addEventListener('click', function (e) {
+        if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            if (art.video.paused) art.play();
+            else art.pause();
+            e.stopPropagation();
+            return;
+        }
+        clickTimer = setTimeout(function () {
+            clickTimer = null;
+            toggleControls();
+        }, 250);
+        e.stopPropagation();
+    });
+
+    playerEl.addEventListener('mousemove', function () {
+        if (!controlsVisible) showControls();
+        else resetAutoHide();
+    });
+
+    playerEl.addEventListener('mouseleave', function () {
+        if (controlsVisible) resetAutoHide();
+    });
+
+    setTimeout(hideControls, 3000);
 }
 
 // 清除视频进度记录

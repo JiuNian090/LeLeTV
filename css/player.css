@@ -1234,3 +1234,15 @@ main.container {
     border: 1px solid #ec4899;
     box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.3);
 }
+
+/* 控制栏收起状态：隐藏 ArtPlayer 底部控件 + 进度条 + 返回按钮 */
+#playerContainer.controls-hidden .art-video-player .art-controls,
+#playerContainer.controls-hidden .art-video-player .art-bottom {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+#playerContainer.controls-hidden .player-back-btn {
+    opacity: 0;
+    pointer-events: none;
+}
