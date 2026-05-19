@@ -35,11 +35,7 @@
 .modal-title {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -moz-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #ec4899;
     word-break: break-word;
     padding-right: 1rem;
     max-width: 80%;
@@ -128,7 +124,7 @@
 .disclaimer-button {
     margin-top: 1.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB);
+    background: #ec4899;
     color: white;
     font-weight: 600;
     border-radius: 0.5rem;
@@ -294,10 +290,10 @@
 }
 
 .resource-card.current {
-    border: 1px solid #7928CA;
-    -webkit-box-shadow: 0 0 0 1px rgba(121, 40, 202, 0.3);
-    -moz-box-shadow: 0 0 0 1px rgba(121, 40, 202, 0.3);
-    box-shadow: 0 0 0 1px rgba(121, 40, 202, 0.3);
+    border: 1px solid #ec4899;
+    -webkit-box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.3);
+    -moz-box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.3);
+    box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.3);
 }
 
 /* 速率徽章样式 */

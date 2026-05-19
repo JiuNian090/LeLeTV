@@ -31,21 +31,35 @@
 }
 
 :root {
-    /* 赛博影视主题配色方案 - 柔和版 */
-    --primary-color: #00ccff;       /* 霓虹蓝主色调 */
-    --primary-light: #33d6ff;       /* 浅霓虹蓝变体 */
-    --secondary-color: #000000;     /* 纯黑色背景色 */
-    --accent-color: #ff3c78;        /* 霓虹粉强调色 */
-    --text-color: #e6f2ff;          /* 柔和的蓝白色文本 */
-    --text-muted: #8599b2;          /* 淡蓝灰色次级文本 */
-    --border-color: rgba(0, 204, 255, 0.15);
-    --page-gradient-start: #000000; /* 纯黑色起始色 */
-    --page-gradient-end: #000000;   /* 纯黑色结束色 */
-    --card-gradient-start: #121b29; /* 卡片起始色 */
-    --card-gradient-end: #1c2939;   /* 卡片结束色 */
-    --card-bg: #1e1e1e;            /* 卡片纯色背景（鸿蒙深灰） */
-    --card-accent: rgba(0, 204, 255, 0.12); /* 霓虹蓝卡片强调色 */
-    --card-hover-border: rgba(0, 204, 255, 0.5); /* 悬停边框颜色 */
+    /* === HarmonyOS 深色模式色彩体系 === */
+    --color-bg:               #000000;
+    --color-bg-secondary:     #121212;
+    --color-surface:          #1e1e1e;
+    --color-surface-hover:    #2a2a2a;
+    --color-surface-subtle:   #1a1a1a;
+    --color-surface-cover:    #161616;
+    --color-border:           #333333;
+    --color-border-hover:     #555555;
+    --color-border-active:    #ec4899;
+
+    --color-primary:          #ec4899;
+    --color-accent:           #ec4899;
+    --color-primary-dim:      rgba(236,72,153,0.15);
+
+    --color-text-primary:     #e6f2ff;
+    --color-text-secondary:   #8599b2;
+    --color-text-tertiary:    #6b7280;
+    --color-text-disabled:    #4a4a4a;
+
+    /* 兼容旧名称，逐步迁移 */
+    --primary-color: #ec4899;
+    --primary-light: #33d6ff;
+    --secondary-color: #000000;
+    --accent-color: #ec4899;
+    --text-color: #e6f2ff;
+    --text-muted: #8599b2;
+    --border-color: #333333;
+    --card-bg: #1e1e1e;
 }
 
 .page-bg {
@@ -61,14 +75,14 @@ button, .card-hover {
 
 /* 改进卡片适应不同内容长度 */
 .card-hover {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--color-border);
     background: var(--card-bg);
     -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     position: relative;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -103,14 +117,14 @@ button, .card-hover {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, var(--card-accent), transparent);
+    background: linear-gradient(90deg, transparent, var(--color-primary-dim), transparent);
     -webkit-transition: left 0.6s ease;
     -moz-transition: left 0.6s ease;
     transition: left 0.6s ease;
 }
 
 .card-hover:hover {
-    border-color: var(--card-hover-border);
+    border-color: var(--color-border-hover);
     -webkit-transform: translateY(-3px);
     -moz-transform: translateY(-3px);
     transform: translateY(-3px);
@@ -124,39 +138,14 @@ button, .card-hover {
 }
 
 .gradient-text {
-    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
-    background-size: 300% auto;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -moz-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    -moz-text-fill-color: transparent;
-    animation: gradientAnimation 8s ease infinite;
-}
-
-@keyframes gradientAnimation {
-    0% {
-        background-position: 0% 50%;
-    }
-    25% {
-        background-position: 50% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    75% {
-        background-position: 150% 50%;
-    }
-    100% {
-        background-position: 200% 50%;
-    }
+    color: #ec4899;
 }
 
 /* 渐变按钮悬停效果 */
 .gradient-btn:hover,
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 204, 255, 0.4);
+    box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
 }
 
 /* 改进设置面板样式 */
@@ -169,8 +158,8 @@ button, .card-hover {
     -webkit-transition: -webkit-transform 0.3s ease;
     -moz-transition: -moz-transform 0.3s ease;
     transition: transform 0.3s ease;
-    background: linear-gradient(135deg, var(--page-gradient-end), var(--page-gradient-start));
-    border-left: 1px solid var(--primary-color);
+    background: var(--card-bg);
+    border-left: 1px solid var(--color-border);
 }
 
 .settings-panel.show {
@@ -239,7 +228,7 @@ button, .card-hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent, rgba(0, 204, 255, 0.05), transparent);
+    background: linear-gradient(45deg, transparent, rgba(236, 72, 153, 0.05), transparent);
     z-index: -1;
     transition: opacity 0.6s ease;
 }
@@ -260,8 +249,7 @@ button, .card-hover {
 /* 统一按钮样式组件 */
 /* 通用渐变按钮类 */
 .gradient-btn {
-    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
-    background-size: 300% auto;
+    background: #ec4899;
     border: none;
     color: white;
     padding: 0.75rem 1.5rem;
@@ -271,13 +259,11 @@ button, .card-hover {
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    animation: gradientAnimation 8s ease infinite;
 }
 
-/* 主按钮样式 - 使用现代多色渐变 */
+/* 主按钮样式 */
 .btn-primary {
-    background: linear-gradient(90deg, #7928CA, #8A2BE2, #FF69B4, #9370DB, #7928CA);
-    background-size: 300% auto;
+    background: #ec4899;
     border: none;
     color: white;
     padding: 0.75rem 1.5rem;
@@ -287,7 +273,6 @@ button, .card-hover {
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    animation: gradientAnimation 8s ease infinite;
 }
 
 .btn-primary::before {
@@ -303,7 +288,7 @@ button, .card-hover {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 204, 255, 0.3);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
 }
 
 .btn-primary:hover::before {
@@ -324,34 +309,34 @@ button, .card-hover {
 
 .btn-secondary:hover {
     background: rgba(51, 51, 51, 0.9);
-    border-color: var(--primary-color);
+    border-color: var(--color-accent);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .search-tag {
-    background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+    background: var(--card-bg);
     color: var(--text-color);
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.875rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--color-border);
     -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     -moz-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .search-tag:hover {
-    background: var(--card-bg);
-    border-color: var(--primary-color);
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-hover);
 }
 
 .footer {
     width: 100%;
     transition: all 0.3s ease;
     margin-top: auto;
-    background: linear-gradient(to bottom, transparent, var(--page-gradient-start));
-    border-top: 1px solid var(--border-color);
+    background: #0a0a0a;
+    border-top: 1px solid var(--color-border);
 }
 
 .footer a:hover {
@@ -426,58 +411,58 @@ body {
 }
 
 #modal > div {
-    background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
-    border: 1px solid var(--primary-color);
-    -webkit-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 204, 255, 0.1);
-    -moz-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 204, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 204, 255, 0.1);
-    border-radius: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--color-border);
+    -webkit-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    -moz-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    border-radius: 12px;
 }
 
 #episodesGrid button {
-    background: rgba(0, 204, 255, 0.08);
-    border: 1px solid rgba(0, 204, 255, 0.2);
+    background: rgba(236, 72, 153, 0.08);
+    border: 1px solid rgba(236, 72, 153, 0.2);
     transition: all 0.2s ease;
 }
 
 #episodesGrid button:hover {
-    background: rgba(0, 204, 255, 0.15);
-    border-color: var(--primary-color);
-    -webkit-box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
-    -moz-box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
-    box-shadow: 0 0 8px rgba(0, 204, 255, 0.3);
+    background: rgba(236, 72, 153, 0.15);
+    border-color: var(--color-accent);
+    -webkit-box-shadow: 0 0 8px rgba(236, 72, 153, 0.3);
+    -moz-box-shadow: 0 0 8px rgba(236, 72, 153, 0.3);
+    box-shadow: 0 0 8px rgba(236, 72, 153, 0.3);
 }
 
 #yellowFilterToggle.dash-switch-input:checked ~ .dash-switch-track {
-    background-color: var(--primary-color);
+    background-color: var(--color-accent);
 }
 
 #yellowFilterToggle.dash-switch-input:checked ~ .dash-switch-dot {
     -webkit-transform: translateX(1.25rem);
     -moz-transform: translateX(1.25rem);
     transform: translateX(1.25rem);
-    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
 }
 
 #yellowFilterToggle.dash-switch-input:focus ~ .dash-switch-track,
 #yellowFilterToggle.dash-switch-input:hover ~ .dash-switch-track {
-    -webkit-box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
-    -moz-box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
-    box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
+    -webkit-box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
+    -moz-box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
 }
 
 #adFilterToggle.dash-switch-input:checked ~ .dash-switch-track {
-    background-color: var(--primary-color);
+    background-color: var(--color-accent);
 }
 
 #adFilterToggle.dash-switch-input:checked ~ .dash-switch-dot {
     transform: translateX(1.25rem);
-    box-shadow: 0 2px 4px rgba(0, 204, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
 }
 
 #adFilterToggle.dash-switch-input:focus ~ .dash-switch-track,
 #adFilterToggle.dash-switch-input:hover ~ .dash-switch-track {
-    box-shadow: 0 0 0 2px rgba(0, 204, 255, 0.3);
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
 }
 
 .dash-switch-dot {
@@ -505,8 +490,8 @@ body {
 }
 
 .form-checkbox:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 .form-checkbox:checked::after {
@@ -819,7 +804,7 @@ body {
 .history-item:hover {
     transform: translateY(-2px);
     border-color: #555;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 204, 255, 0.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(236, 72, 153, 0.08);
 }
 
 /* 封面区域 - 左侧1/4宽度 */
@@ -938,7 +923,7 @@ body {
 
 .progress-filled {
     height: 100%;
-    background: linear-gradient(to right, #00ccff, #3b82f6);
+    background: #ec4899;
     border-radius: 2px;
     transition: width 0.3s ease;
 }
@@ -1102,22 +1087,28 @@ body {
 }
 
 /* 响应式调整：在小屏幕上依然保持较好的视觉效果 */
-@media (min-width: 641px) and (max-width: 768px) {
+@media (min-width: 640px) and (max-width: 767px) {
     #results {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
 
 /* 调整网格布局，减少每行卡片数量以适应更大尺寸的卡片 */
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1023px) {
     #results {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
 
-@media (min-width: 1025px) {
+@media (min-width: 1024px) and (max-width: 1919px) {
     #results {
         grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1920px) {
+    #results {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     }
 }
 
@@ -1294,9 +1285,9 @@ img.loading-fade.loaded {
 
 /* 详情模态框样式优化 */
 #modal .modal-detail-info {
-    background: linear-gradient(135deg, #0a0a0a, #111);
-    border: 1px solid #222;
-    border-radius: 8px;
+    background: var(--color-surface-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -1391,8 +1382,8 @@ img.loading-fade.loaded {
 
 /* 负载均衡面板样式优化 */
 #loadBalancerPanel {
-    background: linear-gradient(135deg, var(--page-gradient-end), var(--page-gradient-start));
-    border: 1px solid var(--primary-color);
+    background: var(--card-bg);
+    border: 1px solid var(--color-border);
 }
 
 /* 负载均衡面板响应式设计 */

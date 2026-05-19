@@ -256,8 +256,8 @@ div.player-loading-text {
 }
 
 .episode-active {
-    background-color: #3b82f6 !important;
-    border-color: #60a5fa !important;
+    background-color: #ec4899 !important;
+    border-color: #f472b6 !important;
 }
 
 .episode-grid {
@@ -345,7 +345,7 @@ div.player-loading-text {
 }
 
 input:checked + .slider {
-    background-color: #7928CA;
+    background-color: #ec4899;
 }
 
 input:checked + .slider:before {
@@ -838,9 +838,9 @@ input:checked + .slider:before {
         overflow-y: auto;
     }
     
-    /* 优化集数显示网格 - 小屏幕自适应 */
+    /* 优化集数显示网格 - 小屏幕4列 */
     #episodesList {
-        grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)) !important;
+        grid-template-columns: repeat(4, 1fr) !important;
     }
     
     /* 优化功能按钮布局 - 保持横向排列 */
@@ -906,7 +906,7 @@ input:checked + .slider:before {
 }
 
 /* 平板设备优化 */
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 1023px) {
     /* 优化播放器高度 */
     #player {
         height: 55vh;
@@ -925,11 +925,15 @@ input:checked + .slider:before {
     }
 }
 
-/* 大屏幕设备优化 */
-@media (min-width: 1025px) {
+/* 大屏幕设备优化 - 集数8列 */
+@media (min-width: 1024px) {
     /* 更大的播放器高度 */
     #player {
         height: 70vh;
+    }
+    
+    #episodesList {
+        grid-template-columns: repeat(8, 1fr) !important;
     }
 }
 
@@ -1092,7 +1096,7 @@ main.container {
     opacity: 0.7;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
     .player-layout {
         flex-direction: row;
         gap: 1.5rem;

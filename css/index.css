@@ -216,7 +216,7 @@
 }
 
 .tmdb-type-btn.active {
-    background: linear-gradient(135deg, #9333ea, #ec4899);
+    background: #ec4899;
     color: white;
 }
 
@@ -278,7 +278,7 @@
 }
 
 .tmdb-genre-btn.active {
-    background: linear-gradient(135deg, #9333ea, #ec4899);
+    background: #ec4899;
     border-color: transparent;
     color: white;
 }
@@ -286,19 +286,19 @@
 /* 结果网格 - 自适应卡片大小 */
 .tmdb-results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
     gap: 0.75rem;
     max-width: 100%;
     overflow-x: hidden;
 }
 
-@media (orientation: portrait) {
+@media (min-width: 640px) {
     .tmdb-results-grid {
-        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
 
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
     .tmdb-results-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     }
@@ -459,7 +459,7 @@
 }
 
 .tmdb-page-btn.active {
-    background: linear-gradient(135deg, #9333ea, #ec4899);
+    background: #ec4899;
     border-color: transparent;
     color: white;
 }
@@ -720,7 +720,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #9333ea, #ec4899);
+    background: #ec4899;
     color: white;
     border: none;
     border-radius: 9999px;
@@ -952,11 +952,11 @@
 }
 
 .dash-action-btn-import {
-    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    background: #ec4899;
 }
 
 .dash-action-btn-import:hover {
-    background: linear-gradient(135deg, #4f46e5, #9333ea, #db2777);
+    background: #db2777;
 }
 
 .dash-action-btn-export {
