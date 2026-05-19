@@ -2010,7 +2010,7 @@ function renderPlayerDetailInfo() {
         
         // 再添加简介
         if (descriptionText) {
-            detailHtml += `<div class="detail-desc-content">${descriptionText}</div>`;
+            detailHtml += `<div class="detail-desc-content"><span class="detail-meta-label">简介:</span>${descriptionText}</div>`;
         }
 
         if (detailHtml) {

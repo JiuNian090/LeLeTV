@@ -342,6 +342,39 @@ button, .card-hover {
     text-decoration: underline;
 }
 
+/* 版本呼吸灯 */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.status-dot-green {
+    background-color: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+    animation: breathe-green 2s ease-in-out infinite;
+}
+
+.status-dot-red {
+    background-color: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    animation: breathe-red 2s ease-in-out infinite;
+}
+
+@keyframes breathe-green {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); }
+    50% { opacity: 0.4; box-shadow: 0 0 2px rgba(34, 197, 94, 0.2); }
+}
+
+@keyframes breathe-red {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+    50% { opacity: 0.4; box-shadow: 0 0 2px rgba(239, 68, 68, 0.2); }
+}
+
 body {
     display: flex;
     flex-direction: column;

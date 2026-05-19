@@ -11,8 +11,9 @@ function formatDisplayVersion(rawVersion) {
     const y = rawVersion.substring(0, 4);
     const m = parseInt(rawVersion.substring(4, 6));
     const d = parseInt(rawVersion.substring(6, 8));
+    const h = parseInt(rawVersion.substring(8, 10));
     const vYear = Math.max(1, (parseInt(y) - 2025) + 1);
-    return `v${vYear}.${m}.${d}`;
+    return `v${vYear}.${m}.${d}.${h}`;
   }
   if (rawVersion.startsWith('v')) return rawVersion;
   return `v${rawVersion}`;
@@ -74,7 +75,21 @@ async function performUpdate() {
 
 function updateFooterBtn(text) {
   const btn = document.getElementById('checkUpdateBtn');
-  if (btn) btn.textContent = text;
+  if (!btn) return;
+  btn.textContent = text;
+  if (text === '立即更新') {
+    btn.classList.add('text-blue-400', 'hover:text-blue-300');
+    btn.classList.remove('text-gray-400', 'hover:text-white');
+  } else {
+    btn.classList.remove('text-blue-400', 'hover:text-blue-300');
+    btn.classList.add('text-gray-400', 'hover:text-white');
+  }
+}
+
+function setStatusDot(color) {
+  var dot = document.getElementById('statusDot');
+  if (!dot) return;
+  dot.className = 'status-dot status-dot-' + color;
 }
 
 async function checkUpdateFromApi() {
@@ -85,57 +100,75 @@ async function checkUpdateFromApi() {
     });
     if (!resp.ok) {
       updateFooterBtn('检查失败');
+      setStatusDot('red');
       return false;
     }
     const data = await resp.json();
-    if (data.success && data.version && data.version !== lastKnownVersion && data.version !== '0') {
-      currentVersion = data.version;
-      hasNewVersion = true;
-      updateFooterBtn('点击更新');
-      return true;
+    if (data.success && data.version && data.version !== '0') {
+      const loadedVersion = window.__LELETV_VERSION__ || '0';
+      if (data.version !== loadedVersion) {
+        currentVersion = data.version;
+        hasNewVersion = true;
+        updateFooterBtn('立即更新');
+        setStatusDot('red');
+        return true;
+      }
     }
     hasNewVersion = false;
-    updateFooterBtn('已是最新');
+    updateFooterBtn('最新版本');
+    setStatusDot('green');
     return false;
   } catch (e) {
     updateFooterBtn('检查失败');
+    setStatusDot('red');
     return false;
   }
 }
 
 function initFooterBtn() {
-  var linkEl = document.getElementById('footer-changelog-link');
-  if (!linkEl) return;
+  var displayEl = document.getElementById('footerVersionDisplay');
+  if (!displayEl) return;
 
-  if (hasNewVersion) {
-    linkEl.insertAdjacentHTML('beforebegin',
-      '<button id="checkUpdateBtn" class="text-blue-400 hover:text-blue-300 text-sm transition-colors bg-transparent border-0 cursor-pointer">点击更新</button>'
-    );
-  } else if (lastKnownVersion && lastKnownVersion !== '0') {
-    linkEl.insertAdjacentHTML('beforebegin',
-      '<button id="checkUpdateBtn" class="text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer">已是最新</button>'
-    );
-  } else {
-    linkEl.insertAdjacentHTML('beforebegin',
-      '<button id="checkUpdateBtn" class="text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer">检查更新</button>'
-    );
+  var versionSpan = document.createElement('span');
+  versionSpan.id = 'footerVersionText';
+  versionSpan.className = 'mr-1';
+  var versionText = formatDisplayVersion(window.__LELETV_VERSION__);
+  if (versionText) {
+    versionSpan.textContent = versionText;
+  }
+  displayEl.appendChild(versionSpan);
+
+  if (typeof window.versionUtils !== 'undefined' && typeof window.versionUtils.getLatestVersionFromChangelog === 'function') {
+    window.versionUtils.getLatestVersionFromChangelog().then(function(semanticVersion) {
+      if (semanticVersion) {
+        versionSpan.textContent = semanticVersion;
+      }
+    });
   }
 
-  var btn = document.getElementById('checkUpdateBtn');
-  if (!btn) return;
+  var btn = document.createElement('button');
+  btn.id = 'checkUpdateBtn';
+  btn.className = 'text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer max-sm:text-xs';
+  btn.textContent = hasNewVersion ? '立即更新' : '检测中...';
+  displayEl.appendChild(btn);
+
+  var dot = document.createElement('span');
+  dot.id = 'statusDot';
+  dot.className = 'status-dot status-dot-red';
+  displayEl.appendChild(dot);
 
   btn.addEventListener('click', function() {
-    updateFooterBtn('检查中...');
     if (hasNewVersion) {
       performUpdate();
     } else {
+      btn.textContent = '检测中...';
       checkUpdateFromApi().then(function(found) {
-        if (found) {
-          performUpdate();
-        }
+        if (found) performUpdate();
       });
     }
   });
+
+  checkUpdateFromApi();
 }
 
 function setupSwUpdateListener() {
@@ -144,14 +177,15 @@ function setupSwUpdateListener() {
       if (event.data && event.data.type === 'SW_UPDATED' && !hasNewVersion) {
         currentVersion = event.data.version;
         hasNewVersion = true;
-        updateFooterBtn('点击更新');
+        updateFooterBtn('立即更新');
+        setStatusDot('red');
       }
     });
   }
 }
 
 window.checkLeLeTVUpdate = function() {
-  updateFooterBtn('检查中...');
+  updateFooterBtn('检测中...');
   checkUpdateFromApi().then(function(found) {
     if (found) {
       performUpdate();
