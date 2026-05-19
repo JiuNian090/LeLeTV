@@ -13,6 +13,16 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.19.24 (2026-05-19 22:57)
+- [其他] 清理冗余调试日志与废弃代码，新增资源速率显示样式
+
+1. 移除多处console调试输出和无用的日志打印
+2. 删除pwa-register相关文件与modals.css样式表
+3. 精简service-worker缓存列表和watch.html引入
+4. 移除toggleSettings、历史面板相关冗余函数
+5. 新增资源速率指示器和卡片悬停样式。
+
+
 ### v2.5.19.23 (2026-05-19 22:39)
 - [其他] rewrite version check logic and add template placeholder support
 
