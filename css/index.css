@@ -1115,3 +1115,25 @@
         gap: 0.5rem;
     }
 }
+
+/* 关于页面布局 */
+.about-page-layout {
+    padding-top: 2rem;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.about-content-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 3vw, 2rem);
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+@media (max-width: 639px) {
+    .about-page-layout {
+        padding-top: 1rem;
+    }
+}

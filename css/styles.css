@@ -336,7 +336,6 @@ button, .card-hover {
     transition: all 0.3s ease;
     margin-top: auto;
     background: #0a0a0a;
-    border-top: 1px solid var(--color-border);
 }
 
 .footer a:hover {

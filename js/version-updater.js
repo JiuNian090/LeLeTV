@@ -104,7 +104,7 @@ async function checkUpdateFromApi() {
 }
 
 function initFooterBtn() {
-  var linkEl = document.querySelector('.footer a[href="about.html#changelog"]');
+  var linkEl = document.getElementById('footer-changelog-link');
   if (!linkEl) return;
 
   if (hasNewVersion) {

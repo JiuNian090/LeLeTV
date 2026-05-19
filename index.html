@@ -73,11 +73,11 @@
                 </button>
                 
                 <!-- 关于按钮 -->
-                <a href="about.html" class="nav-btn" aria-label="关于">
+                <button class="nav-btn" onclick="switchPage('about')" aria-label="关于" data-page="about">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                </a>
+                </button>
             </div>
         </div>
     </nav>
@@ -281,31 +281,125 @@
         </div>
     </div>
 
+        <!-- 关于页面 -->
+        <div id="page-about" class="page-content">
+            <div class="about-page-layout">
+                <div class="about-content-container">
+                    <div class="bg-[#1e1e1e] border border-[#333] rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-12 shadow-2xl">
+                        <!-- 项目介绍 -->
+                        <div class="text-center mb-8 sm:mb-16">
+                            <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl mb-6 sm:mb-8">
+                                <img src="image/logo-black.png" alt="LeLeTV Logo" class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl">
+                            </div>
+                             
+                            <p class="text-gray-300 text-lg sm:text-xl mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto px-2">
+                                LeLeTV 是自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span id="contactLeLe3" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
+                            </p>
+                            
+                            <div class="flex justify-center mb-6">
+                                <a href="https://letvport.776645.xyz/" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-[#ec4899] hover:bg-[#db2777] text-white rounded-lg transition-all duration-300 flex items-center font-semibold">
+                                    访问我的网站
+                                    <svg class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="flex justify-center">
+                                <a href="https://github.com/JiuNian090/LeLeTV" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                    </svg>
+                                    GitHub 仓库
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 分割线 -->
+                        <div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
+
+                        <!-- 隐私政策 -->
+                        <div id="privacy" class="mb-8 sm:mb-16">
+                            <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[#ec4899]">隐私政策</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+                                <div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
+                                    <div class="flex items-center mb-3 sm:mb-4">
+                                        <div class="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                                        <h3 class="text-lg sm:text-xl font-semibold text-gray-200">数据保护</h3>
+                                    </div>
+                                    <p class="text-gray-300 text-base sm:text-lg leading-relaxed">
+                                        LeLeTV 尊重并保护您的隐私。LeLeTV 不收集任何个人数据，还请不要相信出现的任何广告，且不要随便分享给别人，如要分享一定和乐乐说一声。
+                                    </p>
+                                </div>
+                                <div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
+                                    <div class="flex items-center mb-3 sm:mb-4">
+                                        <div class="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                                        <h3 class="text-lg sm:text-xl font-semibold text-gray-200">服务说明</h3>
+                                    </div>
+                                    <p class="text-gray-300 text-base sm:text-lg leading-relaxed">
+                                        本平台仅用于提供在线视频搜索与播放服务。所有数据均由第三方接口提供，我不会存储或追踪用户信息。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分割线 -->
+                        <div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
+
+                        <!-- 版权声明与投诉机制 -->
+                        <div id="copyright">
+                            <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[#ec4899]">版权声明与投诉机制</h2>
+                            <div class="space-y-6 sm:space-y-8">
+                                <div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4 mt-1">
+                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg sm:text-xl font-semibold text-gray-200 mb-3 sm:mb-4">免责声明</h3>
+                                            <p class="text-gray-300 text-base sm:text-lg leading-relaxed">
+                                                LeLeTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容。所有搜索结果均来自第三方公开接口。用户在使用本站服务时，须遵守相关法律法规，不得利用搜索结果从事侵权行为，如下载、传播未经授权的作品等。
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分割线 -->
+                        <div class="w-full h-px bg-gradient-to-r from-transparent via-[#333] to-transparent mb-8 sm:mb-16"></div>
+
+                        <!-- 更新日志 -->
+                        <div id="changelog" class="mb-8 sm:mb-16">
+                            <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[#ec4899]">更新日志</h2>
+                            <div class="space-y-6">
+                                <div class="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 sm:p-8">
+                                    <h3 class="text-xl font-bold mb-4 gradient-text">版本历史</h3>
+                                    <div id="aboutChangelogContent">
+                                        <div class="text-center py-8">
+                                            <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <p class="mt-4 text-gray-400">加载更新日志中...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     <!-- 页脚区域 -->
-    <footer class="footer py-4 border-t border-[#333] bg-[#0a0a0a] max-sm:py-2.5">
+    <footer class="footer py-4 bg-[#0a0a0a] max-sm:py-2.5">
         <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-3 md:mb-0 max-sm:mb-1">
-                    <div class="flex items-center justify-center md:justify-start max-sm:hidden">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        <span class="gradient-text font-bold">LeLeTV</span>
-                    </div>
-                    <p class="text-gray-500 text-sm mt-1 text-center md:text-left max-sm:text-xs">© 2025 LeLeTV</p>
-                </div>
-                
-                <div class="text-center md:text-right">
-                    <p class="text-gray-500 text-sm max-w-md max-sm:hidden">
-                        免责声明：本站仅为视频搜索工具，不存储、上传或分发任何视频内容。
-                        所有视频均来自第三方API接口。如有侵权，请联系相关内容提供方。
-                    </p>
-                    <div class="mt-1.5 flex justify-center md:justify-end space-x-4 max-sm:mt-1">
-                        <a href="about.html#changelog" class="text-gray-400 hover:text-white text-sm transition-colors max-sm:text-xs">更新日志</a>
-                        <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors max-sm:text-xs">关于我们</a>
-                        <a href="about.html" class="text-gray-400 hover:text-white text-sm transition-colors max-sm:text-xs">隐私政策</a>
-                    </div>
-                </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-1">
+                <p class="text-gray-500 text-sm max-sm:text-xs">© 2025 LeLeTV</p>
+                <p class="text-gray-500 text-sm max-sm:text-xs">仅供学习使用，禁止商业分享</p>
             </div>
         </div>
     </footer>
@@ -527,9 +621,94 @@
                     break;
                     
                 case 'settings':
-                    // 设置页面不需要特殊操作
+                    break;
+
+                case 'about':
+                    loadAboutPageChangelog();
                     break;
             }
+        }
+
+        // 切换到关于页面并滚动到指定区块
+        function switchToAbout(section) {
+            switchPage('about');
+            if (section) {
+                setTimeout(function() {
+                    var el = document.getElementById(section);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+
+        // 加载关于页面更新日志
+        function loadAboutPageChangelog() {
+            var container = document.getElementById('aboutChangelogContent');
+            if (!container || container.getAttribute('data-loaded') === 'true') return;
+            container.setAttribute('data-loaded', 'true');
+
+            fetch('/CHANGELOG.md', { cache: 'no-store' })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('获取更新日志失败');
+                    return response.text();
+                })
+                .then(function(markdownContent) {
+                    var entries = parseChangelogMarkdown(markdownContent);
+                    container.innerHTML = '';
+                    container.appendChild(renderVersionHistory(entries));
+                })
+                .catch(function(error) {
+                    console.error('加载更新日志出错:', error);
+                    container.innerHTML = '<div class="bg-red-900/30 border border-red-800/50 rounded-lg p-4 text-center mt-4"><p class="text-red-400 text-sm">加载更新日志失败</p></div>';
+                });
+        }
+
+        // 解析CHANGELOG.md内容为版本历史条目数组
+        function parseChangelogMarkdown(markdownContent) {
+            var versionEntries = [];
+            var currentEntry = null;
+            var lines = markdownContent.split('\n');
+
+            lines.forEach(function(line) {
+                if (line.startsWith('### ')) {
+                    if (currentEntry) versionEntries.push(currentEntry);
+                    currentEntry = { content: '' };
+                    var versionMatch = line.match(/### (v[\d\.]+) \(([\d\-:\s]+)\)/);
+                    if (versionMatch) {
+                        currentEntry.content += '<h4 class="text-lg font-semibold mb-2 text-blue-400">' + versionMatch[1] + '</h4>';
+                    } else if (line.includes('初始版本')) {
+                        currentEntry.content += '<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>';
+                    }
+                } else if (line.startsWith('- ') && currentEntry) {
+                    var tagMatch = line.match(/- \[(.*?)\] (.*?)$/);
+                    if (tagMatch) {
+                        currentEntry.content += '<p class="ml-4 mb-1"><span class="text-green-400">[' + tagMatch[1] + ']</span> ' + tagMatch[2] + '</p>';
+                    } else {
+                        currentEntry.content += '<p class="ml-4 mb-1">' + line.substring(2) + '</p>';
+                    }
+                } else if (line.trim() !== '' && currentEntry) {
+                    currentEntry.content += '<p class="text-gray-400 text-sm mt-2 ml-4">' + line + '</p>';
+                }
+            });
+
+            if (currentEntry) versionEntries.push(currentEntry);
+            return versionEntries;
+        }
+
+        // 渲染版本历史
+        function renderVersionHistory(versionEntries) {
+            var container = document.createElement('div');
+            container.className = 'space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent';
+            container.style.scrollbarWidth = 'thin';
+            container.style.scrollbarColor = '#4B5563 transparent';
+
+            versionEntries.forEach(function(entry) {
+                var entryDiv = document.createElement('div');
+                entryDiv.className = 'mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10';
+                entryDiv.innerHTML = entry.content;
+                container.appendChild(entryDiv);
+            });
+
+            return container;
         }
         
         // 重写toggleHistory和toggleSettings函数
