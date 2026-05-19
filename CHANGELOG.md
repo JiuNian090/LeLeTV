@@ -13,6 +13,16 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.20.6 (2026-05-20 01:15)
+- [其他] add progress bar thumbnail preview 功能
+
+1. 移除废弃的webkit浏览器检测变量
+2. 将播放器主题色从#23ade5改为#ec4899
+3. 新增setupThumbnailCapture函数实现渐进式抓帧生成进度条缩略图雪碧图
+4. 替换旧的播放器切换逻辑为art.switchUrl实现无缝切换
+5. 新增项目代码维基文档CODE_WIKI.md。
+
+
 ### v2.5.20.5 (2026-05-20 00:57)
 - [其他] 重构进度条和长按倍速逻辑，适配ArtPlayer
 
