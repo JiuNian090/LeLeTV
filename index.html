@@ -47,12 +47,7 @@
                     </svg>
                 </button>
                 
-                <!-- 热门按钮 -->
-                <button class="nav-btn" onclick="switchPage('hot')" aria-label="热门" data-page="hot">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                    </svg>
-                </button>
+
                 
                 <!-- 分类按钮 -->
                 <button class="nav-btn" onclick="switchPage('category')" aria-label="分类" data-page="category">
@@ -142,49 +137,7 @@
             </div>
         </div>
 
-        <!-- 热门推荐页面 -->
-        <div id="page-hot" class="page-content">
-            <div class="hot-page-layout">
-                <div class="hot-content-container">
-                    <div class="hot-page-header">
-                        <h2 class="text-xl font-bold gradient-text mb-4">热门推荐</h2>
-                        <div class="flex items-center bg-[#222] rounded-full p-1 w-fit">
-                            <button id="douban-movie-toggle" class="px-3 py-1 text-sm rounded-full bg-pink-600 text-white">电影</button>
-                            <button id="douban-tv-toggle" class="px-3 py-1 text-sm rounded-full text-gray-300 hover:text-white">电视剧</button>
-                        </div>
-                    </div>
 
-                    <div class="mt-4">
-                        <div class="pb-2 mb-4">
-                            <div id="douban-tags" class="flex flex-wrap space-x-2"></div>
-                        </div>
-                        
-                        <div id="douban-results" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 gap-2 sm:gap-3"></div>
-                        
-                        <div class="mt-4 flex justify-center items-center">
-                            <div class="pagination-buttons flex items-center gap-2">
-                                <button id="douban-prev-page" class="text-sm px-3 py-1 bg-[#333] hover:bg-[#444] text-white rounded-lg flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                        <span>上一页</span>
-                                    </button>
-                                    
-                                    <div id="douban-page-indicator" class="flex items-center gap-1"></div>
-                                    
-                                    <button id="douban-next-page" class="text-sm px-3 py-1 bg-pink-600 hover:bg-pink-700 text-white rounded-lg flex items-center gap-1">
-                                        <span>下一页</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 分类页面 -->
         <div id="page-category" class="page-content">
@@ -409,7 +362,7 @@
                     <strong class="text-blue-400">👇二.如何使用：</strong>
                     <br>1.右上角设置中可选择视频源
                     <br>2.若视频卡顿，可手动切换源（不同剧集在各源表现不同）。
-                    <br>3.建议先全选视频源，选择剧集后，在播放界面点击切换资源，可以根据延迟自行选择，一般推荐豆瓣，天涯资源。
+                    <br>3.建议先全选视频源，选择剧集后，在播放界面点击切换资源，可以根据延迟自行选择。
                     <br>4.如视频播放异常，可尝试切换源或刷新页面。
                 </p>
                 <p>
@@ -472,7 +425,6 @@
     <script src="js/loadBalancerUI.js" defer></script>
     <script src="js/ui.js" defer></script>
     <script src="js/api.js" defer></script>
-    <script src="js/douban.js" defer></script>
     <script src="js/password.js" defer></script>
     <script src="js/search.js" defer></script>
     <script src="js/tmdb.js" defer></script>
@@ -562,13 +514,6 @@
                     }, 100);
                     break;
                     
-                case 'hot':
-                    // 加载豆瓣热门内容
-                    if (typeof loadDoubanContent === 'function') {
-                        loadDoubanContent();
-                    }
-                    break;
-                    
                 case 'category':
                     if (typeof initTmdbCategory === 'function') {
                         initTmdbCategory();
@@ -596,10 +541,6 @@
         function toggleSettings(event) {
             if (event) event.stopPropagation();
             switchPage('settings');
-        }
-        
-        function toggleDouban() {
-            switchPage('hot');
         }
         
         function focusSearch() {

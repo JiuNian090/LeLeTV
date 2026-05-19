@@ -225,7 +225,6 @@ const CACHE_CONFIG = {
         'customAPIs',            // 自定义API列表
         'yellowFilterEnabled',   // 黄色内容过滤开关
         'adFilteringEnabled',    // 广告过滤开关
-        'doubanEnabled',         // 豆瓣功能开关
         'hasInitializedDefaults',// 是否已初始化默认值
         'viewingHistory',        // 观看历史记录
         'videoSearchHistory',    // 搜索历史记录

@@ -129,55 +129,7 @@
     max-width: 80rem !important; /* 5xl for wide screens */
 }
 
-/* 热门页面布局 */
-.hot-page-layout {
-    padding-top: 2rem;
-    width: 100%;
-    overflow-x: hidden;
-}
-
-.hot-content-container {
-    width: 100%;
-    max-width: 100%;
-}
-
-.hot-page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-/* 热门推荐网格优化 */
-#douban-results {
-    width: 100%;
-    overflow-x: hidden;
-}
-
-/* 确保热门标签不会导致横向滚动 */
-#douban-tags {
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
-}
-
-/* 热门推荐卡片响应式尺寸 */
-@media (max-width: 639px) {
-    #douban-results .rating-badge-text {
-        font-size: 9px;
-        padding: 0.1rem 0.3rem;
-        bottom: 0.25rem;
-        left: 0.25rem;
-    }
-    #douban-results .card-title-text {
-        font-size: 11px;
-    }
-    #douban-results .card-body {
-        padding: 0.35rem;
-    }
-}
-
-/* 历史记录页面布局 - 与热门推荐保持一致 */
+/* 历史记录页面布局 */
 .history-page-layout {
     padding-top: 2rem;
     width: 100%;
@@ -1028,10 +980,6 @@
         padding: 0 0.75rem 1.5rem;
     }
     
-    .hot-page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
 }
 
 /* 超宽屏幕搜索框更宽 - 占屏幕一半宽度，居中 */
