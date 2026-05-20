@@ -13,6 +13,16 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.20.10 (2026-05-20 23:35)
+- [构建] bump version to v2.5.20.283 and update static resource 缓存 tags
+
+- update version number in VERSION.txt and service-worker.js
+- update 缓存 busting query params for all static assets in html files
+- add collapsible genre filter 界面 for TMDB filter section
+- 优化 TMDB results paging logic to reduce redundant requests
+- remove redundant styles from TMDB filter section。
+
+
 ### v2.5.20.9 (2026-05-20 23:20)
 - [其他] release version v2.5.20.280
 
