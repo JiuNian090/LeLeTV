@@ -42,7 +42,7 @@ if (fs.existsSync(changelogPath)) {
   const regex = new RegExp(`\\(${todayStr}`, 'g');
   const matches = changelog.match(regex);
   if (matches) {
-    commitOrder = matches.length + 1;
+    commitOrder = matches.length;
   }
 }
 

@@ -61,7 +61,7 @@ async function getCommitOrderFromChangelog(dateStr) {
         // 匹配格式：### vX.Y.Z (YYYY-MM-DD HH:MM)
         const regex = new RegExp(`\\(${dateStr}`, 'g');
         const matches = text.match(regex);
-        return (matches ? matches.length : 0) + 1;
+        return (matches ? matches.length : 0);
     } catch (e) {
         return 1;
     }
