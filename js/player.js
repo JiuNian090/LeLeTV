@@ -358,6 +358,8 @@ function initializePageContent() {
 function handleKeyboardShortcuts(e) {
     // 忽略输入框中的按键事件
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    // 锁定状态下禁用所有键盘快捷键
+    if (controlsLocked) return;
 
     // Alt + 左箭头 = 上一集
     if (e.altKey && e.key === 'ArrowLeft') {
@@ -707,9 +709,29 @@ function initPlayer(videoUrl) {
     // 全屏状态切换时注册/移除 mouseout 事件，监听鼠标移出屏幕事件
     // 从而对播放器状态栏进行隐藏倒计时
     function handleFullScreen(isFullScreen, isWeb) {
+        const container = document.getElementById('playerContainer');
+        const lockBtn = document.getElementById('playerLockBtn');
         if (isFullScreen) {
+            container.classList.add('fullscreen-active');
+            // 进入全屏时把锁定按钮移入 #player（ArtPlayer 容器），使其在全屏视图中可见
+            if (lockBtn) {
+                lockBtn.dataset.origParent = lockBtn.parentElement.id || 'playerContainer';
+                const playerEl = document.getElementById('player');
+                if (playerEl && lockBtn.parentElement !== playerEl) {
+                    playerEl.appendChild(lockBtn);
+                }
+            }
             document.addEventListener('mouseout', handleMouseOut);
         } else {
+            container.classList.remove('fullscreen-active');
+            // 退出全屏时把锁定按钮移回容器
+            if (lockBtn && lockBtn.dataset.origParent) {
+                const origParent = document.getElementById(lockBtn.dataset.origParent) || container;
+                if (lockBtn.parentElement !== origParent) {
+                    origParent.insertBefore(lockBtn, origParent.querySelector('.relative') || null);
+                }
+                delete lockBtn.dataset.origParent;
+            }
             document.removeEventListener('mouseout', handleMouseOut);
             // 退出全屏时清理计时器
             clearTimeout(hideTimer);
@@ -1684,14 +1706,30 @@ function setupControlsBehavior() {
     overlay.addEventListener('mousedown', function (e) {
         if (controlsLocked) {
             e.stopPropagation();
+            e.preventDefault();
         }
     });
 
     overlay.addEventListener('touchstart', function (e) {
         if (controlsLocked) {
             e.stopPropagation();
+            e.preventDefault();
         }
-    }, { passive: true });
+    }, { passive: false });
+
+    overlay.addEventListener('touchend', function (e) {
+        if (controlsLocked) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    overlay.addEventListener('dblclick', function (e) {
+        if (controlsLocked) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    });
 
     overlay.addEventListener('click', function (e) {
         if (controlsLocked) {
