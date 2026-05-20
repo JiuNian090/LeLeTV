@@ -13,6 +13,17 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.20.11 (2026-05-20 23:55)
+- [构建] bump version to v2.5.20.287 and update versioned assets
+
+主要变更：
+1. 更新版本号文件VERSION.txt和缓存版本号
+2. 替换所有静态资源的版本戳从283到287
+3. 重构版本获取逻辑，从CHANGELOG.md改为读取VERSION.txt
+4. 新增_routes.json配置文件
+5. 删除不再使用的middleware.js和api代理相关文件。
+
+
 ### v2.5.20.10 (2026-05-20 23:35)
 - [构建] bump version to v2.5.20.283 and update static resource 缓存 tags
 
