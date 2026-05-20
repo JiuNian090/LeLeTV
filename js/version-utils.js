@@ -84,21 +84,19 @@ function convertTextVersionNumbers(text) {
 }
 
 /**
- * 从CHANGELOG.md文件获取最新版本号
+ * 从VERSION.txt文件获取最新版本号
  * @returns {Promise<string>} 最新版本号
  */
 async function getLatestVersionFromChangelog() {
     try {
-        const response = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+        const response = await fetch('/VERSION.txt', { cache: 'no-store' });
         if (!response.ok) {
-            throw new Error('获取更新日志失败');
+            throw new Error('获取版本文件失败');
         }
-        const markdownContent = await response.text();
-        
-        // 直接从CHANGELOG.md中提取最新版本号
-        const versionMatch = markdownContent.match(/### (v[\d\.]+) \(/);
-        if (versionMatch) {
-            return versionMatch[1];
+        const versionText = await response.text();
+        const rawVersion = versionText.trim();
+        if (rawVersion) {
+            return convertToSemanticVersion(rawVersion);
         }
         return '未知版本';
     } catch (error) {

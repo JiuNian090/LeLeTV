@@ -97,14 +97,15 @@ function setStatusDot(color) {
   dot.className = 'status-dot status-dot-' + color;
 }
 
-/** 从 CHANGELOG.md 获取最新版本号 */
+/** 从 VERSION.txt 获取最新版本号 */
 async function getChangelogVersion() {
   try {
-    var resp = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+    var resp = await fetch('/VERSION.txt', { cache: 'no-store' });
     if (!resp.ok) return null;
     var text = await resp.text();
-    var match = text.match(/### (v[\d\.]+) \(/);
-    return match ? match[1] : null;
+    var rawVersion = text.trim();
+    if (!rawVersion) return null;
+    return formatDisplayVersion(rawVersion);
   } catch (e) {
     return null;
   }

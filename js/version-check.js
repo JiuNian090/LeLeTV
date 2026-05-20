@@ -63,24 +63,24 @@ function calculateCommitOrderFromChangelog(year, month, day) {
     return 1;
 }
 
-// 解析CHANGELOG.md内容获取最新版本号
+// 解析VERSION.txt内容获取最新版本号
 async function getLatestVersionFromChangelog() {
     try {
-        // 获取CHANGELOG.md文件内容
-        const response = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+        const response = await fetch('/VERSION.txt', { cache: 'no-store' });
         if (!response.ok) {
-            throw new Error('获取更新日志失败');
+            throw new Error('获取版本文件失败');
         }
-        const markdownContent = await response.text();
-        
-        // 直接从CHANGELOG.md中提取最新版本号
-        const versionMatch = markdownContent.match(/### (v[\d\.]+) \(/);
-        if (versionMatch) {
-            return versionMatch[1];
+        const versionText = await response.text();
+        const rawVersion = versionText.trim();
+        if (rawVersion) {
+            if (window.versionUtils && typeof window.versionUtils.formatVersionToSemantic === 'function') {
+                return window.versionUtils.formatVersionToSemantic(rawVersion);
+            }
+            return formatVersion(rawVersion);
         }
         return null;
     } catch (error) {
-        console.error('解析更新日志获取最新版本号出错:', error);
+        console.error('解析版本文件出错:', error);
         return null;
     }
 }

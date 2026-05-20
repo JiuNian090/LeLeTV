@@ -1,0 +1,15 @@
+{
+    "version": 1,
+    "include": ["/*"],
+    "exclude": [
+        "/css/*",
+        "/js/*",
+        "/libs/*",
+        "/image/*",
+        "/CHANGELOG.md",
+        "/VERSION.txt",
+        "/manifest.json",
+        "/robots.txt",
+        "/api/*"
+    ]
+}
