@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.21.2 (2026-05-21 00:44)
+- [重构] 合并home.css样式到styles.css并删除冗余文件
+
+本次提交将原本独立的home.css中的首页、搜索、历史记录、分类、设置以及关于页面的样式代码全部合并到styles.css中，同时移除了不再需要的home.css文件，更新了README和CODE_WIKI中的文件说明，并且从service-worker.js和index.html中移除了对home.css的引用，减少了HTTP请求数量，优化了项目结构。
+
+
 ### v2.5.21.1 (2026-05-21 00:38)
 - [重构] 重命名index.css为home.css并更新引用
 
