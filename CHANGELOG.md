@@ -13,6 +13,16 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.20.8 (2026-05-20 20:37)
+- [构建] bump version to v2.5.20.247
+
+- 更新版本号从v2.5.20.2到v2.5.20.247
+- 为所有静态资源添加新的版本缓存参数
+- 新增.gitignore规则忽略.claude/目录
+- 新增AGENTS.md和CLAUDE.md文档配置GitNexus AI集成
+- 大幅更新README.md和CODE_WIKI.md文档内容。
+
+
 ### v2.5.20.7 (2026-05-20 01:24)
 - [其他] add controls auto-hide and click/double-click behavior
 
