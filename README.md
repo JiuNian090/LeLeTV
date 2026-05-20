@@ -343,7 +343,7 @@ LeLeTV/
 │   └── proxy/[...path].mjs       #   视频代理（通配路由）
 ├── css/                          # 样式文件（3794 行手写）
 │   ├── styles.css                #   全局样式（1147 行）
-│   ├── index.css                 #   首页 + 搜索卡片（1170 行）
+│   ├── home.css                  #   首页 + 搜索卡片（1170 行）
 │   ├── player.css                #   播放器页面（1248 行）
 │   ├── watch.css                 #   中转页面（229 行）
 │   ├── tailwind.css              #   Tailwind 入口（3 行）
