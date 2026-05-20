@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.21.1 (2026-05-21 00:38)
+- [重构] 重命名index.css为home.css并更新引用
+
+将首页相关样式文件从index.css重命名为home.css，同步更新service worker、index.html、README和CODE_WIKI中的文件引用，新增home.css并迁移原有首页样式代码。
+
+
 ### v2.5.20.11 (2026-05-20 23:55)
 - [构建] bump version to v2.5.20.287 and update versioned assets
 
