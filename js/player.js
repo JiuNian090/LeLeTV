@@ -1512,6 +1512,7 @@ function setupLongPressSpeedControl() {
 
     // 核心：开始长按倒计时
     function startLongPress() {
+        if (controlsLocked) return;
         if (art.video.paused) return;
         originalPlaybackRate = art.video.playbackRate;
         clearTimeout(longPressTimer);
@@ -1680,7 +1681,25 @@ function setupControlsBehavior() {
     videoWrapper.style.position = 'relative';
     videoWrapper.appendChild(overlay);
 
+    overlay.addEventListener('mousedown', function (e) {
+        if (controlsLocked) {
+            e.stopPropagation();
+        }
+    });
+
+    overlay.addEventListener('touchstart', function (e) {
+        if (controlsLocked) {
+            e.stopPropagation();
+        }
+    }, { passive: true });
+
     overlay.addEventListener('click', function (e) {
+        if (controlsLocked) {
+            showLockBtn();
+            scheduleLockBtnHide();
+            e.stopPropagation();
+            return;
+        }
         if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
@@ -1697,11 +1716,20 @@ function setupControlsBehavior() {
     });
 
     playerEl.addEventListener('mousemove', function () {
+        if (controlsLocked) {
+            showLockBtn();
+            scheduleLockBtnHide();
+            return;
+        }
         if (!controlsVisible) showControls();
         else resetAutoHide();
     });
 
     playerEl.addEventListener('mouseleave', function () {
+        if (controlsLocked) {
+            scheduleLockBtnHide();
+            return;
+        }
         if (controlsVisible) resetAutoHide();
     });
 
@@ -1860,15 +1888,47 @@ function addNextEpisodeDirectly(art) {
 }
 
 let controlsLocked = false;
-function toggleControlsLock() {
+let lockBtnHideTimeout = null;
+
+function showLockBtn() {
+    const btn = document.getElementById('playerLockBtn');
+    if (btn) btn.classList.add('visible');
+}
+
+function hideLockBtn() {
+    const btn = document.getElementById('playerLockBtn');
+    if (btn) btn.classList.remove('visible');
+    if (lockBtnHideTimeout) {
+        clearTimeout(lockBtnHideTimeout);
+        lockBtnHideTimeout = null;
+    }
+}
+
+function scheduleLockBtnHide() {
+    if (lockBtnHideTimeout) clearTimeout(lockBtnHideTimeout);
+    lockBtnHideTimeout = setTimeout(hideLockBtn, 2000);
+}
+
+function toggleControlsLock(event) {
+    if (event) event.stopPropagation();
     const container = document.getElementById('playerContainer');
     controlsLocked = !controlsLocked;
     container.classList.toggle('controls-locked', controlsLocked);
-    const icon = document.getElementById('lockIcon');
-    // 切换图标：锁 / 解锁
-    icon.innerHTML = controlsLocked
-        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d=\"M12 15v2m0-8V7a4 4 0 00-8 0v2m8 0H4v8h16v-8H6v-6z\"/>'
-        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d=\"M15 11V7a3 3 0 00-6 0v4m-3 4h12v6H6v-6z\"/>';
+
+    const openIcon = document.getElementById('lockOpenIcon');
+    const closedIcon = document.getElementById('lockClosedIcon');
+    if (!openIcon || !closedIcon) return;
+
+    if (controlsLocked) {
+        openIcon.classList.add('hidden');
+        closedIcon.classList.remove('hidden');
+        showLockBtn();
+        scheduleLockBtnHide();
+    } else {
+        openIcon.classList.remove('hidden');
+        closedIcon.classList.add('hidden');
+        hideLockBtn();
+    }
 }
 
 function renderPlayerDetailInfo() {

@@ -11,10 +11,10 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <link rel="stylesheet" href="css/output.css?v=v2.5.20.247">
-    <script src="js/version-check.js?v=v2.5.20.247"></script>
-    <link rel="stylesheet" href="css/styles.css?v=v2.5.20.247">
-    <link rel="stylesheet" href="css/player.css?v=v2.5.20.247">
+    <link rel="stylesheet" href="css/output.css?v=v2.5.20.280">
+    <script src="js/version-check.js?v=v2.5.20.280"></script>
+    <link rel="stylesheet" href="css/styles.css?v=v2.5.20.280">
+    <link rel="stylesheet" href="css/player.css?v=v2.5.20.280">
     
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -49,6 +49,17 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
+
+                    <!-- 锁定按钮（播放器内右侧居中） -->
+                    <button id="playerLockBtn" class="player-lock-btn" onclick="toggleControlsLock(event)" title="锁定控制栏">
+                        <svg id="lockOpenIcon" class="lock-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                        </svg>
+                        <svg id="lockClosedIcon" class="lock-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </button>
+
                     <div class="relative">
                         <div id="player" class="player-placeholder">
                             <!-- Initial loading state before JavaScript loads -->
@@ -123,34 +134,24 @@
 
                 <!-- 控制按钮 -->
                 <div class="player-container player-right-item">
-                    <div class="flex items-center justify-between gap-2 control-buttons-container">
-                        <!-- 左侧组：自动连播 + 锁定控制 + 复制链接 -->
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
-                            <!-- 自动连播开关 -->
-                            <div class="flex items-center gap-1 flex-shrink-0 autoplay-container control-btn px-3 py-1 bg-[#222] border border-[#333] rounded-lg transition">
-                                <span class="text-gray-400 text-sm whitespace-nowrap">自动连播</span>
-                                <label class="switch">
-                                    <input type="checkbox" id="autoplayToggle">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-
-                            <!-- 复制链接按钮 -->
-                            <button title="复制播放链接" onclick="copyLinks()" class="bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition flex-shrink-0 flex items-center justify-center control-btn icon-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                </svg>
-                            </button>
-
-                            <!-- 锁定控制按钮 -->
-                            <button id="lockToggle" onclick="toggleControlsLock()" title="锁定控制"
-                                    class="bg-[#222] hover:bg-[#333] border border-[#333] text-white rounded-lg transition flex-shrink-0 flex items-center justify-center control-btn icon-btn">
-                                <svg id="lockIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 11V7a3 3 0 00-6 0v4m-3 4h12v6H6v-6z" />
-                                </svg>
-                            </button>
+                    <div class="flex items-center gap-1 control-buttons-container">
+                        <!-- 自动连播开关 -->
+                        <div class="flex items-center gap-1 flex-1 justify-center autoplay-container control-btn px-3 py-1 bg-[#222] border border-[#333] rounded-lg transition">
+                            <span class="text-gray-400 text-sm whitespace-nowrap">自动连播</span>
+                            <label class="switch">
+                                <input type="checkbox" id="autoplayToggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
+
+                        <!-- 复制链接按钮 -->
+                        <button title="复制播放链接" onclick="copyLinks()"
+                                class="flex items-center gap-1.5 flex-1 justify-center control-btn px-3 py-1 bg-[#222] border border-[#333] rounded-lg transition hover:bg-[#333]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            <span class="text-gray-400 text-sm whitespace-nowrap">复制链接</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -193,23 +194,23 @@
     </div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v2.5.20.247"></script>
+    <script src="libs/sha256.min.js?v=v2.5.20.280"></script>
     <script>
         // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
         window._jsSha256 = window.sha256;
     </script>
     
-    <script src="libs/hls.min.js?v=v2.5.20.247" defer crossorigin="anonymous"></script>
-    <script src="libs/artplayer.min.js?v=v2.5.20.247" defer crossorigin="anonymous"></script>
+    <script src="libs/hls.min.js?v=v2.5.20.280" defer crossorigin="anonymous"></script>
+    <script src="libs/artplayer.min.js?v=v2.5.20.280" defer crossorigin="anonymous"></script>
 
-    <script src="js/config.js?v=v2.5.20.247" defer></script>
-    <script src="js/proxy-auth.js?v=v2.5.20.247" defer></script>
-    <script src="js/customer_site.js?v=v2.5.20.247" defer></script>
-    <script src="js/password.js?v=v2.5.20.247" defer></script>
-    <script src="js/ui.js?v=v2.5.20.247" defer></script>
-    <script src="js/api.js?v=v2.5.20.247" defer></script>
-    <script src="js/search.js?v=v2.5.20.247" defer></script>
-    <script src="js/player.js?v=v2.5.20.247" defer></script>
+    <script src="js/config.js?v=v2.5.20.280" defer></script>
+    <script src="js/proxy-auth.js?v=v2.5.20.280" defer></script>
+    <script src="js/customer_site.js?v=v2.5.20.280" defer></script>
+    <script src="js/password.js?v=v2.5.20.280" defer></script>
+    <script src="js/ui.js?v=v2.5.20.280" defer></script>
+    <script src="js/api.js?v=v2.5.20.280" defer></script>
+    <script src="js/search.js?v=v2.5.20.280" defer></script>
+    <script src="js/player.js?v=v2.5.20.280" defer></script>
 
     <script>
         // 创建全局环境变量对象
@@ -243,10 +244,10 @@
 
     </script>
     <!-- 版本更新检测模块 -->
-    <script src="js/version-updater.js?v=v2.5.20.247" defer></script>
+    <script src="js/version-updater.js?v=v2.5.20.280" defer></script>
     <!-- 缓存管理模块 -->
-    <script src="js/cache-manager.js?v=v2.5.20.247" defer></script>
-    <script src="js/app.js?v=v2.5.20.247" defer></script>
+    <script src="js/cache-manager.js?v=v2.5.20.280" defer></script>
+    <script src="js/app.js?v=v2.5.20.280" defer></script>
     <script>
         // 初始化邮箱点击处理器
         document.addEventListener('DOMContentLoaded', function() {
