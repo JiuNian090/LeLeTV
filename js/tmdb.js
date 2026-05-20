@@ -10,7 +10,8 @@ const TMDB_STATE = {
   originCountry: '',
   tvStatus: '',
   isLoaded: false,
-  isLoading: false
+  isLoading: false,
+  _genreExpanded: false
 };
 
 const TMDB_CONFIG = {
@@ -244,11 +245,16 @@ function renderTmdbFilters() {
       </div>
 
       <div class="tmdb-filter-row tmdb-genre-row">
-        <div class="tmdb-genre-list">
+        <div class="tmdb-genre-list${!TMDB_STATE._genreExpanded && GENRE_MAP[getEffectiveType(type)].length > 8 ? ' genre-filter-collapsed' : ''}">
           <button class="tmdb-genre-btn${!TMDB_STATE.selectedGenre ? ' active' : ''}" data-genre="">全部</button>
-          ${genres.map(g => `
-            <button class="tmdb-genre-btn${TMDB_STATE.selectedGenre === g.id ? ' active' : ''}" data-genre="${g.id}">${g.name}</button>
+          ${genres.map((g, i) => `
+            <button class="tmdb-genre-btn${TMDB_STATE.selectedGenre === g.id ? ' active' : ''}${i >= 8 ? ' genre-btn-extra' : ''}" data-genre="${g.id}">${g.name}</button>
           `).join('')}
+          ${GENRE_MAP[getEffectiveType(type)].length > 8 ? `
+            <button class="tmdb-genre-btn genre-toggle-btn" data-genre-toggle>
+              ${TMDB_STATE._genreExpanded ? '收起' : '更多类型...'}
+            </button>
+          ` : ''}
         </div>
       </div>
 
@@ -347,6 +353,10 @@ function bindFilterTags() {
       TMDB_STATE._yearExpanded = !TMDB_STATE._yearExpanded;
       renderTmdbFilters();
       return;
+    } else if (btn.hasAttribute('data-genre-toggle')) {
+      TMDB_STATE._genreExpanded = !TMDB_STATE._genreExpanded;
+      renderTmdbFilters();
+      return;
     } else if (btn.hasAttribute('data-year')) {
       if (btn.dataset.year === TMDB_STATE.selectedYear) return;
       TMDB_STATE.selectedYear = btn.dataset.year;
@@ -432,10 +442,25 @@ async function loadTmdbResults() {
     }
 
     const endpoint = isMovie ? 'discover/movie' : 'discover/tv';
-    const data = await tmdbFetch(endpoint, params);
 
-    TMDB_STATE.totalPages = Math.min(data.total_pages || 1, 500);
-    renderTmdbCards(data.results || []);
+    const ourPage = TMDB_STATE.page;
+    const startIdx = (ourPage - 1) * 24;
+    const tmdbPage1 = Math.floor(startIdx / 20) + 1;
+    const offset = startIdx % 20;
+
+    const [data, data2] = await Promise.all([
+      tmdbFetch(endpoint, { ...params, page: tmdbPage1 }),
+      tmdbPage1 + 1 <= 500
+        ? tmdbFetch(endpoint, { ...params, page: tmdbPage1 + 1 })
+        : { results: [] }
+    ]);
+
+    let results = [...(data.results || []), ...(data2.results || [])];
+    results = results.slice(offset, offset + 24);
+
+    const totalTmdbPages = Math.min(data.total_pages || 1, 500);
+    TMDB_STATE.totalPages = Math.min(Math.ceil(totalTmdbPages * 20 / 24), 500);
+    renderTmdbCards(results);
     renderTmdbPagination();
   } catch (err) {
     console.error('TMDB 加载失败:', err);

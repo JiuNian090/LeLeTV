@@ -171,10 +171,6 @@
 
 /* TMDB 筛选区域 */
 .tmdb-filter-section {
-    background: #151515;
-    border: 1px solid #2d2d2d;
-    border-radius: 0.75rem;
-    padding: 1rem;
     max-width: 100%;
     overflow-x: hidden;
     box-sizing: border-box;
@@ -1025,6 +1021,27 @@
 }
 
 .year-toggle-btn:hover {
+  border-color: #93c5fd !important;
+  background: rgba(147, 197, 253, 0.1) !important;
+}
+
+/* 类型标签折叠样式 */
+.genre-filter-collapsed {
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+}
+
+.genre-filter-collapsed .genre-btn-extra {
+  display: none;
+}
+
+.genre-toggle-btn {
+  flex-shrink: 0;
+  color: #93c5fd !important;
+  border-color: rgba(147, 197, 253, 0.3) !important;
+}
+
+.genre-toggle-btn:hover {
   border-color: #93c5fd !important;
   background: rgba(147, 197, 253, 0.1) !important;
 }
