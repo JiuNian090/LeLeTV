@@ -31,7 +31,21 @@ const RAW_VERSION = `${year}${month}${day}${hours}${minutes}`;
 
 // 语义化版本号 vN.M.D.Z (年偏移.月.日.提交次序)
 const versionYear = Math.max(1, (year - 2025) + 1);
-const commitOrder = Math.floor((now.getHours() * 60 + now.getMinutes()) / 5) + 1;
+
+// 从 CHANGELOG.md 统计当天已有几条记录，新版本的提交次序 = 记录数 + 1
+let commitOrder = 1;
+const changelogPath = path.join(ROOT, 'CHANGELOG.md');
+if (fs.existsSync(changelogPath)) {
+  const changelog = fs.readFileSync(changelogPath, 'utf8');
+  const todayStr = `${year}-${month}-${day}`;
+  // 匹配格式：### vX.Y.Z (YYYY-MM-DD HH:MM)
+  const regex = new RegExp(`\\(${todayStr}`, 'g');
+  const matches = changelog.match(regex);
+  if (matches) {
+    commitOrder = matches.length + 1;
+  }
+}
+
 const SEMANTIC_VERSION = `v${versionYear}.${parseInt(month)}.${parseInt(day)}.${commitOrder}`;
 
 console.log(`[版本生成] 原始: ${RAW_VERSION}  →  语义: ${SEMANTIC_VERSION}`);

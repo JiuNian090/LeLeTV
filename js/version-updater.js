@@ -13,9 +13,9 @@ function formatDisplayVersion(rawVersion) {
     const y = rawVersion.substring(0, 4);
     const m = parseInt(rawVersion.substring(4, 6));
     const d = parseInt(rawVersion.substring(6, 8));
-    const h = parseInt(rawVersion.substring(8, 10));
     const vYear = Math.max(1, (parseInt(y) - 2025) + 1);
-    return `v${vYear}.${m}.${d}.${h}`;
+    // 初次显示默认用1，后续 getLatestVersionFromChangelog 会异步覆盖为正确值
+    return `v${vYear}.${m}.${d}.1`;
   }
   if (rawVersion.startsWith('v')) return rawVersion;
   return `v${rawVersion}`;

@@ -5,7 +5,13 @@
  * @param {string} numericVersion - 数字格式的版本号，如"202508270043"
  * @returns {string} 语义化格式的版本号，如"v1.8.28.1"
  */
-function convertToSemanticVersion(numericVersion) {
+/**
+ * 将数字格式的版本号转换为语义化版本号
+ * @param {string} numericVersion - 数字格式的版本号，如"202605210048"
+ * @param {number} [commitOrder] - 可选，当天提交次序。不传时默认1
+ * @returns {string} 语义化格式的版本号，如"v2.5.21.3"
+ */
+function convertToSemanticVersion(numericVersion, commitOrder) {
     // 验证输入
     if (!numericVersion || typeof numericVersion !== 'string') {
         return '未知版本';
@@ -20,7 +26,7 @@ function convertToSemanticVersion(numericVersion) {
     }
     
     // 根据项目当前版本格式（YYYYMMDDHHMM）创建语义化版本号
-    // 新转换规则：vN（25年为1，以后年份递增）.Y（当前月份）.X（当前日期）.Z（当天提交的次序）
+    // vN（25年为1，以后年份递增）.Y（当前月份）.X（当前日期）.Z（当天提交的次序，从 CHANGELOG 统计）
     if (cleanedVersion.length >= 12) {
         // 年份完整值
         const fullYear = cleanedVersion.substring(0, 4);
@@ -31,11 +37,11 @@ function convertToSemanticVersion(numericVersion) {
         // 日期
         const day = parseInt(cleanedVersion.substring(6, 8));
         
-        // 提交次序（基于CHANGELOG.md中相同日期的版本号统计）
-        const commitOrder = calculateCommitOrderFromChangelog(fullYear, month, day);
+        // 提交次序：有传入则用传入值，否则默认为1
+        const order = (commitOrder !== undefined) ? commitOrder : 1;
         
         // 组合成新的版本号格式：vN.Y.X.Z
-        return `v${versionYear}.${month}.${day}.${commitOrder}`;
+        return `v${versionYear}.${month}.${day}.${order}`;
     }
     
     // 如果无法解析，返回带有v前缀的原始版本
@@ -43,17 +49,22 @@ function convertToSemanticVersion(numericVersion) {
 }
 
 /**
- * 从CHANGELOG.md中计算指定日期的提交次序
- * @param {string} year - 年份
- * @param {number} month - 月份
- * @param {number} day - 日期
- * @returns {number} 提交次序
+ * 从 CHANGELOG.md 中统计当天已有几条记录，返回下次提交的次序
+ * @param {string} dateStr - 日期字符串，格式 "YYYY-MM-DD"
+ * @returns {Promise<number>} 提交次序（记录数 + 1，至少为1）
  */
-function calculateCommitOrderFromChangelog(year, month, day) {
-    // 在浏览器环境中，我们无法直接读取CHANGELOG.md文件
-    // 所以我们返回默认值1
-    // 在实际项目中，这需要通过异步方式获取
-    return 1;
+async function getCommitOrderFromChangelog(dateStr) {
+    try {
+        const resp = await fetch('/CHANGELOG.md', { cache: 'no-store' });
+        if (!resp.ok) return 1;
+        const text = await resp.text();
+        // 匹配格式：### vX.Y.Z (YYYY-MM-DD HH:MM)
+        const regex = new RegExp(`\\(${dateStr}`, 'g');
+        const matches = text.match(regex);
+        return (matches ? matches.length : 0) + 1;
+    } catch (e) {
+        return 1;
+    }
 }
 
 /**
@@ -89,16 +100,31 @@ function convertTextVersionNumbers(text) {
  */
 async function getLatestVersionFromChangelog() {
     try {
-        const response = await fetch('/VERSION.txt', { cache: 'no-store' });
-        if (!response.ok) {
+        const [versionResp, changelogResp] = await Promise.all([
+            fetch('/VERSION.txt', { cache: 'no-store' }),
+            fetch('/CHANGELOG.md', { cache: 'no-store' })
+        ]);
+        
+        if (!versionResp.ok) {
             throw new Error('获取版本文件失败');
         }
-        const versionText = await response.text();
+        
+        const versionText = await versionResp.text();
         const rawVersion = versionText.trim();
-        if (rawVersion) {
-            return convertToSemanticVersion(rawVersion);
+        
+        if (!rawVersion) return '未知版本';
+        
+        // 从 VERSION.txt 提取日期（YYYYMMDDHHMM → YYYY-MM-DD）
+        const cleaned = rawVersion.replace(/^v/, '');
+        let commitOrder;
+        if (cleaned.length >= 8) {
+            const dateStr = `${cleaned.substring(0, 4)}-${cleaned.substring(4, 6)}-${cleaned.substring(6, 8)}`;
+            commitOrder = await getCommitOrderFromChangelog(dateStr);
+        } else {
+            commitOrder = 1;
         }
-        return '未知版本';
+        
+        return convertToSemanticVersion(rawVersion, commitOrder);
     } catch (error) {
         console.error('获取最新版本号出错:', error);
         return '未知版本';
@@ -167,6 +193,7 @@ window.versionUtils = {
     formatVersionToSemantic,
     convertTextVersionNumbers,
     getLatestVersionFromChangelog,
+    getCommitOrderFromChangelog,
     updateFooterVersion,
     updateChangelogVersions
 };
