@@ -182,8 +182,7 @@ LeLeTV/
 ├── api/                        # Cloudflare Pages Functions
 │   └── proxy/[...path].mjs     #   视频代理（通配路由）
 ├── css/                        # 样式文件（3794 行手写）
-│   ├── styles.css              #   全局样式（1147 行：滚动条、动画、HarmonyOS 变量）
-│   ├── home.css                #   首页 + 搜索卡片（1170 行）
+│   ├── styles.css              #   全局样式（2335 行，含首页、搜索、设置、关于等）
 │   ├── player.css              #   播放器页面（1248 行）
 │   ├── watch.css               #   中转页面（229 行）
 │   ├── tailwind.css            #   Tailwind CSS 入口（@tailwind 指令）

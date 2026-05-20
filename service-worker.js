@@ -18,7 +18,7 @@ const STATIC_ASSETS = [
   '/image/logo.png',
   '/css/output.css',
   '/css/styles.css',
-  '/css/home.css',
+
   '/css/player.css',
   '/css/watch.css',
   '/js/app.js',
