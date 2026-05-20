@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.20.9 (2026-05-20 23:20)
+- [其他] release version v2.5.20.280
+
+add player control lock 功能, update all static resource version tags。
+
+
 ### v2.5.20.8 (2026-05-20 20:37)
 - [构建] bump version to v2.5.20.247
 
