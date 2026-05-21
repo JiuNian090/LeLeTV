@@ -13,6 +13,12 @@ npm run tag
 ```
 ## 版本历史
 
+### v2.5.21.7 (2026-05-21 13:16)
+- [其他] 移除重复的AGENTS.md和CLAUDE.md文档
+
+删除了两份完全相同的GitNexus使用说明文档，清理仓库冗余文件。
+
+
 ### v2.5.21.6 (2026-05-21 01:18)
 - [构建] bump version to 2.5.21.5 and update assets
 
