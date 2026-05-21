@@ -1,16 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * LeLeTV 版本生成脚本
- *
- * 在构建时运行，完成以下工作：
- * 1. 生成基于当前时间戳的版本号 YYYYMMDDHHmm
- * 2. 写入 VERSION.txt
- * 3. 替换 HTML 文件中的 {{LELETV_VERSION}} 占位符
- * 4. 更新 service-worker.js 中的 CACHE_VERSION
- * 5. 为 CSS/JS 引用添加缓存失效查询参数
- */
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,40 +8,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
 
-const now = new Date();
-const year = now.getFullYear();
-const month = String(now.getMonth() + 1).padStart(2, '0');
-const day = String(now.getDate()).padStart(2, '0');
-const hours = String(now.getHours()).padStart(2, '0');
-const minutes = String(now.getMinutes()).padStart(2, '0');
-
-// 原始版本号 YYYYMMDDHHmm
-const RAW_VERSION = `${year}${month}${day}${hours}${minutes}`;
-
-// 语义化版本号 vN.M.D.Z (年偏移.月.日.提交次序)
-const versionYear = Math.max(1, (year - 2025) + 1);
-
-// 从 CHANGELOG.md 统计当天已有几条记录，新版本的提交次序 = 记录数 + 1
-let commitOrder = 1;
-const changelogPath = path.join(ROOT, 'CHANGELOG.md');
-if (fs.existsSync(changelogPath)) {
-  const changelog = fs.readFileSync(changelogPath, 'utf8');
-  const todayStr = `${year}-${month}-${day}`;
-  // 匹配格式：### vX.Y.Z (YYYY-MM-DD HH:MM)
-  const regex = new RegExp(`\\(${todayStr}`, 'g');
-  const matches = changelog.match(regex);
-  if (matches) {
-    commitOrder = matches.length;
-  }
+/* ---------- 1. 读取 VERSION.txt ---------- */
+const versionFilePath = path.join(ROOT, 'VERSION.txt');
+if (!fs.existsSync(versionFilePath)) {
+  console.error('[错误] VERSION.txt 不存在，请先手动创建版本文件');
+  process.exit(1);
 }
 
-const SEMANTIC_VERSION = `v${versionYear}.${parseInt(month)}.${parseInt(day)}.${commitOrder}`;
+const RAW_VERSION = fs.readFileSync(versionFilePath, 'utf8').trim();
+if (!RAW_VERSION) {
+  console.error('[错误] VERSION.txt 内容为空，请写入版本号');
+  process.exit(1);
+}
 
-console.log(`[版本生成] 原始: ${RAW_VERSION}  →  语义: ${SEMANTIC_VERSION}`);
-
-/* ---------- 1. 写入 VERSION.txt ---------- */
-fs.writeFileSync(path.join(ROOT, 'VERSION.txt'), RAW_VERSION, 'utf8');
-console.log('[VERSION.txt] 已更新');
+console.log(`[版本读取] 当前版本: ${RAW_VERSION}`);
 
 /* ---------- 2. 替换 HTML 中的占位符和缓存引用 ---------- */
 const HTML_FILES = ['index.html', 'player.html', 'about.html', 'watch.html'];
@@ -66,19 +35,22 @@ for (const fileName of HTML_FILES) {
 
   let content = fs.readFileSync(filePath, 'utf8');
 
-  // 替换版本号占位符
   content = content.replace(/{{LELETV_VERSION}}/g, RAW_VERSION);
 
-  // 为 CSS 引用添加缓存失效参数
+  // 替换 window.__LELETV_VERSION__ 硬编码版本号
   content = content.replace(
-    /(<link[^>]*href="[^"]*\.css)(\?v=[^"]*)?("[^>]*>)/g,
-    `$1?v=${SEMANTIC_VERSION}$3`
+    /(window\.__LELETV_VERSION__\s*=\s*")[^"]*(")/,
+    `$1${RAW_VERSION}$2`
   );
 
-  // 为 JS 引用添加缓存失效参数
+  content = content.replace(
+    /(<link[^>]*href="[^"]*\.css)(\?v=[^"]*)?("[^>]*>)/g,
+    `$1?v=${RAW_VERSION}$3`
+  );
+
   content = content.replace(
     /(<script[^>]*src="[^"]*\.js)(\?v=[^"]*)?("[^>]*>)/g,
-    `$1?v=${SEMANTIC_VERSION}$3`
+    `$1?v=${RAW_VERSION}$3`
   );
 
   fs.writeFileSync(filePath, content, 'utf8');
@@ -92,11 +64,11 @@ if (fs.existsSync(swPath)) {
 
   swContent = swContent.replace(
     /const CACHE_VERSION = '[^']*'/,
-    `const CACHE_VERSION = '${SEMANTIC_VERSION}'`
+    `const CACHE_VERSION = '${RAW_VERSION}'`
   );
 
   fs.writeFileSync(swPath, swContent, 'utf8');
-  console.log(`[service-worker.js] CACHE_VERSION 已更新为 ${SEMANTIC_VERSION}`);
+  console.log(`[service-worker.js] CACHE_VERSION 已更新为 ${RAW_VERSION}`);
 }
 
 console.log('[完成] 版本生成脚本执行完毕');

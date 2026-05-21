@@ -1,5 +1,5 @@
 // Service Worker 版本
-const CACHE_VERSION = 'v2.5.21.5';
+const CACHE_VERSION = '202605211317';
 const CACHE_NAME = `leletv-cache-${CACHE_VERSION}`;
 const CACHE_API = `leletv-api-${CACHE_VERSION}`;
 const CACHE_IMAGES = `leletv-images-${CACHE_VERSION}`;

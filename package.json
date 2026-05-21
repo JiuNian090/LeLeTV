@@ -30,9 +30,6 @@
     "start": "node server.mjs",
     "build": "node scripts/generate-version.mjs && tailwindcss -i ./css/tailwind.css -o ./css/output.css --minify",
     "test": "echo 'Running tests...'",
-    "tag": "node scripts/create-tag.js",
-    "historical-releases": "node scripts/create-historical-releases.js",
-    "test-auto-release": "node scripts/test-auto-release.js",
     "lint": "echo 'Linting code...'",
     "format": "echo 'Formatting code...'"
   },

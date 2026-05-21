@@ -7,16 +7,6 @@ var latestChangelogVersion = null;
 function formatDisplayVersion(rawVersion) {
   if (!rawVersion || rawVersion === '0') return '';
   if (rawVersion.startsWith('{{')) return '';
-  if (rawVersion.length >= 12) {
-    const digits = parseInt(rawVersion.substring(0, 4));
-    if (isNaN(digits)) return '';
-    const y = rawVersion.substring(0, 4);
-    const m = parseInt(rawVersion.substring(4, 6));
-    const d = parseInt(rawVersion.substring(6, 8));
-    const vYear = Math.max(1, (parseInt(y) - 2025) + 1);
-    // 初次显示默认用1，后续 getLatestVersionFromChangelog 会异步覆盖为正确值
-    return `v${vYear}.${m}.${d}.1`;
-  }
   if (rawVersion.startsWith('v')) return rawVersion;
   return `v${rawVersion}`;
 }
@@ -73,7 +63,6 @@ async function performUpdate() {
 
   setTimeout(() => {
     localStorage.removeItem(UPDATING_KEY);
-    // 带时间戳重新加载，穿透所有缓存层（浏览器、SW、CDN）
     window.location.href = '/?_=' + Date.now();
   }, 800);
 }
@@ -111,7 +100,7 @@ async function getChangelogVersion() {
   }
 }
 
-/** 核心：对比 CHANGELOG 版本与 localStorage 记录 */
+/** 核心：对比 VERSION.txt 版本与 localStorage 记录 */
 async function checkForUpdates() {
   var changelogVersion = await getChangelogVersion();
   if (!changelogVersion) {
