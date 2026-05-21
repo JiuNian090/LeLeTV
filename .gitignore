@@ -36,6 +36,8 @@ apikey/
 
 # AI tools generated files
 .claude/
+AGENTS.md
+CLAUDE.md
 
 # Environment variables
 .env
