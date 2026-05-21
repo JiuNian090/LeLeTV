@@ -21,6 +21,9 @@
     <meta http-equiv="Expires" content="0">
 </head>
 <body>
+    <!-- Aurora 极光背景 -->
+    <div id="auroraContainer" class="aurora-bg" style="opacity:0.3"></div>
+    
     <!-- 密码验证弹窗 -->
     <div id="passwordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
         <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333] max-h-[90vh] flex flex-col">
@@ -247,10 +250,18 @@
     <script src="js/version-updater.js?v=v2.5.3" defer></script>
     <!-- 缓存管理模块 -->
     <script src="js/cache-manager.js?v=v2.5.3" defer></script>
+    <script src="js/aurora-bg.js?v=v2.5.3"></script>
     <script src="js/app.js?v=v2.5.3" defer></script>
     <script>
         // 初始化邮箱点击处理器
         document.addEventListener('DOMContentLoaded', function() {
+            initAurora({
+                selector: '#auroraContainer',
+                colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
+                amplitude: 0.3,
+                blend: 0.9,
+                speed: 0.4
+            });
             if (typeof setupEmailClickHandlers === 'function') {
                 setupEmailClickHandlers();
             }

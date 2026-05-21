@@ -2334,3 +2334,33 @@ img.loading-fade.loaded {
         padding-top: 0.5rem;
     }
 }
+
+/* Aurora 极光背景 */
+.aurora-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.aurora-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* 内容层在极光之上 */
+.main-container,
+.about-page-layout,
+body > main,
+body > header {
+    position: relative;
+    z-index: 1;
+}

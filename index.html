@@ -27,6 +27,9 @@
     <link rel="icon" href="/image/logo-black.png" sizes="384x384">
 </head>
 <body class="page-bg text-white">
+    <!-- Aurora 极光背景 -->
+    <div id="auroraContainer" class="aurora-bg"></div>
+    
     <!-- 导航栏 -->
     <nav class="top-nav-bar">
         <div class="nav-container">
@@ -540,6 +543,9 @@
     <!-- 缓存管理模块 -->
     <script src="js/cache-manager.js?v=v2.5.3" defer></script>
 
+    <!-- Aurora 极光背景 -->
+    <script src="js/aurora-bg.js?v=v2.5.3"></script>
+
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
     <script src="js/index-page.js?v=v2.5.3" defer></script>
     <script>
@@ -729,6 +735,15 @@
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化极光背景
+            initAurora({
+                selector: '#auroraContainer',
+                colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
+                amplitude: 0.5,
+                blend: 0.8,
+                speed: 0.5
+            });
+
             // 初始显示首页
             switchPage('home');
             

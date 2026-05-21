@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="css/output.css?v=v2.5.3">
     <!-- 缓存管理模块 -->
     <script src="js/cache-manager.js?v=v2.5.3"></script>
+    <script src="js/aurora-bg.js?v=v2.5.3"></script>
     <script src="js/app.js?v=v2.5.3"></script>
     <script src="js/version-utils.js?v=v2.5.3"></script>
     <link rel="stylesheet" href="css/styles.css?v=v2.5.3">
@@ -21,7 +22,10 @@
 
 </head>
 <body class="page-bg text-white flex flex-col min-h-screen">
-	<header class="border-b border-[#333] bg-[#000000] p-4 max-sm:p-2 max-sm:px-3">
+    <!-- Aurora 极光背景 -->
+    <div id="auroraContainer" class="aurora-bg"></div>
+    
+    <header class="border-b border-[#333] bg-[#000000] p-4 max-sm:p-2 max-sm:px-3">
         <div class="container mx-auto flex items-center">
             <div class="flex items-center">
                 <a href="/" class="flex items-center">
@@ -247,6 +251,13 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            initAurora({
+                selector: '#auroraContainer',
+                colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
+                amplitude: 0.5,
+                blend: 0.8,
+                speed: 0.5
+            });
             loadAboutPageChangelog();
             if (typeof setupEmailClickHandlers === 'function') {
                 setupEmailClickHandlers();
