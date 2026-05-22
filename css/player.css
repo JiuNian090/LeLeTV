@@ -937,41 +937,24 @@ input:checked + .slider:before {
     flex-wrap: nowrap !important;
 }
 
-/* 响应式间距调整 - 超小屏幕 */
+/* 响应式间距调整 */
 @media (max-width: 480px) {
     .control-buttons-container {
-        gap: 0.25rem !important;
+        gap: 0.5rem !important;
     }
     
-    /* 超小屏幕下缩小按钮间距 */
     .control-buttons-container > div:first-child {
         gap: 0.25rem !important;
     }
     
-    /* 超小屏幕下自动连播文字稍小 */
     .autoplay-container span {
         font-size: 0.75rem !important;
     }
 }
 
-/* 响应式间距调整 - 小屏幕 */
-@media (min-width: 481px) and (max-width: 768px) {
+@media (min-width: 481px) {
     .control-buttons-container {
-        gap: 0.5rem !important;
-    }
-}
-
-/* 响应式间距调整 - 中等屏幕 */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .control-buttons-container {
-        gap: 1rem !important;
-    }
-}
-
-/* 响应式间距调整 - 大屏幕 */
-@media (min-width: 1025px) {
-    .control-buttons-container {
-        gap: 2rem !important;
+        gap: 0.75rem !important;
     }
 }
 
@@ -1056,7 +1039,7 @@ main.container {
         flex-direction: column;
         height: 100%;
         position: relative;
-        padding: 0.75rem 0 0 0.75rem;
+        padding: 0.75rem 0 0 0;
     }
 
     .player-layout-left #playerContainer {
