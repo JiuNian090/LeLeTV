@@ -118,7 +118,7 @@
     │
     ├── 第三方采集站 API (21 个) ──── 视频搜索和播放源
     │       ├── 14 个普通源（dyttzy、bdzy、moduzy 等）
-    │       └── 7 个成人标记源（ckzy、fhzy、ywzy 等）
+    │       └── 7 个隐藏标记源（ckzy、fhzy、ywzy 等）
     │
     └── TMDB API ────────────────── 影片元数据
             └── api.themoviedb.org
@@ -146,7 +146,7 @@
 | 首页（搜索） | `/` / `/s=keyword` | `#page-home` | 视频搜索 + 最近搜索历史 |
 | 分类浏览 | JS 切换 | `#page-category` | TMDB 分类 + 多维筛选（惰性加载） |
 | 观看历史 | JS 切换 | `#page-history` | 分组展示（今天/昨天/本周/更早）+ 进度条 |
-| 设置 | JS 切换 | `#page-settings` | 数据源、自定义 API、功能开关（黄色过滤） |
+| 设置 | JS 切换 | `#page-settings` | 数据源、自定义 API、功能开关（隐藏过滤） |
 | 关于 | JS 切换 | `#page-about` | 隐私政策 + 更新日志（CHANGELOG.md 动态加载） |
 | 播放器 | `/player.html` | 独立页面 | ArtPlayer 全屏播放（2390 行 JS） |
 
@@ -293,13 +293,13 @@ LeLeTV/
 |--------|------|
 | `initAPICheckboxes()` | 初始化设置页面的 API 源复选框列表 |
 | `applyNewDataSourceLogic()` | 应用数据源选择策略（v1 版本逻辑） |
-| `getRandomDataSources(count)` | 随机选择指定数量的非成人数据源 |
+| `getRandomDataSources(count)` | 随机选择指定数量的非隐藏数据源 |
 | `updateSelectedAPIs()` | 同步复选框状态到 localStorage |
-| `selectAllAPIs(selectAll, excludeAdult)` | 全选/取消全选 API 源 |
+| `selectAllAPIs(selectAll, excludeHidden)` | 全选/取消全选 API 源 |
 | `addCustomApi()` | 添加自定义 API 源（最多 5 个，URL 格式校验） |
 | `removeCustomApi(index)` | 删除自定义 API 源并重新索引 |
-| `checkAdultAPIsSelected()` | 检查是否选中了成人内容 API，联动禁用过滤开关 |
-| `verifyAdminPassword()` | 管理员密码验证（关闭黄色过滤时触发） |
+| `checkHiddenAPIsSelected()` | 检查是否选中了隐藏内容 API，联动禁用过滤开关 |
+| `verifyAdminPassword()` | 管理员密码验证（关闭隐藏过滤时触发） |
 | `search()` | 核心搜索函数（防抖 + 渐进式渲染 + 负载均衡集成） |
 | `_buildSearchCardsHtml(items)` | 生成搜索卡片 HTML（XSS 保护，HTML 转义） |
 | `playDirectly(id, vod_name, sourceCode)` | 直接跳转播放（绕过详情弹窗） |
@@ -569,7 +569,7 @@ showNextToast() → 先进先出依次显示
 
 **内置 API 源列表（21 个）**:
 - 普通（14 个）：dyttzy(电影天堂)、bdzy(百度资源)、moduzy(魔都资源)、zy360(360资源)、bfzy(暴风资源)、tyyszy(天涯资源)、wolong(卧龙资源)、jisu(极速资源)、dbzy(豆瓣资源)、mozhua(魔爪资源)、zuid(最大资源)、wujin(无尽资源)、mtzy(茅台资源)、ikun(iKun资源)、hnzy(红牛资源)
-- 成人标记（7 个）：ckzy、fhzy、ywzy、mdzy、kgzy、nxzy、lbzy
+- 隐藏标记（7 个）：ckzy、fhzy、ywzy、mdzy、kgzy、nxzy、lbzy
 
 ### 5.10 负载均衡 - loadBalancer.js
 
@@ -632,7 +632,7 @@ score = 基础 100 分
 **职责**: `CacheManager` 类，自动清理 localStorage 中的过期临时数据。
 
 **清理规则**:
-- **保留数据**：selectedAPIs、customAPIs、yellowFilterEnabled、adFilteringEnabled、hasInitializedDefaults、viewingHistory、videoSearchHistory、passwordVerified
+- **保留数据**：selectedAPIs、customAPIs、hiddenFilterEnabled、adFilteringEnabled、hasInitializedDefaults、viewingHistory、videoSearchHistory、passwordVerified
 - **清理目标**：videoProgress_*、lastPageUrl、currentPlayingId 等临时键
 - **清理间隔**：24 小时
 - **TTL**：临时数据 24 小时过期
@@ -790,7 +790,7 @@ search() (app.js)
   │       ├── 请求代理 URL → LoadBalancer 记录结果
   │       ├── 处理第 1 页 → 并发获取 2~3 页
   │       └── 写入缓存 → 返回带来源标记的结果
-  ├── 黄色内容过滤（如启用，涉及 ADMINPASSWORD 验证）
+  ├── 隐藏内容过滤（如启用，涉及 ADMINPASSWORD 验证）
   ├── 渐进式渲染卡片 (insertAdjacentHTML)
   ├── 最终排序（按名称）
   └── 更新 URL (pushState)
@@ -862,7 +862,7 @@ initTmdbCategory()（惰性加载，仅一次）
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
 | `PASSWORD` | **是** | 用户访问密码（明文，服务端做 SHA-256 后注入页面） |
-| `ADMINPASSWORD` | 否 | 管理员密码（控制黄色内容过滤开关） |
+| `ADMINPASSWORD` | 否 | 管理员密码（控制隐藏内容过滤开关） |
 | `TMDB_WORKER_URL` | 推荐 | Cloudflare Worker 地址 |
 | `TMDB_API_KEY` | 否 | TMDB API v3 密钥（本地直连时使用，生产配在 Worker 中） |
 | `PORT` | 否 | 本地服务器端口（默认 8080） |

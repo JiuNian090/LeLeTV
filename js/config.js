@@ -102,37 +102,37 @@ const API_SITES = {
     ckzy: {
         api: 'https://ckzy.me/api.php/provide/vod',
         name: 'ck资源',
-        adult: true
+        hidden: true
     },
      fhzy: {
         api: 'http://fhapi9.com/api.php/provide/vod',
         name: 'fh资源',
-        adult: true
+        hidden: true
     },
     ywzy: {
         api: 'https://155api.com/api.php/provide/vod',
         name: '155资源',
-        adult: true
+        hidden: true
     },
     mdzy: {
         api: 'https://91md.me/api.php/provide/vod',
         name: 'md资源',
-        adult: true
+        hidden: true
     },
     kgzy: {
         api: 'https://jkunzyapi.com/api.php/provide/vod',
         name: 'kg资源',
-        adult: true
+        hidden: true
     },
     nxzy: {
         api: 'https://naixxzy.com/api.php/provide/vod',
         name: '奶香资源',
-        adult: true
+        hidden: true
     },
     lbzy: {
         api: 'https://lbapi9.com/api.php/provide/vod',
         name: 'lb资源',
-        adult: true
+        hidden: true
     },
     
 }
@@ -223,7 +223,7 @@ const CACHE_CONFIG = {
     preserveKeys: [
         'selectedAPIs',          // 用户选择的API列表
         'customAPIs',            // 自定义API列表
-        'yellowFilterEnabled',   // 黄色内容过滤开关
+        'hiddenFilterEnabled',   // 隐藏内容过滤开关
         'adFilteringEnabled',    // 广告过滤开关
         'hasInitializedDefaults',// 是否已初始化默认值
         'viewingHistory',        // 观看历史记录
@@ -256,11 +256,11 @@ const CUSTOM_API_CONFIG = {
     validateUrl: true,        // 验证URL格式
     cacheResults: true,       // 缓存测试结果
     cacheExpiry: 5184000000,  // 缓存过期时间(2个月)
-    adultPropName: 'isAdult' // 用于标记成人内容的属性名
+    hiddenPropName: 'isHidden' // 用于标记隐藏内容的属性名
 };
 
-// 隐藏内置黄色采集站API的变量
-const HIDE_BUILTIN_ADULT_APIS = false;
+// 不显示内置隐藏采集站API
+const HIDE_BUILTIN_HIDDEN_APIS = false;
 
 // 负载均衡器配置
 const LOAD_BALANCER_CONFIG = {

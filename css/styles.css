@@ -308,19 +308,19 @@ body {
     box-shadow: 0 0 8px rgba(236, 72, 153, 0.3);
 }
 
-#yellowFilterToggle.dash-switch-input:checked ~ .dash-switch-track {
+#hiddenFilterToggle.dash-switch-input:checked ~ .dash-switch-track {
     background-color: var(--color-accent);
 }
 
-#yellowFilterToggle.dash-switch-input:checked ~ .dash-switch-dot {
+#hiddenFilterToggle.dash-switch-input:checked ~ .dash-switch-dot {
     -webkit-transform: translateX(1.25rem);
     -moz-transform: translateX(1.25rem);
     transform: translateX(1.25rem);
     box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
 }
 
-#yellowFilterToggle.dash-switch-input:focus ~ .dash-switch-track,
-#yellowFilterToggle.dash-switch-input:hover ~ .dash-switch-track {
+#hiddenFilterToggle.dash-switch-input:focus ~ .dash-switch-track,
+#hiddenFilterToggle.dash-switch-input:hover ~ .dash-switch-track {
     -webkit-box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
     -moz-box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
     box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
@@ -441,20 +441,20 @@ body {
     opacity: 1;
 }
 
-/* 成人内容API标记样式 */
-.api-adult + label {
+/* 隐藏内容API标记样式 */
+.api-hidden + label {
     color: #ff6b8b !important;
 }
 
 /* 添加警告图标和标签样式 */
-.adult-warning {
+.hidden-warning {
     display: inline-flex;
     align-items: center;
     margin-left: 0.25rem;
     color: #ff6b8b;
 }
 
-.adult-warning svg {
+.hidden-warning svg {
     width: 12px;
     height: 12px;
     margin-right: 4px;
@@ -479,7 +479,7 @@ body {
     letter-spacing: 0.05em;
 }
 
-.api-group-title.adult {
+.api-group-title.hidden {
     color: #ff6b8b;
 }
 

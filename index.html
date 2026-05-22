@@ -218,8 +218,8 @@
                                     <input type="text" id="customApiUrl" placeholder="https://abc.com" class="dash-input mb-2" autocomplete="off">
                                     <input type="text" id="customApiDetail" placeholder="detail地址（可选）" class="dash-input mb-2" autocomplete="off">
                                     <div class="flex items-center mb-3">
-                                        <input type="checkbox" id="customApiIsAdult" class="dash-checkbox">
-                                        <label for="customApiIsAdult" class="ml-2 text-xs text-pink-400">隐藏资源站</label>
+                                        <input type="checkbox" id="customApiIsHidden" class="dash-checkbox">
+                                        <label for="customApiIsHidden" class="ml-2 text-xs text-pink-400">隐藏资源站</label>
                                     </div>
                                     <div class="flex gap-2">
                                         <button onclick="addCustomApi()" class="dash-btn dash-btn-green flex-1">添加</button>
@@ -242,7 +242,7 @@
                                         <span class="dash-switch-desc">过滤"伦理片"等，密码提示:⟲</span>
                                     </div>
                                     <div class="dash-switch-toggle">
-                                        <input type="checkbox" id="yellowFilterToggle" class="dash-switch-input">
+                                        <input type="checkbox" id="hiddenFilterToggle" class="dash-switch-input">
                                         <div class="dash-switch-track"></div>
                                         <div class="dash-switch-dot"></div>
                                     </div>
@@ -509,7 +509,8 @@
         window._jsSha256 = window.sha256;
     </script>
     <script src="js/config.js?v=v2.6.0" defer></script>
-    <script src="js/proxy-auth.js?v=v2.6.0" defer></script>
+<script src="js/api-config.js?v=v2.6.0" defer></script>
+<script src="js/proxy-auth.js?v=v2.6.0" defer></script>
     <script src="js/loadBalancer.js?v=v2.6.0" defer></script>
     <script src="js/loadBalancerUI.js?v=v2.6.0" defer></script>
     <script src="js/ui.js?v=v2.6.0" defer></script>
