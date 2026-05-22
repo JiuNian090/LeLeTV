@@ -13,6 +13,10 @@
 /
   Cache-Control: no-cache
 
+# Service Worker：禁止缓存，必须实时更新
+/service-worker.js
+  Cache-Control: no-cache
+
 # 版本相关文件：必须实时校验
 /CHANGELOG.md
   Cache-Control: no-cache
