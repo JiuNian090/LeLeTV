@@ -1,6 +1,12 @@
-// 全屏时退出全屏返回播放页，非全屏时返回首页
+// 返回键：全屏时退出全屏，否则返回上一页
 function goHome(event) {
     if (event) event.preventDefault();
+
+    if (art && art.fullscreen) {
+        art.fullscreen = false;
+        autoFullscreened = false;
+        return;
+    }
 
     if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
@@ -8,16 +14,7 @@ function goHome(event) {
         return;
     }
 
-    if (art) {
-        art.destroy();
-        art = null;
-    }
-    if (currentHls) {
-        try { currentHls.destroy(); } catch (e) {}
-        currentHls = null;
-    }
-
-    window.location.href = '/';
+    window.history.back();
 }
 
 // 页面加载时保存当前播放状态
@@ -1797,29 +1794,51 @@ function setupControlsBehavior() {
 
     overlay.addEventListener('mousedown', function (e) {
         if (controlsLocked) {
+            showLockBtn();
+            scheduleLockBtnHide();
             e.stopPropagation();
             e.preventDefault();
+            return;
+        }
+    });
+
+    overlay.addEventListener('mouseup', function (e) {
+        if (controlsLocked) {
+            e.stopPropagation();
+            e.preventDefault();
+            return;
         }
     });
 
     overlay.addEventListener('touchstart', function (e) {
         if (controlsLocked) {
+            showLockBtn();
+            scheduleLockBtnHide();
+            e.stopPropagation();
+            return;
+        }
+    }, { passive: false });
+
+    overlay.addEventListener('touchmove', function (e) {
+        if (controlsLocked) {
             e.stopPropagation();
             e.preventDefault();
+            return;
         }
     }, { passive: false });
 
     overlay.addEventListener('touchend', function (e) {
         if (controlsLocked) {
             e.stopPropagation();
-            e.preventDefault();
+            return;
         }
-    }, { passive: false });
+    }, { passive: true });
 
     overlay.addEventListener('dblclick', function (e) {
         if (controlsLocked) {
             e.stopPropagation();
             e.preventDefault();
+            return;
         }
     });
 

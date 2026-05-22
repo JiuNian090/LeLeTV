@@ -1240,5 +1240,12 @@ main.container {
 
 /* 全屏模式下锁定按钮保持可见和正确层级 */
 #playerContainer.fullscreen-active .player-lock-btn {
-    z-index: 150;
+    z-index: 9999;
+}
+
+/* 全屏 + 锁定：锁定按钮确保始终可见可交互 */
+#playerContainer.fullscreen-active.controls-locked .player-lock-btn {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 9999;
 }
