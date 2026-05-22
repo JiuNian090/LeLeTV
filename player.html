@@ -22,7 +22,7 @@
 </head>
 <body>
     <!-- Aurora 极光背景 -->
-    <div id="auroraContainer" class="aurora-bg" style="opacity:0.3"></div>
+    <div id="auroraContainer" class="aurora-bg"></div>
     
     <!-- 密码验证弹窗 -->
     <div id="passwordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
@@ -258,9 +258,9 @@
             initAurora({
                 selector: '#auroraContainer',
                 colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
-                amplitude: 0.3,
-                blend: 0.9,
-                speed: 0.4
+                amplitude: 0.5,
+                blend: 0.8,
+                speed: 0.5
             });
             if (typeof setupEmailClickHandlers === 'function') {
                 setupEmailClickHandlers();

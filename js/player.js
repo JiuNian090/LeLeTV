@@ -837,6 +837,11 @@ function initPlayer(videoUrl) {
 
     // URL 切换（切集/换源）后也检查一遍
     art.on('restart', () => {
+        if (episodeSwitchTimeout) {
+            clearTimeout(episodeSwitchTimeout);
+            episodeSwitchTimeout = null;
+        }
+        window.isSwitchingVideo = false;
         setTimeout(() => addNextEpisodeDirectly(art), 300);
         setTimeout(() => addNextEpisodeDirectly(art), 800);
     });
@@ -1171,7 +1176,7 @@ function playEpisode(index) {
             clearTimeout(episodeSwitchTimeout);
         }
 
-        // 设置切换超时：12秒后如果视频仍未开始播放，说明 switchUrl 可能失败
+        // 设置切换超时：12秒后如果视频仍未开始播放，说明切换可能失败
         episodeSwitchTimeout = setTimeout(function () {
             episodeSwitchTimeout = null;
             window.isSwitchingVideo = false;
@@ -1192,7 +1197,7 @@ function playEpisode(index) {
             }
         }, 12000);
 
-        art.switchUrl = url;
+        art.url = url;
     } else {
         // art 为空，直接初始化播放器
         initPlayer(url);
