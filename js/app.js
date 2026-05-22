@@ -13,6 +13,16 @@ let episodesReversed = false;
 
 // 页面初始化
 document.addEventListener('DOMContentLoaded', function () {
+    // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
+    if (!localStorage.getItem('hasInitializedDefaults')) {
+        selectedAPIs = ["tyyszy", "bfzy", "dyttzy", "wolong"];
+        localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+        localStorage.setItem('hiddenFilterEnabled', 'true');
+        localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');
+        localStorage.setItem('hasInitializedDefaults', 'true');
+        localStorage.setItem('dataSourceLogicVersion', 'v1');
+    }
+
     // 初始化API复选框
     initAPICheckboxes();
 
@@ -24,20 +34,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 渲染搜索历史
     renderSearchHistory();
-
-    // 设置默认API选择（如果是第一次加载）
-    if (!localStorage.getItem('hasInitializedDefaults')) {
-        // 默认选中资源
-        selectedAPIs = ["tyyszy", "bfzy", "dyttzy", "wolong"];
-        localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
-
-        // 默认选中过滤开关
-        localStorage.setItem('hiddenFilterEnabled', 'true');
-        localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');
-
-        // 标记已初始化默认值
-        localStorage.setItem('hasInitializedDefaults', 'true');
-    }
 
     // 设置隐藏内容过滤器开关初始状态
     const hiddenFilterToggle = document.getElementById('hiddenFilterToggle');

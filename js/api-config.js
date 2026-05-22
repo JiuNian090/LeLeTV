@@ -215,11 +215,7 @@ function refreshDataSources(hasUserSelected) {
     const updatedSelectedAPIs = currentSelectedAPIs.filter(api => 
         allDataSources.includes(api) || api.startsWith('custom_')
     );
-    if (!hasUserSelected) {
-        selectedAPIs = getRandomDataSources(5);
-    } else {
-        selectedAPIs = updatedSelectedAPIs;
-    }
+    selectedAPIs = updatedSelectedAPIs;
     localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
     localStorage.setItem('lastRefreshTime', currentTime.toString());
 }
