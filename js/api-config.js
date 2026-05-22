@@ -131,91 +131,8 @@ function initAPICheckboxes() {
 
     // 立即更新选中的API数量显示
     updateSelectedApiCount();
-    
-    // 确保UI反映最新的数据源配置
 
-// 从当前版本开始，对所有用户应用新的数据源选择逻辑
-function applyNewDataSourceLogic() {
-    // 版本标记，用于标识用户是否已经应用了新的数据源选择逻辑
-    const DATA_SOURCE_LOGIC_VERSION = 'v1';
-    const currentVersion = localStorage.getItem('dataSourceLogicVersion');
-    const currentTime = Date.now();
-    const dayInMs = 24 * 60 * 60 * 1000;
-    
-    // 检查是否需要应用新逻辑
-    if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
-        // 清除之前的选择
-        selectedAPIs = getRandomDataSources(5);
-        localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
-        localStorage.setItem('lastRefreshTime', currentTime.toString());
-        localStorage.setItem('hasUserSelectedAPIs', 'false');
-        localStorage.setItem('dataSourceLogicVersion', DATA_SOURCE_LOGIC_VERSION);
-        
-    } else {
-        // 检查是否需要刷新（每24小时）
-        const lastRefreshTime = localStorage.getItem('lastRefreshTime');
-        const hasUserSelected = localStorage.getItem('hasUserSelectedAPIs') === 'true';
-        
-        if (lastRefreshTime && currentTime - parseInt(lastRefreshTime) >= dayInMs) {
-            refreshDataSources(hasUserSelected);
-        }
-        
-        // 初始化selectedAPIs
-        const savedSelectedAPIs = localStorage.getItem('selectedAPIs');
-        if (savedSelectedAPIs) {
-            selectedAPIs = JSON.parse(savedSelectedAPIs);
-        } else {
-            // 第一次打开，随机选择5个数据源
-            selectedAPIs = getRandomDataSources(5);
-            localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
-            localStorage.setItem('lastRefreshTime', currentTime.toString());
-            localStorage.setItem('hasUserSelectedAPIs', 'false');
-        }
-    }
-}
-
-// 刷新数据源
-function refreshDataSources(hasUserSelected) {
-    const currentTime = Date.now();
-    const savedSelectedAPIs = localStorage.getItem('selectedAPIs') || '[]';
-    const currentSelectedAPIs = JSON.parse(savedSelectedAPIs);
-    
-    // 获取当前所有可用数据源
-    const allDataSources = Object.keys(API_SITES).filter(key => !API_SITES[key].hidden);
-    
-    // 更新已删除的数据源
-    const updatedSelectedAPIs = currentSelectedAPIs.filter(api => 
-        allDataSources.includes(api) || api.startsWith('custom_')
-    );
-    
-    if (!hasUserSelected) {
-        // 用户没有选择过，随机选择5个
-        selectedAPIs = getRandomDataSources(5);
-    } else {
-        // 用户有选择过，保留用户选择
-        selectedAPIs = updatedSelectedAPIs;
-    }
-    
-    localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
-    localStorage.setItem('lastRefreshTime', currentTime.toString());
-}
-
-// 随机选择指定数量的数据源
-function getRandomDataSources(count) {
-    // 过滤掉隐藏数据源
-    const normalDataSources = Object.keys(API_SITES).filter(key => !API_SITES[key].hidden);
-    
-    // 如果数据源不足5个，则全部选择
-    if (normalDataSources.length <= count) {
-        return normalDataSources;
-    }
-    
-    // 随机选择
-    const shuffled = [...normalDataSources].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-}
-
-// 添加普通API组标题
+    // 添加普通API组标题
     const normaldiv = document.createElement('div');
     normaldiv.id = 'normaldiv';
     normaldiv.className = 'contents';
@@ -227,7 +144,7 @@ function getRandomDataSources(count) {
     // 创建普通API源的复选框
     Object.keys(API_SITES).forEach(apiKey => {
         const api = API_SITES[apiKey];
-        if (api.hidden) return; // 跳过隐藏内容API，稍后添加
+        if (api.hidden) return;
 
         const checked = selectedAPIs.includes(apiKey);
 
@@ -242,7 +159,6 @@ function getRandomDataSources(count) {
         `;
         normaldiv.appendChild(checkbox);
 
-        // 添加事件监听器
         checkbox.querySelector('input').addEventListener('change', function () {
             updateSelectedAPIs();
             checkHiddenAPIsSelected();
@@ -255,6 +171,67 @@ function getRandomDataSources(count) {
 
     // 初始检查隐藏内容状态
     checkHiddenAPIsSelected();
+}
+
+// 从当前版本开始，对所有用户应用新的数据源选择逻辑
+function applyNewDataSourceLogic() {
+    const DATA_SOURCE_LOGIC_VERSION = 'v1';
+    const currentVersion = localStorage.getItem('dataSourceLogicVersion');
+    const currentTime = Date.now();
+    const dayInMs = 24 * 60 * 60 * 1000;
+
+    if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
+        selectedAPIs = getRandomDataSources(5);
+        localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+        localStorage.setItem('lastRefreshTime', currentTime.toString());
+        localStorage.setItem('hasUserSelectedAPIs', 'false');
+        localStorage.setItem('dataSourceLogicVersion', DATA_SOURCE_LOGIC_VERSION);
+    } else {
+        const lastRefreshTime = localStorage.getItem('lastRefreshTime');
+        const hasUserSelected = localStorage.getItem('hasUserSelectedAPIs') === 'true';
+
+        if (lastRefreshTime && currentTime - parseInt(lastRefreshTime) >= dayInMs) {
+            refreshDataSources(hasUserSelected);
+        }
+
+        const savedSelectedAPIs = localStorage.getItem('selectedAPIs');
+        if (savedSelectedAPIs) {
+            selectedAPIs = JSON.parse(savedSelectedAPIs);
+        } else {
+            selectedAPIs = getRandomDataSources(5);
+            localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+            localStorage.setItem('lastRefreshTime', currentTime.toString());
+            localStorage.setItem('hasUserSelectedAPIs', 'false');
+        }
+    }
+}
+
+// 刷新数据源
+function refreshDataSources(hasUserSelected) {
+    const currentTime = Date.now();
+    const savedSelectedAPIs = localStorage.getItem('selectedAPIs') || '[]';
+    const currentSelectedAPIs = JSON.parse(savedSelectedAPIs);
+    const allDataSources = Object.keys(API_SITES).filter(key => !API_SITES[key].hidden);
+    const updatedSelectedAPIs = currentSelectedAPIs.filter(api => 
+        allDataSources.includes(api) || api.startsWith('custom_')
+    );
+    if (!hasUserSelected) {
+        selectedAPIs = getRandomDataSources(5);
+    } else {
+        selectedAPIs = updatedSelectedAPIs;
+    }
+    localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
+    localStorage.setItem('lastRefreshTime', currentTime.toString());
+}
+
+// 随机选择指定数量的数据源
+function getRandomDataSources(count) {
+    const normalDataSources = Object.keys(API_SITES).filter(key => !API_SITES[key].hidden);
+    if (normalDataSources.length <= count) {
+        return normalDataSources;
+    }
+    const shuffled = [...normalDataSources].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
 }
 
 // 添加隐藏API列表
