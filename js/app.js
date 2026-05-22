@@ -1375,9 +1375,7 @@ async function showDetails(id, vod_name, sourceCode) {
     }
 }
 
-// 更新播放视频函数，修改为使用/watch路径而不是直接打开player.html
 function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
-    // 密码保护校验
     if (window.isPasswordProtected && window.isPasswordVerified) {
         if (window.isPasswordProtected() && !window.isPasswordVerified()) {
             showPasswordModal && showPasswordModal();
@@ -1385,18 +1383,14 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         }
     }
 
-    // 获取当前路径作为返回页面
     let currentPath = window.location.href;
 
-    // 构建播放页面URL，使用watch.html作为中间跳转页
-    let watchUrl = `watch.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
+    let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
-    // 添加返回URL参数
     if (currentPath.includes('index.html') || currentPath.endsWith('/')) {
-        watchUrl += `&back=${encodeURIComponent(currentPath)}`;
+        playerUrl += `&back=${encodeURIComponent(currentPath)}`;
     }
 
-    // 保存当前状态到localStorage
     try {
         localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
         localStorage.setItem('currentEpisodes', JSON.stringify(currentEpisodes));
@@ -1404,63 +1398,12 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         localStorage.setItem('currentSourceCode', sourceCode || '');
         localStorage.setItem('lastPlayTime', Date.now());
         localStorage.setItem('lastSearchPage', currentPath);
-        localStorage.setItem('lastPageUrl', currentPath);  // 确保保存返回页面URL
+        localStorage.setItem('lastPageUrl', currentPath);
     } catch (e) {
         console.error('保存播放状态失败:', e);
     }
 
-    // 在当前标签页中打开播放页面
-    window.location.href = watchUrl;
-}
-
-// 弹出播放器页面
-function showVideoPlayer(url) {
-    // 在打开播放器前，隐藏详情弹窗
-    const detailModal = document.getElementById('modal');
-    if (detailModal) {
-        detailModal.classList.add('hidden');
-    }
-    // 临时隐藏搜索结果区域，防止高度超出播放器而出现滚动条
-    document.getElementById('resultsArea').classList.add('hidden');
-    // 在框架中打开播放页面
-    videoPlayerFrame = document.createElement('iframe');
-    videoPlayerFrame.id = 'VideoPlayerFrame';
-    videoPlayerFrame.className = 'fixed w-full h-screen z-50';
-    videoPlayerFrame.src = url;
-    document.body.appendChild(videoPlayerFrame);
-    // 将焦点移入iframe
-    videoPlayerFrame.focus();
-
-    // 隐藏顶部导航栏
-    const topNav = document.querySelector('.top-nav-bar');
-    if (topNav) {
-        topNav.style.display = 'none';
-    }
-}
-
-// 关闭播放器页面
-function closeVideoPlayer(home = false) {
-    videoPlayerFrame = document.getElementById('VideoPlayerFrame');
-    if (videoPlayerFrame) {
-        videoPlayerFrame.remove();
-
-        // 恢复顶部导航栏显示
-        const topNav = document.querySelector('.top-nav-bar');
-        if (topNav) {
-            topNav.style.display = '';
-        }
-        // 恢复搜索结果显示
-        document.getElementById('resultsArea').classList.remove('hidden');
-        // 关闭播放器时也隐藏详情弹窗
-        const detailModal = document.getElementById('modal');
-        if (detailModal) {
-            detailModal.classList.add('hidden');
-        }
-    }
-    if (home) {
-        // 刷新主页
-        window.location.href = '/'
-    }
+    window.location.href = playerUrl;
 }
 
 // 播放上一集

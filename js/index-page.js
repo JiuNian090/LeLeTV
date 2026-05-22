@@ -21,11 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // URL搜索参数处理脚本
-    // 首先检查是否是播放URL格式 (/watch 开头的路径)
-    if (window.location.pathname.startsWith('/watch')) {
-        // 播放URL，不做额外处理，watch.html会处理重定向
-        return;
-    }
+    
     
     // 检查页面路径中的搜索参数 (格式: /s=keyword)
     const path = window.location.pathname;

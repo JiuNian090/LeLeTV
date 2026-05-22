@@ -24,7 +24,7 @@ if (!RAW_VERSION) {
 console.log(`[版本读取] 当前版本: ${RAW_VERSION}`);
 
 /* ---------- 2. 替换 HTML 中的占位符和缓存引用 ---------- */
-const HTML_FILES = ['index.html', 'player.html', 'watch.html'];
+const HTML_FILES = ['index.html', 'player.html'];
 
 for (const fileName of HTML_FILES) {
   const filePath = path.join(ROOT, fileName);

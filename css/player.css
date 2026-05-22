@@ -776,39 +776,6 @@ input:checked + .slider:before {
         padding-top: 0;
     }
     
-    /* 缩小logo尺寸 */
-    .logo-icon {
-        width: 20px !important;
-        height: 20px !important;
-    }
-    
-    /* 简化标题区域显示 */
-    .logo-text {
-        font-size: 0.9rem !important;
-    }
-    
-    /* 隐藏标题文本，节省空间 */
-    #videoTitle {
-        display: none;
-    }
-    
-    /* 优化返回按钮 */
-    #goBack {
-        padding: 0.25rem 0.75rem;
-    }
-    
-    /* 优化首页按钮位置，确保在移动端显示在右侧 */
-    #goHome {
-        order: 3;
-        margin-left: auto;
-    }
-    
-    /* 为首页按钮添加特定样式，确保对称性 */
-    .home-btn {
-        min-width: auto;
-        white-space: nowrap;
-    }
-    
     /* 优化播放器容器内边距 */
     main {
         padding: 0;
@@ -881,21 +848,6 @@ input:checked + .slider:before {
     /* 优化模态框样式 */
     #modal, #passwordModal {
         padding: 1rem;
-    }
-    
-    /* 优化页脚显示 */
-    footer {
-        padding: 1rem 0.5rem;
-    }
-    
-    footer .container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    footer .container > div {
-        margin-bottom: 0.5rem;
-        text-align: center;
     }
 }
 

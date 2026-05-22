@@ -762,42 +762,17 @@ body {
 }
 
 /* 锁定控制时屏蔽交互 */
-.player-container.controls-locked .dplayer-controller,
-.player-container.controls-locked .dplayer-mask,
-.player-container.controls-locked .dplayer-bar-wrap,
-.player-container.controls-locked .dplayer-statusbar,
 .player-container.controls-locked .shortcut-hint {
     opacity: 0 !important;
     pointer-events: none !important;
 }
 /* 保留锁按钮可见可点 */
-.player-container.controls-locked #lockToggle {
+.player-container.controls-locked #playerLockBtn {
     opacity: 1 !important;
     pointer-events: auto !important;
 }
 
-/* 播放器顶部header移动端优化 */
-.player-header {
-    gap: 0.5rem;
-}
-.logo-text {
-    display: inline;
-}
-@media (max-width: 640px) {
-    .logo-text {
-        display: none;
-    }
-    .logo-icon {
-        margin-right: 0;
-    }
-    .home-btn svg {
-        margin-right: 0;
-    }
-    .player-header {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
-    }
-}
+
 
 /* 搜索结果卡片优化：横向布局 */
 .search-card-img-container {

@@ -149,7 +149,6 @@
 | 设置 | JS 切换 | `#page-settings` | 数据源、自定义 API、功能开关（黄色过滤） |
 | 关于 | JS 切换 | `#page-about` | 隐私政策 + 更新日志（CHANGELOG.md 动态加载） |
 | 播放器 | `/player.html` | 独立页面 | ArtPlayer 全屏播放（2390 行 JS） |
-| 中转页 | `/watch.html` | 独立页面 | 播放前参数中转 |
 
 ### 3.4 JS 文件加载顺序
 
@@ -182,7 +181,6 @@ LeLeTV/
 ├── css/                        # 样式文件（3794 行手写）
 │   ├── styles.css              #   全局样式（2335 行，含首页、搜索、设置、关于等）
 │   ├── player.css              #   播放器页面（1248 行）
-│   ├── watch.css               #   中转页面（229 行）
 │   ├── tailwind.css            #   Tailwind CSS 入口（@tailwind 指令）
 │   └── output.css              #   Tailwind 编译输出（压缩版）
 ├── docs/
@@ -241,7 +239,6 @@ LeLeTV/
 ├── CODE_WIKI.md                # 本文档
 ├── index.html                  # SPA 主入口
 ├── player.html                 # 播放器独立页面
-├── watch.html                  # 播放中转页面
 ├── manifest.json               # PWA Web App Manifest
 ├── middleware.js                # Vercel 中间件
 ├── package.json                # 项目配置
@@ -307,7 +304,7 @@ LeLeTV/
 | `_buildSearchCardsHtml(items)` | 生成搜索卡片 HTML（XSS 保护，HTML 转义） |
 | `playDirectly(id, vod_name, sourceCode)` | 直接跳转播放（绕过详情弹窗） |
 | `showDetails(id, vod_name, sourceCode)` | 显示视频详情弹窗 |
-| `playVideo(url, vod_name, sourceCode, episodeIndex)` | 播放视频（跳转 watch.html 中转） |
+| `playVideo(url, vod_name, sourceCode, episodeIndex)` | 播放视频（跳转 player.html） |
 | `renderEpisodes(vodName, sourceCode, vodId)` | 渲染剧集按钮网格 |
 | `toggleEpisodeOrder(sourceCode, vodId)` | 切换剧集正序/倒序 |
 | `importConfig()` / `exportConfig()` | 配置文件导入/导出（含哈希校验） |
@@ -317,7 +314,7 @@ LeLeTV/
 ```
 用户输入 → search() → searchByAPIAndKeyWord() × N → 渐进式渲染结果
          → 解析 episode URL → playDirectly() / showDetails()
-         → watch.html → player.html → ArtPlayer 播放
+         → player.html → ArtPlayer 播放
          → 实时保存观看进度到 localStorage（30 秒防抖）
 ```
 
