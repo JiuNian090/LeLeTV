@@ -28,7 +28,7 @@
   "scripts": {
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
-    "build": "node scripts/generate-version.mjs && tailwindcss -i ./css/tailwind.css -o ./css/output.css --minify",
+    "build": "node scripts/generate-version.mjs && npx tailwindcss@3.4.19 -i ./css/tailwind.css -o ./css/output.css --minify",
     "test": "echo 'Running tests...'",
     "lint": "echo 'Linting code...'",
     "format": "echo 'Formatting code...'"

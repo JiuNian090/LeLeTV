@@ -1,6 +1,6 @@
 # LeLeTV 项目 Code Wiki
 
-> 生成日期：2026-05-20 | 项目版本：v2.5.20.2
+> 生成日期：2026-05-22 | 项目版本：v2.6.0
 
 ---
 
@@ -158,7 +158,6 @@ index.html 底部脚本加载顺序:
   libs/sha256.min.js         ← SHA-256 工具库
   js/config.js               ← 全局配置（最先，定义常量与 21 个 API 源）
   js/proxy-auth.js           ← 代理鉴权（密码哈希 + 时间戳参数）
-  js/customer_site.js        ← 自定义站点扩展（第三方资源共享）
   js/loadBalancer.js         ← 负载均衡核心（自动实例化）
   js/loadBalancerUI.js       ← 负载均衡状态面板 UI
   js/ui.js                   ← UI 工具（Toast/Loading/历史管理）
@@ -168,7 +167,6 @@ index.html 底部脚本加载顺序:
   js/tmdb.js                 ← TMDB 分类浏览
   js/app.js                  ← 主入口（初始化所有逻辑，1765 行）
   js/version-utils.js        ← 版本工具函数
-  js/version-check.js        ← 版本检测
   js/version-updater.js      ← 版本更新自动检测
   js/index-page.js           ← 首页弹窗 + URL 搜索参数处理
 ```
@@ -196,12 +194,11 @@ LeLeTV/
 │   ├── logo.png                #   网站 Logo（圆形）
 │   ├── logo-black.png          #   PWA 图标（方形黑色）
 │   └── nomedia.png             #   无封面占位图
-├── js/                         # JavaScript 核心模块（19 个文件）
+├── js/                         # JavaScript 核心模块（17 个文件）
 │   ├── config.js               #   全局常量与配置（284 行：21 个 API 源、配置对象）
 │   ├── app.js                  #   主入口（1765 行：初始化、搜索、播放跳转）
 │   ├── search.js               #   视频搜索（缓存、并发、分页、负载均衡）
 │   ├── player.js               #   播放器（2390 行，最大模块：ArtPlayer + HLS.js）
-│   ├── watch.js                #   播放中转页面
 │   ├── tmdb.js                 #   TMDB 分类浏览（筛选/分页/惰性加载）
 │   ├── ui.js                   #   UI 工具（Toast/Loading/历史管理）
 │   ├── api.js                  #   API 请求工具函数
@@ -210,12 +207,11 @@ LeLeTV/
 │   ├── loadBalancer.js         #   负载均衡核心（类实现，评分算法）
 │   ├── loadBalancerUI.js       #   负载均衡状态面板 UI
 │   ├── cache-manager.js        #   智能缓存管理（类实现，24h 清理）
-│   ├── customer_site.js        #   第三方资源共享扩展
-│   ├── version-check.js        #   版本检测 + CHANGELOG 解析
 │   ├── version-utils.js        #   版本号格式转换工具
 │   ├── version-updater.js      #   版本更新 + SW 缓存清理
 │   ├── index-page.js           #   首页弹窗 + URL 搜索参数
-│   └── sha256.js               #   SHA-256 实现（备用）
+│   ├── aurora-bg.js            #   极光背景动画效果
+│   └── sha256.js               #   SHA-256 实现（备用，供 proxy-auth.js 和 _middleware.js 动态导入）
 ├── libs/                       # 第三方库（本地引用）
 │   ├── artplayer.min.js        #   ArtPlayer 播放器
 │   ├── hls.min.js              #   HLS.js 核心
@@ -246,7 +242,6 @@ LeLeTV/
 ├── index.html                  # SPA 主入口
 ├── player.html                 # 播放器独立页面
 ├── watch.html                  # 播放中转页面
-├── about.html                  # 关于页面（已废弃，内容嵌入 SPA）
 ├── manifest.json               # PWA Web App Manifest
 ├── middleware.js                # Vercel 中间件
 ├── package.json                # 项目配置
@@ -655,11 +650,6 @@ score = 基础 100 分
 - `convertToSemanticVersion(numericVersion)` - 将 `YYYYMMDDHHMM` 转换为 `vN.Y.X.Z` 语义化版本
 - `updateFooterVersion()` - 从 CHANGELOG.md 获取版本并更新到页脚
 
-**version-check.js**: 版本检测逻辑
-- `formatVersion(versionString)` - 格式化版本号显示
-- `parseChangelogMarkdown(markdownContent)` - 解析 CHANGELOG.md 为版本条目数组
-- `getLatestVersionFromChangelog()` - 提取 CHANGELOG 中最新版本号
-
 **version-updater.js**: 版本更新自动检测
 - `checkForUpdates()` - 对比 CHANGELOG 版本与 localStorage 记录
 - `initFooterBtn()` - 初始化页脚版本显示 + 更新按钮
@@ -671,9 +661,7 @@ score = 基础 100 分
 | 文件 | 说明 |
 |------|------|
 | `api.js` | API 请求工具函数封装 |
-| `sha256.js` | 纯 JS SHA-256 实现（备用，优先使用 Web Crypto API） |
-| `customer_site.js` | 第三方资源共享扩展（`CUSTOMER_SITES` 对象，通过 `extendAPISites()` 合并到 `API_SITES`） |
-| `watch.js` | 播放中转页面逻辑（解析 URL 参数 → 重定向到 player.html） |
+| `sha256.js` | 纯 JS SHA-256 实现（备用，供 proxy-auth.js 和 functions/_middleware.js 动态导入） |
 | `index-page.js` | 首页初始化（使用说明弹窗 + URL 搜索参数 `/s=keyword` 处理） |
 
 ---
@@ -986,4 +974,4 @@ initTmdbCategory()（惰性加载，仅一次）
 
 ---
 
-> 本文档基于项目源代码和 GitNexus 知识图谱生成，涵盖 LeLeTV 项目的完整架构、模块职责、关键函数、数据流和运维配置。版本 v2.5.20.2。
+> 本文档基于项目源代码和 GitNexus 知识图谱生成，涵盖 LeLeTV 项目的完整架构、模块职责、关键函数、数据流和运维配置。版本 v2.6.0。

@@ -12,7 +12,6 @@ const STATIC_ASSETS = [
   '/index.html',
   '/player.html',
   '/watch.html',
-  '/about.html',
   '/manifest.json',
   '/image/logo-black.png',
   '/image/logo.png',
