@@ -12,12 +12,8 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 async function handleRequest(request) {
   const url = new URL(request.url);
 
-  if (url.pathname === '/health') {
-    return healthCheck();
-  }
-
   if (url.pathname === '/' && !url.searchParams.has('endpoint')) {
-    return healthCheck();
+    return jsonResponse({ error: '缺少 endpoint 参数，使用 ?endpoint=discover/movie&page=1' }, 400);
   }
 
   let endpoint = url.searchParams.get('endpoint') || '';
@@ -98,20 +94,6 @@ async function handleRequest(request) {
       error: `TMDB 请求失败: ${error.message}`
     }, 500);
   }
-}
-
-function healthCheck() {
-  return jsonResponse({
-    status: 'ok',
-    service: 'TMDB Proxy Worker',
-    version: '2.0.0',
-    usage: {
-      query_param: '/?endpoint=discover/movie&page=1',
-      path_param: '/discover/movie?page=1',
-      health: '/health'
-    },
-    note: 'TMDB_API_KEY 通过 Worker 环境变量安全注入'
-  }, 200);
 }
 
 function jsonResponse(data, status) {

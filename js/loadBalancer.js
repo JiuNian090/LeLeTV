@@ -6,14 +6,15 @@
 class LoadBalancer {
     constructor() {
         this.apiStats = new Map(); // API统计信息
-        this.healthCheckInterval = null;
+        this.activeRequests = new Map(); // 活跃请求计数
+        this.saveTimeout = null; // 防抖保存定时器
+        this.preferredApi = null; // 当前首选API（热缓存）
+        this.preferredApiExpiry = 0; // 首选API过期时间
         
         // 使用全局配置，如果不存在则使用默认配置
         this.config = window.LOAD_BALANCER_CONFIG || {
-            healthCheckInterval: 5 * 60 * 1000, // 5分钟健康检查
             responseTimeThreshold: 10000, // 响应时间阈值10秒
             failureThreshold: 0.3, // 失败率阈值30%
-            minHealthyApis: 2, // 最少健康API数量
             requestTimeout: 15000, // 请求超时时间
             cooldownPeriod: 10 * 60 * 1000, // 冷却期10分钟
             maxConcurrentRequests: 3, // 单个API最大并发请求数
@@ -25,9 +26,6 @@ class LoadBalancer {
             recentSuccessBonus: 1.2
         };
         
-        this.requestQueue = new Map(); // 请求队列
-        this.activeRequests = new Map(); // 活跃请求计数
-        
         this.init();
     }
 
@@ -37,11 +35,10 @@ class LoadBalancer {
     init() {
         this.loadStats();
         this.initializeApiStats();
-        this.startHealthCheck();
         
-        // 监听页面卸载，保存统计数据
+        // 监听页面卸载，立即保存
         window.addEventListener('beforeunload', () => {
-            this.saveStats();
+            this.flushSave();
         });
     }
 
@@ -73,13 +70,11 @@ class LoadBalancer {
         return {
             apiKey,
             isCustom,
-            isHealthy: true,
             responseTime: 0,
             successCount: 0,
             failureCount: 0,
             lastSuccessTime: 0,
             lastFailureTime: 0,
-            lastHealthCheck: 0,
             averageResponseTime: 0,
             load: 0, // 当前负载
             priority: 1, // 优先级
@@ -91,12 +86,25 @@ class LoadBalancer {
 
     /**
      * 获取最佳API源（智能负载均衡）
+     * 优先使用热缓存API，避免每次都重新算分
      */
     getBestApi(preferredApis = null) {
         const availableApis = preferredApis || this.getSelectedApis();
         
         if (availableApis.length === 0) {
             throw new Error('没有可用的API源');
+        }
+
+        // 热缓存命中：首选API可用、健康、未超载，直接返回
+        if (this.preferredApi && Date.now() < this.preferredApiExpiry) {
+            if (!preferredApis || preferredApis.includes(this.preferredApi)) {
+                const stat = this.apiStats.get(this.preferredApi);
+                if (stat && this.isApiHealthy(stat) && !this.isApiOverloaded(this.preferredApi)) {
+                    return this.preferredApi;
+                }
+            }
+            // 热缓存失效，清除
+            this.preferredApi = null;
         }
 
         // 过滤健康的API
@@ -193,6 +201,7 @@ class LoadBalancer {
 
     /**
      * 检查API是否健康
+     * 基于实际搜索结果评估，不再发送额外探测请求
      */
     isApiHealthy(stat) {
         const now = Date.now();
@@ -202,7 +211,12 @@ class LoadBalancer {
             return false;
         }
 
-        // 检查连续失败次数
+        // 快速失败检测：连续2次失败且在60秒内，立刻标记为不健康
+        if (stat.consecutiveFailures >= 2 && (now - stat.lastFailureTime) < 60000) {
+            return false;
+        }
+
+        // 常规连续失败检查
         if (stat.consecutiveFailures >= 3) {
             return false;
         }
@@ -226,6 +240,7 @@ class LoadBalancer {
 
     /**
      * 记录API请求结果
+     * 成功时更新热缓存，失败时立即清除
      */
     recordApiResult(apiKey, success, responseTime = 0, error = null) {
         let stat = this.apiStats.get(apiKey);
@@ -250,10 +265,22 @@ class LoadBalancer {
                     stat.averageResponseTime = (stat.averageResponseTime * 0.7) + (responseTime * 0.3);
                 }
             }
+
+            // 响应时间好（<3秒）时设为热缓存，下次直接选它
+            if (responseTime > 0 && responseTime < 3000) {
+                this.preferredApi = apiKey;
+                this.preferredApiExpiry = now + 60000; // 缓存1分钟
+            }
         } else {
             stat.failureCount++;
             stat.lastFailureTime = now;
             stat.consecutiveFailures++;
+            
+            // 当前首选的API失败了，立即清除热缓存
+            if (this.preferredApi === apiKey) {
+                this.preferredApi = null;
+                this.preferredApiExpiry = 0;
+            }
             
             // 连续失败过多时加入黑名单
             if (stat.consecutiveFailures >= this.config.blacklistThreshold) {
@@ -266,7 +293,8 @@ class LoadBalancer {
         // 减少当前负载
         this.decreaseApiLoad(apiKey);
         
-        this.saveStats();
+        // 防抖保存（2秒内多次变更合并为一次写入）
+        this.scheduleSave();
     }
 
     /**
@@ -308,122 +336,6 @@ class LoadBalancer {
     }
 
     /**
-     * 执行带负载均衡的搜索请求
-     */
-    async executeSearchRequest(query, preferredApis = null) {
-        const selectedApis = preferredApis || this.getSelectedApis();
-        let lastError = null;
-        
-        // 尝试多个API源
-        for (let attempt = 0; attempt < Math.min(selectedApis.length, 3); attempt++) {
-            try {
-                const apiKey = this.getBestApi(selectedApis.filter(api => 
-                    !this.isApiOverloaded(api) && 
-                    selectedApis.includes(api)
-                ));
-                
-                this.increaseApiLoad(apiKey);
-                
-                const startTime = Date.now();
-                const result = await this.performSearch(apiKey, query);
-                const responseTime = Date.now() - startTime;
-                
-                this.recordApiResult(apiKey, true, responseTime);
-                
-                return result;
-                
-            } catch (error) {
-                lastError = error;
-                if (this.activeRequests.has(this.lastUsedApi)) {
-                    this.recordApiResult(this.lastUsedApi, false, 0, error);
-                }
-                
-                console.warn(`搜索请求失败 (尝试 ${attempt + 1}):`, error.message);
-                
-                // 如果不是最后一次尝试，等待一小段时间再重试
-                if (attempt < 2) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
-        }
-        
-        throw lastError || new Error('所有API源都不可用');
-    }
-
-    /**
-     * 执行实际的搜索请求
-     */
-    async performSearch(apiKey, query) {
-        this.lastUsedApi = apiKey;
-        
-        // 这里调用原有的搜索函数
-        return await searchByAPIAndKeyWord(apiKey, query);
-    }
-
-    /**
-     * 开始健康检查
-     */
-    startHealthCheck() {
-        if (this.healthCheckInterval) {
-            clearInterval(this.healthCheckInterval);
-        }
-        
-        this.healthCheckInterval = setInterval(() => {
-            this.performHealthCheck();
-        }, this.config.healthCheckInterval);
-        
-        // 立即执行一次健康检查
-        this.performHealthCheck();
-    }
-
-    /**
-     * 执行健康检查
-     */
-    async performHealthCheck() {
-        const selectedApis = this.getSelectedApis();
-        const healthCheckPromises = selectedApis.map(apiKey => 
-            this.checkApiHealth(apiKey)
-        );
-        
-        try {
-            await Promise.allSettled(healthCheckPromises);
-            console.log('健康检查完成');
-        } catch (error) {
-            console.error('健康检查失败:', error);
-        }
-    }
-
-    /**
-     * 检查单个API的健康状态
-     */
-    async checkApiHealth(apiKey) {
-        try {
-            const startTime = Date.now();
-            
-            // 使用简单的测试查询
-            const result = await this.performSearch(apiKey, 'test');
-            const responseTime = Date.now() - startTime;
-            
-            this.recordApiResult(apiKey, true, responseTime);
-            
-            const stat = this.apiStats.get(apiKey);
-            if (stat) {
-                stat.lastHealthCheck = Date.now();
-                stat.isHealthy = true;
-            }
-            
-        } catch (error) {
-            this.recordApiResult(apiKey, false, 0, error);
-            
-            const stat = this.apiStats.get(apiKey);
-            if (stat) {
-                stat.lastHealthCheck = Date.now();
-                stat.isHealthy = false;
-            }
-        }
-    }
-
-    /**
      * 获取选中的API列表
      */
     getSelectedApis() {
@@ -443,17 +355,6 @@ class LoadBalancer {
     }
 
     /**
-     * 获取健康的API数量
-     */
-    getHealthyApiCount() {
-        let count = 0;
-        this.apiStats.forEach(stat => {
-            if (this.isApiHealthy(stat)) count++;
-        });
-        return count;
-    }
-
-    /**
      * 重置API统计
      */
     resetApiStats(apiKey = null) {
@@ -465,6 +366,27 @@ class LoadBalancer {
         } else {
             this.apiStats.clear();
             this.initializeApiStats();
+        }
+        this.preferredApi = null;
+        this.preferredApiExpiry = 0;
+        this.flushSave();
+    }
+
+    /**
+     * 防抖保存：多次变更合并为一次写入
+     */
+    scheduleSave() {
+        if (this.saveTimeout) clearTimeout(this.saveTimeout);
+        this.saveTimeout = setTimeout(() => this.saveStats(), 2000);
+    }
+
+    /**
+     * 立即保存（用于页面卸载时）
+     */
+    flushSave() {
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = null;
         }
         this.saveStats();
     }
@@ -505,11 +427,7 @@ class LoadBalancer {
      * 销毁负载均衡器
      */
     destroy() {
-        if (this.healthCheckInterval) {
-            clearInterval(this.healthCheckInterval);
-            this.healthCheckInterval = null;
-        }
-        this.saveStats();
+        this.flushSave();
     }
 }
 

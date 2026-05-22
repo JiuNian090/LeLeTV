@@ -1067,23 +1067,6 @@ img.loading-fade.loaded {
     }
 }
 
-/* 负载均衡面板样式优化 */
-#loadBalancerPanel {
-    background: var(--card-bg);
-    border: 1px solid var(--color-border);
-}
-
-/* 负载均衡面板响应式设计 */
-@media (max-width: 768px) {
-    #loadBalancerPanel {
-        right: 1rem !important;
-        left: 1rem !important;
-        width: calc(100% - 2rem) !important;
-        max-width: none !important;
-        z-index: 70 !important;
-    }
-}
-
 /* ========== Window Controls Overlay (首页) ==========
    仅对安装到桌面的 PWA 生效 */
 @media (display-mode: window-controls-overlay) {
