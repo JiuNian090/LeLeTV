@@ -34,6 +34,16 @@ window.addEventListener('load', function () {
     }
 });
 
+// 处理移动端滑动返回/前进时的 bfcache 恢复
+// 当页面从 bfcache 恢复时（浏览器缓存了页面状态但网络连接已断开），
+// HLS.js 实例可能处于失效状态，加载指示器会卡住无法消失
+window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+        // 页面从 bfcache 恢复，强制刷新以确保播放器干净初始化
+        window.location.reload();
+    }
+});
+
 
 // =================================
 // ============== PLAYER ==========
@@ -53,6 +63,7 @@ let autoFullscreened = false; // 标记是否由自动全屏进入
 let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
+let episodeSwitchTimeout = null; // 集数切换超时定时器（用于兜底重建）
 Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
 // TMDB 影片详情配置（TMDB优先，视频源API兜底）
@@ -331,6 +342,15 @@ function initializePageContent() {
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') {
             saveCurrentProgress();
+        } else if (document.visibilityState === 'visible') {
+            // 页面恢复可见时，检查加载状态是否卡住
+            const loadingEl = document.getElementById('player-loading');
+            if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
+                // 如果视频已初始化但加载状态卡住，尝试隐藏
+                if (art && art.video && art.video.currentTime > 0) {
+                    loadingEl.style.display = 'none';
+                }
+            }
         }
     });
 
@@ -477,6 +497,14 @@ function initPlayer(videoUrl) {
         return
     }
 
+    // 加载看门狗：防止加载状态卡住无法消失（如 bfcache 恢复、网络中断等场景）
+    let loadingWatchdog = setTimeout(function () {
+        const loadingEl = document.getElementById('player-loading');
+        if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
+            loadingEl.style.display = 'none';
+        }
+    }, 30000);
+
     // 销毁旧实例
     if (art) {
         art.destroy();
@@ -572,6 +600,12 @@ function initPlayer(videoUrl) {
                 // 监听视频播放事件
                 video.addEventListener('playing', function () {
                     playbackStarted = true;
+                    clearTimeout(loadingWatchdog);
+                    if (episodeSwitchTimeout) {
+                        clearTimeout(episodeSwitchTimeout);
+                        episodeSwitchTimeout = null;
+                    }
+                    window.isSwitchingVideo = false;
                     document.getElementById('player-loading').style.display = 'none';
                     document.getElementById('error').style.display = 'none';
                 });
@@ -647,11 +681,23 @@ function initPlayer(videoUrl) {
 
                 // 监听分段加载事件
                 hls.on(Hls.Events.FRAG_LOADED, function () {
+                    clearTimeout(loadingWatchdog);
+                    if (episodeSwitchTimeout) {
+                        clearTimeout(episodeSwitchTimeout);
+                        episodeSwitchTimeout = null;
+                    }
+                    window.isSwitchingVideo = false;
                     document.getElementById('player-loading').style.display = 'none';
                 });
 
                 // 监听级别加载事件
                 hls.on(Hls.Events.LEVEL_LOADED, function () {
+                    clearTimeout(loadingWatchdog);
+                    if (episodeSwitchTimeout) {
+                        clearTimeout(episodeSwitchTimeout);
+                        episodeSwitchTimeout = null;
+                    }
+                    window.isSwitchingVideo = false;
                     document.getElementById('player-loading').style.display = 'none';
                 });
             }
@@ -796,6 +842,12 @@ function initPlayer(videoUrl) {
     });
 
     art.on('video:loadedmetadata', function() {
+        clearTimeout(loadingWatchdog);
+        if (episodeSwitchTimeout) {
+            clearTimeout(episodeSwitchTimeout);
+            episodeSwitchTimeout = null;
+        }
+        window.isSwitchingVideo = false;
         document.getElementById('player-loading').style.display = 'none';
         videoHasEnded = false; // 视频加载时重置结束标志
         // 优先使用URL传递的position参数
@@ -1052,8 +1104,15 @@ function renderEpisodes() {
 
 // 播放指定集数
 function playEpisode(index) {
+    // 切换状态锁：防止快速点击集数造成并发切换
+    if (window.isSwitchingVideo) {
+        return;
+    }
+    window.isSwitchingVideo = true;
+
     // 确保index在有效范围内
     if (index < 0 || index >= currentEpisodes.length) {
+        window.isSwitchingVideo = false;
         return;
     }
 
@@ -1087,7 +1146,7 @@ function playEpisode(index) {
     // 更新当前剧集索引
     currentEpisodeIndex = index;
     currentVideoUrl = url;
-    videoHasEnded = false; // 重置视频结束标志
+    videoHasEnded = false;
 
     clearVideoProgress();
 
@@ -1098,22 +1157,50 @@ function playEpisode(index) {
     currentUrl.searchParams.delete('position');
     window.history.replaceState({}, '', currentUrl.toString());
 
-    // 使用 switchUrl 实现无缝切换，不销毁重建播放器
-    art.switchUrl = url;
-
     // 更新UI
     updateEpisodeInfo();
     updateButtonStates();
     renderEpisodes();
-    
-    // 更新 Media Session 信息
     updateMediaSession();
-
-    // 重置用户点击位置记录
     userClickedPosition = null;
 
+    // 尝试无缝切换，如果失败则回退到销毁重建播放器
+    if (art) {
+        // 清除之前的超时
+        if (episodeSwitchTimeout) {
+            clearTimeout(episodeSwitchTimeout);
+        }
+
+        // 设置切换超时：12秒后如果视频仍未开始播放，说明 switchUrl 可能失败
+        episodeSwitchTimeout = setTimeout(function () {
+            episodeSwitchTimeout = null;
+            window.isSwitchingVideo = false;
+
+            // 检查加载状态是否仍未消失
+            const loadingEl = document.getElementById('player-loading');
+            if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
+                // 兜底：销毁现有播放器，重新初始化
+                if (art) {
+                    art.destroy();
+                    art = null;
+                }
+                if (currentHls) {
+                    try { currentHls.destroy(); } catch (e) {}
+                    currentHls = null;
+                }
+                initPlayer(url);
+            }
+        }, 12000);
+
+        art.switchUrl = url;
+    } else {
+        // art 为空，直接初始化播放器
+        initPlayer(url);
+        window.isSwitchingVideo = false;
+    }
+
     // 三秒后保存到历史记录
-    setTimeout(() => saveToHistory(), 3000);
+    setTimeout(function () { saveToHistory(); }, 3000);
 }
 
 // 播放上一集
