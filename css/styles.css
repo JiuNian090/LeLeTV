@@ -1235,6 +1235,12 @@ img.loading-fade.loaded {
     padding-top: 4rem;
 }
 
+.home-layout.has-results {
+    justify-content: flex-start;
+    min-height: auto;
+    padding-top: 1rem;
+}
+
 /* 搜索页面布局 */
 .search-page-layout {
     padding-top: 2rem;

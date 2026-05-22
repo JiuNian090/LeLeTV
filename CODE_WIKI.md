@@ -1,6 +1,6 @@
 # LeLeTV 项目 Code Wiki
 
-> 生成日期：2026-05-22 | 项目版本：v2.6.0
+> 生成日期：2026-05-22（更新: 模块化拆分） | 项目版本：v2.6.0
 
 ---
 
@@ -13,18 +13,20 @@
 5. [前端模块详解](#5-前端模块详解)
    - [5.1 主入口 - index.html](#51-主入口---indexhtml)
    - [5.2 核心应用逻辑 - app.js](#52-核心应用逻辑---appjs)
-   - [5.3 搜索模块 - search.js](#53-搜索模块---searchjs)
-   - [5.4 播放器模块 - player.js](#54-播放器模块---playerjs)
-   - [5.5 TMDB 分类模块 - tmdb.js](#55-tmdb-分类模块---tmdbjs)
-   - [5.6 UI 工具 & 观看历史 - ui.js](#56-ui-工具--观看历史---uijs)
-   - [5.7 密码保护 - password.js](#57-密码保护---passwordjs)
-   - [5.8 代理鉴权 - proxy-auth.js](#58-代理鉴权---proxyauthjs)
-   - [5.9 全局配置 - config.js](#59-全局配置---configjs)
-   - [5.10 负载均衡 - loadBalancer.js](#510-负载均衡---loadbalancerjs)
-   - [5.11 负载均衡 UI - loadBalancerUI.js](#511-负载均衡-ui---loadbalanceruijs)
-   - [5.12 缓存管理 - cache-manager.js](#512-缓存管理---cache-managerjs)
-   - [5.13 版本管理](#513-版本管理)
-   - [5.14 其他模块](#514-其他模块)
+   - [5.3 API 管理 - api-config.js](#53-api-管理---api-configjs)
+   - [5.4 播放器桥接 - player-bridge.js](#54-播放器桥接---player-bridgejs)
+   - [5.5 搜索模块 - search.js](#55-搜索模块---searchjs)
+   - [5.6 播放器模块 - player.js](#56-播放器模块---playerjs)
+   - [5.7 TMDB 分类模块 - tmdb.js](#57-tmdb-分类模块---tmdbjs)
+   - [5.8 UI 工具 & 观看历史 - ui.js](#58-ui-工具--观看历史---uijs)
+   - [5.9 密码保护 - password.js](#59-密码保护---passwordjs)
+   - [5.10 代理鉴权 - proxy-auth.js](#510-代理鉴权---proxyauthjs)
+   - [5.11 全局配置 - config.js](#511-全局配置---configjs)
+   - [5.12 负载均衡 - loadBalancer.js](#512-负载均衡---loadbalancerjs)
+   - [5.13 负载均衡 UI - loadBalancerUI.js](#513-负载均衡-ui---loadbalanceruijs)
+   - [5.14 缓存管理 - cache-manager.js](#514-缓存管理---cache-managerjs)
+   - [5.15 版本管理](#515-版本管理)
+   - [5.16 其他模块](#516-其他模块)
 6. [服务端](#6-服务端)
    - [6.1 本地服务器 - server.mjs](#61-本地服务器---servermjs)
    - [6.2 Cloudflare Worker - tmdb-worker.js](#62-cloudflare-worker---tmdb-workerjs)
@@ -156,6 +158,7 @@
 index.html 底部脚本加载顺序:
   libs/sha256.min.js         ← SHA-256 工具库
   js/config.js               ← 全局配置（最先，定义常量与 21 个 API 源）
+  js/api-config.js           ← API 管理（复选框、自定义 API、隐藏过滤）
   js/proxy-auth.js           ← 代理鉴权（密码哈希 + 时间戳参数）
   js/loadBalancer.js         ← 负载均衡核心（自动实例化）
   js/loadBalancerUI.js       ← 负载均衡状态面板 UI
@@ -164,7 +167,8 @@ index.html 底部脚本加载顺序:
   js/password.js             ← 密码保护系统
   js/search.js               ← 搜索模块
   js/tmdb.js                 ← TMDB 分类浏览
-  js/app.js                  ← 主入口（初始化所有逻辑，1765 行）
+  js/player-bridge.js        ← 播放器桥接（播放跳转、详情弹窗、剧集管理）
+  js/app.js                  ← 主入口（初始化、设置事件监听、配置导入导出）
   js/version-utils.js        ← 版本工具函数
   js/version-updater.js      ← 版本更新自动检测
   js/index-page.js           ← 首页弹窗 + URL 搜索参数处理
@@ -192,9 +196,11 @@ LeLeTV/
 │   ├── logo.png                #   网站 Logo（圆形）
 │   ├── logo-black.png          #   PWA 图标（方形黑色）
 │   └── nomedia.png             #   无封面占位图
-├── js/                         # JavaScript 核心模块（17 个文件）
+├── js/                         # JavaScript 核心模块（20 个文件）
 │   ├── config.js               #   全局常量与配置（284 行：21 个 API 源、配置对象）
-│   ├── app.js                  #   主入口（1765 行：初始化、搜索、播放跳转）
+│   ├── api-config.js           #   API 管理（复选框、自定义 API、隐藏内容过滤）
+│   ├── app.js                  #   主入口（~765 行：初始化、事件监听、配置导入导出）
+│   ├── player-bridge.js        #   播放器桥接（播放跳转、详情弹窗、剧集管理）
 │   ├── search.js               #   视频搜索（缓存、并发、分页、负载均衡）
 │   ├── player.js               #   播放器（2390 行，最大模块：ArtPlayer + HLS.js）
 │   ├── tmdb.js                 #   TMDB 分类浏览（筛选/分页/惰性加载）
@@ -283,42 +289,93 @@ LeLeTV/
 
 ### 5.2 核心应用逻辑 - app.js
 
-**文件**: [app.js](file:///e:/Code/JiunianTV/LeLeTV/js/app.js)（1765 行）
+**文件**: [app.js](file:///e:/Code/JiunianTV/LeLeTV/js/app.js)（~765 行）
 
-**职责**: 应用的全局核心逻辑，包括页面初始化、API 选择管理、搜索流程、详情展示、播放跳转、配置导入导出。
+**职责**: 应用的全局核心逻辑，包括页面初始化、事件监听、API 选择管理、搜索流程、配置导入导出。
 
 **关键函数**:
 
 | 函数名 | 说明 |
 |--------|------|
-| `initAPICheckboxes()` | 初始化设置页面的 API 源复选框列表 |
-| `applyNewDataSourceLogic()` | 应用数据源选择策略（v1 版本逻辑） |
-| `getRandomDataSources(count)` | 随机选择指定数量的非隐藏数据源 |
-| `updateSelectedAPIs()` | 同步复选框状态到 localStorage |
-| `selectAllAPIs(selectAll, excludeHidden)` | 全选/取消全选 API 源 |
-| `addCustomApi()` | 添加自定义 API 源（最多 5 个，URL 格式校验） |
-| `removeCustomApi(index)` | 删除自定义 API 源并重新索引 |
-| `checkHiddenAPIsSelected()` | 检查是否选中了隐藏内容 API，联动禁用过滤开关 |
-| `verifyAdminPassword()` | 管理员密码验证（关闭隐藏过滤时触发） |
+| `setupEventListeners()` | 设置页面事件监听器（回车搜索、隐藏过滤/广告过滤开关） |
+| `resetSearchArea()` | 重置搜索区域回到首页状态 |
+| `getCustomApiInfo(customApiIndex)` | 获取自定义 API 配置信息 |
+| `generateSkeletonCards(count)` | 生成骨架屏卡片 HTML |
 | `search()` | 核心搜索函数（防抖 + 渐进式渲染 + 负载均衡集成） |
 | `_buildSearchCardsHtml(items)` | 生成搜索卡片 HTML（XSS 保护，HTML 转义） |
-| `playDirectly(id, vod_name, sourceCode)` | 直接跳转播放（绕过详情弹窗） |
-| `showDetails(id, vod_name, sourceCode)` | 显示视频详情弹窗 |
-| `playVideo(url, vod_name, sourceCode, episodeIndex)` | 播放视频（跳转 player.html） |
-| `renderEpisodes(vodName, sourceCode, vodId)` | 渲染剧集按钮网格 |
-| `toggleEpisodeOrder(sourceCode, vodId)` | 切换剧集正序/倒序 |
-| `importConfig()` / `exportConfig()` | 配置文件导入/导出（含哈希校验） |
 | `setupEmailClickHandlers()` | 邮箱点击处理器（复制 + 打开客户端） |
+| `toggleClearButton()` | 切换搜索框清空按钮显示状态 |
+| `clearSearchInput()` | 清空搜索框内容 |
+| `hookInput()` | 劫持搜索框 value 属性确保类型安全 |
+| `performTraditionalSearch(query)` | 传统降级搜索方式 |
+| `importConfig()` / `exportConfig()` | 配置文件导入/导出（含哈希校验） |
+| `importConfigFromUrl()` | 从 URL 导入配置文件 |
+| `saveStringAsFile(content, fileName)` | 将字符串保存为文件下载 |
+
+> 搜索函数调用的播放跳转（`playDirectly`、`showDetails`）和剧集管理（`playVideo`、`renderEpisodes`、`toggleEpisodeOrder`）已拆分到 [player-bridge.js](file:///e:/Code/JiunianTV/LeLeTV/js/player-bridge.js)。API 管理函数（`initAPICheckboxes`、`addCustomApi`、`verifyAdminPassword` 等）已拆分到 [api-config.js](file:///e:/Code/JiunianTV/LeLeTV/js/api-config.js)。
 
 **数据流**:
 ```
 用户输入 → search() → searchByAPIAndKeyWord() × N → 渐进式渲染结果
-         → 解析 episode URL → playDirectly() / showDetails()
+         → 点击卡片 → playDirectly() / showDetails() (player-bridge.js)
          → player.html → ArtPlayer 播放
          → 实时保存观看进度到 localStorage（30 秒防抖）
 ```
 
-### 5.3 搜索模块 - search.js
+### 5.3 API 管理 - api-config.js
+
+**文件**: [api-config.js](file:///e:/Code/JiunianTV/LeLeTV/js/api-config.js)（~631 行）
+
+**职责**: API 源管理和隐藏内容过滤逻辑，从 app.js 拆分出的独立模块。管理 API 复选框初始化、自定义 API 增删改、数据源选择策略、隐藏内容 API 过滤开关。
+
+**关键函数**:
+
+| 函数名 | 说明 |
+|--------|------|
+| `verifyAdminPassword()` | 管理员密码弹窗验证 |
+| `resetDataSourceLogic()` | 重置数据源选择为默认配置 |
+| `initAPICheckboxes()` | 初始化设置页面的 API 源复选框列表 |
+| `applyNewDataSourceLogic()` | 应用数据源选择策略（v1 版本逻辑） |
+| `refreshDataSources()` | 刷新数据源列表 |
+| `getRandomDataSources(count)` | 随机选择指定数量的非隐藏数据源 |
+| `addHiddenAPI()` | 添加隐藏内容 API 区域到设置页面 |
+| `checkHiddenAPIsSelected()` | 检查是否选中了隐藏 API，联动禁用过滤开关 |
+| `renderCustomAPIsList()` | 渲染自定义 API 列表 |
+| `updateSelectedAPIs()` | 同步复选框状态到 localStorage |
+| `updateSelectedApiCount()` | 更新选中的 API 数量显示 |
+| `selectAllAPIs(selectAll, excludeHidden)` | 全选/取消全选 API 源 |
+| `addCustomApi()` / `removeCustomApi(index)` | 添加/删除自定义 API 源 |
+
+### 5.4 播放器桥接 - player-bridge.js
+
+**文件**: [player-bridge.js](file:///e:/Code/JiunianTV/LeLeTV/js/player-bridge.js)（~316 行）
+
+**职责**: 播放器桥接模块，从 app.js 拆分出的独立模块。处理视频播放跳转、详情弹窗展示、剧集管理和排序。
+
+**关键函数**:
+
+| 函数名 | 说明 |
+|--------|------|
+| `playDirectly(id, vod_name, sourceCode)` | 直接跳转播放（绕过详情弹窗，含自定义 API 参数构建） |
+| `showDetails(id, vod_name, sourceCode)` | 显示视频详情弹窗（含来源信息、剧集列表、切换排序） |
+| `playVideo(url, vod_name, sourceCode, episodeIndex, vodId)` | 播放视频（保存状态后跳转 player.html） |
+| `playPreviousEpisode(sourceCode)` | 播放上一集 |
+| `playNextEpisode(sourceCode)` | 播放下一集 |
+| `renderEpisodes(vodName, sourceCode, vodId)` | 渲染剧集按钮网格（支持正序/倒序） |
+| `copyLinks()` | 复制所有剧集链接到剪贴板 |
+| `toggleEpisodeOrder(sourceCode, vodId)` | 切换剧集正序/倒序 |
+
+**数据流**:
+```
+搜索卡片点击 → playDirectly() / showDetails()
+  ├── 构建 API 参数 (source/customApi)
+  ├── fetch /api/detail?id=...（服务端代理）
+  ├── 获取 episodes 数组
+  ├── 保存状态到 localStorage
+  └── 跳转 player.html?url=...&title=...&source=...
+```
+
+### 5.5 搜索模块 - search.js
 
 **文件**: [search.js](file:///e:/Code/JiunianTV/LeLeTV/js/search.js)
 
@@ -344,7 +401,7 @@ LeLeTV/
 8. 错误时调用 loadBalancer.recordApiResult()
 ```
 
-### 5.4 播放器模块 - player.js
+### 5.6 播放器模块 - player.js
 
 **文件**: [player.js](file:///e:/Code/JiunianTV/LeLeTV/js/player.js)（约 2390 行，最复杂的模块）
 
@@ -444,7 +501,7 @@ LeLeTV/
 - 评分（5 分以上 ~ 9 分以上）
 - 排序（热门/评分/日期/名称等 8 种方式）
 
-### 5.6 UI 工具 & 观看历史 - ui.js
+### 5.8 UI 工具 & 观看历史 - ui.js
 
 **文件**: [ui.js](file:///e:/Code/JiunianTV/LeLeTV/js/ui.js)
 
@@ -494,7 +551,7 @@ showNextToast() → 先进先出依次显示
 | `clearLocalStorage()` | 清除全部本地存储（含确认弹窗） |
 | `showImportBox(callback)` | 拖拽/选择文件导入框 |
 
-### 5.7 密码保护 - password.js
+### 5.9 密码保护 - password.js
 
 **文件**: [password.js](file:///e:/Code/JiunianTV/LeLeTV/js/password.js)
 
@@ -526,7 +583,7 @@ showNextToast() → 先进先出依次显示
   触发 'passwordVerified' 事件
 ```
 
-### 5.8 代理鉴权 - proxy-auth.js
+### 5.10 代理鉴权 - proxy-auth.js
 
 **文件**: [proxy-auth.js](file:///e:/Code/JiunianTV/LeLeTV/js/proxy-auth.js)
 
@@ -571,7 +628,7 @@ showNextToast() → 先进先出依次显示
 - 普通（14 个）：dyttzy(电影天堂)、bdzy(百度资源)、moduzy(魔都资源)、zy360(360资源)、bfzy(暴风资源)、tyyszy(天涯资源)、wolong(卧龙资源)、jisu(极速资源)、dbzy(豆瓣资源)、mozhua(魔爪资源)、zuid(最大资源)、wujin(无尽资源)、mtzy(茅台资源)、ikun(iKun资源)、hnzy(红牛资源)
 - 隐藏标记（7 个）：ckzy、fhzy、ywzy、mdzy、kgzy、nxzy、lbzy
 
-### 5.10 负载均衡 - loadBalancer.js
+### 5.12 负载均衡 - loadBalancer.js
 
 **文件**: [loadBalancer.js](file:///e:/Code/JiunianTV/LeLeTV/js/loadBalancer.js)
 
@@ -621,11 +678,11 @@ score = 基础 100 分
 - 冷却期：10 分钟
 - 冷却后自动恢复评估
 
-### 5.11 负载均衡 UI - loadBalancerUI.js
+### 5.13 负载均衡 UI - loadBalancerUI.js
 
 **职责**: 渲染负载均衡器状态面板，实时显示各 API 源的健康状态、成功率、响应时间和负载情况。
 
-### 5.12 缓存管理 - cache-manager.js
+### 5.14 缓存管理 - cache-manager.js
 
 **文件**: [cache-manager.js](file:///e:/Code/JiunianTV/LeLeTV/js/cache-manager.js)
 
@@ -639,7 +696,7 @@ score = 基础 100 分
 - **手动触发**：`cacheManager.manualCleanup()`
 - **自动触发**：每 24 小时定时器自动检查
 
-### 5.13 版本管理
+### 5.15 版本管理
 
 模块由 3 个文件协作完成：
 
@@ -653,7 +710,7 @@ score = 基础 100 分
 - `performUpdate()` - 执行更新（清除 SW 缓存 + 清除 browser cache + 重载）
 - `setupSwUpdateListener()` - 监听 SW 更新消息
 
-### 5.14 其他模块
+### 5.16 其他模块
 
 | 文件 | 说明 |
 |------|------|
