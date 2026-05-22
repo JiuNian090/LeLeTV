@@ -843,16 +843,20 @@ body {
     padding: 0.5rem;
 }
 
-/* Toast 提示样式优化 */
+/* Toast 提示样式 */
 #toast {
-    z-index: 9999; /* 确保显示在最上层 */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    min-width: 200px;
-    text-align: center;
-    pointer-events: none; /* 防止toast阻挡点击事件 */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2147483647;
     font-family: inherit;
     font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    #toast {
+        max-width: calc(100% - 2rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 /* ========== 骨架屏 ========== */
@@ -963,33 +967,6 @@ img.loading-fade.loaded {
     100% {
         background-color: transparent;
         transform: scale(1);
-    }
-}
-
-/* 响应式调整 */
-@media (max-width: 640px) {
-    #toast {
-        left: 10px !important;
-        right: 10px !important;
-        width: auto !important;
-        max-width: calc(100% - 20px) !important;
-        transform: translateX(0) !important;
-        font-size: 0.9rem !important;
-        padding: 0.65rem 1rem !important;
-    }
-}
-
-/* 深色模式优化 */
-@media (prefers-color-scheme: dark) {
-    #toast {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-}
-
-/* 高对比度模式支持 */
-@media (prefers-contrast: high) {
-    #toast {
-        border-width: 2px !important;
     }
 }
 
