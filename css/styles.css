@@ -229,7 +229,9 @@ button, .card-hover {
     border: 1px solid #333;
     border-top: none;
     border-radius: 0 0 0.75rem 0.75rem;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 50vh;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
