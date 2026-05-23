@@ -2354,6 +2354,7 @@ async function showSwitchResourceModal() {
     modalTitle.innerHTML = `<span class="break-words">${currentVideoTitle}</span>`;
     modalContent.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;grid-column:1/-1;">正在加载资源列表...</div>';
     modal.classList.remove('hidden');
+    modal.classList.add('flex');
 
     // 搜索
     const localSelectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');

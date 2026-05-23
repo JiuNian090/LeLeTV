@@ -402,6 +402,7 @@ async function search() {
         // 抬升布局 + 显示关闭按钮
         document.querySelector('.home-layout')?.classList.add('has-results');
         document.getElementById('closeSearchResults')?.classList.remove('hidden');
+        document.getElementById('closeSearchResults')?.classList.add('flex');
 
         // 更新URL
         try {
