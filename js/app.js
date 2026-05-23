@@ -379,10 +379,12 @@ async function search() {
         resultsArea.classList.remove('hidden');
     }
 
-    // 重置过滤状态并渲染源标签
+    // 重置过滤状态
     _activeSourceFilter = 'all';
     _lastAllResults = [];
-    _renderSourceFilterTabs(selectedAPIs, 0);
+
+    // 初始渲染标签：基于 selectedAPIs，但过滤掉配置中已不存在的源
+    _initFilterTabs();
 
     showLoading();
 
@@ -469,6 +471,7 @@ async function search() {
                 return (a.source_name || '').localeCompare(b.source_name || '', 'zh-CN');
             });
             _lastAllResults = allResults;
+            _renderSourceFilterTabs(allResults.length);
             _applySourceFilter(_activeSourceFilter);
         } else {
             resultsDiv.innerHTML = `
@@ -481,6 +484,7 @@ async function search() {
                     <p class="mt-1 text-sm text-gray-500">请尝试其他关键词或更换数据源</p>
                 </div>
             `;
+            document.getElementById('sourceFilterTabs').innerHTML = '';
             hideLoading();
             return;
         }
@@ -597,27 +601,75 @@ function _extractSeasonInfo(title) {
 }
 
 // 获取API源的人类可读名称
-function _getSourceLabel(apiId) {
+function _getSourceLabel(apiId, results) {
+    // 优先从结果中取实际返回的 source_name（来自搜索时实时读取的配置）
+    if (results) {
+        const match = results.find(r => r.source_code === apiId);
+        if (match && match.source_name) return match.source_name;
+    }
     if (apiId.startsWith('custom_')) {
         const idx = parseInt(apiId.replace('custom_', ''));
         const api = customAPIs[idx];
         return api ? api.name : `自定义源${idx + 1}`;
     }
-    return API_SITES[apiId] ? API_SITES[apiId].name : apiId;
+    if (API_SITES[apiId]) return API_SITES[apiId].name;
+    return apiId;
 }
 
-// 渲染搜索源过滤标签
-function _renderSourceFilterTabs(apiIds, totalCount) {
+// 基于当前配置初始化过滤标签（初始渲染用，搜索完成后会被实际结果覆盖）
+function _initFilterTabs() {
     const container = document.getElementById('sourceFilterTabs');
     if (!container) return;
-    if (!apiIds || apiIds.length === 0) {
+    if (!selectedAPIs || selectedAPIs.length === 0) {
         container.innerHTML = '';
         return;
     }
-    const allCount = totalCount || 0;
+    // 只保留当前配置中真实存在的源
+    const validApis = selectedAPIs.filter(id => {
+        if (id.startsWith('custom_')) {
+            const idx = parseInt(id.replace('custom_', ''));
+            return idx >= 0 && idx < customAPIs.length;
+        }
+        return !!API_SITES[id];
+    });
+    if (validApis.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    let html = '<button class="source-filter-tab active" data-source="all">全部 (0)</button>';
+    validApis.forEach(id => {
+        const label = _getSourceLabel(id);
+        html += `<button class="source-filter-tab" data-source="${id}">${label}</button>`;
+    });
+    container.innerHTML = html;
+}
+
+// 渲染搜索源过滤标签（从实际搜索结果中提取源列表）
+function _renderSourceFilterTabs(totalCount) {
+    const container = document.getElementById('sourceFilterTabs');
+    if (!container) return;
+    if (!_lastAllResults || _lastAllResults.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    const allCount = totalCount || _lastAllResults.length;
+
+    // 从搜索结果中收集唯一的 source_code
+    const seen = new Set();
+    const uniqueSources = [];
+    _lastAllResults.forEach(item => {
+        const code = item.source_code;
+        if (code && !seen.has(code)) {
+            seen.add(code);
+            uniqueSources.push(code);
+        }
+    });
+
     let html = `<button class="source-filter-tab active" data-source="all">全部 (${allCount})</button>`;
-    apiIds.forEach(apiId => {
-        html += `<button class="source-filter-tab" data-source="${apiId}">${_getSourceLabel(apiId)}</button>`;
+    uniqueSources.forEach(code => {
+        const label = _getSourceLabel(code, _lastAllResults);
+        const count = _lastAllResults.filter(r => r.source_code === code).length;
+        html += `<button class="source-filter-tab" data-source="${code}">${label} (${count})</button>`;
     });
     container.innerHTML = html;
 }
@@ -628,6 +680,15 @@ function _updateAllTabCount(count) {
     if (allTab) {
         allTab.textContent = `全部 (${count})`;
     }
+    // 同步更新各源标签计数
+    const container = document.getElementById('sourceFilterTabs');
+    if (!container || !_lastAllResults) return;
+    container.querySelectorAll('.source-filter-tab:not([data-source="all"])').forEach(tab => {
+        const code = tab.dataset.source;
+        const count = _lastAllResults.filter(r => r.source_code === code).length;
+        const label = _getSourceLabel(code, _lastAllResults);
+        tab.textContent = `${label} (${count})`;
+    });
 }
 
 // 按源过滤搜索结果并重绘
