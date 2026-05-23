@@ -86,6 +86,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 设置事件监听器
     setupEventListeners();
 
+    // 确保搜索历史下拉默认隐藏
+    hideSearchHistory();
+
     // 初始检查隐藏API选中状态
     setTimeout(checkHiddenAPIsSelected, 100);
 });
@@ -102,8 +105,8 @@ function setupEventListeners() {
         }
     });
 
-    // 搜索历史下拉：聚焦时显示
-    searchInput.addEventListener('focus', function () {
+    // 搜索历史下拉：点击/触摸时显示（不用 focus 避免浏览器自动聚焦触发）
+    searchInput.addEventListener('pointerdown', function () {
         showSearchHistory(this.value);
     });
 
@@ -226,6 +229,9 @@ function setupEventListeners() {
 
 // 重置搜索区域
 function resetSearchArea() {
+    // 关闭搜索历史下拉
+    hideSearchHistory();
+
     // 清理搜索结果
     document.getElementById('results').innerHTML = '';
     document.getElementById('searchInput').value = '';
