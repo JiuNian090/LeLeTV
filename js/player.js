@@ -488,28 +488,9 @@ function showShortcutHint(text, direction) {
     }, 2000);
 }
 
-// 初始化播放器
-function initPlayer(videoUrl) {
-    if (!videoUrl) {
-        return
-    }
-
-    // 加载看门狗：防止加载状态卡住无法消失（如 bfcache 恢复、网络中断等场景）
-    let loadingWatchdog = setTimeout(function () {
-        const loadingEl = document.getElementById('player-loading');
-        if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
-            loadingEl.style.display = 'none';
-        }
-    }, 30000);
-
-    // 销毁旧实例
-    if (art) {
-        art.destroy();
-        art = null;
-    }
-
-    // 配置HLS.js选项
-    const hlsConfig = {
+// ========== HLS 配置模块 ==========
+function createHlsConfig() {
+    return {
         debug: false,
         loader: adFilteringEnabled ? CustomHlsJsLoader : Hls.DefaultConfig.loader,
         enableWorker: true,
@@ -532,13 +513,120 @@ function initPlayer(videoUrl) {
         abrBandWidthUpFactor: 0.7,
         abrMaxWithRealBitrate: true,
         stretchShortVideoTrack: true,
-        appendErrorMaxRetry: 5,  // 增加尝试次数
+        appendErrorMaxRetry: 5,
         liveSyncDurationCount: 3,
         liveDurationInfinity: false
     };
+}
 
-    // Create new ArtPlayer instance
-    art = new Artplayer({
+// ========== HLS 自定义类型模块 ==========
+function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
+    if (currentHls && currentHls.destroy) {
+        try {
+            currentHls.destroy();
+        } catch (e) {
+        }
+    }
+
+    const hls = new Hls(hlsConfig);
+    currentHls = hls;
+
+    let errorDisplayed = false;
+    let errorCount = 0;
+    let playbackStarted = false;
+    let bufferAppendErrorCount = 0;
+
+    video.addEventListener('playing', function () {
+        playbackStarted = true;
+        clearTimeout(loadingWatchdog);
+        if (episodeSwitchTimeout) {
+            clearTimeout(episodeSwitchTimeout);
+            episodeSwitchTimeout = null;
+        }
+        window.isSwitchingVideo = false;
+        document.getElementById('player-loading').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+    });
+
+    video.addEventListener('timeupdate', function () {
+        if (video.currentTime > 1) {
+            document.getElementById('error').style.display = 'none';
+        }
+    });
+
+    hls.loadSource(url);
+    hls.attachMedia(video);
+
+    let sourceElement = video.querySelector('source');
+    if (sourceElement) {
+        sourceElement.src = url;
+    } else {
+        sourceElement = document.createElement('source');
+        sourceElement.src = url;
+        video.appendChild(sourceElement);
+    }
+    video.disableRemotePlayback = false;
+
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        video.play().catch(e => {
+        });
+    });
+
+    hls.on(Hls.Events.ERROR, function (event, data) {
+        errorCount++;
+
+        if (data.details === 'bufferAppendError') {
+            bufferAppendErrorCount++;
+            if (playbackStarted) {
+                return;
+            }
+            if (bufferAppendErrorCount >= 3) {
+                hls.recoverMediaError();
+            }
+        }
+
+        if (data.fatal && !playbackStarted) {
+            switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                    hls.startLoad();
+                    break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                    hls.recoverMediaError();
+                    break;
+                default:
+                    if (errorCount > 3 && !errorDisplayed) {
+                        errorDisplayed = true;
+                        showError('视频加载失败，可能是格式不兼容或源不可用');
+                    }
+                    break;
+            }
+        }
+    });
+
+    hls.on(Hls.Events.FRAG_LOADED, function () {
+        clearTimeout(loadingWatchdog);
+        if (episodeSwitchTimeout) {
+            clearTimeout(episodeSwitchTimeout);
+            episodeSwitchTimeout = null;
+        }
+        window.isSwitchingVideo = false;
+        document.getElementById('player-loading').style.display = 'none';
+    });
+
+    hls.on(Hls.Events.LEVEL_LOADED, function () {
+        clearTimeout(loadingWatchdog);
+        if (episodeSwitchTimeout) {
+            clearTimeout(episodeSwitchTimeout);
+            episodeSwitchTimeout = null;
+        }
+        window.isSwitchingVideo = false;
+        document.getElementById('player-loading').style.display = 'none';
+    });
+}
+
+// ========== 播放器实例创建模块 ==========
+function createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog) {
+    return new Artplayer({
         container: '#player',
         url: videoUrl,
         type: 'm3u8',
@@ -573,143 +661,17 @@ function initPlayer(videoUrl) {
         },
         customType: {
             m3u8: function (video, url) {
-                // 清理之前的HLS实例
-                if (currentHls && currentHls.destroy) {
-                    try {
-                        currentHls.destroy();
-                    } catch (e) {
-                    }
-                }
-
-                // 创建新的HLS实例
-                const hls = new Hls(hlsConfig);
-                currentHls = hls;
-
-                // 跟踪是否已经显示错误
-                let errorDisplayed = false;
-                // 跟踪是否有错误发生
-                let errorCount = 0;
-                // 跟踪视频是否开始播放
-                let playbackStarted = false;
-                // 跟踪视频是否出现bufferAppendError
-                let bufferAppendErrorCount = 0;
-
-                // 监听视频播放事件
-                video.addEventListener('playing', function () {
-                    playbackStarted = true;
-                    clearTimeout(loadingWatchdog);
-                    if (episodeSwitchTimeout) {
-                        clearTimeout(episodeSwitchTimeout);
-                        episodeSwitchTimeout = null;
-                    }
-                    window.isSwitchingVideo = false;
-                    document.getElementById('player-loading').style.display = 'none';
-                    document.getElementById('error').style.display = 'none';
-                });
-
-                // 监听视频进度事件
-                video.addEventListener('timeupdate', function () {
-                    if (video.currentTime > 1) {
-                        // 视频进度超过1秒，隐藏错误（如果存在）
-                        document.getElementById('error').style.display = 'none';
-                    }
-                });
-
-                hls.loadSource(url);
-                hls.attachMedia(video);
-
-                // enable airplay, from https://github.com/video-dev/hls.js/issues/5989
-                // 检查是否已存在source元素，如果存在则更新，不存在则创建
-                let sourceElement = video.querySelector('source');
-                if (sourceElement) {
-                    // 更新现有source元素的URL
-                    sourceElement.src = videoUrl;
-                } else {
-                    // 创建新的source元素
-                    sourceElement = document.createElement('source');
-                    sourceElement.src = videoUrl;
-                    video.appendChild(sourceElement);
-                }
-                video.disableRemotePlayback = false;
-
-                hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                    video.play().catch(e => {
-                    });
-                });
-
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    // 增加错误计数
-                    errorCount++;
-
-                    // 处理bufferAppendError
-                    if (data.details === 'bufferAppendError') {
-                        bufferAppendErrorCount++;
-                        // 如果视频已经开始播放，则忽略这个错误
-                        if (playbackStarted) {
-                            return;
-                        }
-
-                        // 如果出现多次bufferAppendError但视频未播放，尝试恢复
-                        if (bufferAppendErrorCount >= 3) {
-                            hls.recoverMediaError();
-                        }
-                    }
-
-                    // 如果是致命错误，且视频未播放
-                    if (data.fatal && !playbackStarted) {
-                        // 尝试恢复错误
-                        switch (data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                hls.startLoad();
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                hls.recoverMediaError();
-                                break;
-                            default:
-                                // 仅在多次恢复尝试后显示错误
-                                if (errorCount > 3 && !errorDisplayed) {
-                                    errorDisplayed = true;
-                                    showError('视频加载失败，可能是格式不兼容或源不可用');
-                                }
-                                break;
-                        }
-                    }
-                });
-
-                // 监听分段加载事件
-                hls.on(Hls.Events.FRAG_LOADED, function () {
-                    clearTimeout(loadingWatchdog);
-                    if (episodeSwitchTimeout) {
-                        clearTimeout(episodeSwitchTimeout);
-                        episodeSwitchTimeout = null;
-                    }
-                    window.isSwitchingVideo = false;
-                    document.getElementById('player-loading').style.display = 'none';
-                });
-
-                // 监听级别加载事件
-                hls.on(Hls.Events.LEVEL_LOADED, function () {
-                    clearTimeout(loadingWatchdog);
-                    if (episodeSwitchTimeout) {
-                        clearTimeout(episodeSwitchTimeout);
-                        episodeSwitchTimeout = null;
-                    }
-                    window.isSwitchingVideo = false;
-                    document.getElementById('player-loading').style.display = 'none';
-                });
+                setupHlsCustomType(video, url, hlsConfig, loadingWatchdog);
             }
         }
     });
+}
 
-    // artplayer 没有 'fullscreenWeb:enter', 'fullscreenWeb:exit' 等事件
-    // 所以原控制栏隐藏代码并没有起作用
-    // 实际起作用的是 artplayer 默认行为，它支持自动隐藏工具栏
-    // 但有一个 bug： 在副屏全屏时，鼠标移出副屏后不会自动隐藏工具栏
-    // 下面进一并重构和修复：
+// ========== 全屏控制模块 ==========
+function createFullScreenController() {
     let hideTimer;
     let backBtnHideTimer;
 
-    // 隐藏控制栏和返回按钮
     function hideControls() {
         if (art && art.controls) {
             art.controls.show = false;
@@ -717,7 +679,6 @@ function initPlayer(videoUrl) {
         hideBackBtn();
     }
 
-    // 显示返回按钮
     function showBackBtn() {
         const btn = document.querySelector('.player-back-btn');
         if (btn) btn.classList.add('show');
@@ -727,14 +688,12 @@ function initPlayer(videoUrl) {
         }, Artplayer.CONTROL_HIDE_TIME);
     }
 
-    // 隐藏返回按钮
     function hideBackBtn() {
         const btn = document.querySelector('.player-back-btn');
         if (btn) btn.classList.remove('show');
         clearTimeout(backBtnHideTimer);
     }
 
-    // 重置计时器，计时器超时时间与 artplayer 保持一致
     function resetHideTimer() {
         clearTimeout(hideTimer);
         hideTimer = setTimeout(() => {
@@ -742,21 +701,17 @@ function initPlayer(videoUrl) {
         }, Artplayer.CONTROL_HIDE_TIME);
     }
 
-    // 处理鼠标离开浏览器窗口
     function handleMouseOut(e) {
         if (e && !e.relatedTarget) {
             resetHideTimer();
         }
     }
 
-    // 全屏状态切换时注册/移除 mouseout 事件，监听鼠标移出屏幕事件
-    // 从而对播放器状态栏进行隐藏倒计时
-    function handleFullScreen(isFullScreen, isWeb) {
+    function handleFullScreen(isFullScreen) {
         const container = document.getElementById('playerContainer');
         const lockBtn = document.getElementById('playerLockBtn');
         if (isFullScreen) {
             container.classList.add('fullscreen-active');
-            // 进入全屏时把锁定按钮移入 #player（ArtPlayer 容器），使其在全屏视图中可见
             if (lockBtn) {
                 lockBtn.dataset.origParent = lockBtn.parentElement.id || 'playerContainer';
                 const playerEl = document.getElementById('player');
@@ -767,7 +722,6 @@ function initPlayer(videoUrl) {
             document.addEventListener('mouseout', handleMouseOut);
         } else {
             container.classList.remove('fullscreen-active');
-            // 退出全屏时把锁定按钮移回容器
             if (lockBtn && lockBtn.dataset.origParent) {
                 const origParent = document.getElementById(lockBtn.dataset.origParent) || container;
                 if (lockBtn.parentElement !== origParent) {
@@ -776,188 +730,183 @@ function initPlayer(videoUrl) {
                 delete lockBtn.dataset.origParent;
             }
             document.removeEventListener('mouseout', handleMouseOut);
-            // 退出全屏时清理计时器
             clearTimeout(hideTimer);
             clearTimeout(backBtnHideTimer);
             autoFullscreened = false;
         }
     }
 
-    // 播放器加载完成后初始隐藏工具栏，并添加下一集按钮
-    art.on('ready', () => {
-        hideControls();
+    return {
+        hideControls,
+        showBackBtn,
+        hideBackBtn,
+        resetHideTimer,
+        handleFullScreen
+    };
+}
 
-        // 鼠标滑过播放区域时显示返回按钮
-        const playerArea = document.querySelector('.player-layout-left');
-        if (playerArea) {
-            playerArea.addEventListener('mousemove', showBackBtn);
-        }
+// ========== 播放器事件处理模块 ==========
+function onPlayerReady(art, fullScreenController) {
+    fullScreenController.hideControls();
 
-        // 手机横屏自动全屏
-        if (window.screen && window.screen.orientation) {
-            window.screen.orientation.addEventListener('change', function onOrientationChange() {
-                if (window.innerWidth > 640 || window.innerHeight > 640) return;
-                const isLandscape = window.screen.orientation.type.includes('landscape');
-                if (isLandscape && !art.fullscreen) {
-                    autoFullscreened = true;
-                    art.fullscreen = true;
-                } else if (!isLandscape && art.fullscreen && autoFullscreened) {
-                    art.fullscreen = false;
-                    autoFullscreened = false;
+    const playerArea = document.querySelector('.player-layout-left');
+    if (playerArea) {
+        playerArea.addEventListener('mousemove', fullScreenController.showBackBtn);
+    }
+
+    if (window.screen && window.screen.orientation) {
+        window.screen.orientation.addEventListener('change', function onOrientationChange() {
+            if (window.innerWidth > 640 || window.innerHeight > 640) return;
+            const isLandscape = window.screen.orientation.type.includes('landscape');
+            if (isLandscape && !art.fullscreen) {
+                autoFullscreened = true;
+                art.fullscreen = true;
+            } else if (!isLandscape && art.fullscreen && autoFullscreened) {
+                art.fullscreen = false;
+                autoFullscreened = false;
+            }
+        });
+    }
+
+    addNextEpisodeDirectly(art);
+    setTimeout(() => addNextEpisodeDirectly(art), 300);
+    setTimeout(() => addNextEpisodeDirectly(art), 800);
+    setTimeout(() => addNextEpisodeDirectly(art), 1500);
+}
+
+function handleFullScreenChange(art, fullScreenController, isFullScreen) {
+    fullScreenController.handleFullScreen(isFullScreen);
+    setTimeout(() => addNextEpisodeDirectly(art), 300);
+    setTimeout(() => addNextEpisodeDirectly(art), 800);
+}
+
+function onPlayerRestart(art) {
+    if (episodeSwitchTimeout) {
+        clearTimeout(episodeSwitchTimeout);
+        episodeSwitchTimeout = null;
+    }
+    window.isSwitchingVideo = false;
+    setTimeout(() => addNextEpisodeDirectly(art), 300);
+    setTimeout(() => addNextEpisodeDirectly(art), 800);
+}
+
+function onVideoLoadedMetadata(art, loadingWatchdog) {
+    clearTimeout(loadingWatchdog);
+    if (episodeSwitchTimeout) {
+        clearTimeout(episodeSwitchTimeout);
+        episodeSwitchTimeout = null;
+    }
+    window.isSwitchingVideo = false;
+    document.getElementById('player-loading').style.display = 'none';
+    videoHasEnded = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const savedPosition = parseInt(urlParams.get('position') || '0');
+
+    if (savedPosition > 10 && savedPosition < art.duration - 2) {
+        art.currentTime = savedPosition;
+        showPositionRestoreHint(savedPosition);
+    } else {
+        try {
+            const progressKey = 'videoProgress_' + getVideoId();
+            const progressStr = localStorage.getItem(progressKey);
+            if (progressStr && art.duration > 0) {
+                const progress = JSON.parse(progressStr);
+                if (
+                    progress &&
+                    typeof progress.position === 'number' &&
+                    progress.position > 10 &&
+                    progress.position < art.duration - 2
+                ) {
+                    art.currentTime = progress.position;
+                    showPositionRestoreHint(progress.position);
                 }
-            });
+            }
+        } catch (e) {
         }
+    }
 
-        // 直接尝试添加按钮
-        addNextEpisodeDirectly(art);
-        // 延迟后再次尝试
-        setTimeout(() => addNextEpisodeDirectly(art), 300);
-        setTimeout(() => addNextEpisodeDirectly(art), 800);
-        setTimeout(() => addNextEpisodeDirectly(art), 1500);
+    setupProgressBarPreciseClicks();
+    setTimeout(saveToHistory, 3000);
+    startProgressSaveInterval();
+    updateMediaSession();
+}
+
+function onVideoError(error) {
+    if (window.isSwitchingVideo) {
+        return;
+    }
+
+    const loadingElements = document.querySelectorAll('#player-loading, .player-loading-container');
+    loadingElements.forEach(el => {
+        if (el) el.style.display = 'none';
     });
 
-    // 全屏 Web 模式处理
+    showError('视频播放失败: ' + (error.message || '未知错误'));
+}
+
+function syncMediaSessionState(state) {
+    if (navigator.mediaSession) {
+        navigator.mediaSession.playbackState = state;
+    }
+}
+
+function onVideoEnded(art) {
+    videoHasEnded = true;
+
+    clearVideoProgress();
+
+    if (autoplayEnabled && currentEpisodeIndex < currentEpisodes.length - 1) {
+        setTimeout(() => {
+            playNextEpisode();
+            videoHasEnded = false;
+        }, 1000);
+    } else {
+        art.fullscreen = false;
+    }
+}
+
+function setupPlayerEventListeners(art, fullScreenController, loadingWatchdog) {
+    art.on('ready', () => {
+        onPlayerReady(art, fullScreenController);
+    });
+
     art.on('fullscreenWeb', function (isFullScreen) {
-        handleFullScreen(isFullScreen, true);
-        // 全屏切换后 ArtPlayer 会重建控制栏 DOM，重新插入下一集按钮
-        setTimeout(() => addNextEpisodeDirectly(art), 300);
-        setTimeout(() => addNextEpisodeDirectly(art), 800);
+        handleFullScreenChange(art, fullScreenController, isFullScreen);
     });
 
-    // 全屏模式处理
     art.on('fullscreen', function (isFullScreen) {
-        handleFullScreen(isFullScreen, false);
-        // 全屏切换后 ArtPlayer 会重建控制栏 DOM，重新插入下一集按钮
-        setTimeout(() => addNextEpisodeDirectly(art), 300);
-        setTimeout(() => addNextEpisodeDirectly(art), 800);
+        handleFullScreenChange(art, fullScreenController, isFullScreen);
     });
 
-    // URL 切换（切集/换源）后也检查一遍
     art.on('restart', () => {
-        if (episodeSwitchTimeout) {
-            clearTimeout(episodeSwitchTimeout);
-            episodeSwitchTimeout = null;
-        }
-        window.isSwitchingVideo = false;
-        setTimeout(() => addNextEpisodeDirectly(art), 300);
-        setTimeout(() => addNextEpisodeDirectly(art), 800);
+        onPlayerRestart(art);
     });
 
     art.on('video:loadedmetadata', function() {
-        clearTimeout(loadingWatchdog);
-        if (episodeSwitchTimeout) {
-            clearTimeout(episodeSwitchTimeout);
-            episodeSwitchTimeout = null;
-        }
-        window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
-        videoHasEnded = false; // 视频加载时重置结束标志
-        // 优先使用URL传递的position参数
-        const urlParams = new URLSearchParams(window.location.search);
-        const savedPosition = parseInt(urlParams.get('position') || '0');
+        onVideoLoadedMetadata(art, loadingWatchdog);
+    });
 
-        if (savedPosition > 10 && savedPosition < art.duration - 2) {
-            // 如果URL中有有效的播放位置参数，直接使用它
-            art.currentTime = savedPosition;
-            showPositionRestoreHint(savedPosition);
-        } else {
-            // 否则尝试从本地存储恢复播放进度
-            try {
-                const progressKey = 'videoProgress_' + getVideoId();
-                const progressStr = localStorage.getItem(progressKey);
-                if (progressStr && art.duration > 0) {
-                    const progress = JSON.parse(progressStr);
-                    if (
-                        progress &&
-                        typeof progress.position === 'number' &&
-                        progress.position > 10 &&
-                        progress.position < art.duration - 2
-                    ) {
-                        art.currentTime = progress.position;
-                        showPositionRestoreHint(progress.position);
-                    }
-                }
-            } catch (e) {
-            }
-        }
-
-        // 设置进度条点击监听
-        setupProgressBarPreciseClicks();
-
-        // 视频加载成功后，在稍微延迟后将其添加到观看历史
-        setTimeout(saveToHistory, 3000);
-
-        // 启动定期保存播放进度
-        startProgressSaveInterval();
-        
-        // 更新 Media Session 信息
-        updateMediaSession();
-        
-
-    })
-
-    // 错误处理
     art.on('video:error', function (error) {
-        // 如果正在切换视频，忽略错误
-        if (window.isSwitchingVideo) {
-            return;
-        }
-
-        // 隐藏所有加载指示器
-        const loadingElements = document.querySelectorAll('#player-loading, .player-loading-container');
-        loadingElements.forEach(el => {
-            if (el) el.style.display = 'none';
-        });
-
-        showError('视频播放失败: ' + (error.message || '未知错误'));
+        onVideoError(error);
     });
 
-    // 添加移动端长按三倍速播放功能
-    setupLongPressSpeedControl();
-
-    // 添加缩略图预览功能（从播放中视频渐进抓帧）
-    setupThumbnailCapture();
-
-    // 添加点击/双击控制行为（单击切换控制栏，双击暂停/播放）
-    setupControlsBehavior();
-
-    // 同步暂停状态到 Media Session
     art.on('video:pause', () => {
-        if (navigator.mediaSession) {
-            navigator.mediaSession.playbackState = 'paused';
-        }
+        syncMediaSessionState('paused');
     });
 
-    // 视频播放结束事件
-    art.on('video:ended', function () {
-        videoHasEnded = true;
-
-        clearVideoProgress();
-
-        // 如果自动播放下一集开启，且确实有下一集
-        if (autoplayEnabled && currentEpisodeIndex < currentEpisodes.length - 1) {
-            // 稍长延迟以确保所有事件处理完成
-            setTimeout(() => {
-                // 确认不是因为用户拖拽导致的假结束事件
-                playNextEpisode();
-                videoHasEnded = false; // 重置标志
-            }, 1000);
-        } else {
-            art.fullscreen = false;
-        }
-    });
-
-    // 同步播放状态到 Media Session
     art.on('video:playing', () => {
-        // 更新 Media Session（容错：如果 loadedmetadata 没触发）
-        if (navigator.mediaSession) {
-            navigator.mediaSession.playbackState = 'playing';
-        }
+        syncMediaSessionState('playing');
     });
 
-    // 10秒后如果仍在加载，但不立即显示错误
+    art.on('video:ended', function () {
+        onVideoEnded(art);
+    });
+}
+
+// ========== 长时间加载提示模块 ==========
+function setupLongLoadingWarning() {
     setTimeout(function () {
-        // 如果视频已经播放开始，则不显示错误
         if (art && art.video && art.video.currentTime > 0) {
             return;
         }
@@ -971,6 +920,41 @@ function initPlayer(videoUrl) {
             `;
         }
     }, 10000);
+}
+
+// ========== 播放器初始化函数（重构版）==========
+function initPlayer(videoUrl) {
+    if (!videoUrl) {
+        return
+    }
+
+    const loadingWatchdog = setTimeout(function () {
+        const loadingEl = document.getElementById('player-loading');
+        if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
+            loadingEl.style.display = 'none';
+        }
+    }, 30000);
+
+    if (art) {
+        art.destroy();
+        art = null;
+    }
+
+    const hlsConfig = createHlsConfig();
+
+    art = createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog);
+
+    const fullScreenController = createFullScreenController();
+
+    setupPlayerEventListeners(art, fullScreenController, loadingWatchdog);
+
+    setupLongPressSpeedControl();
+
+    setupThumbnailCapture();
+
+    setupControlsBehavior();
+
+    setupLongLoadingWarning();
 }
 
 // 自定义M3U8 Loader用于过滤广告
