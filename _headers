@@ -25,19 +25,11 @@
 
 # 静态资源：缓存 7 天 + immutable（配合 ?v= 参数做缓存失效）
 # 构建脚本 generate-version.mjs 每次部署都会更新 ?v= 值
-*.css
+/css/*
   Cache-Control: public, max-age=604800, immutable
-*.js
+/js/*
   Cache-Control: public, max-age=604800, immutable
-*.png
+/image/*
   Cache-Control: public, max-age=604800, immutable
-*.jpg
-  Cache-Control: public, max-age=604800, immutable
-*.jpeg
-  Cache-Control: public, max-age=604800, immutable
-*.webp
-  Cache-Control: public, max-age=604800, immutable
-*.svg
-  Cache-Control: public, max-age=604800, immutable
-*.ico
+/libs/*
   Cache-Control: public, max-age=604800, immutable
