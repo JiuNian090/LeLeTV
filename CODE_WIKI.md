@@ -1,6 +1,6 @@
 # LeLeTV 项目 Code Wiki
 
-> 生成日期：2026-05-22（更新: 模块化拆分） | 项目版本：v2.6.0
+> 生成日期：2026-05-23（更新: 搜索历史下拉、源过滤标签、智能排序） | 项目版本：v2.6.7
 
 ---
 
@@ -45,7 +45,7 @@
 
 ## 1. 项目概述
 
-**LeLeTV（乐乐影视）** 是一个自用的在线视频搜索与观看平台，纯前端 SPA（单页应用）架构，聚合 21 个第三方视频采集站 API 实现搜索和播放，通过 TMDB（The Movie Database）提供分类浏览、影片详情和智能筛选功能。
+**LeLeTV（乐乐影视）** 是一个自用的在线视频搜索与观看平台，纯前端 SPA（单页应用）架构，聚合 21 个第三方视频采集站 API 实现搜索和播放，通过 **TMDB（The Movie Database）** 提供分类浏览、影片详情和智能筛选功能。
 
 - **作者**：JiuNian (jiunian090@gmail.com)
 - **许可证**：Apache-2.0
@@ -54,7 +54,7 @@
 - **播放器**：ArtPlayer + HLS.js（约 2390 行 JS）
 - **样式框架**：Tailwind CSS 3.4 + PostCSS
 - **UI 风格**：HarmonyOS 深色调色板，霓虹粉 #ec4899 主色
-- **AI 索引**：GitNexus MCP 知识图谱（1809 符号，3031 关系）
+- **AI 索引**：GitNexus MCP 知识图谱（1638 符号，2741 关系，140 执行流）
 
 ---
 
@@ -289,23 +289,27 @@ LeLeTV/
 
 ### 5.2 核心应用逻辑 - app.js
 
-**文件**: [app.js](file:///e:/Code/JiunianTV/LeLeTV/js/app.js)（~765 行）
+**文件**: [app.js](file:///e:/Code/JiunianTV/LeLeTV/js/app.js)（~800 行）
 
-**职责**: 应用的全局核心逻辑，包括页面初始化、事件监听、API 选择管理、搜索流程、配置导入导出。
+**职责**: 应用的全局核心逻辑，包括页面初始化、事件监听、API 选择管理、搜索流程、配置导入导出、搜索源过滤标签、智能排序。
 
 **关键函数**:
 
 | 函数名 | 说明 |
 |--------|------|
-| `setupEventListeners()` | 设置页面事件监听器（回车搜索、隐藏过滤/广告过滤开关） |
-| `resetSearchArea()` | 重置搜索区域回到首页状态 |
+| `setupEventListeners()` | 设置页面事件监听器（回车搜索、搜索历史下拉、隐藏过滤/广告过滤开关、源过滤标签切换、外部点击关闭下拉） |
+| `resetSearchArea()` | 重置搜索区域回到首页状态（含下拉隐藏） |
 | `getCustomApiInfo(customApiIndex)` | 获取自定义 API 配置信息 |
 | `generateSkeletonCards(count)` | 生成骨架屏卡片 HTML |
-| `search()` | 核心搜索函数（防抖 + 渐进式渲染 + 负载均衡集成） |
+| `search()` | 核心搜索函数（防抖 + 下拉关闭 + 渐进式渲染 + 智能排序 + 源过滤标签） |
 | `_buildSearchCardsHtml(items)` | 生成搜索卡片 HTML（XSS 保护，HTML 转义） |
-| `setupEmailClickHandlers()` | 邮箱点击处理器（复制 + 打开客户端） |
-| `toggleClearButton()` | 切换搜索框清空按钮显示状态 |
-| `clearSearchInput()` | 清空搜索框内容 |
+| `_chineseToNumber(str)` | 中文数字转阿拉伯数字（如「十二」→ 12） |
+| `_extractSeasonInfo(title)` | 提取视频标题中的基础片名和季/部/集序号 |
+| `_getSourceLabel(apiId, results)` | 获取源标签的人类可读名称（优先从搜索结果取） |
+| `_initFilterTabs()` | 基于 selectedAPIs 初始化过滤标签，自动过滤无效源 |
+| `_renderSourceFilterTabs(totalCount)` | 根据实际搜索结果重绘源过滤标签 |
+| `_updateAllTabCount(count)` | 渐进式追加时更新所有标签的计数 |
+| `_applySourceFilter(sourceFilter)` | 按源过滤结果 + 重绘卡片 + 重置滚动到顶部 |
 | `hookInput()` | 劫持搜索框 value 属性确保类型安全 |
 | `performTraditionalSearch(query)` | 传统降级搜索方式 |
 | `importConfig()` / `exportConfig()` | 配置文件导入/导出（含哈希校验） |
@@ -316,7 +320,9 @@ LeLeTV/
 
 **数据流**:
 ```
-用户输入 → search() → searchByAPIAndKeyWord() × N → 渐进式渲染结果
+用户点击/触摸搜索框 → showSearchHistory() (ui.js) → 下拉菜单展开
+用户输入 → 实时过滤历史 → 点击条目 → search()
+search() → searchByAPIAndKeyWord() × N → 渐进式渲染 + 各源计数更新
          → 点击卡片 → playDirectly() / showDetails() (player-bridge.js)
          → player.html → ArtPlayer 播放
          → 实时保存观看进度到 localStorage（30 秒防抖）
@@ -518,14 +524,19 @@ showNextToast() → 先进先出依次显示
 支持类型: error / success / info / warning
 ```
 
-#### 搜索历史管理
+#### 搜索历史管理（下拉菜单）
 
 | 函数 | 说明 |
 |------|------|
 | `getSearchHistory()` | 获取搜索历史（兼容新旧格式） |
 | `saveSearchHistory(query)` | 保存搜索历史（最长 5 条，2 个月过期） |
-| `renderSearchHistory()` | 渲染历史标签（含时间 tooltip + 单条删除） |
-| `clearSearchHistory()` | 清空所有搜索历史 |
+| `renderSearchHistory()` | 渲染下拉菜单内容（供初始化用） |
+| `showSearchHistory(filterText)` | 显示下拉菜单，支持输入过滤 |
+| `hideSearchHistory()` | 隐藏下拉菜单，恢复搜索框圆角 |
+| `deleteSingleSearchHistory(query)` | 删除单条搜索历史 |
+| `clearSearchHistory()` | 清空所有搜索历史（关闭下拉） |
+| `_positionDropdown(dropdown)` | 计算 fixed 定位坐标（紧贴搜索框底部） |
+| `_addSearchBarFlush()` / `_removeSearchBarFlush()` | 切换搜索框底部变平/恢复圆角 |
 
 #### 观看历史管理
 
@@ -837,8 +848,10 @@ score = 基础 100 分
   ↓
 search() (app.js)
   ├── 密码验证 (ensurePasswordProtection)
+  ├── 隐藏搜索历史下拉 (hideSearchHistory)
   ├── 保存搜索历史 (saveSearchHistory)
   ├── 显示骨架屏 (generateSkeletonCards)
+  ├── 初始化源过滤标签 (_initFilterTabs) — 基于 selectedAPIs 过滤无效源
   ├── 并发请求所有选中 API 源
   │   └── searchByAPIAndKeyWord(apiId, query) (search.js)
   │       ├── 查缓存 (5min TTL)
@@ -849,15 +862,32 @@ search() (app.js)
   │       └── 写入缓存 → 返回带来源标记的结果
   ├── 隐藏内容过滤（如启用，涉及 ADMINPASSWORD 验证）
   ├── 渐进式渲染卡片 (insertAdjacentHTML)
-  ├── 最终排序（按名称）
+  │   └── 每次追加后更新「全部」和各源标签计数
+  ├── 智能排序（同名按季/部/集数字排序，支持中文数字）
+  ├── 根据实际结果重绘源过滤标签 (_renderSourceFilterTabs)
+  ├── 激活当前过滤器 (_applySourceFilter) — 重绘卡片 + 重置滚动
   └── 更新 URL (pushState)
 ```
 
-### 9.2 播放数据流
+### 9.2 搜索下拉 & 源过滤标签
+
+**搜索历史下拉菜单** (app.js + ui.js):
+- 触发方式：`pointerdown` 点击/触摸搜索框时展开（不用 `focus` 避免自动聚焦）
+- 动态过滤：输入文字时实时过滤匹配的历史记录
+- 交互：点击条目 → 填入搜索框 + 自动搜索；点击 ✕ → 单条删除；底部按钮 → 清空全部
+- 关闭方式：点击外部、按 Esc、滚动页面、窗口缩放
+- 样式：`position: fixed` 脱离层级，`z-index: 2147483647` 覆盖所有内容，下拉时搜索框底部变平无缝衔接
+
+**搜索结果源过滤标签** (app.js):
+- 搜索开始：基于 `selectedAPIs` 渲染初始标签，自动过滤已删除/无效的源
+- 搜索完成：根据 `_lastAllResults` 中实际的 `source_code` 重绘标签，确保名称与当前 `API_SITES` 配置一致
+- 每个标签显示各自计数：`豆瓣资源 (12)`、`魔都资源 (8)`
+- 切换标签时不请求 API，只做 DOM 过滤，重置滚动到顶部
+
+### 9.3 播放数据流
 
 ```
 点击搜索结果
-  ↓
 playDirectly() / showDetails()
   ├── 构建 API 参数 (source, customApi)
   ├── fetch /api/detail?id=...（服务端代理）
@@ -1028,4 +1058,4 @@ initTmdbCategory()（惰性加载，仅一次）
 
 ---
 
-> 本文档基于项目源代码和 GitNexus 知识图谱生成，涵盖 LeLeTV 项目的完整架构、模块职责、关键函数、数据流和运维配置。版本 v2.6.0。
+> 本文档基于项目源代码和 GitNexus 知识图谱生成，涵盖 LeLeTV 项目的完整架构、模块职责、关键函数、数据流和运维配置。版本 v2.6.7。
