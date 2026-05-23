@@ -11,6 +11,40 @@ let currentVideoTitle = '';
 // 全局变量用于倒序状态
 let episodesReversed = false;
 
+// 过滤配置缓存
+let _filterConfig = null;
+
+// 加载过滤配置（从外部 JSON，避免敏感词出现在代码中）
+async function loadFilterConfig() {
+    if (_filterConfig) return _filterConfig;
+    try {
+        const res = await fetch('/js/filter-config.json');
+        _filterConfig = await res.json();
+    } catch (e) {
+        console.warn('过滤配置加载失败，使用默认空配置:', e);
+        _filterConfig = { mode: 'blacklist', blacklist: [], whitelist: [] };
+    }
+    return _filterConfig;
+}
+
+// 对搜索结果应用内容过滤
+async function applyFilter(results) {
+    if (!results || results.length === 0) return results;
+    const config = await loadFilterConfig();
+    if (config.mode === 'whitelist') {
+        // 白名单模式：只保留分类在白名单中的结果
+        return results.filter(item => {
+            const typeName = (item.type_name || '').toLowerCase();
+            return config.whitelist.some(w => typeName.includes(w.toLowerCase()));
+        });
+    }
+    // 黑名单模式（默认）：过滤掉匹配黑名单的结果
+    return results.filter(item => {
+        const typeName = (item.type_name || '').toLowerCase();
+        return !config.blacklist.some(k => typeName.includes(k.toLowerCase()));
+    });
+}
+
 // 页面初始化
 document.addEventListener('DOMContentLoaded', function () {
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
@@ -282,11 +316,7 @@ async function search() {
 
                 let filtered = results;
                 if (hiddenFilterEnabled) {
-                    const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
-                    filtered = results.filter(item => {
-                        const typeName = item.type_name || '';
-                        return !banned.some(keyword => typeName.includes(keyword));
-                    });
+                    filtered = await applyFilter(results);
                 }
                 if (filtered.length === 0) return;
 
@@ -304,11 +334,7 @@ async function search() {
             if (fallbackResults.length > 0) {
                 let filtered = fallbackResults;
                 if (hiddenFilterEnabled) {
-                    const banned = ['伦理片', '福利', '里番动漫', '门事件', '萝莉少女', '制服诱惑', '国产传媒', 'cosplay', '黑丝诱惑', '无码', '日本无码', '有码', '日本有码', 'SWAG', '网红主播', '色情片', '同性片', '福利视频', '福利片'];
-                    filtered = fallbackResults.filter(item => {
-                        const typeName = item.type_name || '';
-                        return !banned.some(keyword => typeName.includes(keyword));
-                    });
+                    filtered = await applyFilter(fallbackResults);
                 }
                 allResults = filtered;
                 resultsDiv.innerHTML = _buildSearchCardsHtml(filtered);
