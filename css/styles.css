@@ -221,6 +221,98 @@ button, .card-hover {
     }
 }
 
+/* 搜索历史下拉菜单 */
+.search-history-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: #111;
+    border: 1px solid #333;
+    border-top: none;
+    border-radius: 0 0 0.75rem 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* 搜索框展开下拉时底部变平，与下拉菜单无缝衔接 */
+.search-bar-flush {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+}
+
+.search-history-item {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    cursor: pointer;
+    transition: background 0.12s;
+    gap: 0.5rem;
+}
+
+.search-history-item:hover {
+    background: #1c1c1c;
+}
+
+.search-history-item .history-text {
+    flex: 1;
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.search-history-item .history-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    padding: 0.25rem;
+    border-radius: 9999px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.search-history-item .history-delete:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.search-history-clear {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    text-align: center;
+    color: #888;
+    font-size: 0.8125rem;
+    border-top: 1px solid #222;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+}
+
+.search-history-clear:hover {
+    color: #fff;
+    background: #1c1c1c;
+}
+
+.search-history-empty {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: #666;
+    font-size: 0.8125rem;
+}
+
 .footer {
     width: 100%;
     transition: all 0.3s ease;

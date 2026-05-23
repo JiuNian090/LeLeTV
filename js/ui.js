@@ -196,66 +196,105 @@ function saveSearchHistory(query) {
             console.error('再次保存搜索历史失败:', e2);
         }
     }
-
-    renderSearchHistory();
 }
 
-// 渲染最近搜索历史的增强版本
+// 渲染搜索历史下拉菜单内容
 function renderSearchHistory() {
-    const historyContainer = document.getElementById('recentSearches');
-    if (!historyContainer) return;
+    const dropdown = document.getElementById('searchHistoryDropdown');
+    if (!dropdown) return;
 
     const history = getSearchHistory();
-
     if (history.length === 0) {
-        historyContainer.innerHTML = '';
+        dropdown.innerHTML = '';
         return;
     }
 
-    // 创建一个包含标题和清除按钮的行
-    historyContainer.innerHTML = `
-        <div class="flex justify-between items-center w-full mb-2">
-            <div class="text-gray-500">最近搜索:</div>
-            <button id="clearHistoryBtn" class="text-gray-500 hover:text-white transition-colors"
-                    onclick="clearSearchHistory()" aria-label="清除搜索历史">
-                清除搜索历史
-            </button>
-        </div>
-    `;
+    let html = '';
+    history.forEach(item => {
+        const safeText = (item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html += `
+            <div class="search-history-item" data-query="${safeText.replace(/"/g, '&quot;')}">
+                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="history-text">${safeText}</span>
+                <button class="history-delete" data-query="${safeText.replace(/"/g, '&quot;')}" aria-label="删除搜索记录">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+    });
+
+    html += `<button class="search-history-clear">清除搜索历史</button>`;
+    dropdown.innerHTML = html;
+}
+
+// 显示搜索历史下拉菜单（带可选过滤文字）
+function showSearchHistory(filterText) {
+    const dropdown = document.getElementById('searchHistoryDropdown');
+    if (!dropdown) return;
+
+    const history = getSearchHistory();
+    if (history.length === 0) {
+        dropdown.classList.add('hidden');
+        _removeSearchBarFlush();
+        return;
+    }
+
+    const query = (filterText || '').trim().toLowerCase();
+    let html = '';
+    let hasVisible = false;
 
     history.forEach(item => {
-        const tag = document.createElement('button');
-        tag.className = 'search-tag flex items-center gap-1';
-        const textSpan = document.createElement('span');
-        textSpan.textContent = item.text;
-        tag.appendChild(textSpan);
-
-        // 添加删除按钮
-        const deleteButton = document.createElement('span');
-        deleteButton.className = 'pl-1 text-gray-500 hover:text-red-500 transition-colors';
-        deleteButton.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-        deleteButton.onclick = function(e) {
-            // 阻止事件冒泡，避免触发搜索
-            e.stopPropagation();
-            // 删除对应历史记录
-            deleteSingleSearchHistory(item.text);
-            // 重新渲染搜索历史
-            renderSearchHistory();
-        };
-        tag.appendChild(deleteButton);
-
-        // 添加时间提示（如果有时间戳）
-        if (item.timestamp) {
-            const date = new Date(item.timestamp);
-            tag.title = `搜索于: ${date.toLocaleString()}`;
-        }
-
-        tag.onclick = function() {
-            document.getElementById('searchInput').value = item.text;
-            search();
-        };
-        historyContainer.appendChild(tag);
+        const safeText = (item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const match = !query || safeText.toLowerCase().includes(query);
+        if (match) hasVisible = true;
+        html += `
+            <div class="search-history-item" data-query="${safeText.replace(/"/g, '&quot;')}"${match ? '' : ' style="display:none"'}">
+                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="history-text">${safeText}</span>
+                <button class="history-delete" data-query="${safeText.replace(/"/g, '&quot;')}" aria-label="删除搜索记录">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        `;
     });
+
+    if (hasVisible) {
+        html += `<button class="search-history-clear">清除搜索历史</button>`;
+        dropdown.innerHTML = html;
+        dropdown.classList.remove('hidden');
+        _addSearchBarFlush();
+    } else {
+        dropdown.classList.add('hidden');
+        _removeSearchBarFlush();
+    }
+}
+
+// 隐藏搜索历史下拉菜单
+function hideSearchHistory() {
+    const dropdown = document.getElementById('searchHistoryDropdown');
+    if (dropdown) {
+        dropdown.classList.add('hidden');
+    }
+    _removeSearchBarFlush();
+}
+
+// 搜索框底部变平，与下拉菜单无缝衔接
+function _addSearchBarFlush() {
+    const searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    if (searchBar) searchBar.classList.add('search-bar-flush');
+}
+
+function _removeSearchBarFlush() {
+    const searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    if (searchBar) searchBar.classList.remove('search-bar-flush');
 }
 
 // 删除单条搜索历史记录
@@ -283,7 +322,7 @@ function clearSearchHistory() {
     }
     try {
         localStorage.removeItem(SEARCH_HISTORY_KEY);
-        renderSearchHistory();
+        hideSearchHistory();
         showToast('搜索历史已清除', 'success');
     } catch (e) {
         console.error('清除搜索历史失败:', e);

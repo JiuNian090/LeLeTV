@@ -70,9 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // 初始化显示选中的API数量
     updateSelectedApiCount();
 
-    // 渲染搜索历史
-    renderSearchHistory();
-
     // 设置隐藏内容过滤器开关初始状态
     const hiddenFilterToggle = document.getElementById('hiddenFilterToggle');
     if (hiddenFilterToggle) {
@@ -95,10 +92,74 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // 设置事件监听器
 function setupEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+
     // 回车搜索
-    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    searchInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
+            hideSearchHistory();
             search();
+        }
+    });
+
+    // 搜索历史下拉：聚焦时显示
+    searchInput.addEventListener('focus', function () {
+        showSearchHistory(this.value);
+    });
+
+    // 搜索历史下拉：输入时过滤
+    searchInput.addEventListener('input', function () {
+        showSearchHistory(this.value);
+    });
+
+    // 搜索历史下拉：Escape 关闭
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            hideSearchHistory();
+        }
+    });
+
+    // 搜索历史下拉：事件委托（点击条目、删除、清除全部）
+    const historyDropdown = document.getElementById('searchHistoryDropdown');
+    if (historyDropdown) {
+        historyDropdown.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.history-delete');
+            const clearBtn = e.target.closest('.search-history-clear');
+            const item = e.target.closest('.search-history-item');
+
+            if (deleteBtn) {
+                e.stopPropagation();
+                const query = deleteBtn.dataset.query;
+                if (query) {
+                    deleteSingleSearchHistory(query);
+                    showSearchHistory(document.getElementById('searchInput').value);
+                }
+                return;
+            }
+
+            if (clearBtn) {
+                e.stopPropagation();
+                clearSearchHistory();
+                return;
+            }
+
+            if (item) {
+                e.stopPropagation();
+                const query = item.dataset.query;
+                if (query) {
+                    document.getElementById('searchInput').value = query;
+                    hideSearchHistory();
+                    search();
+                }
+            }
+        });
+    }
+
+    // 点击页面其他位置关闭下拉
+    document.addEventListener('click', function (e) {
+        const searchBarWrapper = document.querySelector('.relative.mb-3');
+        if (searchBarWrapper && !searchBarWrapper.contains(e.target)) {
+            hideSearchHistory();
         }
     });
     
@@ -251,6 +312,7 @@ async function search() {
         return;
     }
     _searchThrottled = true;
+    hideSearchHistory();
     const releaseThrottle = () => { _searchThrottled = false; };
     // 强化的密码保护校验 - 防止绕过
     try {
