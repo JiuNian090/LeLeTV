@@ -372,9 +372,16 @@ async function search() {
 
         if (allResults.length > 0) {
             allResults.sort((a, b) => {
-                const nameCompare = (a.vod_name || '').localeCompare(b.vod_name || '');
-                if (nameCompare !== 0) return nameCompare;
-                return (a.source_name || '').localeCompare(b.source_name || '');
+                const nameA = a.vod_name || '';
+                const nameB = b.vod_name || '';
+                const { base: baseA, season: seasonA } = _extractSeasonInfo(nameA);
+                const { base: baseB, season: seasonB } = _extractSeasonInfo(nameB);
+                const baseCompare = baseA.localeCompare(baseB, 'zh-CN');
+                if (baseCompare !== 0) return baseCompare;
+                if (seasonA !== null && seasonB !== null) return seasonA - seasonB;
+                if (seasonA !== null) return -1;
+                if (seasonB !== null) return 1;
+                return (a.source_name || '').localeCompare(b.source_name || '', 'zh-CN');
             });
             _lastAllResults = allResults;
             _applySourceFilter(_activeSourceFilter);
@@ -462,6 +469,46 @@ function _buildSearchCardsHtml(items) {
             </div>
         `;
     }).join('');
+}
+
+// 中文数字转阿拉伯数字
+function _chineseToNumber(str) {
+    const chineseNums = {
+        '零': 0, '一': 1, '二': 2, '三': 3, '四': 4,
+        '五': 5, '六': 6, '七': 7, '八': 8, '九': 9,
+        '十': 10, '百': 100, '千': 1000
+    };
+    if (/^\d+$/.test(str)) return parseInt(str, 10);
+    let result = 0;
+    let temp = 0;
+    for (const char of str) {
+        const num = chineseNums[char];
+        if (num === undefined) continue;
+        if (num >= 10) {
+            result += (temp || 1) * num;
+            temp = 0;
+        } else {
+            temp = num;
+        }
+    }
+    return result + temp;
+}
+
+// 从视频标题中提取基础片名和季/部/集序号
+function _extractSeasonInfo(title) {
+    const pattern = /第([一二三四五六七八九十百千\d]+)(季|部|集)/;
+    const match = title.match(pattern);
+    if (match) {
+        const base = title.replace(pattern, '').replace(/\s+$/, '');
+        return { base, season: _chineseToNumber(match[1]) };
+    }
+    const sPattern = /S(\d+)/i;
+    const sMatch = title.match(sPattern);
+    if (sMatch) {
+        const base = title.replace(sPattern, '').replace(/\s+$/, '');
+        return { base, season: parseInt(sMatch[1], 10) };
+    }
+    return { base: title, season: null };
 }
 
 // 获取API源的人类可读名称
