@@ -15,6 +15,9 @@ let episodesReversed = false;
 let _activeSourceFilter = 'all';
 let _lastAllResults = [];
 
+// 搜索框就绪标志，初始化期间不响应任何事件
+let _searchReady = false;
+
 // 过滤配置缓存
 let _filterConfig = null;
 
@@ -86,8 +89,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // 设置事件监听器
     setupEventListeners();
 
-    // 确保搜索历史下拉默认隐藏
+    // 确保搜索历史下拉默认隐藏，并强制移除焦点
     hideSearchHistory();
+    document.getElementById('searchInput').blur();
+
+    // 延迟标记搜索就绪，防止浏览器自动填充/自动聚焦触发下拉
+    setTimeout(() => { _searchReady = true; }, 200);
 
     // 初始检查隐藏API选中状态
     setTimeout(checkHiddenAPIsSelected, 100);
@@ -107,11 +114,13 @@ function setupEventListeners() {
 
     // 搜索历史下拉：点击/触摸时显示（不用 focus 避免浏览器自动聚焦触发）
     searchInput.addEventListener('pointerdown', function () {
+        if (!_searchReady) return;
         showSearchHistory(this.value);
     });
 
     // 搜索历史下拉：输入时过滤
     searchInput.addEventListener('input', function () {
+        if (!_searchReady) return;
         showSearchHistory(this.value);
     });
 
@@ -160,11 +169,18 @@ function setupEventListeners() {
 
     // 点击页面其他位置关闭下拉
     document.addEventListener('click', function (e) {
-        const searchBarWrapper = document.querySelector('.relative.mb-3');
-        if (searchBarWrapper && !searchBarWrapper.contains(e.target)) {
-            hideSearchHistory();
+        const dropdown = document.getElementById('searchHistoryDropdown');
+        const searchInput = document.getElementById('searchInput');
+        if (dropdown && !dropdown.classList.contains('hidden')) {
+            if (!dropdown.contains(e.target) && e.target !== searchInput) {
+                hideSearchHistory();
+            }
         }
     });
+
+    // 滚动或窗口大小变化时关闭下拉（fixed定位需要同步位置）
+    window.addEventListener('scroll', hideSearchHistory, { passive: true });
+    window.addEventListener('resize', hideSearchHistory, { passive: true });
     
     // 初始化邮箱点击事件处理器
     setupEmailClickHandlers();

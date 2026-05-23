@@ -269,12 +269,23 @@ function showSearchHistory(filterText) {
     if (hasVisible) {
         html += `<button class="search-history-clear">清除搜索历史</button>`;
         dropdown.innerHTML = html;
+        _positionDropdown(dropdown);
         dropdown.classList.remove('hidden');
         _addSearchBarFlush();
     } else {
         dropdown.classList.add('hidden');
         _removeSearchBarFlush();
     }
+}
+
+// 固定定位：计算下拉菜单位置（相对于视口，覆盖所有内容）
+function _positionDropdown(dropdown) {
+    const searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    if (!searchBar) return;
+    const rect = searchBar.getBoundingClientRect();
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.top = rect.bottom + 'px';
+    dropdown.style.width = rect.width + 'px';
 }
 
 // 隐藏搜索历史下拉菜单

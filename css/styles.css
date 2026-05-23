@@ -223,11 +223,8 @@ button, .card-hover {
 
 /* 搜索历史下拉菜单 */
 .search-history-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 60;
+    position: fixed;
+    z-index: 2147483647;
     background: #111;
     border: 1px solid #333;
     border-top: none;
