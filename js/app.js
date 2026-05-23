@@ -11,6 +11,10 @@ let currentVideoTitle = '';
 // 全局变量用于倒序状态
 let episodesReversed = false;
 
+// 搜索源过滤状态
+let _activeSourceFilter = 'all';
+let _lastAllResults = [];
+
 // 过滤配置缓存
 let _filterConfig = null;
 
@@ -145,6 +149,18 @@ function setupEventListeners() {
             localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, e.target.checked);
         });
     }
+
+    // 搜索源过滤标签切换（事件委托）
+    const sourceFilterTabs = document.getElementById('sourceFilterTabs');
+    if (sourceFilterTabs) {
+        sourceFilterTabs.addEventListener('click', function (e) {
+            const tab = e.target.closest('.source-filter-tab');
+            if (!tab) return;
+            const sourceFilter = tab.dataset.source;
+            if (!sourceFilter || sourceFilter === _activeSourceFilter) return;
+            _applySourceFilter(sourceFilter);
+        });
+    }
 }
 
 // 重置搜索区域
@@ -183,6 +199,12 @@ function resetSearchArea() {
     } catch (e) {
         console.error('更新浏览器历史失败:', e);
     }
+
+    // 清空源过滤标签和状态
+    const filterTabs = document.getElementById('sourceFilterTabs');
+    if (filterTabs) filterTabs.innerHTML = '';
+    _activeSourceFilter = 'all';
+    _lastAllResults = [];
 }
 
 // 获取自定义API信息
@@ -273,6 +295,11 @@ async function search() {
         resultsArea.classList.remove('hidden');
     }
 
+    // 重置过滤状态并渲染源标签
+    _activeSourceFilter = 'all';
+    _lastAllResults = [];
+    _renderSourceFilterTabs(selectedAPIs, 0);
+
     showLoading();
 
     try {
@@ -303,8 +330,7 @@ async function search() {
             document.title = `搜索: ${query} - LeLeTV`;
         } catch (e) {}
 
-        const searchCountEl = document.getElementById('searchResultsCount');
-
+        
         // 构建搜索任务：每个API独立执行，结果立即追加
         const searchTasks = selectedAPIs.map(async (apiId) => {
             try {
@@ -323,7 +349,7 @@ async function search() {
                 allResults = allResults.concat(filtered);
 
                 resultsDiv.insertAdjacentHTML('beforeend', _buildSearchCardsHtml(filtered));
-                if (searchCountEl) searchCountEl.textContent = allResults.length;
+                _updateAllTabCount(allResults.length);
             } catch (e) {
                 console.warn(`API ${apiId} 搜索失败:`, e);
             }
@@ -338,7 +364,7 @@ async function search() {
                 }
                 allResults = filtered;
                 resultsDiv.innerHTML = _buildSearchCardsHtml(filtered);
-                if (searchCountEl) searchCountEl.textContent = filtered.length;
+                _updateAllTabCount(filtered.length);
             }
         } else {
             await Promise.allSettled(searchTasks);
@@ -350,8 +376,8 @@ async function search() {
                 if (nameCompare !== 0) return nameCompare;
                 return (a.source_name || '').localeCompare(b.source_name || '');
             });
-            resultsDiv.innerHTML = _buildSearchCardsHtml(allResults);
-            if (searchCountEl) searchCountEl.textContent = allResults.length;
+            _lastAllResults = allResults;
+            _applySourceFilter(_activeSourceFilter);
         } else {
             resultsDiv.innerHTML = `
                 <div class="col-span-full text-center py-16">
@@ -436,6 +462,66 @@ function _buildSearchCardsHtml(items) {
             </div>
         `;
     }).join('');
+}
+
+// 获取API源的人类可读名称
+function _getSourceLabel(apiId) {
+    if (apiId.startsWith('custom_')) {
+        const idx = parseInt(apiId.replace('custom_', ''));
+        const api = customAPIs[idx];
+        return api ? api.name : `自定义源${idx + 1}`;
+    }
+    return API_SITES[apiId] ? API_SITES[apiId].name : apiId;
+}
+
+// 渲染搜索源过滤标签
+function _renderSourceFilterTabs(apiIds, totalCount) {
+    const container = document.getElementById('sourceFilterTabs');
+    if (!container) return;
+    if (!apiIds || apiIds.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    const allCount = totalCount || 0;
+    let html = `<button class="source-filter-tab active" data-source="all">全部 (${allCount})</button>`;
+    apiIds.forEach(apiId => {
+        html += `<button class="source-filter-tab" data-source="${apiId}">${_getSourceLabel(apiId)}</button>`;
+    });
+    container.innerHTML = html;
+}
+
+// 更新「全部」标签的计数
+function _updateAllTabCount(count) {
+    const allTab = document.querySelector('#sourceFilterTabs .source-filter-tab[data-source="all"]');
+    if (allTab) {
+        allTab.textContent = `全部 (${count})`;
+    }
+}
+
+// 按源过滤搜索结果并重绘
+function _applySourceFilter(sourceFilter) {
+    _activeSourceFilter = sourceFilter;
+
+    // 更新标签激活状态
+    document.querySelectorAll('#sourceFilterTabs .source-filter-tab').forEach(tab => {
+        const isActive = tab.dataset.source === sourceFilter;
+        tab.classList.toggle('active', isActive);
+    });
+
+    // 过滤结果
+    let filteredResults = _lastAllResults;
+    if (sourceFilter !== 'all') {
+        filteredResults = _lastAllResults.filter(item => item.source_code === sourceFilter);
+    }
+
+    // 重绘
+    document.getElementById('results').innerHTML = _buildSearchCardsHtml(filteredResults);
+
+    // 重置滚动位置到结果区域顶部
+    const resultsArea = document.getElementById('resultsArea');
+    if (resultsArea) {
+        resultsArea.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }
 }
 
 // 设置邮箱点击事件处理器
