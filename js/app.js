@@ -732,24 +732,6 @@ function setupEmailClickHandlers() {
     });
 }
 
-// 切换清空按钮的显示状态
-function toggleClearButton() {
-    const searchInput = document.getElementById('searchInput');
-    const clearButton = document.getElementById('clearSearchInput');
-    if (searchInput.value !== '') {
-        clearButton.classList.remove('hidden');
-    } else {
-        clearButton.classList.add('hidden');
-    }
-}
-
-// 清空搜索框内容
-function clearSearchInput() {
-    const searchInput = document.getElementById('searchInput');
-    searchInput.value = '';
-    toggleClearButton();
-}
-
 // 关闭搜索结果，恢复居中布局
 function closeSearchResults() {
     resetSearchArea();

@@ -33,8 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (keyword) {
             // 设置搜索框的值
             document.getElementById('searchInput').value = keyword;
-            // 显示清空按钮
-            toggleClearButton();
             // 执行搜索
             setTimeout(() => {
                 // 使用setTimeout确保其他DOM加载和初始化完成
