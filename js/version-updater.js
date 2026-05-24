@@ -140,19 +140,16 @@ function initFooterBtn() {
   var versionSpan = document.createElement('span');
   versionSpan.id = 'footerVersionText';
   versionSpan.className = 'mr-1';
-  var versionText = formatDisplayVersion(window.__LELETV_VERSION__);
-  if (versionText) {
-    versionSpan.textContent = versionText;
+  var storedVersion = localStorage.getItem(LAST_VERSION_KEY);
+  if (storedVersion) {
+    versionSpan.textContent = storedVersion;
+  } else {
+    var versionText = formatDisplayVersion(window.__LELETV_VERSION__);
+    if (versionText) {
+      versionSpan.textContent = versionText;
+    }
   }
   displayEl.appendChild(versionSpan);
-
-  if (typeof window.versionUtils !== 'undefined' && typeof window.versionUtils.getLatestVersionFromChangelog === 'function') {
-    window.versionUtils.getLatestVersionFromChangelog().then(function(semanticVersion) {
-      if (semanticVersion) {
-        versionSpan.textContent = semanticVersion;
-      }
-    });
-  }
 
   var btn = document.createElement('button');
   btn.id = 'checkUpdateBtn';

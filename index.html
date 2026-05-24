@@ -296,7 +296,7 @@
                                     <p class="text-gray-300 text-sm sm:text-base mb-5 leading-relaxed">
                                         LeLeTV 是自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span id="contactLeLe3" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
                                     </p>
-                                    <div class="flex flex-col sm:flex-row justify-center gap-3">
+                                    <div class="flex flex-row justify-center gap-3">
                                         <a href="https://letvport.776645.xyz/" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 bg-[#ec4899] hover:bg-[#db2777] text-white rounded-lg transition-all duration-300 flex items-center justify-center font-semibold text-sm">
                                             访问我的网站
                                             <svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -661,22 +661,23 @@
             lines.forEach(function(line) {
                 if (line.startsWith('### ')) {
                     if (currentEntry) versionEntries.push(currentEntry);
-                    currentEntry = { content: '' };
+                    currentEntry = { version: '', date: '', content: '' };
                     var versionMatch = line.match(/### (v[\d\.]+) \(([\d\-:\s]+)\)/);
                     if (versionMatch) {
-                        currentEntry.content += '<h4 class="text-lg font-semibold mb-2 text-blue-400">' + versionMatch[1] + '</h4>';
+                        currentEntry.version = versionMatch[1];
+                        currentEntry.date = versionMatch[2];
                     } else if (line.includes('初始版本')) {
-                        currentEntry.content += '<h4 class="text-lg font-semibold mb-2 text-blue-400">初始版本</h4>';
+                        currentEntry.version = '初始版本';
                     }
                 } else if (line.startsWith('- ') && currentEntry) {
                     var tagMatch = line.match(/- \[(.*?)\] (.*?)$/);
                     if (tagMatch) {
-                        currentEntry.content += '<p class="ml-4 mb-1"><span class="text-green-400">[' + tagMatch[1] + ']</span> ' + tagMatch[2] + '</p>';
+                        currentEntry.content += '<p class="mb-1"><span class="text-green-400">[' + tagMatch[1] + ']</span> ' + tagMatch[2] + '</p>';
                     } else {
-                        currentEntry.content += '<p class="ml-4 mb-1">' + line.substring(2) + '</p>';
+                        currentEntry.content += '<p class="mb-1">' + line.substring(2) + '</p>';
                     }
                 } else if (line.trim() !== '' && currentEntry) {
-                    currentEntry.content += '<p class="text-gray-400 text-sm mt-2 ml-4">' + line + '</p>';
+                    currentEntry.content += '<p class="text-gray-400 text-sm mt-2">' + line + '</p>';
                 }
             });
 
@@ -684,17 +685,64 @@
             return versionEntries;
         }
 
-        // 渲染版本历史
+        // 渲染版本历史 - 时间线布局
         function renderVersionHistory(versionEntries) {
             var container = document.createElement('div');
-            container.className = 'space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent';
+            container.className = 'changelog-timeline max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent';
             container.style.scrollbarWidth = 'thin';
             container.style.scrollbarColor = '#4B5563 transparent';
 
-            versionEntries.forEach(function(entry) {
+            versionEntries.forEach(function(entry, index) {
+                var isLatest = (index === 0);
                 var entryDiv = document.createElement('div');
-                entryDiv.className = 'mb-6 p-4 bg-[#222] rounded-lg border border-[#444] transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10';
-                entryDiv.innerHTML = entry.content;
+                entryDiv.className = 'changelog-entry';
+
+                var markerDiv = document.createElement('div');
+                markerDiv.className = 'timeline-marker';
+
+                var dotDiv = document.createElement('div');
+                dotDiv.className = 'timeline-dot' + (isLatest ? ' latest' : '');
+                markerDiv.appendChild(dotDiv);
+
+                var lineDiv = document.createElement('div');
+                lineDiv.className = 'timeline-line';
+                markerDiv.appendChild(lineDiv);
+
+                entryDiv.appendChild(markerDiv);
+
+                var contentDiv = document.createElement('div');
+                contentDiv.className = 'timeline-content';
+
+                var headerDiv = document.createElement('div');
+                headerDiv.className = 'entry-header';
+
+                var versionEl = document.createElement('span');
+                versionEl.className = 'version-number';
+                versionEl.textContent = entry.version;
+                headerDiv.appendChild(versionEl);
+
+                if (isLatest) {
+                    var badgeEl = document.createElement('span');
+                    badgeEl.className = 'latest-badge';
+                    badgeEl.textContent = '最新';
+                    headerDiv.appendChild(badgeEl);
+                }
+
+                if (entry.date) {
+                    var dateEl = document.createElement('span');
+                    dateEl.className = 'version-date';
+                    dateEl.textContent = entry.date;
+                    headerDiv.appendChild(dateEl);
+                }
+
+                contentDiv.appendChild(headerDiv);
+
+                var bodyDiv = document.createElement('div');
+                bodyDiv.className = 'entry-body';
+                bodyDiv.innerHTML = entry.content;
+                contentDiv.appendChild(bodyDiv);
+
+                entryDiv.appendChild(contentDiv);
                 container.appendChild(entryDiv);
             });
 
