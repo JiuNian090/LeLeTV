@@ -2558,3 +2558,116 @@ body > header {
     position: relative;
     z-index: 1;
 }
+
+/* ============================================
+   移动端全屏搜索覆盖层
+   ============================================ */
+.mobile-search-overlay {
+    display: none;
+}
+
+@media (max-width: 639px) {
+    .mobile-search-overlay.active {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        inset: 0;
+        height: 100dvh;
+        z-index: 2147483647;
+        background: #000;
+    }
+
+    .mobile-search-header {
+        flex-shrink: 0;
+        padding: 12px 16px;
+        padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+        background: #000;
+        border-bottom: 1px solid #222;
+    }
+
+    .mobile-search-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: border-color 0.2s;
+    }
+
+    .mobile-search-input-wrapper:focus-within {
+        border-color: #ec4899;
+    }
+
+    .mobile-search-back-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        color: #888;
+    }
+
+    .mobile-search-input {
+        flex: 1;
+        height: 44px;
+        background: transparent;
+        border: none;
+        padding: 0 4px;
+        color: white;
+        font-size: 16px;
+        outline: none;
+    }
+
+    .mobile-search-input::placeholder {
+        color: #555;
+    }
+
+    .mobile-search-cancel {
+        flex-shrink: 0;
+        color: #ec4899;
+        font-size: 15px;
+        font-weight: 500;
+        background: none;
+        border: none;
+        padding: 0 14px;
+        height: 44px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.15s;
+    }
+
+    .mobile-search-cancel:active {
+        opacity: 0.6;
+    }
+
+    .mobile-search-history-list {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-search-history-list .search-history-item {
+        padding: 14px 16px;
+    }
+
+    .mobile-search-history-list .search-history-clear {
+        display: block;
+        width: 100%;
+        padding: 14px 16px;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        background: none;
+        border: none;
+        border-top: 1px solid #222;
+        cursor: pointer;
+    }
+
+    .mobile-search-history-list .search-history-clear:active {
+        color: #fff;
+        background: #1c1c1c;
+    }
+}

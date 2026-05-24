@@ -303,6 +303,49 @@ function hideSearchHistory() {
     _removeSearchBarFlush();
 }
 
+// 移动端全屏搜索覆盖层 - 渲染搜索历史
+function renderMobileSearchHistory(filterText) {
+    const container = document.getElementById('mobileSearchHistoryList');
+    if (!container) return;
+
+    const history = getSearchHistory();
+    if (history.length === 0) {
+        container.innerHTML = '<div class="search-history-empty" style="padding:1.5rem 1rem;text-align:center;color:#555;font-size:14px">暂无搜索历史</div>';
+        return;
+    }
+
+    const query = (filterText || '').trim().toLowerCase();
+    let html = '';
+    let hasVisible = false;
+
+    history.forEach(item => {
+        const safeText = (item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const match = !query || safeText.toLowerCase().includes(query);
+        if (match) hasVisible = true;
+        html += `
+            <div class="search-history-item" data-query="${safeText.replace(/"/g, '&quot;')}"${match ? '' : ' style="display:none"'}>
+                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="history-text">${safeText}</span>
+                <button class="history-delete" data-query="${safeText.replace(/"/g, '&quot;')}" aria-label="删除搜索记录">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+    });
+
+    if (hasVisible) {
+        html += `<button class="search-history-clear">清除搜索历史</button>`;
+    } else {
+        html = '<div class="search-history-empty" style="padding:1.5rem 1rem;text-align:center;color:#555;font-size:14px">无匹配的历史记录</div>';
+    }
+
+    container.innerHTML = html;
+}
+
 // 搜索框底部变平，与下拉菜单无缝衔接
 function _addSearchBarFlush() {
     const searchBar = document.querySelector('.relative.mb-3 > .h-12');

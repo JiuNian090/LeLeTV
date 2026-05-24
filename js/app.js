@@ -112,10 +112,24 @@ function setupEventListeners() {
         }
     });
 
-    // 搜索历史下拉：点击/触摸时显示（不用 focus 避免浏览器自动聚焦触发）
-    searchInput.addEventListener('pointerdown', function () {
+    // 搜索历史下拉：点击/触摸时显示
+    // 窄窗口触发全屏覆盖层，宽窗口显示下拉
+    searchInput.addEventListener('pointerdown', function (e) {
         if (!_searchReady) return;
+        if (window.innerWidth <= 639) {
+            e.preventDefault();
+            openMobileSearch();
+            return;
+        }
         showSearchHistory(this.value);
+    });
+
+    // focus 确保宽窗口下键盘正常弹出
+    searchInput.addEventListener('focus', function () {
+        if (!_searchReady) return;
+        if (window.innerWidth > 639) {
+            showSearchHistory(this.value);
+        }
     });
 
     // 搜索历史下拉：输入时过滤
@@ -188,6 +202,82 @@ function setupEventListeners() {
         window.visualViewport.addEventListener('scroll', repositionSearchHistory);
     }
     
+    // 移动端全屏搜索覆盖层
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileSearchCancel = document.getElementById('mobileSearchCancel');
+    const mobileHistoryList = document.getElementById('mobileSearchHistoryList');
+
+    if (mobileSearchInput) {
+        mobileSearchInput.addEventListener('input', function () {
+            renderMobileSearchHistory(this.value);
+        });
+
+        mobileSearchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                const val = this.value.trim();
+                if (val) {
+                    document.getElementById('searchInput').value = val;
+                    closeMobileSearch();
+                    search();
+                }
+            }
+            if (e.key === 'Escape') {
+                closeMobileSearch();
+            }
+        });
+    }
+
+    if (mobileSearchCancel) {
+        mobileSearchCancel.addEventListener('click', closeMobileSearch);
+    }
+
+    if (mobileHistoryList) {
+        mobileHistoryList.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.history-delete');
+            const clearBtn = e.target.closest('.search-history-clear');
+            const item = e.target.closest('.search-history-item');
+
+            if (deleteBtn) {
+                e.stopPropagation();
+                const query = deleteBtn.dataset.query;
+                if (query) {
+                    deleteSingleSearchHistory(query);
+                    renderMobileSearchHistory(mobileSearchInput ? mobileSearchInput.value : '');
+                }
+                return;
+            }
+
+            if (clearBtn) {
+                e.stopPropagation();
+                clearSearchHistory();
+                renderMobileSearchHistory('');
+                return;
+            }
+
+            if (item) {
+                e.stopPropagation();
+                const query = item.dataset.query;
+                if (query && mobileSearchInput) {
+                    mobileSearchInput.value = query;
+                    document.getElementById('searchInput').value = query;
+                    closeMobileSearch();
+                    search();
+                }
+            }
+        });
+    }
+
+    // 移动端键盘适配：覆盖层跟随 visualViewport
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', function () {
+            const overlay = document.getElementById('mobileSearchOverlay');
+            if (overlay && overlay.classList.contains('active')) {
+                overlay.style.height = window.visualViewport.height + 'px';
+                overlay.style.top = window.visualViewport.offsetTop + 'px';
+            }
+        });
+    }
+
     // 初始化邮箱点击事件处理器
     setupEmailClickHandlers();
 
@@ -251,7 +341,8 @@ function setupEventListeners() {
 
 // 重置搜索区域
 function resetSearchArea() {
-    // 关闭搜索历史下拉
+    // 关闭移动端覆盖层和搜索历史下拉
+    closeMobileSearch();
     hideSearchHistory();
 
     // 清理搜索结果
@@ -332,8 +423,30 @@ function generateSkeletonCards(count = 8) {
 // 搜索功能节流锁
 let _searchThrottled = false;
 
+// 移动端全屏搜索覆盖层
+function openMobileSearch() {
+    const overlay = document.getElementById('mobileSearchOverlay');
+    const input = document.getElementById('mobileSearchInput');
+    if (!overlay || !input) return;
+    input.value = document.getElementById('searchInput').value;
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderMobileSearchHistory(input.value);
+    setTimeout(function () { input.focus(); }, 100);
+}
+
+function closeMobileSearch() {
+    const overlay = document.getElementById('mobileSearchOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 // 搜索功能 - 修改为支持多选API和多页结果
 async function search() {
+    // 关闭移动端覆盖层（如果有）
+    closeMobileSearch();
+
     // 防重复搜索节流
     if (_searchThrottled) {
         showToast('请等待当前搜索完成', 'info');

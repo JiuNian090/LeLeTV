@@ -478,6 +478,22 @@
         </div>
     </div>
 
+    <!-- 移动端全屏搜索覆盖层（手机/窄窗口） -->
+    <div id="mobileSearchOverlay" class="mobile-search-overlay">
+        <div class="mobile-search-header">
+            <div class="mobile-search-input-wrapper">
+                <div class="mobile-search-back-icon">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索你喜欢的视频..." autocomplete="off" aria-label="视频搜索框">
+                <button id="mobileSearchCancel" class="mobile-search-cancel">取消</button>
+            </div>
+        </div>
+        <div id="mobileSearchHistoryList" class="mobile-search-history-list"></div>
+    </div>
+
     <!-- 搜索历史下拉菜单 -->
     <div id="searchHistoryDropdown" class="search-history-dropdown hidden"></div>
 
