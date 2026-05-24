@@ -2671,3 +2671,25 @@ body > header {
         background: #1c1c1c;
     }
 }
+
+/* ============================================
+   LeLeTV 标题书写动效容器
+   ============================================ */
+.home-layout header {
+    width: 100%;
+}
+
+#titleContainer {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    min-height: 110px;
+    margin: 0 auto;
+}
+
+@media (max-width: 639px) {
+    #titleContainer {
+        min-height: 86px;
+        max-width: 340px;
+    }
+}
