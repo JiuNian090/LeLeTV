@@ -178,9 +178,15 @@ function setupEventListeners() {
         }
     });
 
-    // 滚动或窗口大小变化时关闭下拉（fixed定位需要同步位置）
-    window.addEventListener('scroll', hideSearchHistory, { passive: true });
-    window.addEventListener('resize', hideSearchHistory, { passive: true });
+    // 滚动或窗口大小变化时重新定位下拉（fixed定位需要同步位置）
+    window.addEventListener('scroll', repositionSearchHistory, { passive: true });
+    window.addEventListener('resize', repositionSearchHistory, { passive: true });
+
+    // 移动端键盘弹出/收起时重新定位下拉
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', repositionSearchHistory);
+        window.visualViewport.addEventListener('scroll', repositionSearchHistory);
+    }
     
     // 初始化邮箱点击事件处理器
     setupEmailClickHandlers();

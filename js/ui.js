@@ -280,12 +280,18 @@ function showSearchHistory(filterText) {
 
 // 固定定位：计算下拉菜单位置（相对于视口，覆盖所有内容）
 function _positionDropdown(dropdown) {
-    const searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    var searchBar = document.querySelector('.relative.mb-3 > .h-12');
     if (!searchBar) return;
-    const rect = searchBar.getBoundingClientRect();
+    var rect = searchBar.getBoundingClientRect();
     dropdown.style.left = rect.left + 'px';
     dropdown.style.top = rect.bottom + 'px';
     dropdown.style.width = rect.width + 'px';
+}
+
+function repositionSearchHistory() {
+    var dropdown = document.getElementById('searchHistoryDropdown');
+    if (!dropdown || dropdown.classList.contains('hidden')) return;
+    _positionDropdown(dropdown);
 }
 
 // 隐藏搜索历史下拉菜单
