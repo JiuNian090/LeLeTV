@@ -36,6 +36,7 @@ apikey/
 
 # AI tools generated files
 .claude/
+.codegraph/
 .reasonix/
 AGENTS.md
 CLAUDE.md
