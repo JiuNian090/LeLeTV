@@ -31,7 +31,6 @@
     }
 
     function playOnce() {
-        if (isPlaying) return;
         isPlaying = true;
 
         var container = document.getElementById('titleContainer');
@@ -146,6 +145,11 @@
     }
 
     function finish(canvas, ctx, container, containerW, containerH, textFontSize) {
+        // 如果容器中已有更新的 canvas（新动画已开始），跳过此次 finish
+        if (container.lastChild && container.lastChild !== canvas) {
+            isPlaying = false;
+            return;
+        }
         isPlaying = false;
         if (!canvas || !canvas.parentNode) return;
 

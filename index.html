@@ -604,13 +604,7 @@
         function handlePageLoad(pageName) {
             switch(pageName) {
                 case 'home':
-                    // 聚焦到搜索框
-                    setTimeout(() => {
-                        const searchInput = document.getElementById('searchInput');
-                        if (searchInput) {
-                            searchInput.focus();
-                        }
-                    }, 100);
+                    // 不再自动聚焦搜索框，等待用户主动点击/触摸触发
                     break;
                     
                 case 'category':
