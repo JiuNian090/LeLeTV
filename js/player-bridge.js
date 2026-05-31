@@ -1,3 +1,32 @@
+// 构建API参数并获取视频详情（提取自 playDirectly 和 showDetails 的重复逻辑）
+async function buildApiParamsAndFetch(id, sourceCode) {
+    let apiParams = '';
+    if (sourceCode.startsWith('custom_')) {
+        const customIndex = sourceCode.replace('custom_', '');
+        const customApi = getCustomApiInfo(customIndex);
+        if (!customApi) {
+            return { error: '自定义API配置无效' };
+        }
+        if (customApi.detail) {
+            apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
+        } else {
+            apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
+        }
+    } else {
+        apiParams = '&source=' + sourceCode;
+    }
+
+    const timestamp = new Date().getTime();
+    const cacheBuster = `&_t=${timestamp}`;
+    try {
+        const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
+        const data = await response.json();
+        return { data };
+    } catch (error) {
+        return { error: '网络请求失败，请稍后重试' };
+    }
+}
+
 // 点击搜索结果直接跳转播放器
 async function playDirectly(id, vod_name, sourceCode) {
     if (window.isPasswordProtected && window.isPasswordVerified) {
@@ -13,28 +42,13 @@ async function playDirectly(id, vod_name, sourceCode) {
 
     showLoading();
     try {
-        let apiParams = '';
-        if (sourceCode.startsWith('custom_')) {
-            const customIndex = sourceCode.replace('custom_', '');
-            const customApi = getCustomApiInfo(customIndex);
-            if (!customApi) {
-                showToast('自定义API配置无效', 'error');
-                hideLoading();
-                return;
-            }
-            if (customApi.detail) {
-                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
-            } else {
-                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
-            }
-        } else {
-            apiParams = '&source=' + sourceCode;
+        const result = await buildApiParamsAndFetch(id, sourceCode);
+        if (result.error) {
+            showToast(result.error, 'error');
+            hideLoading();
+            return;
         }
-
-        const timestamp = new Date().getTime();
-        const cacheBuster = `&_t=${timestamp}`;
-        const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
-        const data = await response.json();
+        const data = result.data;
 
         if (!data.episodes || data.episodes.length === 0) {
             showToast('没有可用的视频资源', 'error');
@@ -93,35 +107,13 @@ async function showDetails(id, vod_name, sourceCode) {
 
     showLoading();
     try {
-        // 构建API参数
-        let apiParams = '';
-
-        // 处理自定义API源
-        if (sourceCode.startsWith('custom_')) {
-            const customIndex = sourceCode.replace('custom_', '');
-            const customApi = getCustomApiInfo(customIndex);
-            if (!customApi) {
-                showToast('自定义API配置无效', 'error');
-                hideLoading();
-                return;
-            }
-            // 传递 detail 字段
-            if (customApi.detail) {
-                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
-            } else {
-                apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
-            }
-        } else {
-            // 内置API
-            apiParams = '&source=' + sourceCode;
+        const result = await buildApiParamsAndFetch(id, sourceCode);
+        if (result.error) {
+            showToast(result.error, 'error');
+            hideLoading();
+            return;
         }
-
-        // Add a timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const cacheBuster = `&_t=${timestamp}`;
-        const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
-
-        const data = await response.json();
+        const data = result.data;
 
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modalTitle');
