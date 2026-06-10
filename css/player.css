@@ -572,6 +572,13 @@ input:checked + .slider:before {
     transform: rotate(-90deg);
 }
 
+.player-detail-info.detail-collapsed .detail-meta-container .detail-meta,
+.player-detail-info.detail-collapsed .detail-meta-collapsible {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
 .detail-desc-section .detail-collapse-body {
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease;
