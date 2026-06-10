@@ -817,19 +817,17 @@ body {
 
 .history-meta-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 4px;
     margin-top: 10px;
 }
 
 .history-meta-left {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: 4px;
     min-width: 0;
-    overflow: hidden;
 }
 
 .history-meta-left > * {
@@ -862,6 +860,7 @@ body {
     font-size: 0.7rem;
     flex-shrink: 0;
     white-space: nowrap;
+    margin-left: auto;
 }
 
 /* 进度条 */

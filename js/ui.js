@@ -516,8 +516,12 @@ function renderHistoryCard(item) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, "\\'");
 
-    const safeSource = item.sourceName ?
-        item.sourceName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') :
+    // 将源代码名称映射为显示名称（如 wujin → 无尽资源）
+    const sourceDisplayName = item.sourceName && window.API_SITES && window.API_SITES[item.sourceName]
+        ? window.API_SITES[item.sourceName].name
+        : item.sourceName;
+    const safeSource = sourceDisplayName ?
+        sourceDisplayName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') :
         '未知来源';
 
     const episodeText = item.episodeIndex !== undefined ? `第${item.episodeIndex + 1}集` : '';
