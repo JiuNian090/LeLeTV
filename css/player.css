@@ -707,7 +707,7 @@ input:checked + .slider:before {
     background: rgba(26,26,26,0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border-default);
+    border: 1px solid #2a2a2a;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -963,7 +963,7 @@ input:checked + .slider:before {
     background: rgba(26,26,26,0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border-default);
+    border: 1px solid #2a2a2a;
     border-radius: 0.5rem;
     padding: 0.5rem 0.75rem;
 }
@@ -1237,12 +1237,12 @@ main.container {
     pointer-events: none;
 }
 
-/* ========== 锁定按钮（播放器内右侧居中覆盖层） ========== */
-.player-lock-btn {
+/* ========== 播放器浮动锁定按钮（右侧居中） ========== */
+.player-floating-lock-btn {
     position: absolute;
     right: 16px;
     top: 50%;
-    z-index: 60;
+    z-index: 61;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
@@ -1251,56 +1251,33 @@ main.container {
     height: 44px;
     cursor: pointer;
     color: rgba(255, 255, 255, 0.9);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
 }
 
-.player-lock-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+.player-floating-lock-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.1);
 }
 
-.player-lock-btn .lock-icon {
+.player-floating-lock-btn svg {
     width: 22px;
     height: 22px;
 }
 
-/* 未锁定 + 控制栏可见 → 显示锁定按钮 */
-#playerContainer:not(.controls-hidden):not(.controls-locked) .player-lock-btn {
+/* 未锁定：随控制栏显隐 */
+#playerContainer:not(.controls-hidden):not(.player-locked) .player-floating-lock-btn,
+#playerContainer.controls-hidden:hover .player-floating-lock-btn,
+#playerContainer.player-locked .player-floating-lock-btn {
     opacity: 1;
-    pointer-events: auto;
 }
 
-/* 锁定状态下，通过 JS 的 .visible 类控制显隐 */
-.player-lock-btn.visible {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-}
-
-/* 锁定状态下 - 控制栏永久隐藏 */
-#playerContainer.controls-locked .art-video-player .art-controls,
-#playerContainer.controls-locked .art-video-player .art-bottom {
+/* 锁定状态下隐藏返回按钮 */
+#playerContainer.player-locked .player-back-btn {
     opacity: 0 !important;
     pointer-events: none !important;
-}
-
-#playerContainer.controls-locked .player-back-btn {
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* 全屏模式下锁定按钮保持可见和正确层级 */
-#playerContainer.fullscreen-active .player-lock-btn {
-    z-index: 9999;
-}
-
-/* 全屏 + 锁定：锁定按钮确保始终可见可交互 */
-#playerContainer.fullscreen-active.controls-locked .player-lock-btn {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    z-index: 9999;
 }

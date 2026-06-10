@@ -709,26 +709,11 @@ function createFullScreenController() {
 
     function handleFullScreen(isFullScreen) {
         const container = document.getElementById('playerContainer');
-        const lockBtn = document.getElementById('playerLockBtn');
         if (isFullScreen) {
             container.classList.add('fullscreen-active');
-            if (lockBtn) {
-                lockBtn.dataset.origParent = lockBtn.parentElement.id || 'playerContainer';
-                const playerEl = document.getElementById('player');
-                if (playerEl && lockBtn.parentElement !== playerEl) {
-                    playerEl.appendChild(lockBtn);
-                }
-            }
             document.addEventListener('mouseout', handleMouseOut);
         } else {
             container.classList.remove('fullscreen-active');
-            if (lockBtn && lockBtn.dataset.origParent) {
-                const origParent = document.getElementById(lockBtn.dataset.origParent) || container;
-                if (lockBtn.parentElement !== origParent) {
-                    origParent.insertBefore(lockBtn, origParent.querySelector('.relative') || null);
-                }
-                delete lockBtn.dataset.origParent;
-            }
             document.removeEventListener('mouseout', handleMouseOut);
             clearTimeout(hideTimer);
             clearTimeout(backBtnHideTimer);
@@ -769,6 +754,7 @@ function onPlayerReady(art, fullScreenController) {
     }
 
     addNextEpisodeDirectly(art);
+    addLockFloatingButton(art);
     setTimeout(() => addNextEpisodeDirectly(art), 300);
     setTimeout(() => addNextEpisodeDirectly(art), 800);
     setTimeout(() => addNextEpisodeDirectly(art), 1500);
@@ -1778,8 +1764,6 @@ function setupControlsBehavior() {
 
     overlay.addEventListener('mousedown', function (e) {
         if (controlsLocked) {
-            showLockBtn();
-            scheduleLockBtnHide();
             e.stopPropagation();
             e.preventDefault();
             return;
@@ -1796,9 +1780,8 @@ function setupControlsBehavior() {
 
     overlay.addEventListener('touchstart', function (e) {
         if (controlsLocked) {
-            showLockBtn();
-            scheduleLockBtnHide();
             e.stopPropagation();
+            e.preventDefault();
             return;
         }
     }, { passive: false });
@@ -1828,8 +1811,6 @@ function setupControlsBehavior() {
 
     overlay.addEventListener('click', function (e) {
         if (controlsLocked) {
-            showLockBtn();
-            scheduleLockBtnHide();
             e.stopPropagation();
             return;
         }
@@ -1850,8 +1831,6 @@ function setupControlsBehavior() {
 
     playerEl.addEventListener('mousemove', function () {
         if (controlsLocked) {
-            showLockBtn();
-            scheduleLockBtnHide();
             return;
         }
         if (!controlsVisible) showControls();
@@ -1860,7 +1839,6 @@ function setupControlsBehavior() {
 
     playerEl.addEventListener('mouseleave', function () {
         if (controlsLocked) {
-            scheduleLockBtnHide();
             return;
         }
         if (controlsVisible) resetAutoHide();
@@ -2021,46 +1999,60 @@ function addNextEpisodeDirectly(art) {
 }
 
 let controlsLocked = false;
-let lockBtnHideTimeout = null;
 
-function showLockBtn() {
-    const btn = document.getElementById('playerLockBtn');
-    if (btn) btn.classList.add('visible');
+// ========== 播放器浮动锁定按钮（右侧居中） ==========
+function addLockFloatingButton(art) {
+    if (!art) return;
+    const playerEl = document.getElementById('player');
+    if (!playerEl) return;
+    // 避免重复添加
+    if (playerEl.querySelector('.player-floating-lock-btn')) return;
+
+    const btn = document.createElement('div');
+    btn.className = 'player-floating-lock-btn';
+    btn.title = '锁定控制栏';
+    btn.innerHTML = getLockSvg(false);
+
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        toggleControlsLock(art);
+    });
+
+    playerEl.appendChild(btn);
 }
 
-function hideLockBtn() {
-    const btn = document.getElementById('playerLockBtn');
-    if (btn) btn.classList.remove('visible');
-    if (lockBtnHideTimeout) {
-        clearTimeout(lockBtnHideTimeout);
-        lockBtnHideTimeout = null;
+function getLockSvg(locked) {
+    if (locked) {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>';
     }
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
 }
 
-function scheduleLockBtnHide() {
-    if (lockBtnHideTimeout) clearTimeout(lockBtnHideTimeout);
-    lockBtnHideTimeout = setTimeout(hideLockBtn, 2000);
-}
 
-function toggleControlsLock(event) {
-    if (event) event.stopPropagation();
-    const container = document.getElementById('playerContainer');
+function toggleControlsLock(art) {
     controlsLocked = !controlsLocked;
-    container.classList.toggle('controls-locked', controlsLocked);
-
-    const openIcon = document.getElementById('lockOpenIcon');
-    const closedIcon = document.getElementById('lockClosedIcon');
-    if (!openIcon || !closedIcon) return;
+    const container = document.getElementById('playerContainer');
 
     if (controlsLocked) {
-        openIcon.classList.add('hidden');
-        closedIcon.classList.remove('hidden');
-        showLockBtn();
-        scheduleLockBtnHide();
+        if (art && art.template && art.template.$player) {
+            art.template.$player.classList.add('art-lock');
+        }
+        art.isLock = true;
+        if (container) container.classList.add('player-locked');
     } else {
-        openIcon.classList.remove('hidden');
-        closedIcon.classList.add('hidden');
-        hideLockBtn();
+        if (art && art.template && art.template.$player) {
+            art.template.$player.classList.remove('art-lock');
+        }
+        art.isLock = false;
+        if (container) container.classList.remove('player-locked');
+    }
+
+    // 更新浮动按钮图标
+    const btn = document.querySelector('.player-floating-lock-btn');
+    if (btn) {
+        btn.innerHTML = getLockSvg(controlsLocked);
+        btn.title = controlsLocked ? '点击解锁' : '锁定控制栏';
     }
 }
 

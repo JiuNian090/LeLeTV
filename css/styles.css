@@ -922,15 +922,10 @@ body {
     transform: scale(1.05);
 }
 
-/* 锁定控制时屏蔽交互 */
-.player-container.controls-locked .shortcut-hint {
+/* 锁定控制时屏蔽交互 - 由 JS 控制键盘快捷键，CSS 作为辅助 */
+.art-video-player.art-lock ~ .shortcut-hint {
     opacity: 0 !important;
     pointer-events: none !important;
-}
-/* 保留锁按钮可见可点 */
-.player-container.controls-locked #playerLockBtn {
-    opacity: 1 !important;
-    pointer-events: auto !important;
 }
 
 
