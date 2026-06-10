@@ -650,7 +650,7 @@ function _buildSearchCardsHtml(items) {
                         <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
                     </div>` : ''}
                     
-                    <div class="p-2 flex flex-col flex-grow">
+                    <div class="p-3 flex flex-col flex-grow min-w-0">
                         <div class="flex-grow">
                             <h3 class="font-semibold mb-2 break-words line-clamp-2 ${hasCover ? '' : 'text-center'}" title="${safeName}">${safeName}</h3>
                             

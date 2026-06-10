@@ -34,7 +34,7 @@
 
 .page-bg {
     background: #000000;
-    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 button, .card-hover {
@@ -359,7 +359,7 @@ button, .card-hover {
 body {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     width: 100%;
 }
@@ -842,7 +842,9 @@ body {
     height: 100%;
     background: #ec4899;
     border-radius: 2px;
-    transition: width 0.3s ease;
+    width: 100%;
+    transform-origin: left;
+    transition: transform 0.3s ease;
 }
 
 .progress-text {
@@ -912,12 +914,22 @@ body {
 
 
 
-/* 搜索结果卡片优化：横向布局 */
+/* 搜索结果卡片优化：横向布局，响应式图片容器 */
 .search-card-img-container {
-    width: 100px;  /* 增加宽度，从80px到100px */
-    height: 150px; /* 增加高度，从120px到150px */
+    width: 120px;
+    min-width: 120px;
+    height: 170px;
     overflow: hidden;
     background-color: #191919;
+}
+
+/* 移动端缩小图片，留更多空间给文字 */
+@media screen and (max-width: 640px) {
+    .search-card-img-container {
+        width: 80px;
+        min-width: 80px;
+        height: 120px;
+    }
 }
 
 /* 确保图片不会被拉伸，并且能够正确显示 */
@@ -1284,6 +1296,8 @@ img.loading-fade.loaded {
 
 .nav-btn.active {
     color: #ec4899;
+    background: rgba(236, 72, 153, 0.12);
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.15);
 }
 
 .nav-btn svg {
@@ -1321,6 +1335,14 @@ img.loading-fade.loaded {
     transform: translateY(0);
     width: 100%;
     overflow-x: hidden;
+}
+
+/* text-wrap 工具类 */
+.text-balance {
+    text-wrap: balance;
+}
+.text-pretty {
+    text-wrap: pretty;
 }
 
 /* 首页布局 */
@@ -1833,15 +1855,15 @@ img.loading-fade.loaded {
 }
 
 .empty-icon {
-    animation: bounce 2s infinite;
+    animation: float 3s ease-in-out infinite;
 }
 
-@keyframes bounce {
+@keyframes float {
     0%, 100% {
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-8px);
     }
 }
 
@@ -1873,6 +1895,7 @@ img.loading-fade.loaded {
     font-size: 1rem;
     font-weight: 600;
     color: #a0aec0;
+    text-wrap: balance;
 }
 
 .settings-dashboard-grid {
@@ -1911,6 +1934,20 @@ img.loading-fade.loaded {
 .dash-card-icon {
     font-size: 1rem;
     line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.625rem;
+    background: rgba(236, 72, 153, 0.1);
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.dash-card-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
 }
 
 .dash-card-title {
@@ -1918,6 +1955,7 @@ img.loading-fade.loaded {
     font-weight: 600;
     color: #e2e8f0;
     flex: 1;
+    text-wrap: balance;
 }
 
 .dash-card-badge {
@@ -2386,6 +2424,7 @@ img.loading-fade.loaded {
     font-size: 1rem;
     font-weight: 600;
     color: #a0aec0;
+    text-wrap: balance;
 }
 
 .about-dashboard-grid {

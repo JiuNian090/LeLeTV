@@ -74,7 +74,7 @@ function showNextToast() {
     setTimeout(() => {
         toast.style.opacity = '1';
         toast.style.transform = window.innerWidth <= 640 ? 'translateX(0) scale(1)' : 'translateX(-50%) scale(1)';
-        toast.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        toast.style.transition = 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
     }, 50);
 
     currentToastTimeout = setTimeout(() => {
@@ -536,7 +536,7 @@ function renderHistoryCard(item) {
         progressHtml = `
             <div class="history-progress">
                 <div class="progress-bar">
-                    <div class="progress-filled" style="width:${percent}%"></div>
+                    <div class="progress-filled" style="transform:scaleX(${percent/100})"></div>
                 </div>
                 <div class="progress-text">${formattedTime} / ${formattedDuration}</div>
             </div>

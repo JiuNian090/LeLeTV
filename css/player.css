@@ -960,7 +960,7 @@ input:checked + .slider:before {
 
 /* ==================== 固定视口布局（通用） ==================== */
 main.container {
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     max-width: none;
     padding: 0;
