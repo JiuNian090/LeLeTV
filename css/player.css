@@ -109,7 +109,7 @@ body, html {
     height: 48px !important;
     border: 4px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 50% !important;
-    border-top-color: #f97316 !important;
+    border-top-color: #ec4899 !important;
     position: relative !important;
     margin-bottom: 16px !important;
     animation: spin 1s linear infinite !important;
@@ -127,7 +127,7 @@ div.player-loading-text {
     font-weight: 500 !important;
     margin-bottom: 8px !important;
     text-align: center !important;
-    font-family: system-ui, -apple-system, sans-serif !important;
+    font-family: 'Geist', system-ui, -apple-system, sans-serif !important;
     line-height: 1.4 !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
     pointer-events: none !important;
@@ -217,12 +217,12 @@ div.player-loading-text {
     flex-direction: column;
 }
 
-.loading-spinner {
+#player-loading .loading-spinner {
     width: 50px;
     height: 50px;
     border: 4px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: #ec4899;
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 10px;
 }
@@ -256,8 +256,9 @@ div.player-loading-text {
 }
 
 .episode-active {
-    background-color: #ec4899 !important;
-    border-color: #f472b6 !important;
+    background-color: rgba(236,72,153,0.2) !important;
+    border-color: rgba(236,72,153,0.5) !important;
+    box-shadow: 0 0 12px rgba(236,72,153,0.25) !important;
 }
 
 .episode-grid {
@@ -325,7 +326,7 @@ div.player-loading-text {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #333;
+    background-color: rgba(255,255,255,0.12);
     -webkit-transition: .4s;
     -moz-transition: .4s;
     transition: .4s;
@@ -363,7 +364,7 @@ input:checked + .slider:before {
 
 /* 自动连播容器hover效果 */
 .autoplay-container:hover {
-    background-color: #333 !important;
+    background-color: rgba(255,255,255,0.08) !important;
 }
 
 /* 确保switch高度合适 */
@@ -422,10 +423,12 @@ input:checked + .slider:before {
     object-fit: cover !important;
 }
 
-/* 视频详情信息区域 */
+/* 视频详情信息区域 - 玻璃效果 */
 .player-detail-info {
-    background: #1a1a1a;
-    border: 1px solid #333;
+    background: rgba(26,26,26,0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-default);
     border-radius: 8px;
     padding: 12px 14px;
     font-size: 0.85rem;
@@ -450,6 +453,22 @@ input:checked + .slider:before {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.detail-title-row .detail-toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: pointer;
+    user-select: none;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.detail-title-row .detail-desc-label {
+    color: var(--color-text-tertiary);
+    font-size: 0.75rem;
+    margin-bottom: 0;
 }
 
 .detail-meta-container .detail-meta {
@@ -517,20 +536,26 @@ input:checked + .slider:before {
     overflow-y: auto;
 }
 
+/* 详情折叠按钮独立行 */
+.detail-meta-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+}
+
 .detail-title-row .detail-toggle-header {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     cursor: pointer;
     user-select: none;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
-    white-space: nowrap;
 }
 
 .detail-title-row .detail-desc-label {
-    color: #888;
-    font-size: 0.8rem;
+    color: var(--color-text-tertiary);
+    font-size: 0.75rem;
     margin-bottom: 0;
 }
 
@@ -575,10 +600,12 @@ input:checked + .slider:before {
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* 选集区域（可折叠卡片） */
+/* 选集区域（可折叠卡片）- 玻璃效果 */
 .episode-section {
-    background: #1a1a1a;
-    border: 1px solid #333;
+    background: rgba(26,26,26,0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-default);
     border-radius: 8px;
     padding: 12px 14px;
 }
@@ -673,11 +700,14 @@ input:checked + .slider:before {
 }
 
 /* 资源信息卡片区 */
+/* 资源信息卡片区 - 玻璃效果 */
 #resourceInfoBarContainer {
     align-items: center;
     border-radius: 0.5rem;
-    -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background: rgba(26,26,26,0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-default);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -925,11 +955,36 @@ input:checked + .slider:before {
     padding: 0 !important;
 }
 
-/* 控制按钮容器上下内边距 */
+/* 控制按钮容器 - 玻璃效果 */
 .control-buttons-container {
     padding-top: 8px;
     padding-bottom: 8px;
     flex-wrap: nowrap !important;
+    background: rgba(26,26,26,0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-default);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* 桌面端控制按钮等宽填充 */
+@media (min-width: 1024px) {
+    .control-buttons-container {
+        gap: 0.75rem;
+    }
+    .control-buttons-container > * {
+        flex: 1;
+        min-width: 0;
+    }
+    .autoplay-container {
+        justify-content: center;
+        width: 100%;
+    }
+    .control-buttons-container > button {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 /* 左侧按钮组也不换行 */

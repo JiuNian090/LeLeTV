@@ -25,7 +25,7 @@
     
     <!-- 密码验证弹窗 -->
     <div id="passwordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333] max-h-[90vh] flex flex-col">
+        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[var(--color-border-default)] max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-6 flex-none">
                 <h2 class="text-2xl font-bold gradient-text">访问验证</h2>
             </div>
@@ -33,7 +33,7 @@
                 <p class="text-gray-300 mb-4">请输入密码继续访问，如若密码错误可以<span id="contactLeLe4" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码</p>
                 <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;">
                     <input type="text" name="username" id="username" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true">
-                    <input type="password" id="passwordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="密码..." autocomplete="new-password">
+                    <input type="password" id="passwordInput" class="w-full bg-[#111] border border-[var(--color-border-default)] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="密码..." autocomplete="new-password">
                     <button id="passwordSubmitBtn" type="submit" class="mt-4 w-full gradient-btn">提交</button>
                 </form>
                 <p id="passwordError" class="text-red-500 mt-2 hidden">密码错误，请重试</p>
@@ -75,7 +75,11 @@
                             <div>正在加载视频...</div>
                         </div>
                         <div class="error-container" id="error">
-                            <div class="error-icon">⚠️</div>
+                            <div class="error-icon">
+                            <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                            </svg>
+                        </div>
                             <div id="error-message">视频加载失败</div>
                             <div class="error-message-sub">请尝试其他视频源或稍后重试</div>
                         </div>
@@ -130,7 +134,7 @@
                 </div>
 
                 <!-- 源信息 -->
-                <div class="player-container player-right-item flex justify-between py-2 px-4 bg-[#222] border border-[#333] rounded-lg" id="resourceInfoBarContainer">
+                <div class="player-container player-right-item flex justify-between py-2 px-4 bg-[rgba(34,34,34,0.5)] border border-[var(--color-border-default)] rounded-lg" id="resourceInfoBarContainer">
                     <!-- 资源信息卡片、切换按钮、视频数将由JS动态渲染 -->
                 </div>
 
@@ -138,7 +142,7 @@
                 <div class="player-container player-right-item">
                     <div class="flex items-center justify-start gap-3 control-buttons-container">
                         <!-- 自动连播开关 -->
-                        <div class="flex items-center gap-1 autoplay-container control-btn px-3 py-1 bg-[#222] border border-[#333] rounded-lg transition">
+                        <div class="flex items-center gap-1 autoplay-container control-btn px-3 py-1 rounded-lg justify-center bg-[rgba(255,255,255,0.02)] border border-[#2a2a2a] hover:bg-[rgba(255,255,255,0.05)] transition">
                             <span class="text-gray-400 text-sm whitespace-nowrap">自动连播</span>
                             <label class="switch">
                                 <input type="checkbox" id="autoplayToggle">
@@ -148,7 +152,7 @@
 
                         <!-- 复制链接按钮 -->
                         <button title="复制播放链接" onclick="copyLinks()"
-                                class="flex items-center gap-1.5 control-btn px-3 py-1 bg-[#222] border border-[#333] rounded-lg transition hover:bg-[#333]">
+                                class="flex items-center gap-1.5 control-btn px-3 py-1 rounded-lg justify-center bg-[rgba(255,255,255,0.02)] border border-[#2a2a2a] hover:bg-[rgba(255,255,255,0.05)] transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                             </svg>
@@ -170,7 +174,7 @@
 
     <!-- 换源模态框 -->
     <div id="modal" class="fixed inset-0 bg-black/60 items-center justify-center transition-opacity duration-300 z-[10000] hidden">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-4xl border border-[#333] max-h-[90vh] flex flex-col">
+        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-4xl border border-[var(--color-border-default)] max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-6 flex-none">
                 <h2 id="modalTitle" class="text-2xl font-bold gradient-text break-words pr-4 max-w-[80%]"></h2>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl transition-colors flex-shrink-0">&times;</button>
@@ -189,7 +193,7 @@
 
     <!-- 添加 loading 提示框 -->
     <div id="loading" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[10001]">
-        <div class="bg-[#111] p-8 rounded-lg border border-[#333] flex items-center space-x-4">
+        <div class="bg-[#111] p-8 rounded-lg border border-[var(--color-border-default)] flex items-center space-x-4">
             <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
             <p class="text-white text-lg">加载中...</p>
         </div>

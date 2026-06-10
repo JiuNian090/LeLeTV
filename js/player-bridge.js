@@ -270,7 +270,7 @@ function renderEpisodes(vodName, sourceCode, vodId) {
         const realIndex = episodesReversed ? currentEpisodes.length - 1 - index : index;
         return `
             <button id="episode-${realIndex}" onclick="playVideo('${episode}','${vodName.replace(/"/g, '&quot;')}', '${sourceCode}', ${realIndex}, '${vodId}')" 
-                    class="px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded-lg transition-colors text-center episode-btn">
+                    class="px-4 py-2 bg-[rgba(34,34,34,0.5)] hover:bg-[rgba(255,255,255,0.1)] border border-[var(--color-border-default)] rounded-lg transition-all text-center episode-btn">
                 ${realIndex + 1}
             </button>
         `;
