@@ -197,6 +197,11 @@ button, .card-hover {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--color-border-default) !important;
 }
+
+/* 源分类过滤标签容器 */
+.source-filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.375rem;
     margin-bottom: 1rem;
     min-height: 2rem;
@@ -214,6 +219,19 @@ button, .card-hover {
     transition: all 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+/* 搜索结果卡片中的源标签 */
+.source-label-tag {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid #333;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: #a0aec0;
+    background: rgba(34, 34, 34, 0.6);
+    white-space: nowrap;
 }
 
 .source-filter-tab:hover {

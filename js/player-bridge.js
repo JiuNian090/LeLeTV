@@ -76,6 +76,7 @@ async function playDirectly(id, vod_name, sourceCode) {
             localStorage.setItem('currentEpisodeIndex', episodeIndex);
             localStorage.setItem('currentSourceCode', sourceCode || '');
             localStorage.setItem('lastPlayTime', Date.now());
+            localStorage.setItem('lastSearchPage', window.location.href);
             if (data.videoInfo) {
                 localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
             }
@@ -83,7 +84,11 @@ async function playDirectly(id, vod_name, sourceCode) {
             console.error('保存播放状态失败:', e);
         }
 
-        const playerUrl = `player.html?url=${encodeURIComponent(episodeUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceCode)}&index=${episodeIndex}&id=${encodeURIComponent(id)}`;
+        let playerUrl = `player.html?url=${encodeURIComponent(episodeUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceCode)}&index=${episodeIndex}&id=${encodeURIComponent(id)}`;
+        const currentPath = window.location.href;
+        if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?')) {
+            playerUrl += `&back=${encodeURIComponent(currentPath)}`;
+        }
         window.location.href = playerUrl;
     } catch (e) {
         showToast('获取视频详情失败，请重试', 'error');

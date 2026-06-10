@@ -14,7 +14,17 @@ function goHome(event) {
         return;
     }
 
-    window.history.back();
+    // 按优先级确定返回地址
+    const urlParams = new URLSearchParams(window.location.search);
+    const backUrl = urlParams.get('back')
+        || localStorage.getItem('lastSearchPage')
+        || document.referrer;
+
+    if (backUrl) {
+        window.location.href = backUrl;
+    } else {
+        window.location.href = '/index.html';
+    }
 }
 
 // 页面加载时保存当前播放状态

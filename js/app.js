@@ -631,7 +631,7 @@ function _buildSearchCardsHtml(items) {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
         const sourceInfo = item.source_name ?
-            `<span class="bg-[#222] text-xs px-1.5 py-0.5 rounded-full">${item.source_name}</span>` : '';
+            `<span class="source-label-tag">${item.source_name}</span>` : '';
         const sourceCode = item.source_code || '';
         const apiUrlAttr = item.api_url ?
             `data-api-url="${item.api_url.replace(/"/g, '&quot;')}"` : '';
