@@ -2459,24 +2459,11 @@ img.loading-fade.loaded {
     box-sizing: border-box;
 }
 
-.about-dashboard-header {
-    margin-bottom: 1rem;
-}
-
-.about-dashboard-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #a0aec0;
-    text-wrap: balance;
-}
-
 .about-dashboard-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.75rem;
+    padding-bottom: 2rem;
 }
 
 @media (min-width: 768px) {
