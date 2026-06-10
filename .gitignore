@@ -112,3 +112,7 @@ VERSION.txt
 # Deployment platforms
 .netlify
 .vercel
+
+# skills
+.agents/
+skills-lock.json

@@ -1,0 +1,70 @@
+# Reasonix configuration.
+# Resolution order: flag > ./reasonix.toml > ~/.config/reasonix/config.toml > built-in defaults.
+# Secrets come from the environment via api_key_env; never put keys here.
+
+config_version = 2   # schema marker for diagnostics; old versions may ignore it
+default_model = "deepseek-flash"
+# language      = "zh"   # ui/model language; empty = auto-detect from $LANG / $REASONIX_LANG
+
+[agent]
+# system_prompt = """..."""   # omit to use the built-in prompt for this version
+# system_prompt_file = "prompts/system.md"   # overrides system_prompt when set
+max_steps   = 0
+temperature = 0.0
+auto_plan   = "off"   # off|on; off keeps plan mode manual
+# auto_plan_classifier = "deepseek-flash"   # optional; only used for borderline tasks
+soft_compact_ratio  = 0.5   # notice only; keeps cache-first prefix intact
+compact_ratio       = 0.8   # try compacting when prompt reaches this fraction
+compact_force_ratio = 0.9   # force compacting at this high-water mark
+# planner_model = "mimo"   # optional: enable two-model collaboration
+# subagent_model = "deepseek-pro"   # optional default for runAs=subagent skills
+# subagent_models = { review = "deepseek-pro", security_review = "deepseek-pro" }   # per-skill overrides
+# output_style = "explanatory"   # explanatory | learning | concise | custom; empty = default
+
+[tools]
+enabled = []   # empty = all built-in tools
+
+[codegraph]
+enabled      = true   # built-in MCP server; off by default for first-run sessions
+auto_install = true   # fetch the runtime when CodeGraph is enabled but missing
+# path       = ""   # empty = cache, then PATH, then a bundle beside reasonix
+# tier       = "lazy"   # lazy|background|eager
+
+[skills]
+# paths = ["~/my-skills", "../shared/skills"]   # extra custom skill roots
+# disabled_skills = ["review"]   # hide noisy or unwanted skills
+
+[permissions]
+# Per-call gating. mode = writer fallback when no rule matches: ask|allow|deny.
+# Readers always default to allow. Precedence: deny > ask > allow > fallback.
+# Rules are "ToolName" or "ToolName(glob)"; '*' matches any run, '?' one char.
+mode  = "ask"
+# deny = ["bash(rm -rf*)", "bash(git push*)"]   # hard-blocked in every mode
+allow = ["bash=npx codegraph callers \"buildApiParamsAndFetch\" 2>&1", "bash=npx codegraph callers \"showToast\" 2>&1", "bash=npx codegraph callers \"isPasswordProtected\" 2>&1", "bash=npx gitnexus analyze --force 2>&1", "bash=npx gitnexus query \"search\" 2>&1", "bash=npx gitnexus query \"search\" --repo LeLeTV 2>&1", "bash=npx gitnexus context \"search\" --repo LeLeTV 2>&1", "bash=diff <(ls .claude/skills/gitnexus/) <(for f in .trae/skills/gitnexus-*/; do echo \"${f#.trae/skills/}\" | sed 's/-/./'; done) 2>&1 || true", "bash=for skill in gitnexus-cli gitnexus-debugging gitnexus-exploring gitnexus-guide gitnexus-impact-analysis gitnexus-refactoring; do echo \"=== $skill ===\" && diff \".claude/skills/gitnexus/$skill/SKILL.md\" \".trae/skills/$skill/SKILL.md\" 2>&1 || true; done", "bash=cd E:/Code/JiunianTV/LeLeTV && node -e \"\nimport('playwright').then(async ({ chromium }) => {\n  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });\n  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });\n  const page = await ctx.newPage();\n  await page.setContent('<h1>Test</h1><p>Hello</p>');\n\n  // 从文件中读取 extractFn 并执行\n  const { readFileSync } = await import('fs');\n  const src = readFileSync('scripts/playwright-cli.mjs', 'utf-8');\n  const fnStart = src.indexOf('function extractFn');\n  // 找到 cmdOpen 函数之前\n  const fnEnd = src.indexOf('async function cmdOpen');\n  const fnSource = src.slice(fnStart, fnEnd);\n  \n  console.log('Function length:', fnSource.length);\n  \n  const wrapped = '(' + fnSource + ')';\n  const r = await page.evaluate(wrapped, null);\n  console.log('RESULT:', JSON.stringify(r));\n  await browser.close();\n});\n\" 2>&1", "bash=cd E:/Code/JiunianTV/LeLeTV && node -e \"\n// 模拟 playwright-cli.mjs 中的 extractFn + extractContent 行为\nimport('playwright').then(async ({ chromium }) => {\n  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });\n  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });\n  const page = await ctx.newPage();\n  await page.setContent('<h1>Test</h1><p>Hello <a href=\\\"/x\\\">link</a></p>');\n\n  // 这是脚本中 extractFn 的精简版\n  function extractFn(sel) {\n    function isVisible(el) { return el.offsetParent !== null; }\n    function buildTree(node, depth) {\n      if (!node || depth > 10) return '';\n      if (node.nodeType === 3) {\n        const t = (node.textContent||'').trim();\n        return t ? '  '.repeat(depth) + t + '\\n' : '';\n      }\n      if (node.nodeType !== 1) return '';\n      const el = node;\n      if (!isVisible(el)) return '';\n      const tag = el.tagName.toLowerCase();\n      const indent = '  '.repeat(depth);\n      const text = (el.innerText||'').trim().slice(0,200);\n\n      if (['a','button'].includes(tag)) {\n        const label = el.getAttribute('aria-label') || text || '';\n        const href = tag==='a' ? (el.getAttribute('href')||'') : '';\n        return indent + '[' + (tag==='a'?'链接':'按钮') + '] ' + label + (href?' -> '+href:'') + '\\n';\n      }\n      if (tag==='input') {\n        return indent + '[输入框] placeholder:'+(el.getAttribute('placeholder')||'')+' value:'+(el.value||'')+'\\n';\n      }\n      if (['h1','h2','h3','h4','h5','h6'].includes(tag)) {\n        return indent + '#'.repeat(parseInt(tag[1])) + ' ' + text + '\\n';\n      }\n      const hasBtns = el.querySelectorAll('a,button,input,textarea,select').length > 0;\n      if (!hasBtns && text) return indent + text + '\\n';\n      let result = '';\n      for (const c of el.children) result += buildTree(c, depth + (tag==='div'||tag==='li'?1:0));\n      return result;\n    }\n    const root = sel ? document.querySelector(sel) : document.body;\n    if (!root) return 'NOT FOUND';\n    return '=== ' + document.title + ' ===\\n' + buildTree(root, 0);\n  }\n\n  // 模拟 extractContent 调用\n  const result = await page.evaluate(extractFn, null);\n  console.log('FIRST TRY:', JSON.stringify(result));\n\n  // 直接用 page.evaluate 传函数\n  const result2 = await page.evaluate(function() { return document.title; });\n  console.log('SECOND TRY:', JSON.stringify(result2));\n\n  await browser.close();\n});\n\" 2>&1", "bash=node scripts/playwright-cli.mjs one-shot https://www.baidu.com --wait=3000 2>&1 | head -40", "bash=node scripts/playwright-cli.mjs open https://www.baidu.com --wait=2000 2>&1 | head -20", "bash=node scripts/playwright-cli.mjs close 2>&1"]
+# ask = ["write_file"]   # force a prompt even if otherwise allowed
+
+[sandbox]
+# Confine tool blast radius. File-writers (write_file/edit_file/multi_edit)
+# may only write under workspace_root (empty = current dir) + allow_write.
+# bash = "enforce" (default) jails each command in an OS sandbox (macOS now;
+# graceful fallback elsewhere); "off" disables it. network allows egress.
+# workspace_root = ""            # default: current working directory
+# allow_write = ["/tmp"]          # extra dirs writers may also modify
+bash    = "enforce"
+network = true
+
+[statusline]
+# A custom status line: a command whose first stdout line replaces the built-in
+# data row. It receives {"model","contextUsed","contextWindow","cwd"} as JSON on stdin.
+# command = "my-statusline.sh"
+
+# External MCP servers. type: "stdio" (default, a subprocess) | "http" | "sse".
+# ${VAR} / ${VAR:-default} are expanded from the environment in command/args/env/url/headers.
+# [[plugins]]
+# name    = "example"
+# command = "reasonix-plugin-example"
+# [[plugins]]                                  # a remote server over Streamable HTTP
+# name    = "stripe"
+# type    = "http"
+# url     = "https://mcp.stripe.com"
+# headers = { Authorization = "Bearer ${STRIPE_KEY}" }
