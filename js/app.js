@@ -829,6 +829,9 @@ function _applySourceFilter(sourceFilter) {
     // 重绘
     document.getElementById('results').innerHTML = _buildSearchCardsHtml(filteredResults);
 
+    // 卡片交错入场
+    animateCardEntrance();
+
     // 重置滚动位置到结果区域顶部
     const resultsArea = document.getElementById('resultsArea');
     if (resultsArea) {
@@ -1175,4 +1178,18 @@ async function performTraditionalSearch(query) {
     });
     
     return allResults;
+}
+
+// 卡片交错入场动画
+function animateCardEntrance() {
+    const cards = document.querySelectorAll('#results .card-hover');
+    cards.forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(16px)';
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, i * 50);
+    });
 }

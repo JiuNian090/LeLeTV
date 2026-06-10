@@ -1,27 +1,51 @@
 /* LeLeTV 全局样式 */
 
 :root {
-    /* === HarmonyOS 深色模式色彩体系 === */
+    /* === HarmonyOS 深色模式色彩体系 v2 === */
     --color-bg:               #000000;
     --color-bg-secondary:     #121212;
-    --color-surface:          #1e1e1e;
-    --color-surface-hover:    #2a2a2a;
+    --color-surface-base:     #0d0d0d;
+    --color-surface-raised:   #141414;
+    --color-surface-overlay:  #1a1a1a;
+    --color-surface-hover:    #222222;
     --color-surface-subtle:   #1a1a1a;
     --color-surface-cover:    #161616;
-    --color-border:           #333333;
-    --color-border-hover:     #555555;
+
+    /* RGBA 自适应透明边框体系 */
+    --color-border-subtle:    rgba(255,255,255,0.06);
+    --color-border-default:   rgba(255,255,255,0.10);
+    --color-border-hover:     rgba(255,255,255,0.18);
     --color-border-active:    #ec4899;
 
     --color-primary:          #ec4899;
     --color-accent:           #ec4899;
     --color-primary-dim:      rgba(236,72,153,0.15);
 
+    /* 扩展粉色体系 */
+    --pink-50:  rgba(236,72,153,0.05);
+    --pink-100: rgba(236,72,153,0.10);
+    --pink-200: rgba(236,72,153,0.20);
+    --pink-400: #f472b6;
+    --pink-500: #ec4899;
+    --pink-600: #db2777;
+    --pink-glow: 0 0 20px rgba(236,72,153,0.3);
+
     --color-text-primary:     #e6f2ff;
     --color-text-secondary:   #8599b2;
     --color-text-tertiary:    #6b7280;
     --color-text-disabled:    #4a4a4a;
 
+    /* 字体 */
+    --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+
+    /* 缓动曲线 */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quart: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-default: 0.35s var(--ease-out-expo);
+
     /* 兼容旧名称，逐步迁移 */
+    --color-border:           var(--color-border-default);
+    --color-border-hover:     rgba(255,255,255,0.18);
     --primary-color: #ec4899;
     --primary-light: #33d6ff;
     --secondary-color: #000000;
@@ -29,7 +53,7 @@
     --text-color: #e6f2ff;
     --text-muted: #8599b2;
     --border-color: #333333;
-    --card-bg: #1e1e1e;
+    --card-bg: #141414;
 }
 
 .page-bg {
@@ -38,18 +62,14 @@
 }
 
 button, .card-hover {
-    -webkit-transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-    -moz-transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: var(--transition-default);
 }
 
 /* 改进卡片适应不同内容长度 */
 .card-hover {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-default);
     background: var(--card-bg);
-    -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    -moz-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(0,0,0,0.4);
     position: relative;
     overflow: hidden;
     border-radius: 12px;
@@ -95,12 +115,8 @@ button, .card-hover {
 
 .card-hover:hover {
     border-color: var(--color-border-hover);
-    -webkit-transform: translateY(-3px);
-    -moz-transform: translateY(-3px);
     transform: translateY(-3px);
-    -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
-    -moz-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.5);
 }
 
 .card-hover:hover::before {
@@ -174,10 +190,13 @@ button, .card-hover {
     border-color: var(--color-border-hover);
 }
 
-/* 搜索源过滤标签 */
-.source-filter-tabs {
-    display: flex;
-    flex-wrap: wrap;
+/* 搜索框玻璃效果 */
+.home-search-bar {
+    background: rgba(18,18,18,0.6) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-default) !important;
+}
     gap: 0.375rem;
     margin-bottom: 1rem;
     min-height: 2rem;
@@ -185,7 +204,7 @@ button, .card-hover {
 
 .source-filter-tab {
     padding: 0.25rem 0.75rem;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 400;
@@ -226,7 +245,7 @@ button, .card-hover {
     position: fixed;
     z-index: 2147483647;
     background: #111;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-top: none;
     border-radius: 0 0 0.75rem 0.75rem;
     overflow-x: hidden;
@@ -317,6 +336,8 @@ button, .card-hover {
     transition: all 0.3s ease;
     margin-top: auto;
     background: #0a0a0a;
+    position: relative;
+    z-index: 1;
 }
 
 .footer a:hover {
@@ -495,7 +516,7 @@ body {
     height: 14px;
     width: 14px;
     background-color: #222;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-radius: 3px;
     cursor: pointer;
     position: relative;
@@ -610,7 +631,7 @@ body {
     grid-column: 1 / -1;
     padding: 0.25rem 0;
     margin-top: 0.5rem;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--color-border-default);
     color: #8599b2;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -706,9 +727,9 @@ body {
 /* 历史记录卡片 - 鸿蒙深色模式风格 */
 .history-item {
     display: flex;
-    background: #1e1e1e;
+    background: var(--color-surface-raised);
     border-radius: 12px;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     overflow: hidden;
     transition: all 0.3s ease;
     position: relative;
@@ -1164,7 +1185,7 @@ img.loading-fade.loaded {
 #modal .detail-desc {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--color-border-default);
 }
 
 #modal .detail-desc-content {
@@ -1234,13 +1255,17 @@ img.loading-fade.loaded {
 
 /* 主页特定样式 */
 
-/* 导航栏样式 */
+/* 导航栏样式 - 玻璃效果 */
 .top-nav-bar {
-    position: relative;
+    position: sticky;
+    top: 0;
     width: 100%;
-    background: transparent;
-    padding: 1rem 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    padding: 0.75rem 0;
     z-index: 50;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .nav-container {
@@ -1285,19 +1310,38 @@ img.loading-fade.loaded {
     justify-content: center;
     transition: all 0.2s ease;
     border-radius: 0.5rem;
+    position: relative;
 }
 
 .nav-btn:hover,
 .nav-btn.active {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.05);
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .nav-btn.active {
     color: #ec4899;
-    background: rgba(236, 72, 153, 0.12);
-    box-shadow: 0 0 12px rgba(236, 72, 153, 0.15);
+    background: transparent;
+    position: relative;
+}
+
+.nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1.2rem;
+    height: 2px;
+    background: #ec4899;
+    border-radius: 1px;
+    animation: navActiveIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes navActiveIn {
+    from { width: 0; opacity: 0; }
+    to { width: 1.2rem; opacity: 1; }
 }
 
 .nav-btn svg {
@@ -1325,8 +1369,8 @@ img.loading-fade.loaded {
 .page-content {
     display: none;
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(12px);
+    transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 
 .page-content.active {
@@ -1446,7 +1490,7 @@ img.loading-fade.loaded {
     background: #0f0f0f;
     border-radius: 9999px;
     padding: 0.25rem;
-    border: 1px solid #2d2d2d;
+    border: 1px solid var(--color-border-default);
 }
 
 .tmdb-type-btn {
@@ -1508,7 +1552,7 @@ img.loading-fade.loaded {
 
 .tmdb-genre-btn {
     padding: 0.25rem 0.75rem;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 400;
@@ -1558,12 +1602,14 @@ img.loading-fade.loaded {
 }
 
 .tmdb-card-inner {
-    background: var(--card-bg);
-    border: 1px solid #2d2d2d;
+    background: rgba(20,20,20,0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border-default);
     border-radius: 0.75rem;
     overflow: hidden;
     cursor: pointer;
-    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    transition: var(--transition-default);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -1572,9 +1618,9 @@ img.loading-fade.loaded {
 }
 
 .tmdb-card-inner:hover {
-    border-color: #ec4899;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15);
+    border-color: rgba(236,72,153,0.3);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(236,72,153,0.15);
 }
 
 .tmdb-card-poster {
@@ -1688,7 +1734,7 @@ img.loading-fade.loaded {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-radius: 0.5rem;
     background: var(--card-bg);
     color: #a0aec0;
@@ -1832,7 +1878,7 @@ img.loading-fade.loaded {
     color: #a0aec0;
     margin-bottom: 0.75rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #2d2d2d;
+    border-bottom: 1px solid var(--color-border-default);
 }
 
 /* 历史记录网格 - 竖屏1列，横屏3列 */
@@ -1912,7 +1958,7 @@ img.loading-fade.loaded {
 
 .dash-card {
     background: var(--card-bg);
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-radius: 0.75rem;
     overflow: hidden;
     transition: border-color 0.2s ease;
@@ -1928,7 +1974,7 @@ img.loading-fade.loaded {
     gap: 0.5rem;
     padding: 0.75rem;
     background: #1a1a1a;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--color-border-default);
 }
 
 .dash-card-icon {
@@ -1965,7 +2011,7 @@ img.loading-fade.loaded {
     align-items: center;
     justify-content: center;
     background: #252525;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     border-radius: 0.375rem;
     cursor: pointer;
     font-size: 0.75rem;
@@ -2013,27 +2059,21 @@ img.loading-fade.loaded {
 }
 
 .dash-btn-green {
-    background: linear-gradient(135deg, #059669, #047857);
+    background: #ec4899;
 }
 
 .dash-btn-green:hover {
-    background: linear-gradient(135deg, #047857, #065f46);
+    background: #db2777;
 }
 
 .dash-btn-gray {
-    background: linear-gradient(135deg, #4b5563, #374151);
+    background: rgba(255,255,255,0.08);
+    color: #a0aec0;
 }
 
 .dash-btn-gray:hover {
-    background: linear-gradient(135deg, #374151, #1f2937);
-}
-
-.dash-btn-blue {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-}
-
-.dash-btn-blue:hover {
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    background: rgba(255,255,255,0.14);
+    color: #e2e8f0;
 }
 
 .dash-list-box {
@@ -2042,7 +2082,7 @@ img.loading-fade.loaded {
     background: #1a1a1a;
     padding: 0.5rem;
     border-radius: 0.5rem;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     margin-bottom: 0.5rem;
 }
 
@@ -2082,7 +2122,7 @@ img.loading-fade.loaded {
 .dash-input {
     width: 100%;
     background: #1a1a1a;
-    border: 1px solid #333;
+    border: 1px solid var(--color-border-default);
     color: white;
     padding: 0.4rem 0.625rem;
     border-radius: 0.375rem;
@@ -2115,7 +2155,7 @@ img.loading-fade.loaded {
 }
 
 .dash-switch-row + .dash-switch-row {
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--color-border-default);
 }
 
 .dash-switch-info {
@@ -2213,28 +2253,34 @@ img.loading-fade.loaded {
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.dash-action-btn-import {
-    background: #ec4899;
+.dash-action-btn-gray {
+    background: rgba(255,255,255,0.08);
+    color: #a0aec0;
 }
 
-.dash-action-btn-import:hover {
-    background: #db2777;
+.dash-action-btn-gray:hover {
+    background: rgba(255,255,255,0.14);
+    color: #e2e8f0;
 }
 
 .dash-action-btn-export {
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: rgba(255,255,255,0.08);
+    color: #a0aec0;
 }
 
 .dash-action-btn-export:hover {
-    background: linear-gradient(135deg, #2563eb, #0891b2);
+    background: rgba(255,255,255,0.14);
+    color: #e2e8f0;
 }
 
 .dash-action-btn-danger {
-    background: linear-gradient(135deg, #dc2626, #e11d48);
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
 }
 
 .dash-action-btn-danger:hover {
-    background: linear-gradient(135deg, #b91c1c, #be123c);
+    background: rgba(239, 68, 68, 0.25);
+    color: #fecaca;
 }
 
 /* 响应式导航栏 */
@@ -2474,6 +2520,16 @@ img.loading-fade.loaded {
     overflow: hidden;
 }
 
+/* 极光底部渐变遮罩 */
+.aurora-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.4) 70%, #000 95%);
+    pointer-events: none;
+    z-index: 1;
+}
+
 /* 内容层在极光之上 */
 .main-container,
 /* 更新日志时间线布局 */
@@ -2629,7 +2685,7 @@ body > header {
         align-items: center;
         gap: 0;
         background: #1a1a1a;
-        border: 1px solid #333;
+        border: 1px solid var(--color-border-default);
         border-radius: 12px;
         overflow: hidden;
         transition: border-color 0.2s;
