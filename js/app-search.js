@@ -469,13 +469,33 @@ async function search() {
         } catch (e) {}
 
         
-        // 构建搜索任务：每个API独立执行，结果立即追加
-        const searchTasks = selectedAPIs.map(async (apiId) => {
+        // 智能排序API源：快源优先，慢源后排
+        let orderedApis = [...selectedAPIs];
+        if (window.loadBalancer && typeof window.loadBalancer.getBestApi === 'function') {
+            orderedApis.sort((a, b) => {
+                const statA = window.loadBalancer.apiStats?.get(a);
+                const statB = window.loadBalancer.apiStats?.get(b);
+                const avgA = statA?.averageResponseTime || 9999;
+                const avgB = statB?.averageResponseTime || 9999;
+                return avgA - avgB; // 响应时间短的优先
+            });
+        }
+
+        // 全局搜索截止时间（避免最慢的源拖累整体体验）
+        const SEARCH_DEADLINE_MS = 12000;
+        const searchStartTime = Date.now();
+
+        // 构建搜索任务：排序后的API依次执行，结果立即追加
+        const searchTasks = orderedApis.map(async (apiId) => {
             try {
+                // 检查全局截止时间
+                if (Date.now() - searchStartTime > SEARCH_DEADLINE_MS) return;
+
                 if (window.loadBalancer && window.loadBalancer.isApiOverloaded(apiId)) {
                     return;
                 }
                 const results = await searchByAPIAndKeyWord(apiId, query);
+                if (Date.now() - searchStartTime > SEARCH_DEADLINE_MS) return; // 超时后丢弃慢源结果
                 if (!results || results.length === 0) return;
 
                 let filtered = results;

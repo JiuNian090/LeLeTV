@@ -1,6 +1,6 @@
 // 搜索缓存
 const _searchCache = new Map();
-const SEARCH_CACHE_TTL = 5 * 60 * 1000; // 缓存5分钟
+const SEARCH_CACHE_TTL = 30 * 60 * 1000; // 缓存30分钟
 
 function _getCacheKey(apiId, query) {
     return `${apiId}_${query.toLowerCase()}`;
@@ -65,7 +65,7 @@ async function searchByAPIAndKeyWord(apiId, query) {
         
         // 添加超时处理
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), AGGREGATED_SEARCH_CONFIG?.timeout || 8000);
         
         // 添加鉴权参数到代理URL
         const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
@@ -121,7 +121,7 @@ async function searchByAPIAndKeyWord(apiId, query) {
                 const pagePromise = (async () => {
                     try {
                         const pageController = new AbortController();
-                        const pageTimeoutId = setTimeout(() => pageController.abort(), 15000);
+                        const pageTimeoutId = setTimeout(() => pageController.abort(), AGGREGATED_SEARCH_CONFIG?.timeout || 8000);
                         
                         // 添加鉴权参数到代理URL
                         const proxiedPageUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 

@@ -6,27 +6,27 @@ function createHlsConfig() {
         debug: false,
         loader: adFilteringEnabled ? CustomHlsJsLoader : Hls.DefaultConfig.loader,
         enableWorker: true,
-        lowLatencyMode: false,
-        backBufferLength: 90,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        maxBufferSize: 30 * 1000 * 1000,
-        maxBufferHole: 0.5,
-        fragLoadingMaxRetry: 6,
-        fragLoadingMaxRetryTimeout: 64000,
-        fragLoadingRetryDelay: 1000,
-        manifestLoadingMaxRetry: 3,
-        manifestLoadingRetryDelay: 1000,
-        levelLoadingMaxRetry: 4,
-        levelLoadingRetryDelay: 1000,
-        startLevel: -1,
-        abrEwmaDefaultEstimate: 500000,
-        abrBandWidthFactor: 0.95,
+        lowLatencyMode: true,           // 低延迟模式加速起播
+        backBufferLength: 60,           // 减小后向缓冲释放内存
+        maxBufferLength: 20,            // 减小前向缓冲，更快开始播放
+        maxMaxBufferLength: 40,
+        maxBufferSize: 20 * 1000 * 1000,
+        maxBufferHole: 0.3,             // 减小缓冲空洞容忍度
+        fragLoadingMaxRetry: 3,         // 减少重试次数
+        fragLoadingMaxRetryTimeout: 15000,
+        fragLoadingRetryDelay: 500,
+        manifestLoadingMaxRetry: 2,
+        manifestLoadingRetryDelay: 500,
+        levelLoadingMaxRetry: 3,
+        levelLoadingRetryDelay: 500,
+        startLevel: 1,                  // 从第二档清晰度起播（平衡速度与画质）
+        abrEwmaDefaultEstimate: 2000000, // 预估带宽从2Mbps开始，提升初始画质
+        abrBandWidthFactor: 0.9,
         abrBandWidthUpFactor: 0.7,
         abrMaxWithRealBitrate: true,
         stretchShortVideoTrack: true,
-        appendErrorMaxRetry: 5,
-        liveSyncDurationCount: 3,
+        appendErrorMaxRetry: 3,
+        liveSyncDurationCount: 2,
         liveDurationInfinity: false
     };
 }
