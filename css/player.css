@@ -423,6 +423,12 @@ input:checked + .slider:before {
     object-fit: cover !important;
 }
 
+/* 网页全屏（ArtPlayer fullscreenWeb）—— 隐藏原始布局 */
+body.fullscreen-active .aurora-bg,
+body.fullscreen-active main.container {
+    display: none !important;
+}
+
 /* 视频详情信息区域 - 玻璃效果 */
 .player-detail-info {
     background: rgba(26,26,26,0.5);

@@ -727,9 +727,11 @@ function createFullScreenController() {
         const container = document.getElementById('playerContainer');
         if (isFullScreen) {
             container.classList.add('fullscreen-active');
+            document.body.classList.add('fullscreen-active');
             document.addEventListener('mouseout', handleMouseOut);
         } else {
             container.classList.remove('fullscreen-active');
+            document.body.classList.remove('fullscreen-active');
             document.removeEventListener('mouseout', handleMouseOut);
             clearTimeout(hideTimer);
             clearTimeout(backBtnHideTimer);
