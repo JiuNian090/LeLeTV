@@ -11,7 +11,7 @@
 
     function loadFont() {
         if (fontReady) return Promise.resolve();
-        var font = new FontFace(FONT_NAME, 'url(/MapleMono-Italic.ttf)');
+        var font = new FontFace(FONT_NAME, 'url(/fonts/MapleMono-Italic.ttf)');
         return font.load().then(function () {
             document.fonts.add(font);
             return document.fonts.load('100px ' + FONT_NAME);

@@ -18,21 +18,32 @@ const STATIC_ASSETS = [
   '/css/styles.css',
 
   '/css/player.css',
-  '/js/config.js',
-  '/js/api-config.js',
-  '/js/proxy-auth.js',
-  '/js/loadBalancer.js',
-  '/js/ui.js',
-  '/js/api.js',
-  '/js/password.js',
-  '/js/search.js',
-  '/js/tmdb.js',
-  '/js/player-bridge.js',
-  '/js/app.js',
-  '/js/player.js',
-  '/js/version-utils.js',
-  '/js/version-updater.js',
-  '/js/cache-manager.js'
+  '/css/variables.css',
+
+  '/js/core/config.js',
+  '/js/api/api-config.js',
+  '/js/auth/proxy-auth.js',
+  '/js/api/loadBalancer.js',
+
+  '/js/ui/ui-core.js',
+  '/js/ui/ui-search-history.js',
+  '/js/ui/ui-viewing-history.js',
+  '/js/ui/ui.js',
+  '/js/api/api.js',
+  '/js/auth/password.js',
+  '/js/api/search.js',
+  '/js/api/tmdb.js',
+  '/js/player/player-core.js',
+  '/js/player/player-episodes.js',
+  '/js/player/player-ui.js',
+  '/js/player/player-bridge.js',
+  '/js/player/player.js',
+
+  '/js/app/app-search.js',
+  '/js/app/app-config.js',
+  '/js/app/app.js',
+  '/js/utils/version-updater.js',
+  '/js/core/cache-manager.js'
 ];
 
 // 最大缓存条目数限制
