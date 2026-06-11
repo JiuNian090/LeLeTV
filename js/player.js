@@ -14,17 +14,23 @@ function goHome(event) {
         return;
     }
 
-    // 按优先级确定返回地址
+    // 优先使用 URL back 参数（来自历史记录等外部跳转带入），否则交由浏览器处理历史栈
     const urlParams = new URLSearchParams(window.location.search);
-    const backUrl = urlParams.get('back')
-        || localStorage.getItem('lastSearchPage')
-        || document.referrer;
+    const backUrl = urlParams.get('back');
 
     if (backUrl) {
+        localStorage.removeItem('lastSearchPage');
         window.location.href = backUrl;
     } else {
-        window.location.href = '/index.html';
+        window.history.back();
     }
+
+    // 兜底：5 秒后如果还在当前页，强制跳转首页
+    setTimeout(() => {
+        if (document.getElementById('playerContainer')) {
+            window.location.href = '/index.html';
+        }
+    }, 5000);
 }
 
 // 页面加载时保存当前播放状态

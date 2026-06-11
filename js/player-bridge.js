@@ -86,8 +86,9 @@ async function playDirectly(id, vod_name, sourceCode) {
 
         let playerUrl = `player.html?url=${encodeURIComponent(episodeUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceCode)}&index=${episodeIndex}&id=${encodeURIComponent(id)}`;
         const currentPath = window.location.href;
-        if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?')) {
-            playerUrl += `&back=${encodeURIComponent(currentPath)}`;
+        // 从首页/搜索页进入时标记 back 为首页，返回时不会带上搜索状态
+        if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?') || currentPath.includes('/s=')) {
+            playerUrl += `&back=${encodeURIComponent(window.location.origin + '/index.html')}`;
         }
         window.location.href = playerUrl;
     } catch (e) {
@@ -229,8 +230,8 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
 
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
-    if (currentPath.includes('index.html') || currentPath.endsWith('/')) {
-        playerUrl += `&back=${encodeURIComponent(currentPath)}`;
+    if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?') || currentPath.includes('/s=')) {
+        playerUrl += `&back=${encodeURIComponent(window.location.origin + '/index.html')}`;
     }
 
     try {

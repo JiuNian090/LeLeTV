@@ -100,6 +100,30 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(checkHiddenAPIsSelected, 100);
 });
 
+// 检测 bfcache 恢复（从播放页返回时），清除陈旧搜索状态
+window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = '';
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('resultsArea')?.classList.add('hidden');
+        document.getElementById('searchArea')?.classList.remove('flex-1', 'mb-8');
+        document.querySelector('.home-layout')?.classList.remove('has-results');
+        document.getElementById('closeSearchResults')?.classList.add('hidden');
+        _lastAllResults = [];
+        _activeSourceFilter = 'all';
+        const filterTabs = document.getElementById('sourceFilterTabs');
+        if (filterTabs) filterTabs.innerHTML = '';
+        // 用 replaceState 修正 URL 不额外增加历史条目
+        if (window.location.pathname !== '/' || window.location.search) {
+            try {
+                window.history.replaceState({}, 'LeLeTV - 乐乐影视', '/');
+                document.title = 'LeLeTV - 乐乐影视';
+            } catch (e) {}
+        }
+    }
+});
+
 // 设置事件监听器
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
