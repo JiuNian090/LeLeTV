@@ -1,6 +1,5 @@
-// 全局变量（在 api-config.js 中初始化）
-var selectedAPIs = window.selectedAPIs;
-var customAPIs = window.customAPIs;
+// 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
+// var selectedAPIs / customAPIs 已在 api-config.js 中声明
 
 // 添加当前播放的集数索引
 let currentEpisodeIndex = 0;
@@ -361,6 +360,42 @@ function setupEventListeners() {
             _applySourceFilter(sourceFilter);
         });
     }
+
+    // 全局 data-action 事件委托（替代 HTML onclick）
+    document.addEventListener('click', function (e) {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        const action = el.dataset.action;
+        if (!action) return;
+
+        switch (action) {
+            case 'switch-page': switchPage(el.dataset.page); break;
+            case 'reset-home': resetToHome(); break;
+            case 'close-results': closeSearchResults(); break;
+            case 'search': search(); break;
+            case 'close-modal': closeModal(); break;
+            case 'open-disclaimer': openDisclaimerModal(); break;
+            case 'hide-password-modal': hidePasswordModal(); break;
+            case 'accept-disclaimer': closeDisclaimerModal(); break;
+            case 'select-all-apis': selectAllAPIs(true, true); break;
+            case 'deselect-all-apis': selectAllAPIs(false); break;
+            case 'reset-apis': resetDataSourceLogic(); break;
+            case 'show-add-custom-api': showAddCustomApiForm(); break;
+            case 'add-custom-api': addCustomApi(); break;
+            case 'cancel-add-custom-api': cancelAddCustomApi(); break;
+            case 'import-config': importConfig(); break;
+            case 'export-config': exportConfig(); break;
+            case 'clear-cache': clearLocalStorage(); break;
+        }
+    });
+
+    // 搜索框回车事件（独立绑定，不再用 onkeypress）
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            hideSearchHistory();
+            search();
+        }
+    });
 }
 
 // 重置搜索区域
@@ -863,20 +898,11 @@ function _applySourceFilter(sourceFilter) {
     }
 }
 
-// 设置邮箱点击事件处理器
+// 设置邮箱点击事件处理器（使用 .contact-link 类统一绑定）
 function setupEmailClickHandlers() {
-    const contactElements = [
-        document.getElementById('contactLeLe'),
-        document.getElementById('contactLeLe2'),
-        document.getElementById('contactLeLe3'),
-        document.getElementById('contactLeLe4'),
-        document.getElementById('contactLeLe5'),
-        document.getElementById('contactLeLe6'),
-        document.getElementById('contactLeLe7')
-    ];
+    const contactElements = document.querySelectorAll('.contact-link');
     contactElements.forEach(element => {
-        if (element) {
-            element.addEventListener('click', function() {
+        element.addEventListener('click', function() {
                 const email = 'jiunian929@gmail.com';
                 const originalText = this.textContent; // 保存原始文本
                 let clientOpened = false; // 标记客户端是否打开
@@ -936,7 +962,6 @@ function setupEmailClickHandlers() {
                     }
                 }, 1000); // 1秒后检查状态
             });
-        }
     });
 }
 
@@ -972,112 +997,52 @@ document.addEventListener('DOMContentLoaded', hookInput);
 
 // 从URL导入配置
 async function importConfigFromUrl() {
-    // 创建模态框元素
-    let modal = document.getElementById('importUrlModal');
-    if (modal) {
-        document.body.removeChild(modal);
-    }
+    showModal({
+        title: '从URL导入配置',
+        content: (body, overlay) => {
+            body.innerHTML = `
+                <div class="mb-4">
+                    <input type="text" id="configUrl" placeholder="输入配置文件URL" 
+                           class="w-full px-3 py-2 bg-[#222] border border-[var(--color-border-default)] rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button id="confirmUrlImport" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">导入</button>
+                    <button id="cancelUrlImport" class="bg-[#444] hover:bg-[#555] text-white px-4 py-2 rounded">取消</button>
+                </div>
+            `;
+            overlay.querySelector('#confirmUrlImport').addEventListener('click', async () => {
+                const url = document.getElementById('configUrl').value.trim();
+                if (!url) { showToast('请输入配置文件URL', 'warning'); return; }
+                try {
+                    const urlObj = new URL(url);
+                    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+                        showToast('URL必须以http://或https://开头', 'warning');
+                        return;
+                    }
+                } catch (e) { showToast('URL格式不正确', 'warning'); return; }
 
-    modal = document.createElement('div');
-    modal.id = 'importUrlModal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40';
-
-    modal.innerHTML = `
-        <div class="bg-[#191919] rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
-            <button id="closeUrlModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
-            
-            <h3 class="text-xl font-bold mb-4">从URL导入配置</h3>
-            
-            <div class="mb-4">
-                <input type="text" id="configUrl" placeholder="输入配置文件URL" 
-                       class="w-full px-3 py-2 bg-[#222] border border-[#333] rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-            </div>
-            
-            <div class="flex justify-end space-x-2">
-                <button id="confirmUrlImport" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">导入</button>
-                <button id="cancelUrlImport" class="bg-[#444] hover:bg-[#555] text-white px-4 py-2 rounded">取消</button>
-            </div>
-        </div`;
-
-    document.body.appendChild(modal);
-
-    // 关闭按钮事件
-    document.getElementById('closeUrlModal').addEventListener('click', () => {
-        document.body.removeChild(modal);
-    });
-
-    // 取消按钮事件
-    document.getElementById('cancelUrlImport').addEventListener('click', () => {
-        document.body.removeChild(modal);
-    });
-
-    // 确认导入按钮事件
-    document.getElementById('confirmUrlImport').addEventListener('click', async () => {
-        const url = document.getElementById('configUrl').value.trim();
-        if (!url) {
-            showToast('请输入配置文件URL', 'warning');
-            return;
-        }
-
-        // 验证URL格式
-        try {
-            const urlObj = new URL(url);
-            if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
-                showToast('URL必须以http://或https://开头', 'warning');
-                return;
-            }
-        } catch (e) {
-            showToast('URL格式不正确', 'warning');
-            return;
-        }
-
-        showLoading('正在从URL导入配置...');
-
-        try {
-            // 获取配置文件 - 直接请求URL
-            const response = await fetch(url, {
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/json'
+                showLoading('正在从URL导入配置...');
+                try {
+                    const response = await fetch(url, { mode: 'cors', headers: { 'Accept': 'application/json' } });
+                    if (!response.ok) throw '获取配置文件失败';
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) throw '响应不是有效的JSON格式';
+                    const config = await response.json();
+                    if (config.name !== 'LeLeTV-Settings') throw '配置文件格式不正确';
+                    const dataHash = await sha256(JSON.stringify(config.data));
+                    if (dataHash !== config.hash) throw '配置文件哈希值不匹配';
+                    for (let item in config.data) localStorage.setItem(item, config.data[item]);
+                    showToast('配置文件导入成功，3 秒后自动刷新本页面。', 'success');
+                    setTimeout(() => window.location.reload(), 3000);
+                } catch (error) {
+                    const message = typeof error === 'string' ? error : '导入配置失败';
+                    showToast(`从URL导入配置出错 (${message})`, 'error');
+                } finally {
+                    hideLoading();
+                    overlay.remove();
                 }
             });
-            if (!response.ok) throw '获取配置文件失败';
-
-            // 验证响应内容类型
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw '响应不是有效的JSON格式';
-            }
-
-            const config = await response.json();
-            if (config.name !== 'LeLeTV-Settings') throw '配置文件格式不正确';
-
-            // 验证哈希
-            const dataHash = await sha256(JSON.stringify(config.data));
-            if (dataHash !== config.hash) throw '配置文件哈希值不匹配';
-
-            // 导入配置
-            for (let item in config.data) {
-                localStorage.setItem(item, config.data[item]);
-            }
-
-            showToast('配置文件导入成功，3 秒后自动刷新本页面。', 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
-        } catch (error) {
-            const message = typeof error === 'string' ? error : '导入配置失败';
-            showToast(`从URL导入配置出错 (${message})`, 'error');
-        } finally {
-            hideLoading();
-            document.body.removeChild(modal);
-        }
-    });
-
-    // 点击模态框外部关闭
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
+            overlay.querySelector('#cancelUrlImport').addEventListener('click', () => overlay.remove());
         }
     });
 }

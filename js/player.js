@@ -385,6 +385,20 @@ function initializePageContent() {
             clearInterval(waitForVideo);
         }
     }, 200);
+
+    // 全局 data-action 事件委托（替代 player.html onclick）
+    document.addEventListener('click', function (e) {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        switch (el.dataset.action) {
+            case 'go-home': goHome(e); break;
+            case 'toggle-detail': toggleDetailInfo(); break;
+            case 'toggle-episodes': toggleEpisodeSection(); break;
+            case 'toggle-episode-order': e.stopPropagation(); toggleEpisodeOrder(); break;
+            case 'copy-links': copyLinks(); break;
+            case 'close-modal': closeModal(); break;
+        }
+    });
 }
 
 // 处理键盘快捷键

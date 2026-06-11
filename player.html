@@ -30,7 +30,7 @@
                 <h2 class="text-2xl font-bold gradient-text">访问验证</h2>
             </div>
             <div class="mb-6">
-                <p class="text-gray-300 mb-4">请输入密码继续访问，如若密码错误可以<span id="contactLeLe4" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码</p>
+                <p class="text-gray-300 mb-4">请输入密码继续访问，如若密码错误可以<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码</p>
                 <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;">
                     <input type="text" name="username" id="username" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true">
                     <input type="password" id="passwordInput" class="w-full bg-[#111] border border-[var(--color-border-default)] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="密码..." autocomplete="new-password">
@@ -46,7 +46,7 @@
             <!-- 左栏：视频播放区 -->
             <div class="player-layout-left">
                 <div id="playerContainer" class="player-container">
-                    <button onclick="goHome(event)" class="player-back-btn" title="返回首页">
+                    <button data-action="go-home" class="player-back-btn" title="返回首页">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
@@ -83,7 +83,7 @@
                 <div class="player-detail-info" id="playerDetailInfo">
                     <div class="detail-title-row">
                         <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
-                        <div class="detail-toggle-header" onclick="toggleDetailInfo()">
+                        <div class="detail-toggle-header" data-action="toggle-detail">
                             <span class="detail-desc-label">详情</span>
                             <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -98,10 +98,10 @@
 
                 <!-- 选集区域（可折叠） -->
                 <div class="player-container player-right-item episode-section" id="episodeSection">
-                    <div class="detail-toggle-header" onclick="toggleEpisodeSection()">
+                    <div class="detail-toggle-header" data-action="toggle-episodes">
                         <div class="episode-title-group">
                             <h3 class="episode-section-title">选集</h3>
-                            <button onclick="event.stopPropagation(); toggleEpisodeOrder()" class="episode-order-btn" title="切换排序">
+                            <button data-action="toggle-episode-order" class="episode-order-btn" title="切换排序">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" id="orderIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="3" y1="6" x2="21" y2="6"/><polyline points="17 2 21 6 17 10"/>
                                     <line x1="21" y1="18" x2="3" y2="18"/><polyline points="7 14 3 18 7 22"/>
@@ -142,7 +142,7 @@
                         </div>
 
                         <!-- 复制链接按钮 -->
-                        <button title="复制播放链接" onclick="copyLinks()"
+                        <button data-action="copy-links" title="复制播放链接"
                                 class="flex items-center gap-1.5 control-btn px-3 py-1 rounded-lg justify-center bg-[rgba(255,255,255,0.02)] border border-[#2a2a2a] hover:bg-[rgba(255,255,255,0.05)] transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -168,7 +168,7 @@
         <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-4xl border border-[var(--color-border-default)] max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-6 flex-none">
                 <h2 id="modalTitle" class="text-2xl font-bold gradient-text break-words pr-4 max-w-[80%]"></h2>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl transition-colors flex-shrink-0">&times;</button>
+                <button data-action="close-modal" class="text-gray-400 hover:text-white text-2xl transition-colors flex-shrink-0">&times;</button>
             </div>
             <div id="modalContent" class="overflow-auto flex-1 min-h-0">
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">

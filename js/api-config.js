@@ -20,40 +20,33 @@ function verifyAdminPassword() {
             return;
         }
 
-        // 创建密码输入弹窗
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/95 items-center justify-center z-[70]';
-        modal.style.display = 'flex';
-        modal.innerHTML = `
-            <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold gradient-text">隐藏内容验证</h2>
-                </div>
-                <div class="mb-6">
+        const overlay = showModal({
+            title: '隐藏内容验证',
+            content: (body) => {
+                body.innerHTML = `
                     <p class="text-gray-300 mb-4">请输入隐藏密码以解锁🔓隐藏🈲内容过滤设置，密码提示:⟲</p>
-                    <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="管理员密码...">
+                    <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[var(--color-border-default)] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="管理员密码...">
                     <div class="mt-4 flex space-x-4">
                         <button id="adminPasswordSubmitBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">确认</button>
                         <button id="adminPasswordCancelBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">取消</button>
                     </div>
-                </div>
-                <p id="adminPasswordError" class="text-red-500 mt-2 hidden">隐藏密码错误，请重试，试试password反过来！</p>
-            </div>
-        `;
+                    <p id="adminPasswordError" class="text-red-500 mt-2 hidden">隐藏密码错误，请重试，试试password反过来！</p>
+                `;
+            }
+        });
 
-        document.body.appendChild(modal);
+        // 提升 z-index 使其高于其他弹窗
+        overlay.style.zIndex = '70';
 
-        const passwordInput = modal.querySelector('#adminPasswordInput');
-        const submitBtn = modal.querySelector('#adminPasswordSubmitBtn');
-        const cancelBtn = modal.querySelector('#adminPasswordCancelBtn');
-        const errorMsg = modal.querySelector('#adminPasswordError');
+        const passwordInput = overlay.querySelector('#adminPasswordInput');
+        const submitBtn = overlay.querySelector('#adminPasswordSubmitBtn');
+        const cancelBtn = overlay.querySelector('#adminPasswordCancelBtn');
+        const errorMsg = overlay.querySelector('#adminPasswordError');
 
         // 聚焦到密码输入框
-        passwordInput.focus();
+        setTimeout(() => passwordInput?.focus(), 100);
 
-        const cleanup = () => {
-            document.body.removeChild(modal);
-        };
+        const cleanup = () => { overlay.remove(); resolve(false); };
 
         const verifyPassword = async () => {
             const inputPassword = passwordInput.value.trim();
@@ -67,7 +60,7 @@ function verifyAdminPassword() {
                 // 使用与服务器端相同的哈希方法
                 const inputHash = await window._jsSha256(inputPassword);
                 if (inputHash === adminPasswordHash) {
-                    cleanup();
+                    overlay.remove();
                     resolve(true);
                 } else {
                     errorMsg.textContent = '隐藏内容密码错误，请重试';
@@ -82,24 +75,16 @@ function verifyAdminPassword() {
         };
 
         submitBtn.addEventListener('click', verifyPassword);
-        cancelBtn.addEventListener('click', () => {
-            cleanup();
-            resolve(false);
-        });
+        cancelBtn.addEventListener('click', cleanup);
 
         // 支持回车键提交
         passwordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                verifyPassword();
-            }
+            if (e.key === 'Enter') verifyPassword();
         });
 
         // 支持ESC键取消
-        modal.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                cleanup();
-                resolve(false);
-            }
+        overlay.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') cleanup();
         });
     });
 }

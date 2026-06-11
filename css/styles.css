@@ -43,17 +43,6 @@
     --ease-out-quart: cubic-bezier(0.25, 0.46, 0.45, 0.94);
     --transition-default: 0.35s var(--ease-out-expo);
 
-    /* 兼容旧名称，逐步迁移 */
-    --color-border:           var(--color-border-default);
-    --color-border-hover:     rgba(255,255,255,0.18);
-    --primary-color: #ec4899;
-    --primary-light: #33d6ff;
-    --secondary-color: #000000;
-    --accent-color: #ec4899;
-    --text-color: #e6f2ff;
-    --text-muted: #8599b2;
-    --border-color: #333333;
-    --card-bg: #141414;
 }
 
 .page-bg {
@@ -68,7 +57,7 @@ button, .card-hover {
 /* 改进卡片适应不同内容长度 */
 .card-hover {
     border: 1px solid var(--color-border-default);
-    background: var(--card-bg);
+    background: var(--color-surface-raised);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(0,0,0,0.4);
     position: relative;
     overflow: hidden;
@@ -174,12 +163,12 @@ button, .card-hover {
 }
 
 .search-tag {
-    background: var(--card-bg);
-    color: var(--text-color);
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.875rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-default);
     -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     -moz-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -214,7 +203,7 @@ button, .card-hover {
     font-size: 0.75rem;
     font-weight: 400;
     color: #a0aec0;
-    background: var(--card-bg);
+    background: var(--color-surface-raised);
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -463,8 +452,8 @@ body {
 }
 
 #modal > div {
-    background: var(--card-bg);
-    border: 1px solid var(--color-border);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-default);
     -webkit-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     -moz-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
@@ -808,7 +797,7 @@ body {
 .history-title {
     font-size: 1.05rem;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--color-text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -846,7 +835,7 @@ body {
 }
 
 .history-episode-total {
-    color: var(--text-muted);
+    color: var(--color-text-secondary);
     font-size: 0.7rem;
 }
 
@@ -1156,7 +1145,7 @@ img.loading-fade.loaded {
 /* 详情模态框样式优化 */
 #modal .modal-detail-info {
     background: var(--color-surface-subtle);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-default);
     border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -1569,7 +1558,7 @@ img.loading-fade.loaded {
     font-size: 0.75rem;
     font-weight: 400;
     color: #a0aec0;
-    background: var(--card-bg);
+    background: var(--color-surface-raised);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1748,7 +1737,7 @@ img.loading-fade.loaded {
     justify-content: center;
     border: 1px solid var(--color-border-default);
     border-radius: 0.5rem;
-    background: var(--card-bg);
+    background: var(--color-surface-raised);
     color: #a0aec0;
     font-size: 0.8125rem;
     cursor: pointer;
@@ -1969,7 +1958,7 @@ img.loading-fade.loaded {
 }
 
 .dash-card {
-    background: var(--card-bg);
+    background: var(--color-surface-raised);
     border: 1px solid var(--color-border-default);
     border-radius: 0.75rem;
     overflow: hidden;
