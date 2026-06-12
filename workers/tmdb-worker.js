@@ -60,7 +60,7 @@ async function handleRequest(request, event) {
   const cache = caches.default;
 
   if (url.pathname === '/' && !url.searchParams.has('endpoint')) {
-    return jsonResponse({ error: '缺少 endpoint 参数，使用 ?endpoint=discover/movie&page=1' }, 400, 0);
+    return jsonResponse({ success: false }, 400, 0);
   }
 
   let endpoint = url.searchParams.get('endpoint') || '';
