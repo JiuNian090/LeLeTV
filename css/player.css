@@ -430,19 +430,13 @@ body.fullscreen-active main.container {
 }
 
 /* ==================== 浏览器原生全屏防卡顿/屏闪 ==================== */
-/* 进入原生全屏时：关闭 backdrop-filter、动画、过渡，防止 GPU 重绘卡顿 */
+/* 进入原生全屏时：关闭 backdrop-filter，防止 GPU 重绘卡顿 */
 body.native-fs-active .player-detail-info,
 body.native-fs-active .episode-section,
 body.native-fs-active #resourceInfoBarContainer,
 body.native-fs-active .control-buttons-container {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-}
-
-body.native-fs-active .art-video-player video {
-    will-change: auto !important;
-    -webkit-transform: none !important;
-    transform: none !important;
 }
 
 /* 退出全屏时：冻结所有过渡/动画 200ms，避免视口变化过程中的屏闪 */

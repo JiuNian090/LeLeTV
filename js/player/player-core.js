@@ -421,7 +421,17 @@ function setupNativeFullscreenHandler() {
     let fsTimeout = null;
 
     function onNativeFullScreenChange() {
-        const isNativeFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
+        const isNativeFullscreen = !!fsElement;
+
+        // 排除 ArtPlayer 自身的全屏：ArtPlayer 在播放器容器上调用 requestFullscreen
+        // 此时 fsElement 是播放器容器或其子元素，不应添加 native-fs-active
+        if (isNativeFullscreen) {
+            const playerContainer = document.getElementById('playerContainer') || document.getElementById('player');
+            if (playerContainer && (playerContainer === fsElement || playerContainer.contains(fsElement))) {
+                return;
+            }
+        }
 
         clearTimeout(fsTimeout);
         document.body.classList.remove('native-fs-exiting');
