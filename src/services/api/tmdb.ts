@@ -246,9 +246,9 @@ function buildTmdbParams(): Record<string, string> {
 }
 
 /**
- * 获取 TMDB 发现列表
+ * 获取 TMDB 发现列表（自定义 24 条/页，内部合并 2 页 TMDB 原始响应）
  */
-export async function fetchTmdbDiscover(): Promise<TmdbResponse | null> {
+export async function fetchTmdbDiscover(): Promise<{ results: TmdbResult[]; total_pages: number } | null> {
   TMDB_STATE.isLoading = true;
 
   try {
@@ -259,23 +259,64 @@ export async function fetchTmdbDiscover(): Promise<TmdbResponse | null> {
       return null;
     }
 
+    const isMovie = TMDB_STATE.type === 'movie';
+    const endpoint = isMovie ? 'discover/movie' : 'discover/tv';
     const params = buildTmdbParams();
-    const endpoint = TMDB_STATE.type === 'movie' ? 'discover/movie' : 'discover/tv';
-    const queryString = new URLSearchParams(params).toString();
-    const url = `${tmdbWorkerUrl}/3/${endpoint}?${queryString}`;
 
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`TMDB 请求失败: ${response.status}`);
+    // 年份处理
+    if (TMDB_STATE.selectedYear === '1980s') {
+      params[isMovie ? 'primary_release_date.gte' : 'first_air_date.gte'] = '1980-01-01';
+      params[isMovie ? 'primary_release_date.lte' : 'first_air_date.lte'] = '1989-12-31';
+    } else if (TMDB_STATE.selectedYear === '1970s') {
+      params[isMovie ? 'primary_release_date.gte' : 'first_air_date.gte'] = '1970-01-01';
+      params[isMovie ? 'primary_release_date.lte' : 'first_air_date.lte'] = '1979-12-31';
+    } else if (TMDB_STATE.selectedYear === '1960s') {
+      params[isMovie ? 'primary_release_date.gte' : 'first_air_date.gte'] = '1900-01-01';
+      params[isMovie ? 'primary_release_date.lte' : 'first_air_date.lte'] = '1969-12-31';
+    } else if (TMDB_STATE.selectedYear) {
+      if (isMovie) params.year = TMDB_STATE.selectedYear;
+      else params.first_air_date_year = TMDB_STATE.selectedYear;
     }
 
-    const data: TmdbResponse = await response.json();
-    TMDB_STATE.totalPages = Math.min(data.total_pages, 500);
+    // 地区过滤
+    if (TMDB_STATE.originCountry) {
+      if (isMovie) params.region = TMDB_STATE.originCountry;
+      else params.with_origin_country = TMDB_STATE.originCountry;
+    }
+
+    // 投票数过滤
+    params['vote_count.gte'] = '10';
+
+    // 自定义分页：24条/页，内部合并2页TMDB
+    const ourPage = TMDB_STATE.page;
+    const startIdx = (ourPage - 1) * 24;
+    const tmdbPage1 = Math.floor(startIdx / 20) + 1;
+    const offset = startIdx % 20;
+
+    const buildUrl = (p: number) => {
+      const pParams = { ...params, page: String(p) };
+      return `${tmdbWorkerUrl}/3/${endpoint}?${new URLSearchParams(pParams).toString()}`;
+    };
+
+    const [resp1, resp2] = await Promise.all([
+      fetch(buildUrl(tmdbPage1)),
+      tmdbPage1 + 1 <= 500 ? fetch(buildUrl(tmdbPage1 + 1)) : Promise.resolve(null),
+    ]);
+
+    if (!resp1?.ok) throw new Error(`TMDB 请求失败: ${resp1?.status}`);
+
+    const data1: TmdbResponse = await resp1.json();
+    const data2: TmdbResponse | null = resp2?.ok ? await resp2.json() : null;
+
+    let results = [...(data1.results || []), ...(data2?.results || [])];
+    results = results.slice(offset, offset + 24);
+
+    const totalTmdbPages = Math.min(data1.total_pages || 1, 500);
+    TMDB_STATE.totalPages = Math.min(Math.ceil((totalTmdbPages * 20) / 24), 500);
     TMDB_STATE.isLoaded = true;
     TMDB_STATE.isLoading = false;
 
-    return data;
+    return { results: results as TmdbResult[], total_pages: TMDB_STATE.totalPages };
   } catch (error) {
     console.error('TMDB 发现列表获取失败:', error);
     TMDB_STATE.isLoading = false;

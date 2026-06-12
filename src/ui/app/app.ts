@@ -7,6 +7,7 @@ import { initAurora } from '../../effects/aurora-bg';
 import { initTitleAnimation } from '../../effects/title-animation';
 import { setupSearchReady, executeSearch, getAllResults } from './app-search';
 import { initAPICheckboxes, renderCustomAPIsList, loadSelectedAPIs, selectAllAPIs, resetAPIs, exportConfig, importConfig, importConfigFromUrl, addCustomApi, removeCustomApi } from './app-config';
+import { initTmdbCategory, loadTmdbResults } from './app-category';
 import { loadViewingHistory, playFromHistory, clearAllHistory, deleteHistoryItem } from '../../services/history';
 import { showToast, showLoading, hideLoading } from '../components/toast';
 import { showModal, clearLocalStorage } from '../components/modal';
@@ -209,6 +210,12 @@ export function handleAction(action: string, element: HTMLElement): void {
       break;
     }
 
+    // === TMDB ===
+    case 'load-tmdb-results': {
+      loadTmdbResults();
+      break;
+    }
+
     // === 页面切换 ===
     case 'switch-page': {
       const page = element.dataset.page;
@@ -236,11 +243,7 @@ function showPage(pageName: string): void {
   // 页面特定初始化
   switch (pageName) {
     case 'category':
-      import('../../services/api/tmdb').then(() => {
-        if (typeof (window as any).initTmdbCategory === 'function') {
-          (window as any).initTmdbCategory();
-        }
-      });
+      initTmdbCategory();
       break;
     case 'history':
       loadViewingHistory();
@@ -267,6 +270,8 @@ function switchPage(pageName: string): void {
 // 暴露到 window 供全局调用
 (window as any).switchPage = switchPage;
 (window as any).showPage = showPage;
+(window as any).initTmdbCategory = initTmdbCategory;
+(window as any).loadTmdbResults = loadTmdbResults;
 
 function handleHashChange(): void {
   showPage(location.hash.slice(1) || 'home');
@@ -423,21 +428,31 @@ function parseAndRenderChangelog(markdown: string): HTMLElement {
 
 // ==================== DOM 就绪初始化 ====================
 
-if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initApp();
+function bootApp(): void {
+  // 如果已经执行过，跳过
+  if ((window as any).__bootAppDone) return;
+  (window as any).__bootAppDone = true;
 
-    // hash 路由
-    showPage(location.hash.slice(1) || 'home');
-    window.addEventListener('hashchange', handleHashChange);
+  initApp();
 
-    // data-action 事件委托
-    document.addEventListener('click', (e) => {
-      const target = (e.target as HTMLElement).closest('[data-action]') as HTMLElement;
-      if (target) {
-        const action = target.dataset.action;
-        if (action) handleAction(action, target);
-      }
-    });
+  // hash 路由
+  showPage(location.hash.slice(1) || 'home');
+  window.addEventListener('hashchange', handleHashChange);
+
+  // data-action 事件委托
+  document.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('[data-action]') as HTMLElement;
+    if (target) {
+      const action = target.dataset.action;
+      if (action) handleAction(action, target);
+    }
   });
+}
+
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootApp);
+  } else {
+    bootApp();
+  }
 }

@@ -128,67 +128,73 @@ window.addEventListener('pageshow', (event: PageTransitionEvent) => {
   }
 });
 
-// ==================== DOM 就绪初始化 ====================
+function bootPlayer(): void {
+  initPlayerPage();
+  setupEventDelegation();
+}
+
+function setupEventDelegation(): void {
+  document.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('[data-action]') as HTMLElement;
+    if (!target) return;
+    const action = target.dataset.action;
+    if (!action) return;
+
+    switch (action) {
+      case 'go-home':
+        (window as any).goHome(e);
+        break;
+      case 'close-modal': {
+        const modal = document.getElementById('modal');
+        if (modal) modal.style.display = 'none';
+        break;
+      }
+      case 'toggle-episodes': {
+        const section = document.getElementById('episodeSection');
+        if (section) section.classList.toggle('collapsed');
+        break;
+      }
+      case 'toggle-detail': {
+        const section = document.getElementById('detailDescSection');
+        if (section) section.classList.toggle('collapsed');
+        break;
+      }
+      case 'toggle-episode-order': {
+        import('./services/player/player-episodes').then((m) => m.toggleEpisodeOrder());
+        break;
+      }
+      case 'play-episode': {
+        const idx = parseInt(target.dataset.index || '-1');
+        import('./services/player/player-episodes').then((m) => m.playEpisode(idx));
+        break;
+      }
+      case 'prev-episode': {
+        import('./services/player/player-episodes').then((m) => m.playPreviousEpisode());
+        break;
+      }
+      case 'next-episode': {
+        import('./services/player/player-episodes').then((m) => m.playNextEpisode());
+        break;
+      }
+      case 'copy-links': {
+        const url = new URLSearchParams(window.location.search).get('url') || '';
+        if (url) {
+          navigator.clipboard.writeText(url).then(() => {
+            if (typeof (window as any).showToast === 'function') {
+              (window as any).showToast('播放链接已复制', 'success');
+            }
+          });
+        }
+        break;
+      }
+    }
+  });
+}
 
 if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initPlayerPage();
-
-    // data-action 事件委托
-    document.addEventListener('click', (e) => {
-      const target = (e.target as HTMLElement).closest('[data-action]') as HTMLElement;
-      if (!target) return;
-      const action = target.dataset.action;
-      if (!action) return;
-
-      switch (action) {
-        case 'go-home':
-          (window as any).goHome(e);
-          break;
-        case 'close-modal': {
-          const modal = document.getElementById('modal');
-          if (modal) modal.style.display = 'none';
-          break;
-        }
-        case 'toggle-episodes': {
-          const section = document.getElementById('episodeSection');
-          if (section) section.classList.toggle('collapsed');
-          break;
-        }
-        case 'toggle-detail': {
-          const section = document.getElementById('detailDescSection');
-          if (section) section.classList.toggle('collapsed');
-          break;
-        }
-        case 'toggle-episode-order': {
-          import('./services/player/player-episodes').then((m) => m.toggleEpisodeOrder());
-          break;
-        }
-        case 'play-episode': {
-          const idx = parseInt(target.dataset.index || '-1');
-          import('./services/player/player-episodes').then((m) => m.playEpisode(idx));
-          break;
-        }
-        case 'prev-episode': {
-          import('./services/player/player-episodes').then((m) => m.playPreviousEpisode());
-          break;
-        }
-        case 'next-episode': {
-          import('./services/player/player-episodes').then((m) => m.playNextEpisode());
-          break;
-        }
-        case 'copy-links': {
-          const url = new URLSearchParams(window.location.search).get('url') || '';
-          if (url) {
-            navigator.clipboard.writeText(url).then(() => {
-              if (typeof (window as any).showToast === 'function') {
-                (window as any).showToast('播放链接已复制', 'success');
-              }
-            });
-          }
-          break;
-        }
-      }
-    });
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootPlayer);
+  } else {
+    bootPlayer();
+  }
 }

@@ -114,7 +114,7 @@ export const PlayerManager = {
 
   /** 清空所有定时器 */
   _clearAllTimers(): void {
-    this._intervals.forEach((id) => {
+    this._intervals.forEach((id: number) => {
       try {
         clearInterval(id);
       } catch {
@@ -123,7 +123,7 @@ export const PlayerManager = {
     });
     this._intervals = [];
 
-    this._timeouts.forEach((id) => {
+    this._timeouts.forEach((id: number) => {
       try {
         clearTimeout(id);
       } catch {

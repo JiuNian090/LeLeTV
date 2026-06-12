@@ -14,9 +14,7 @@
     },
 
     /* 渐进式严格模式 */
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
+    "strict": true,
 
     /* 兼容现有 JS 文件 */
     "allowJs": true,
