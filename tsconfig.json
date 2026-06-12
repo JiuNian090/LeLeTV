@@ -8,6 +8,7 @@
 
     /* 路径别名（与 vite.config.ts 一致） */
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["src/*"]
     },
