@@ -264,9 +264,54 @@ function switchPage(pageName: string): void {
   }
 }
 
+// 暴露到 window 供全局调用
+(window as any).switchPage = switchPage;
+(window as any).showPage = showPage;
+
 function handleHashChange(): void {
   showPage(location.hash.slice(1) || 'home');
 }
+
+// ==================== 公开 API（供内联 onclick 等向后兼容） ====================
+
+/** 切换到关于页面并滚动到指定区块 */
+(window as any).switchToAbout = function (section?: string): void {
+  switchPage('about');
+  if (section) {
+    setTimeout(() => {
+      const el = document.getElementById(section);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+};
+
+(window as any).toggleHistory = function (event?: Event): void {
+  event?.stopPropagation();
+  switchPage('history');
+};
+
+(window as any).toggleSettings = function (event?: Event): void {
+  event?.stopPropagation();
+  switchPage('settings');
+};
+
+(window as any).focusSearch = function (): void {
+  switchPage('home');
+  setTimeout(() => {
+    document.getElementById('searchInput')?.focus();
+  }, 100);
+};
+
+(window as any).openDisclaimerModal = function (): void {
+  const modal = document.getElementById('disclaimerModal');
+  if (modal) modal.style.display = 'flex';
+};
+
+(window as any).closeDisclaimerModal = function (): void {
+  localStorage.setItem('lastAcceptedDisclaimer', String(Date.now()));
+  const modal = document.getElementById('disclaimerModal');
+  if (modal) modal.style.display = 'none';
+};
 
 // ==================== 关于页面 ====================
 

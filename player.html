@@ -201,78 +201,15 @@
     <script src="libs/hls.min.js?v=v2.8.4" defer crossorigin="anonymous"></script>
     <script src="libs/artplayer.min.js?v=v2.8.4" defer crossorigin="anonymous"></script>
 
-    <script src="js/core/config.js?v=v2.8.4" defer></script>
-    <script src="js/core/leletv-global.js?v=v2.8.4" defer></script>
-    <script src="js/core/storage-service.js?v=v2.8.4" defer></script>
-    <script src="js/core/listener-tracker.js?v=v2.8.4" defer></script>
-    <script src="js/core/timing.js?v=v2.8.4" defer></script>
-    <script src="js/auth/proxy-auth.js?v=v2.8.4" defer></script>
-    <script src="js/auth/password.js?v=v2.8.4" defer></script>
-    <script src="js/ui/ui-core.js?v=v2.8.4" defer></script>
-    <script src="js/ui/ui-search-history.js?v=v2.8.4" defer></script>
-    <script src="js/ui/ui-viewing-history.js?v=v2.8.4" defer></script>
-    <script src="js/ui/ui.js?v=v2.8.4" defer></script>
-    <script src="js/api/api.js?v=v2.8.4" defer></script>
-    <script src="js/api/search.js?v=v2.8.4" defer></script>
-    <script src="js/player/player-manager.js?v=v2.8.4" defer></script>
-    <script src="js/player/player-core.js?v=v2.8.4" defer></script>
-    <script src="js/player/player-episodes.js?v=v2.8.4" defer></script>
-    <script src="js/player/player-ui.js?v=v2.8.4" defer></script>
-    <script src="js/player/player.js?v=v2.8.4" defer></script>
 
+    <!-- Vite 入口 -->
+    <script type="module" src="/src/player.ts"></script>
+
+    <!-- 环境变量注入脚本 -->
     <script>
-        // 创建全局环境变量对象
         window.__ENV__ = window.__ENV__ || {};
-        
-        // 注入服务器端环境变量 (将由服务器端替换)
-        // PASSWORD 变量将在这里被服务器端注入
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
         window.__LELETV_VERSION__ = "v2.8.4";
-
-        // 确保首页按钮功能正常
-        function ensureGoHome() {
-            if (typeof goHome !== 'function') {
-                window.goHome = function(event) {
-                    if (event) event.preventDefault();
-                    try {
-                        window.location.href = '/';
-                    } catch (e) {
-                        window.location.assign('/');
-                    }
-                };
-            }
-        }
-        
-        // 页面加载后立即执行
-        ensureGoHome();
-        
-        // DOM加载完成后再次确保
-        document.addEventListener('DOMContentLoaded', ensureGoHome);
-
-
-    </script>
-    <!-- 版本更新检测模块 -->
-    <script src="js/utils/version-updater.js?v=v2.8.4" defer></script>
-    <!-- 缓存管理模块 -->
-    <script src="js/core/cache-manager.js?v=v2.8.4" defer></script>
-    <script src="js/effects/aurora-bg.js?v=v2.8.4"></script>
-    <script src="js/app/app-search.js?v=v2.8.4" defer></script>
-    <script src="js/app/app-config.js?v=v2.8.4" defer></script>
-    <script src="js/app/app.js?v=v2.8.4" defer></script>
-    <script>
-        // 初始化邮箱点击处理器
-        document.addEventListener('DOMContentLoaded', function() {
-            initAurora({
-                selector: '#auroraContainer',
-                colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
-                amplitude: 0.5,
-                blend: 0.8,
-                speed: 0.5
-            });
-            if (typeof setupEmailClickHandlers === 'function') {
-                setupEmailClickHandlers();
-            }
-        });
     </script>
 </body>
 </html>
