@@ -42,4 +42,37 @@
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-out-quart: cubic-bezier(0.25, 0.46, 0.45, 0.94);
     --transition-default: 0.35s var(--ease-out-expo);
+
+    /* ==================== 布局 ==================== */
+
+    /* 间距体系（4px 递增） */
+    --space-1:   4px;
+    --space-2:   8px;
+    --space-3:   12px;
+    --space-4:   16px;
+    --space-5:   20px;
+    --space-6:   24px;
+    --space-8:   32px;
+    --space-10:  40px;
+    --space-12:  48px;
+    --space-16:  64px;
+
+    /* 圆角 */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* 容器最大宽度 */
+    --content-max-width: 1280px;
+    --search-bar-max-width: 1024px;
+
+    /* 导航栏高度 */
+    --nav-height: 64px;
+
+    /* 卡片尺寸 */
+    --card-min-height: 120px;
+    --card-img-width: 120px;
+    --card-img-height: 168px;
 }
