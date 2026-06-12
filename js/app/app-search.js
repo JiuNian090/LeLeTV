@@ -644,7 +644,7 @@ function _buildSearchCardsHtml(items) {
         const hasCover = item.vod_pic && item.vod_pic.startsWith('http');
 
         return `
-            <div class="card-hover rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
+            <div class="card-hover search-result-card rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
                  data-action="play-directly" 
                  data-id="${safeId}"
                  data-name="${safeName}"
@@ -652,35 +652,31 @@ function _buildSearchCardsHtml(items) {
                  ${apiUrlAttr}>
                 <div class="flex h-full">
                     ${hasCover ? `
-                    <div class="relative flex-shrink-0 search-card-img-container image-container">
+                    <div class="search-card-img-container">
                         <img src="${item.vod_pic}" alt="${safeName}" loading="lazy"
-                             class="h-full w-full object-cover transition-transform hover:scale-110 loading-fade" 
+                             class="loading-fade" 
                              onerror="this.onerror=null; this.src='https://via.placeholder.com/300x450?text=无封面'; this.classList.add('object-contain');"
                              onload="this.classList.add('loaded')">
-                        <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
                     </div>` : ''}
                     
-                    <div class="p-3 flex flex-col flex-grow min-w-0">
-                        <div class="flex-grow">
-                            <h3 class="font-semibold mb-2 break-words line-clamp-2 ${hasCover ? '' : 'text-center'}" title="${safeName}">${safeName}</h3>
+                    <div class="card-content">
+                        <div class="card-content-header">
+                            <h3 title="${safeName}">${safeName}</h3>
                             
-                            <div class="flex flex-wrap ${hasCover ? '' : 'justify-center'} gap-1 mb-2">
+                            <div class="card-content-tags">
                                 ${(item.type_name || '').toString().replace(/</g, '&lt;') ?
-                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-blue-500 text-blue-300">
-                                      ${(item.type_name || '').toString().replace(/</g, '&lt;')}
-                                  </span>` : ''}
+                    `<span>${(item.type_name || '').toString().replace(/</g, '&lt;')}</span>` : ''}
                                 ${(item.vod_year || '') ?
-                    `<span class="text-xs py-0.5 px-1.5 rounded bg-opacity-20 bg-purple-500 text-purple-300">
-                                      ${item.vod_year}
-                                  </span>` : ''}
+                    `<span>${item.vod_year}</span>` : ''}
                             </div>
-                            <p class="text-gray-400 line-clamp-2 overflow-hidden ${hasCover ? '' : 'text-center'} mb-2">
-                                ${(item.vod_remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
-                            </p>
                         </div>
                         
-                        <div class="flex justify-between items-center mt-1 pt-1 border-t border-gray-800">
-                            ${sourceInfo ? `<div>${sourceInfo}</div>` : '<div></div>'}
+                        <p class="card-content-description">
+                            ${(item.vod_remarks || '暂无介绍').toString().replace(/</g, '&lt;')}
+                        </p>
+                        
+                        <div class="card-content-footer">
+                            ${sourceInfo ? `${sourceInfo}` : ''}
                         </div>
                     </div>
                 </div>
