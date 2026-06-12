@@ -26,9 +26,11 @@
     "url": "https://github.com/JiuNian090/leletv/issues"
   },
   "scripts": {
-    "dev": "nodemon server.mjs",
-    "start": "node server.mjs",
-    "build": "node scripts/generate-version.mjs && npx tailwindcss@3.4.19 -i ./css/tailwind.css -o ./css/output.css --minify",
+    "dev": "vite",
+    "start": "vite preview",
+    "build": "node scripts/generate-version.mjs && vite build && npx tailwindcss@3.4.19 -i ./css/tailwind.css -o ./css/output.css --minify",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "test": "echo 'Running tests...'",
     "lint": "echo 'Linting code...'",
     "format": "echo 'Formatting code...'"
@@ -41,13 +43,16 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "@types/node": "^25.9.3",
     "autoprefixer": "^10.5.0",
     "nodemon": "^3.1.10",
     "postcss": "^8.5.14",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "typescript": "^6.0.3",
+    "vite": "^6.4.3"
   },
   "engines": {
-    "node": "^16.0.0 || ^18.0.0 || ^20.0.0",
+    "node": "^16.0.0 || ^18.0.0 || ^20.0.0 || >=22.0.0",
     "npm": "^8.0.0 || ^9.0.0"
   },
   "browserslist": [

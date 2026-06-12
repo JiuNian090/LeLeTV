@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+
+    /* 路径别名（与 vite.config.ts 一致） */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    /* 渐进式严格模式 */
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+
+    /* 兼容现有 JS 文件 */
+    "allowJs": true,
+    "checkJs": false,
+
+    /* 构建选项 */
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+
+    /* 不检查 node_modules */
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "public"]
+}
