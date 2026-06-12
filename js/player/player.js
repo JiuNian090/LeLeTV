@@ -279,70 +279,66 @@ function initializePageContent() {
     const videoTitleRight = document.getElementById('videoTitleRight');
     if (videoTitleRight) videoTitleRight.textContent = currentVideoTitle;
 
-    // 渲染视频详情信息（先用视频源API数据）
-    renderPlayerDetailInfo();
-
-    // 异步获取TMDB数据增强详情（TMDB优先，API源数据兜底）
-    fetchTmdbPlayerDetail(currentVideoTitle).then(tmdbInfo => {
-      if (tmdbInfo) {
-        let existingInfo = null;
-        try {
-          existingInfo = StorageService.getCurrentVideoInfo();
-        } catch (e) {}
-
-        const mergedInfo = {
-          ...(existingInfo || {}),
-          ...tmdbInfo,
-          remarks: existingInfo?.remarks || '',
-          source_name: existingInfo?.source_name || '',
-          source_code: existingInfo?.source_code || ''
-        };
-
-        StorageService.setCurrentVideoInfo(mergedInfo);
-        renderPlayerDetailInfo();
-
-        // 同步封面到观看历史记录
-        if (tmdbInfo.cover) {
-          try {
-            const history = StorageService.getViewingHistory();
-            const idx = history.findIndex(item => item.title === currentVideoTitle);
-            if (idx !== -1) {
-              history[idx].cover = tmdbInfo.cover;
-              StorageService.setViewingHistory(history);
-            }
-          } catch (e) {}
-        }
-      }
-    });
-
     // 初始化播放器
     if (videoUrl) {
+        // 直接视频URL（历史记录播放），立即渲染并初始化
+        renderPlayerDetailInfo();
         initPlayer(videoUrl);
     } else if (urlParams.get('id') && sourceCode) {
         // 从搜索卡片直接跳转（无url参数），异步加载剧集详情
+        // 注意：不要在这里调用 renderPlayerDetailInfo 等渲染函数
+        // fetchDetailAndInit 会处理所有渲染
         const vodId = urlParams.get('id');
         fetchDetailAndInit(vodId, sourceCode, title, index);
     } else {
         showError('无效的视频链接');
     }
 
-    // 渲染源信息
-    renderResourceInfoBar();
+    // 渲染源信息（仅对有直接URL的情况，因为搜索卡片路径由fetchDetailAndInit处理）
+    if (videoUrl) {
+        renderResourceInfoBar();
+        updateEpisodeInfo();
+        renderEpisodes();
+        updateButtonStates();
+        updateOrderButton();
+        updateEpisodeCollapseState();
+    }
 
-    // 更新集数信息
-    updateEpisodeInfo();
+    // 异步获取TMDB数据增强详情（TMDB优先，API源数据兜底）
+    // 注意：搜索卡片路径的TMDB增强由fetchDetailAndInit内部处理
+    if (videoUrl) {
+        fetchTmdbPlayerDetail(currentVideoTitle).then(tmdbInfo => {
+            if (tmdbInfo) {
+                let existingInfo = null;
+                try {
+                    existingInfo = StorageService.getCurrentVideoInfo();
+                } catch (e) {}
 
-    // 渲染集数列表
-    renderEpisodes();
+                const mergedInfo = {
+                    ...(existingInfo || {}),
+                    ...tmdbInfo,
+                    remarks: existingInfo?.remarks || '',
+                    source_name: existingInfo?.source_name || '',
+                    source_code: existingInfo?.source_code || ''
+                };
 
-    // 初始化选集区域折叠状态（横屏展开，移动端折叠）
-    updateEpisodeCollapseState();
+                StorageService.setCurrentVideoInfo(mergedInfo);
+                renderPlayerDetailInfo();
 
-    // 更新按钮状态
-    updateButtonStates();
-
-    // 更新排序按钮状态
-    updateOrderButton();
+                // 同步封面到观看历史记录
+                if (tmdbInfo.cover) {
+                    try {
+                        const history = StorageService.getViewingHistory();
+                        const idx = history.findIndex(item => item.title === currentVideoTitle);
+                        if (idx !== -1) {
+                            history[idx].cover = tmdbInfo.cover;
+                            StorageService.setViewingHistory(history);
+                        }
+                    } catch (e) {}
+                }
+            }
+        });
+    }
 
     // 添加对进度条的监听，确保点击准确跳转
     setTimeout(() => {

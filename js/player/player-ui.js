@@ -678,9 +678,9 @@ function renderPlayerDetailInfo() {
     // 渲染详情部分（可折叠）- 包含主演和简介
     if (descBody) {
         let detailHtml = '';
-        
+
         // 先添加主演
-        if (videoInfo.actor) {
+        if (videoInfo && videoInfo.actor) {
             detailHtml += '<div class="detail-meta detail-meta-collapsible">';
             detailHtml += `<div class="detail-meta-item"><span class="detail-meta-label">主演:</span><span class="detail-meta-value">${videoInfo.actor}</span></div>`;
             detailHtml += '</div>';
