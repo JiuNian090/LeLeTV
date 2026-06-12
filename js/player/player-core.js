@@ -368,7 +368,11 @@ function setupPlayerEventListeners(art, fullScreenController, loadingWatchdog) {
     });
 
     art.on('fullscreen', function (isFullScreen) {
-        handleFullScreenChange(art, fullScreenController, isFullScreen);
+        // 浏览器全屏 API（requestFullscreen）由浏览器管理全屏元素
+        // 不切换 fullscreen-active，避免 main.container display:none 影响恢复
+        // 只需处理下一集按钮
+        setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
+        setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
     });
 
     art.on('restart', () => {
@@ -418,14 +422,11 @@ function setupLongLoadingWarning() {
  * 用于在华为等浏览器原生视频播放器全屏时关闭高耗 CSS 效果，防止卡顿和屏闪
  */
 function setupNativeFullscreenHandler() {
-    let fsTimeout = null;
-
     function onNativeFullScreenChange() {
         const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
         const isNativeFullscreen = !!fsElement;
 
         // 排除 ArtPlayer 自身的全屏：ArtPlayer 在播放器容器上调用 requestFullscreen
-        // 此时 fsElement 是播放器容器或其子元素，不应添加 native-fs-active
         if (isNativeFullscreen) {
             const playerContainer = document.getElementById('playerContainer') || document.getElementById('player');
             if (playerContainer && (playerContainer === fsElement || playerContainer.contains(fsElement))) {
@@ -433,18 +434,7 @@ function setupNativeFullscreenHandler() {
             }
         }
 
-        clearTimeout(fsTimeout);
-        document.body.classList.remove('native-fs-exiting');
-
-        if (isNativeFullscreen) {
-            document.body.classList.add('native-fs-active');
-        } else {
-            document.body.classList.remove('native-fs-active');
-            document.body.classList.add('native-fs-exiting');
-            fsTimeout = setTimeout(() => {
-                document.body.classList.remove('native-fs-exiting');
-            }, 200);
-        }
+        document.body.classList.toggle('native-fs-active', isNativeFullscreen);
     }
 
     document.addEventListener('fullscreenchange', onNativeFullScreenChange);

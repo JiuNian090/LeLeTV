@@ -439,16 +439,6 @@ body.native-fs-active .control-buttons-container {
     -webkit-backdrop-filter: none !important;
 }
 
-/* 退出全屏时：冻结所有过渡/动画 200ms，避免视口变化过程中的屏闪 */
-body.native-fs-exiting *,
-body.native-fs-exiting *::before,
-body.native-fs-exiting *::after {
-    transition-duration: 0s !important;
-    animation-duration: 0s !important;
-    animation-delay: 0s !important;
-    caret-color: transparent !important;
-}
-
 /* 视频详情信息区域 - 玻璃效果 */
 .player-detail-info {
     background: rgba(26,26,26,0.5);
