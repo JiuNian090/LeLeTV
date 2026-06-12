@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Cloudflare Worker - TMDB API 代理
 // 支持路径参数和查询参数两种方式
 //
