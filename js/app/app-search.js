@@ -289,6 +289,39 @@ function setupEventListeners() {
             case 'import-config': importConfig(); break;
             case 'export-config': exportConfig(); break;
             case 'clear-cache': clearLocalStorage(); break;
+            // ---- onclick→data-action 迁移新增 ----
+            case 'play-directly': {
+                const id = el.dataset.id;
+                const name = el.dataset.name;
+                const source = el.dataset.source;
+                if (id && name && source) playDirectly(id, name, source);
+                break;
+            }
+            case 'edit-custom-api': editCustomApi(parseInt(el.dataset.index)); break;
+            case 'remove-custom-api': removeCustomApi(parseInt(el.dataset.index)); break;
+            case 'update-custom-api': updateCustomApi(parseInt(el.dataset.index)); break;
+            case 'cancel-edit-custom-api': cancelEditCustomApi(); break;
+            case 'load-tmdb-results': loadTmdbResults(); break;
+            case 'tmdb-search-video': tmdbSearchVideo(el.dataset.title); break;
+            case 'play-from-history': {
+                const url = el.dataset.url;
+                const title = el.dataset.title;
+                const index = parseInt(el.dataset.index || '0');
+                const position = parseInt(el.dataset.position || '0');
+                if (url && title) playFromHistory(url, title, index, position);
+                break;
+            }
+            case 'delete-history-item': {
+                const itemUrl = el.dataset.url;
+                const itemTitle = el.dataset.title;
+                if (itemUrl) {
+                    event.stopPropagation();
+                    deleteHistoryItem(itemUrl, itemTitle);
+                }
+                break;
+            }
+            case 'import-config-from-url': importConfigFromUrl(); break;
+            case 'switch-to-category': switchPage('category'); break;
         }
     });
 
@@ -612,7 +645,11 @@ function _buildSearchCardsHtml(items) {
 
         return `
             <div class="card-hover rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md" 
-                 onclick="playDirectly('${safeId}','${safeName}','${sourceCode}')" ${apiUrlAttr}>
+                 data-action="play-directly" 
+                 data-id="${safeId}"
+                 data-name="${safeName}"
+                 data-source="${sourceCode}"
+                 ${apiUrlAttr}>
                 <div class="flex h-full">
                     ${hasCover ? `
                     <div class="relative flex-shrink-0 search-card-img-container image-container">

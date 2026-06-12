@@ -468,7 +468,7 @@ async function loadTmdbResults() {
       <div class="col-span-full text-center py-12">
         <div class="text-red-400 text-lg mb-2">加载失败</div>
         <div class="text-gray-500 text-sm">${err.message}，请检查 TMDB API Key 是否正确配置</div>
-        <button onclick="loadTmdbResults()" class="mt-4 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-colors">重试</button>
+        <button data-action="load-tmdb-results" class="mt-4 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-colors">重试</button>
       </div>
     `;
   } finally {
@@ -517,7 +517,7 @@ function renderTmdbCards(items) {
     card.className = 'tmdb-card';
 
     card.innerHTML = `
-      <div class="tmdb-card-inner" onclick="tmdbSearchVideo('${safeTitle}')">
+      <div class="tmdb-card-inner" data-action="tmdb-search-video" data-title="${safeTitle}">
         <div class="tmdb-card-poster">
           ${posterPath
             ? `<img src="${posterPath}" alt="${safeTitle}" loading="lazy" class="tmdb-card-img" onerror="this.parentElement.innerHTML = '<div class=\\'tmdb-card-placeholder\\'><svg class=\\'w-12 h-12\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'1.5\\' d=\\'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z\\'></path></svg><span class=\\'text-xs text-gray-500 mt-2\\'>${safeTitle}</span></div>'">

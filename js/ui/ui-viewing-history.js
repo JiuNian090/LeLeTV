@@ -24,7 +24,7 @@ function loadViewingHistory() {
                 </div>
                 <p class="text-gray-400 text-lg mb-2">暂无观看记录</p>
                 <p class="text-gray-600 text-sm mb-6">去分类发现更多精彩内容</p>
-                <button onclick="switchPage('category')" class="px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
+                <button data-action="switch-to-category" class="px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
                     去分类浏览
                 </button>
             </div>
@@ -129,8 +129,12 @@ function renderHistoryCard(item) {
             </div>`;
 
     return `
-        <div class="history-item" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
-            <button onclick="event.stopPropagation(); deleteHistoryItem('${safeURL}')"
+        <div class="history-item" data-action="play-from-history" 
+             data-url="${item.url}" 
+             data-title="${safeTitle}" 
+             data-index="${item.episodeIndex || 0}" 
+             data-position="${item.playbackPosition || 0}">
+            <button data-action="delete-history-item" data-url="${safeURL}" data-title="${safeTitle}"
                     class="delete-btn"
                     title="删除记录">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

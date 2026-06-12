@@ -396,6 +396,19 @@ function initializePageContent() {
             case 'toggle-episode-order': e.stopPropagation(); toggleEpisodeOrder(); break;
             case 'copy-links': copyLinks(); break;
             case 'close-modal': closeModal(); break;
+            // ---- onclick→data-action 迁移新增 ----
+            case 'play-episode': playEpisode(parseInt(el.dataset.index)); break;
+            case 'play-video': {
+                const url = el.dataset.url;
+                const name = el.dataset.name;
+                const source = el.dataset.source;
+                const index = parseInt(el.dataset.index);
+                const vodId = el.dataset.vodId;
+                if (url && name) playVideo(url, name, source, index, vodId);
+                break;
+            }
+            case 'show-switch-resource': showSwitchResourceModal(); break;
+            case 'switch-to-resource': switchToResource(el.dataset.key, el.dataset.vodId); break;
         }
     });
 }
