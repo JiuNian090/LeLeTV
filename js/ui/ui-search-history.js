@@ -146,7 +146,7 @@ function showSearchHistory(filterText) {
 }
 
 function _positionDropdown(dropdown) {
-    var searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    var searchBar = document.querySelector('[data-searchbar]');
     if (!searchBar) return;
     var rect = searchBar.getBoundingClientRect();
     dropdown.style.left = rect.left + 'px';
@@ -211,12 +211,12 @@ function renderMobileSearchHistory(filterText) {
 }
 
 function _addSearchBarFlush() {
-    const searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    const searchBar = document.querySelector('[data-searchbar]');
     if (searchBar) searchBar.classList.add('search-bar-flush');
 }
 
 function _removeSearchBarFlush() {
-    const searchBar = document.querySelector('.relative.mb-3 > .h-12');
+    const searchBar = document.querySelector('[data-searchbar]');
     if (searchBar) searchBar.classList.remove('search-bar-flush');
 }
 

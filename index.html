@@ -126,7 +126,7 @@
                 <div id="searchArea" class="flex flex-col items-center justify-center">
                     <div class="w-full max-w-5xl mx-auto">
                         <div class="relative mb-3">
-                            <div class="home-search-bar h-12 rounded-full overflow-hidden flex items-center transition-all duration-300 hover:border-[#555] focus-within:border-[#555] focus-within:shadow-lg">
+                            <div class="home-search-bar h-12 rounded-full overflow-hidden flex items-center transition-all duration-300 hover:border-[#555] focus-within:border-[#555] focus-within:shadow-lg" data-searchbar>
                                 <button data-action="reset-home" class="h-full w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white transition-colors" aria-label="返回首页">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -264,7 +264,7 @@
                                 <h3 class="dash-card-title">功能开关</h3>
                             </div>
                             <div class="dash-card-body dash-switch-body">
-                                <label class="dash-switch-row">
+                                <label class="dash-switch-row" data-role="filter-section">
                                     <div class="dash-switch-info">
                                         <span class="dash-switch-label">🈲 隐藏内容过滤</span>
                                         <span class="dash-switch-desc">过滤"伦理片"等，密码提示:⟲</span>
@@ -275,7 +275,7 @@
                                         <div class="dash-switch-dot"></div>
                                     </div>
                                 </label>
-                                <label class="dash-switch-row">
+                                <label class="dash-switch-row" data-role="filter-ad">
                                     <div class="dash-switch-info">
                                         <span class="dash-switch-label">分片广告过滤</span>
                                         <span class="dash-switch-desc">关闭可减少旧版浏览器卡顿</span>

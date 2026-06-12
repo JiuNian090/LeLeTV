@@ -139,12 +139,13 @@ function initAPICheckboxes() {
             <input type="checkbox" id="api_${apiKey}" 
                    class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333]" 
                    ${checked ? 'checked' : ''} 
-                   data-api="${apiKey}">
+                   data-api="${apiKey}"
+                       data-role="api-toggle">
             <label for="api_${apiKey}" class="ml-1 text-xs text-gray-400 truncate">${api.name}</label>
         `;
         normaldiv.appendChild(checkbox);
 
-        checkbox.querySelector('input').addEventListener('change', function () {
+        checkbox.querySelector('[data-role="api-toggle"]').addEventListener('change', function () {
             updateSelectedAPIs();
             checkHiddenAPIsSelected();
         });
@@ -247,13 +248,14 @@ function addHiddenAPI() {
                 <input type="checkbox" id="api_${apiKey}" 
                        class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333] api-hidden" 
                        ${checked ? 'checked' : ''} 
-                       data-api="${apiKey}">
+                       data-api="${apiKey}"
+                       data-role="api-toggle">
                 <label for="api_${apiKey}" class="ml-1 text-xs text-pink-400 truncate">${api.name}</label>
             `;
             hiddendiv.appendChild(checkbox);
 
             // 添加事件监听器
-            checkbox.querySelector('input').addEventListener('change', function () {
+            checkbox.querySelector('[data-role="api-toggle"]').addEventListener('change', function () {
                 updateSelectedAPIs();
                 checkHiddenAPIsSelected();
             });
@@ -273,8 +275,8 @@ function checkHiddenAPIsSelected() {
     const hasHiddenSelected = hiddenBuiltinCheckboxes.length > 0 || customApiCheckboxes.length > 0;
 
     const hiddenFilterToggle = document.getElementById('hiddenFilterToggle');
-    const hiddenFilterContainer = hiddenFilterToggle.closest('div').parentNode;
-    const filterDescription = hiddenFilterContainer.querySelector('p.filter-description');
+    const hiddenFilterContainer = document.querySelector('[data-role="filter-section"]');
+    const filterDescription = hiddenFilterContainer ? hiddenFilterContainer.querySelector('.dash-switch-desc') : null;
 
     // 如果选择了隐藏API，禁用隐藏内容过滤器
     if (hasHiddenSelected) {
@@ -336,7 +338,8 @@ function renderCustomAPIsList() {
                 <input type="checkbox" id="custom_api_${index}" 
                        class="form-checkbox h-3 w-3 text-blue-600 mr-1 ${api.isHidden ? 'api-hidden' : ''}" 
                        ${selectedAPIs.includes('custom_' + index) ? 'checked' : ''} 
-                       data-custom-index="${index}">
+                       data-custom-index="${index}"
+                       data-role="api-toggle">
                 <div class="flex-1 min-w-0">
                     <div class="text-xs font-medium ${textColorClass} truncate">
                         ${hiddenTag}${api.name}
@@ -351,7 +354,7 @@ function renderCustomAPIsList() {
             </div>
         `;
         container.appendChild(apiItem);
-        apiItem.querySelector('input').addEventListener('change', function () {
+        apiItem.querySelector('[data-role="api-toggle"]').addEventListener('change', function () {
             updateSelectedAPIs();
             checkHiddenAPIsSelected();
         });
