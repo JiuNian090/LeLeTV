@@ -67,13 +67,13 @@ function showNextToast() {
 
     setTimeout(() => {
         toast.style.opacity = '1';
-        toast.style.transform = window.innerWidth <= 640 ? 'translateX(0) scale(1)' : 'translateX(-50%) scale(1)';
+        toast.style.transform = 'translateX(-50%) scale(1)';
         toast.style.transition = 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
     }, 50);
 
     currentToastTimeout = setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transform = window.innerWidth <= 640 ? 'translateX(0) scale(0.5)' : 'translateX(-50%) scale(0.5)';
+        toast.style.transform = 'translateX(-50%) scale(0.5)';
         toast.style.transition = 'all 0.2s ease-in';
 
         setTimeout(() => {

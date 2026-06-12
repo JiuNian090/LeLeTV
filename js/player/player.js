@@ -318,6 +318,10 @@ function initializePageContent() {
     // 初始化播放器
     if (videoUrl) {
         initPlayer(videoUrl);
+    } else if (urlParams.get('id') && sourceCode) {
+        // 从搜索卡片直接跳转（无url参数），异步加载剧集详情
+        const vodId = urlParams.get('id');
+        fetchDetailAndInit(vodId, sourceCode, title, index);
     } else {
         showError('无效的视频链接');
     }
@@ -819,6 +823,87 @@ function updateMediaSession() {
         } catch (e) {
             // 某些浏览器不支持所有 action，静默跳过
         }
+    }
+}
+
+// 异步获取视频详情并初始化播放器（用于搜索卡片直接跳转场景）
+async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
+    const loadingEl = document.getElementById('player-loading');
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    // 构建API参数（支持自定义源）
+    let apiParams = '';
+    if (sourceCode.startsWith('custom_')) {
+        const customIndex = sourceCode.replace('custom_', '');
+        const customApi = typeof getCustomApiInfo === 'function' ? getCustomApiInfo(customIndex) : null;
+        if (!customApi) {
+            showError('自定义API配置无效');
+            return;
+        }
+        if (customApi.detail) {
+            apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
+        } else {
+            apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
+        }
+    } else {
+        apiParams = '&source=' + sourceCode;
+    }
+
+    try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}&_t=${timestamp}`);
+        if (!response.ok) throw new Error(`API请求失败: ${response.status}`);
+        const data = await response.json();
+
+        if (!data.episodes || data.episodes.length === 0) {
+            showError('没有可用的视频资源');
+            return;
+        }
+
+        const episodes = data.episodes;
+        currentVideoTitle = title || localStorage.getItem('currentVideoTitle') || '未知视频';
+        currentEpisodeIndex = episodeIndex;
+        currentEpisodes = episodes;
+
+        // 保存到localStorage
+        try {
+            localStorage.setItem('currentVideoTitle', currentVideoTitle);
+            localStorage.setItem('currentEpisodes', JSON.stringify(episodes));
+            localStorage.setItem('currentEpisodeIndex', episodeIndex);
+            localStorage.setItem('currentSourceCode', sourceCode || '');
+            if (data.videoInfo) {
+                localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
+            }
+        } catch (e) {}
+
+        // 更新页面标题和标题显示
+        document.title = currentVideoTitle + ' - LeLeTV播放器';
+        const elTitle = document.getElementById('videoTitle');
+        if (elTitle) elTitle.textContent = currentVideoTitle;
+        const elTitleRight = document.getElementById('videoTitleRight');
+        if (elTitleRight) elTitleRight.textContent = currentVideoTitle;
+
+        // 渲染详情、集数、源信息
+        renderPlayerDetailInfo();
+        renderResourceInfoBar();
+        updateEpisodeInfo();
+        renderEpisodes();
+        updateButtonStates();
+        updateOrderButton();
+
+        // 播放第一集（或指定集）
+        const targetIndex = episodeIndex < episodes.length ? episodeIndex : 0;
+        const episodeUrl = episodes[targetIndex];
+        if (episodeUrl) {
+            currentVideoUrl = episodeUrl;
+            currentEpisodeIndex = targetIndex;
+            document.getElementById('player-loading').style.display = 'none';
+            initPlayer(episodeUrl);
+        } else {
+            showError('没有可播放的视频资源');
+        }
+    } catch (e) {
+        showError('获取视频详情失败，请稍后重试');
     }
 }
 

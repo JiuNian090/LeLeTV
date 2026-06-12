@@ -48,6 +48,22 @@ function showError(message) {
     if (errorEl) errorEl.style.display = 'flex';
     const errorMsgEl = document.getElementById('error-message');
     if (errorMsgEl) errorMsgEl.textContent = message;
+
+    // 有 back 参数时显示返回按钮
+    const urlParams = new URLSearchParams(window.location.search);
+    const backUrl = urlParams.get('back');
+    const backBtn = document.getElementById('error-back-btn');
+    if (backBtn) {
+        if (backUrl) {
+            backBtn.style.display = 'inline-block';
+            backBtn.onclick = function () {
+                localStorage.removeItem('lastSearchPage');
+                window.location.href = backUrl;
+            };
+        } else {
+            backBtn.style.display = 'none';
+        }
+    }
 }
 
 function copyLinks() {

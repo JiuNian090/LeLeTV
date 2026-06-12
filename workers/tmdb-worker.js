@@ -120,12 +120,16 @@ async function handleRequest(request, event) {
   const targetUrl = `${TMDB_BASE_URL}/${endpoint}?${queryParams.toString()}`;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const response = await fetch(targetUrl, {
+      signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'application/json'
       }
     });
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -154,9 +158,10 @@ async function handleRequest(request, event) {
 
     return res;
   } catch (error) {
+    const isTimeout = error.name === 'AbortError';
     return jsonResponse({
       success: false,
-      error: `TMDB 请求失败: ${error.message}`
+      error: isTimeout ? 'TMDB 请求超时，请稍后重试' : `TMDB 请求失败: ${error.message}`
     }, 500, 0);
   }
 }

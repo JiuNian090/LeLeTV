@@ -27,7 +27,7 @@ async function buildApiParamsAndFetch(id, sourceCode) {
     }
 }
 
-// 点击搜索结果直接跳转播放器
+// 点击搜索结果直接跳转播放器（立即跳转，不等待API响应）
 async function playDirectly(id, vod_name, sourceCode) {
     if (window.isPasswordProtected && window.isPasswordVerified) {
         if (window.isPasswordProtected() && !window.isPasswordVerified()) {
@@ -40,61 +40,29 @@ async function playDirectly(id, vod_name, sourceCode) {
         return;
     }
 
-    showLoading();
+    // 保存基础信息到localStorage供播放页使用
     try {
-        const result = await buildApiParamsAndFetch(id, sourceCode);
-        if (result.error) {
-            showToast(result.error, 'error');
-            hideLoading();
-            return;
-        }
-        const data = result.data;
-
-        if (!data.episodes || data.episodes.length === 0) {
-            showToast('没有可用的视频资源', 'error');
-            hideLoading();
-            return;
-        }
-
-        currentEpisodes = data.episodes;
-        currentVideoTitle = vod_name || '未知视频';
-
-        let episodeIndex = 0;
-        try {
-            const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
-            const historyItem = history.find(item => item.title === currentVideoTitle);
-            if (historyItem && historyItem.episodeIndex >= 0 && historyItem.episodeIndex < data.episodes.length) {
-                episodeIndex = historyItem.episodeIndex;
-            }
-        } catch (e) {}
-
-        const episodeUrl = data.episodes[episodeIndex];
-
-        try {
-            localStorage.setItem('currentVideoTitle', currentVideoTitle);
-            localStorage.setItem('currentEpisodes', JSON.stringify(data.episodes));
-            localStorage.setItem('currentEpisodeIndex', episodeIndex);
-            localStorage.setItem('currentSourceCode', sourceCode || '');
-            localStorage.setItem('lastPlayTime', Date.now());
-            localStorage.setItem('lastSearchPage', window.location.href);
-            if (data.videoInfo) {
-                localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
-            }
-        } catch (e) {
-            console.error('保存播放状态失败:', e);
-        }
-
-        let playerUrl = `player.html?url=${encodeURIComponent(episodeUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceCode)}&index=${episodeIndex}&id=${encodeURIComponent(id)}`;
-        const currentPath = window.location.href;
-        // 从首页/搜索页进入时标记 back 为首页，返回时不会带上搜索状态
-        if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?') || currentPath.includes('/s=')) {
-            playerUrl += `&back=${encodeURIComponent(window.location.origin + '/index.html')}`;
-        }
-        window.location.href = playerUrl;
+        // 清除旧源缓存的剧集列表，防止污染新源
+        localStorage.removeItem('currentEpisodes');
+        localStorage.removeItem('currentEpisodeIndex');
+        localStorage.removeItem('currentVideoInfo');
+        localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
+        localStorage.setItem('currentSourceCode', sourceCode || '');
+        localStorage.setItem('lastPlayTime', Date.now());
+        localStorage.setItem('lastSearchPage', window.location.href);
     } catch (e) {
-        showToast('获取视频详情失败，请重试', 'error');
-        hideLoading();
+        console.error('保存播放状态失败:', e);
     }
+
+    // 立即跳转播放页，不等待API响应
+    // player.js 会从URL参数中获取 id + source，异步加载剧集信息
+    let playerUrl = `player.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(vod_name || '未知视频')}&source=${encodeURIComponent(sourceCode)}`;
+    const currentPath = window.location.href;
+    // 从首页/搜索页进入时标记 back 为首页，返回时不会带上搜索状态
+    if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?') || currentPath.includes('/s=')) {
+        playerUrl += `&back=${encodeURIComponent(window.location.origin + '/index.html')}`;
+    }
+    window.location.href = playerUrl;
 }
 
 // 显示详情 - 修改为支持自定义API
