@@ -61,7 +61,7 @@ async function handleRequest(request, event) {
   const cache = caches.default;
 
   if (url.pathname === '/' && !url.searchParams.has('endpoint')) {
-    return jsonResponse({ success: false }, 400, 0);
+    return serveDashboard();
   }
 
   let endpoint = url.searchParams.get('endpoint') || '';
@@ -165,6 +165,87 @@ async function handleRequest(request, event) {
       error: isTimeout ? 'TMDB 请求超时，请稍后重试' : `TMDB 请求失败: ${error.message}`
     }, 500, 0);
   }
+}
+
+async function serveDashboard() {
+  const apiKey = typeof TMDB_API_KEY !== 'undefined' ? TMDB_API_KEY : '';
+  const keyConfigured = !!apiKey;
+
+  let tmdbStatus = 'unknown';
+  let tmdbLabel = '检测中...';
+
+  if (!keyConfigured) {
+    tmdbStatus = 'error';
+    tmdbLabel = 'API Key 未配置';
+  } else {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      const testUrl = `https://api.themoviedb.org/3/configuration?api_key=${apiKey}`;
+      const resp = await fetch(testUrl, { signal: controller.signal });
+      clearTimeout(timer);
+      tmdbStatus = resp.ok ? 'ok' : 'error';
+      tmdbLabel = resp.ok ? '连通正常' : `HTTP ${resp.status}`;
+    } catch (e) {
+      tmdbStatus = 'error';
+      tmdbLabel = e.name === 'AbortError' ? '连接超时' : '连接失败';
+    }
+  }
+
+  const workerStatus = 'ok';
+  const workerLabel = '运行中';
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LeLeTV TMDB Proxy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d0f;color:#e0e0e0;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{max-width:420px;width:90%;padding:40px 36px;background:#16161a;border:1px solid #2a2a30;border-radius:12px}
+h1{font-size:16px;font-weight:500;color:#888;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
+.sub{font-size:12px;color:#555;margin-bottom:28px}
+.status-list{display:flex;flex-direction:column;gap:14px}
+.status-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#1a1a1f;border-radius:8px;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot.ok{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,0.4)}
+.dot.error{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,0.4)}
+.dot.unknown{background:#6b7280;box-shadow:0 0 8px rgba(107,114,128,0.3)}
+.label{color:#aaa}
+.status-item .value{color:#e0e0e0;margin-left:auto}
+.refresh{display:block;margin-top:24px;padding:8px 0;width:100%;background:#1e1e24;border:1px solid #2a2a30;border-radius:8px;color:#888;font-size:13px;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none}
+.refresh:hover{background:#2a2a30;color:#e0e0e0}
+.footer{margin-top:20px;text-align:center;font-size:11px;color:#444}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>LeLeTV TMDB Proxy</h1>
+<div class="sub">TMDB API 代理状态</div>
+<div class="status-list">
+<div class="status-item">
+<span class="dot ${workerStatus}"></span>
+<span class="label">Worker</span>
+<span class="value">${workerLabel}</span>
+</div>
+<div class="status-item">
+<span class="dot ${tmdbStatus}"></span>
+<span class="label">TMDB</span>
+<span class="value">${tmdbLabel}</span>
+</div>
+</div>
+<a href="/" class="refresh">刷新状态</a>
+<div class="footer">Powered by Cloudflare Workers</div>
+</div>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
 }
 
 function jsonResponse(data, status, cacheTTL) {
