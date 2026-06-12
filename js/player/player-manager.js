@@ -43,6 +43,10 @@ const PlayerManager = {
             try { this._hls.destroy(); } catch (e) { /* 静默处理 */ }
         }
         this._hls = instance;
+        // 同步全局变量（向后兼容，旧代码仍读取 currentHls）
+        if (typeof currentHls !== 'undefined') {
+            currentHls = instance;
+        }
     },
 
     /**
