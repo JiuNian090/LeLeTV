@@ -573,7 +573,7 @@ async function search() {
     } finally {
         hideLoading();
         // 释放节流锁（延迟释放，防止短暂连点）
-        setTimeout(releaseThrottle, 500);
+        setTimeout(releaseThrottle, TIMING.SEARCH_THROTTLE_RELEASE);
     }
 }
 

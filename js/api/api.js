@@ -26,7 +26,7 @@ async function handleApiRequest(url) {
             
             // 添加超时处理
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const timeoutId = setTimeout(() => controller.abort(), TIMING.API_REQUEST_TIMEOUT);
             
             try {
                 // 添加鉴权参数到代理URL
@@ -115,7 +115,7 @@ async function handleApiRequest(url) {
             
             // 添加超时处理
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const timeoutId = setTimeout(() => controller.abort(), TIMING.API_REQUEST_TIMEOUT);
             
             try {
                 // 添加鉴权参数到代理URL
@@ -217,7 +217,7 @@ async function handleCustomApiSpecialDetail(id, customApi) {
         
         // 添加超时处理
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), TIMING.API_REQUEST_TIMEOUT);
         
         // 添加鉴权参数到代理URL
         const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
@@ -284,7 +284,7 @@ async function handleSpecialSourceDetail(id, sourceCode) {
         
         // 添加超时处理
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), TIMING.API_REQUEST_TIMEOUT);
         
         // 添加鉴权参数到代理URL
         const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
@@ -373,7 +373,7 @@ async function handleAggregatedSearch(searchQuery) {
             
             // 使用Promise.race添加超时处理
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error(`${source}源搜索超时`)), 8000)
+                setTimeout(() => reject(new Error(`${source}源搜索超时`)), TIMING.API_SEARCH_TIMEOUT)
             );
             
             // 添加鉴权参数到代理URL
@@ -487,7 +487,7 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             
             // 使用Promise.race添加超时处理
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error(`自定义API ${index+1} 搜索超时`)), 8000)
+                setTimeout(() => reject(new Error(`自定义API ${index+1} 搜索超时`)), TIMING.API_SEARCH_TIMEOUT)
             );
             
             // 添加鉴权参数到代理URL

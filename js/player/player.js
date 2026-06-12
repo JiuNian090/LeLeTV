@@ -30,7 +30,7 @@ function goHome(event) {
         if (document.getElementById('playerContainer')) {
             window.location.href = '/index.html';
         }
-    }, 5000);
+    }, TIMING.FALLBACK_NAVIGATION_DELAY);
 }
 
 // 页面加载时保存当前播放状态
@@ -375,7 +375,7 @@ function initializePageContent() {
             let lastSave = 0;
             art.video.addEventListener('timeupdate', function() {
                 const now = Date.now();
-                if (now - lastSave > 5000) { // 每5秒最多保存一次
+                if (now - lastSave > TIMING.PROGRESS_SAVE_THROTTLE) { // 每5秒最多保存一次
                     saveCurrentProgress();
                     lastSave = now;
                 }
@@ -657,7 +657,7 @@ function startProgressSaveInterval() {
     }
 
     // 每30秒保存一次播放进度
-    progressSaveInterval = setInterval(saveCurrentProgress, 30000);
+    progressSaveInterval = setInterval(saveCurrentProgress, TIMING.PROGRESS_SAVE_INTERVAL);
 }
 
 // 保存当前播放进度

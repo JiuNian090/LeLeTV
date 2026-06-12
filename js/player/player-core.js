@@ -261,15 +261,15 @@ function onPlayerReady(art, fullScreenController) {
 
     addNextEpisodeDirectly(art);
     addLockFloatingButton(art);
-    setTimeout(() => addNextEpisodeDirectly(art), 300);
-    setTimeout(() => addNextEpisodeDirectly(art), 800);
-    setTimeout(() => addNextEpisodeDirectly(art), 1500);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_TERTIARY);
 }
 
 function handleFullScreenChange(art, fullScreenController, isFullScreen) {
     fullScreenController.handleFullScreen(isFullScreen);
-    setTimeout(() => addNextEpisodeDirectly(art), 300);
-    setTimeout(() => addNextEpisodeDirectly(art), 800);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
 }
 
 function onPlayerRestart(art) {
@@ -278,8 +278,8 @@ function onPlayerRestart(art) {
         episodeSwitchTimeout = null;
     }
     window.isSwitchingVideo = false;
-    setTimeout(() => addNextEpisodeDirectly(art), 300);
-    setTimeout(() => addNextEpisodeDirectly(art), 800);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
+    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
 }
 
 function onVideoLoadedMetadata(art, loadingWatchdog) {
@@ -319,7 +319,7 @@ function onVideoLoadedMetadata(art, loadingWatchdog) {
     }
 
     setupProgressBarPreciseClicks();
-    setTimeout(saveToHistory, 3000);
+    setTimeout(saveToHistory, TIMING.SAVE_HISTORY_DELAY);
     startProgressSaveInterval();
     updateMediaSession();
 }
@@ -423,7 +423,7 @@ function initPlayer(videoUrl) {
         if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
             loadingEl.style.display = 'none';
         }
-    }, 30000);
+    }, TIMING.PLAYER_LOADING_WATCHDOG);
 
     // 由 PlayerManager 统一销毁旧实例
     PlayerManager.destroy();

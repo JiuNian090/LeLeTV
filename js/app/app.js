@@ -66,10 +66,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('searchInput').blur();
 
     // 延迟标记搜索就绪，防止浏览器自动填充/自动聚焦触发下拉
-    setTimeout(() => { _searchReady = true; }, 200);
+    setTimeout(() => { _searchReady = true; }, TIMING.SEARCH_READY_DELAY);
 
     // 初始检查隐藏API选中状态
-    setTimeout(checkHiddenAPIsSelected, 100);
+    setTimeout(checkHiddenAPIsSelected, TIMING.FOCUS_DELAY);
 });
 
 // 检测 bfcache 恢复（从播放页返回时），清除陈旧搜索状态

@@ -365,7 +365,7 @@ function setupControlsBehavior() {
 
     function resetAutoHide() {
         if (hideTimer) clearTimeout(hideTimer);
-        hideTimer = setTimeout(hideControls, 2000);
+        hideTimer = setTimeout(hideControls, TIMING.CONTROLS_HIDE_DELAY);
     }
 
     // 在视频元素上方覆盖透明点击层（仅覆盖视频区域，不遮挡控件）
@@ -460,7 +460,7 @@ function setupControlsBehavior() {
         if (controlsVisible) resetAutoHide();
     });
 
-    setTimeout(hideControls, 3000);
+    setTimeout(hideControls, TIMING.CONTROLS_INITIAL_HIDE_DELAY);
 }
 
 function clearVideoProgress() {
