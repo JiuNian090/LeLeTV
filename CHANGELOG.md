@@ -4,6 +4,10 @@
 
 ## 版本历史
 
+### v2.8.4 (2026-06-11)
+- 🏗️ 重构 将 20 处 onclick 硬编码迁移至 data-action 事件委托
+- 🏗️ 重构 将 index.html 内联初始化迁移至 AppInit 模块
+
 ### v2.8.3 (2026-06-11)
 - 🔧 修复 修复页面背景丢失和导航切换失效问题
 - 🔧 修复 PlayerManager.setHlsInstance 同步全局 currentHls 变量
