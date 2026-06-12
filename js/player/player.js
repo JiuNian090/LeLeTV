@@ -286,8 +286,7 @@ function initializePageContent() {
       if (tmdbInfo) {
         let existingInfo = null;
         try {
-          const stored = localStorage.getItem('currentVideoInfo');
-          if (stored) existingInfo = JSON.parse(stored);
+          existingInfo = StorageService.getCurrentVideoInfo();
         } catch (e) {}
 
         const mergedInfo = {
@@ -298,17 +297,17 @@ function initializePageContent() {
           source_code: existingInfo?.source_code || ''
         };
 
-        localStorage.setItem('currentVideoInfo', JSON.stringify(mergedInfo));
+        StorageService.setCurrentVideoInfo(mergedInfo);
         renderPlayerDetailInfo();
 
         // 同步封面到观看历史记录
         if (tmdbInfo.cover) {
           try {
-            const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
+            const history = StorageService.getViewingHistory();
             const idx = history.findIndex(item => item.title === currentVideoTitle);
             if (idx !== -1) {
               history[idx].cover = tmdbInfo.cover;
-              localStorage.setItem('viewingHistory', JSON.stringify(history));
+              StorageService.setViewingHistory(history);
             }
           } catch (e) {}
         }
@@ -564,9 +563,8 @@ function saveToHistory() {
     // 尝试获取当前视频的封面信息
     let currentVideoCover = '';
     try {
-        const storedVideoInfo = localStorage.getItem('currentVideoInfo');
-        if (storedVideoInfo) {
-            const parsedInfo = JSON.parse(storedVideoInfo);
+        const parsedInfo = StorageService.getCurrentVideoInfo();
+        if (parsedInfo) {
             currentVideoCover = parsedInfo.cover || parsedInfo.vod_pic || '';
         }
     } catch (e) {
@@ -590,7 +588,7 @@ function saveToHistory() {
     };
     
     try {
-        const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
+        const history = StorageService.getViewingHistory();
 
         // 查找相同标题的剧集（不管播放源如何，只保留最新播放源）
         const existingIndex = history.findIndex(item => 
@@ -642,7 +640,7 @@ function saveToHistory() {
         // 限制历史记录数量为50条
         if (history.length > 50) history.splice(50);
 
-        localStorage.setItem('viewingHistory', JSON.stringify(history));
+        StorageService.setViewingHistory(history);
     } catch (e) {
     }
 }
@@ -687,9 +685,8 @@ function saveCurrentProgress() {
 
         // 更新 viewingHistory 中的进度
         try {
-            const historyRaw = localStorage.getItem('viewingHistory');
-            if (historyRaw) {
-                const history = JSON.parse(historyRaw);
+            const history = StorageService.getViewingHistory();
+            if (history.length > 0) {
                 
                 // 用更精确的匹配方式：sourceName + vod_id + episodeIndex
                 let idx = -1;
@@ -726,7 +723,7 @@ function saveCurrentProgress() {
                         history[idx].playbackPosition = currentTime;
                         history[idx].duration = duration;
                         history[idx].timestamp = Date.now();
-                        localStorage.setItem('viewingHistory', JSON.stringify(history));
+                        StorageService.setViewingHistory(history);
                     }
                 } else if (currentVideoTitle && currentVideoUrl) {
                     // 如果找不到匹配项，并且有足够信息，创建一个新的历史记录项

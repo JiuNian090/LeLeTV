@@ -544,6 +544,8 @@
     </script>
     <script src="js/core/config.js?v=v2.8.2" defer></script>
 <script src="js/core/leletv-global.js?v=v2.8.2" defer></script>
+<script src="js/core/storage-service.js?v=v2.8.2" defer></script>
+<script src="js/core/listener-tracker.js?v=v2.8.2" defer></script>
 <script src="js/api/api-config.js?v=v2.8.2" defer></script>
 <script src="js/auth/proxy-auth.js?v=v2.8.2" defer></script>
     <script src="js/api/loadBalancer.js?v=v2.8.2" defer></script>
@@ -559,6 +561,7 @@
     <script src="js/app/app-search.js?v=v2.8.2" defer></script>
     <script src="js/app/app-config.js?v=v2.8.2" defer></script>
     <script src="js/app/app.js?v=v2.8.2" defer></script>
+    <script src="js/app/app-init.js?v=v2.8.2" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -826,9 +829,8 @@
             }, 100);
         }
         
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化极光背景
+        // 使用 AppInit 显式注册初始化阶段
+        AppInit.register('aurora', AppInit.PHASES.POST, function() {
             initAurora({
                 selector: '#auroraContainer',
                 colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
@@ -836,18 +838,25 @@
                 blend: 0.6,
                 speed: 0.35
             });
+        });
 
-            // 读取初始 hash 并切换到对应页面（支持直接链接 #history/#settings/#about）
+        AppInit.register('hash-routing', AppInit.PHASES.POST, function() {
+            // 读取初始 hash 并切换到对应页面
             const initialPage = location.hash.slice(1) || 'home';
             showPage(initialPage);
-
-            // 监听 hash 变化（浏览器前进/后退）
+            // 监听 hash 变化
             window.addEventListener('hashchange', handleHashChange);
-            
-            // 初始化邮箱点击处理器
+        });
+
+        AppInit.register('email-handler', AppInit.PHASES.POST, function() {
             if (typeof setupEmailClickHandlers === 'function') {
                 setupEmailClickHandlers();
             }
+        });
+
+        // 启动初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            AppInit.run();
         });
 
         // 打开使用说明弹窗（用户使用协议）

@@ -71,6 +71,11 @@
     // ==================== 工具 ====================
 
     /**
+     * ListenerTracker 构造函数引用
+     */
+    _adapter.ListenerTracker = null;
+
+    /**
      * 显示 Toast 消息
      * @param {string} message
      * @param {string} [type='error']
@@ -121,6 +126,17 @@
     Object.defineProperty(window.LeLeTV, 'player', {
         get: function () {
             return typeof PlayerManager !== 'undefined' ? PlayerManager : null;
+        },
+        set: function (v) {
+            // 只读属性
+        },
+        configurable: true
+    });
+
+    // 同步 ListenerTracker
+    Object.defineProperty(window.LeLeTV, 'ListenerTracker', {
+        get: function () {
+            return typeof ListenerTracker !== 'undefined' ? ListenerTracker : null;
         },
         set: function (v) {
             // 只读属性

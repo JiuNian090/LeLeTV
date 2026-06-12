@@ -473,9 +473,8 @@ function clearVideoProgress() {
 
 function getVideoCover() {
     try {
-        const stored = localStorage.getItem('currentVideoInfo');
-        if (stored) {
-            const info = JSON.parse(stored);
+        const info = StorageService.getCurrentVideoInfo();
+        if (info) {
             if (info.cover && info.cover.startsWith('http')) return info.cover;
         }
     } catch (e) {}
@@ -624,10 +623,8 @@ function renderPlayerDetailInfo() {
 
     let videoInfo = null;
     try {
-        const stored = localStorage.getItem('currentVideoInfo');
-        if (stored) {
-            videoInfo = JSON.parse(stored);
-        }
+        const videoInfo = StorageService.getCurrentVideoInfo();
+
     } catch (e) {
         // ignore
     }
@@ -1038,7 +1035,7 @@ async function switchToResource(sourceKey, vodId) {
             
             // 保存视频详细信息，包括封面
             if (data.videoInfo) {
-                localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
+                StorageService.setCurrentVideoInfo(data.videoInfo);
             }
         } catch (e) {
             console.error('保存播放状态失败:', e);
@@ -1046,9 +1043,8 @@ async function switchToResource(sourceKey, vodId) {
 
         // 更新历史记录中的源信息而不是创建新记录
         try {
-            const historyRaw = localStorage.getItem('viewingHistory');
-            if (historyRaw) {
-                const history = JSON.parse(historyRaw);
+            const history = StorageService.getViewingHistory();
+            if (history.length > 0) {
                 
                 // 查找当前视频的历史记录项（通过标题和集数索引）
                 const currentUrlParams = new URLSearchParams(window.location.search);
@@ -1080,7 +1076,7 @@ async function switchToResource(sourceKey, vodId) {
                     const updatedItem = history.splice(idx, 1)[0];
                     history.unshift(updatedItem);
                     
-                    localStorage.setItem('viewingHistory', JSON.stringify(history));
+                    StorageService.setViewingHistory(history);
                 }
             }
         } catch (e) {

@@ -15,6 +15,7 @@ const PlayerManager = {
     _hls: null,
     _intervals: [],
     _timeouts: [],
+    _tracker: null,
 
     /** @returns {Artplayer|null} */
     getInstance() {
@@ -45,7 +46,18 @@ const PlayerManager = {
     },
 
     /**
-     * 销毁当前播放器（ArtPlayer + HLS + 清理所有定时器）
+     * 获取或创建 ListenerTracker 实例
+     * @returns {Object}
+     */
+    getTracker() {
+        if (!this._tracker && typeof ListenerTracker !== 'undefined') {
+            this._tracker = new ListenerTracker();
+        }
+        return this._tracker;
+    },
+
+    /**
+     * 销毁当前播放器（ArtPlayer + HLS + 清理所有定时器和事件）
      */
     destroy() {
         // 销毁 ArtPlayer
@@ -66,6 +78,12 @@ const PlayerManager = {
                 // 静默处理
             }
             this._hls = null;
+        }
+
+        // 清理事件监听器
+        if (this._tracker) {
+            this._tracker.removeAll();
+            this._tracker = null;
         }
 
         this._clearAllTimers();
