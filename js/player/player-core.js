@@ -413,6 +413,34 @@ function setupLongLoadingWarning() {
     }, 10000);
 }
 
+/**
+ * 监听浏览器原生全屏变化（区别于 ArtPlayer 的 fullscreen/fullscreenWeb）
+ * 用于在华为等浏览器原生视频播放器全屏时关闭高耗 CSS 效果，防止卡顿和屏闪
+ */
+function setupNativeFullscreenHandler() {
+    let fsTimeout = null;
+
+    function onNativeFullScreenChange() {
+        const isNativeFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+        clearTimeout(fsTimeout);
+        document.body.classList.remove('native-fs-exiting');
+
+        if (isNativeFullscreen) {
+            document.body.classList.add('native-fs-active');
+        } else {
+            document.body.classList.remove('native-fs-active');
+            document.body.classList.add('native-fs-exiting');
+            fsTimeout = setTimeout(() => {
+                document.body.classList.remove('native-fs-exiting');
+            }, 200);
+        }
+    }
+
+    document.addEventListener('fullscreenchange', onNativeFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', onNativeFullScreenChange);
+}
+
 function initPlayer(videoUrl) {
     if (!videoUrl) {
         return
@@ -436,6 +464,8 @@ function initPlayer(videoUrl) {
     const fullScreenController = createFullScreenController();
 
     setupPlayerEventListeners(art, fullScreenController, loadingWatchdog);
+
+    setupNativeFullscreenHandler();
 
     setupLongPressSpeedControl();
 
