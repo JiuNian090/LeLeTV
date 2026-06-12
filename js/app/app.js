@@ -1,14 +1,8 @@
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
 // var selectedAPIs / customAPIs 已在 api-config.js 中声明
 
-// 添加当前播放的集数索引
-let currentEpisodeIndex = 0;
-// 添加当前视频的所有集数
-let currentEpisodes = [];
-// 添加当前视频的标题
-let currentVideoTitle = '';
-// 全局变量用于倒序状态
-let episodesReversed = false;
+// 添加当前视频的所有集数（实际在 player.js 中声明，此处仅为类型参考）
+// let currentEpisodeIndex, currentEpisodes, currentVideoTitle, episodesReversed
 
 // 搜索源过滤状态
 let _activeSourceFilter = 'all';

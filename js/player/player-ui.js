@@ -623,7 +623,7 @@ function renderPlayerDetailInfo() {
 
     let videoInfo = null;
     try {
-        const videoInfo = StorageService.getCurrentVideoInfo();
+        videoInfo = StorageService.getCurrentVideoInfo();
 
     } catch (e) {
         // ignore
