@@ -357,6 +357,7 @@ function closeSearchResults() {
 
 function hookInput() {
     const input = document.getElementById('searchInput');
+    if (!input) return;
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
 
     // 重写 value 属性的 getter 和 setter

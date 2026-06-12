@@ -18,8 +18,11 @@ let _filterConfig = null;
 
 // 对搜索结果应用内容过滤
 
-// 页面初始化
+// 页面初始化（仅在主页面执行，播放页通过 player.js 独立初始化）
 document.addEventListener('DOMContentLoaded', function () {
+    // 检测是否在主页面（搜索输入框是否存在），播放页忽略此初始化
+    if (!document.getElementById('searchInput')) return;
+
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
     if (!localStorage.getItem('hasInitializedDefaults')) {
         selectedAPIs = ["tyyszy", "bfzy", "dyttzy", "wolong"];
