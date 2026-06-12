@@ -543,6 +543,7 @@
         window._jsSha256 = window.sha256;
     </script>
     <script src="js/core/config.js?v=v2.8.2" defer></script>
+<script src="js/core/leletv-global.js?v=v2.8.2" defer></script>
 <script src="js/api/api-config.js?v=v2.8.2" defer></script>
 <script src="js/auth/proxy-auth.js?v=v2.8.2" defer></script>
     <script src="js/api/loadBalancer.js?v=v2.8.2" defer></script>
@@ -586,8 +587,24 @@
         // 当前页面状态
         let currentPage = 'home';
         
-        // 页面切换函数
+        // 页面切换函数（公开 API → 更新 hash，触发 hashchange）
         function switchPage(pageName) {
+            const targetHash = pageName === 'home' ? '' : '#' + pageName;
+            if (location.hash !== targetHash) {
+                location.hash = targetHash; // 触发 hashchange → showPage
+            } else {
+                showPage(pageName); // hash 已正确，直接切换
+            }
+        }
+        
+        // 监听 hash 变化（浏览器前进/后退、直接输入 URL）
+        function handleHashChange() {
+            const pageName = location.hash.slice(1) || 'home';
+            showPage(pageName);
+        }
+        
+        // 显示指定页面（实际的 DOM 切换逻辑）
+        function showPage(pageName) {
             // 更新当前页面
             currentPage = pageName;
             
@@ -820,8 +837,12 @@
                 speed: 0.35
             });
 
-            // 初始显示首页
-            switchPage('home');
+            // 读取初始 hash 并切换到对应页面（支持直接链接 #history/#settings/#about）
+            const initialPage = location.hash.slice(1) || 'home';
+            showPage(initialPage);
+
+            // 监听 hash 变化（浏览器前进/后退）
+            window.addEventListener('hashchange', handleHashChange);
             
             // 初始化邮箱点击处理器
             if (typeof setupEmailClickHandlers === 'function') {

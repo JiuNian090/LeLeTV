@@ -86,12 +86,16 @@ window.addEventListener('pageshow', function (e) {
         _activeSourceFilter = 'all';
         const filterTabs = document.getElementById('sourceFilterTabs');
         if (filterTabs) filterTabs.innerHTML = '';
-        // 用 replaceState 修正 URL 不额外增加历史条目
-        if (window.location.pathname !== '/' || window.location.search) {
+        // 用 replaceState 修正 URL 不额外增加历史条目，同时清除 hash
+        if (window.location.pathname !== '/' || window.location.search || location.hash) {
             try {
                 window.history.replaceState({}, 'LeLeTV - 乐乐影视', '/');
                 document.title = 'LeLeTV - 乐乐影视';
             } catch (e) {}
+        }
+        // 恢复首页面板（bfcache 不会触发 hashchange）
+        if (typeof showPage === 'function') {
+            showPage('home');
         }
     }
 });

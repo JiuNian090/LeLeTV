@@ -32,15 +32,11 @@ function createHlsConfig() {
 }
 
 function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
-    if (currentHls && currentHls.destroy) {
-        try {
-            currentHls.destroy();
-        } catch (e) {
-        }
-    }
+    // 由 PlayerManager 管理 HLS 生命周期
+    PlayerManager.setHlsInstance(null);
 
     const hls = new Hls(hlsConfig);
-    currentHls = hls;
+    PlayerManager.setHlsInstance(hls);
 
     let errorDisplayed = false;
     let errorCount = 0;
@@ -429,14 +425,13 @@ function initPlayer(videoUrl) {
         }
     }, 30000);
 
-    if (art) {
-        art.destroy();
-        art = null;
-    }
+    // 由 PlayerManager 统一销毁旧实例
+    PlayerManager.destroy();
 
     const hlsConfig = createHlsConfig();
 
     art = createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog);
+    PlayerManager.setInstance(art);
 
     const fullScreenController = createFullScreenController();
 

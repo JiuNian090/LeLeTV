@@ -328,8 +328,11 @@ function resetSearchArea() {
         footer.style.position = '';
     }
 
-    // 重置URL为主页
+    // 重置URL为主页（同时清除 hash）
     try {
+        if (location.hash) {
+            history.pushState(null, '', location.pathname + location.search);
+        }
         window.history.pushState(
             {},
             `LeLeTV - 乐乐影视`,

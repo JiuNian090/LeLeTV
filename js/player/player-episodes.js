@@ -147,12 +147,8 @@ function playEpisode(index) {
             if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
                 // 兜底：销毁现有播放器，重新初始化
                 if (art) {
-                    art.destroy();
-                    art = null;
+                    PlayerManager.destroy();
                 }
-                if (currentHls) {
-                    try { currentHls.destroy(); } catch (e) {}
-                    currentHls = null;
                 }
                 initPlayer(url);
             }
