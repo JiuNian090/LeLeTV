@@ -2,7 +2,7 @@
  * AppInit — 应用初始化协调器
  *
  * 显式定义 LeLeTV 首页的初始化阶段和依赖顺序，不再隐式依赖 <script> 标签顺序。
- * 各模块的 DOMContentLoaded 监听器仍然保留以维持向后兼容，
+ * 各模块逐步迁移到此机制，目前 index.html 的内联初始化已接入。
  * 新模块应通过 AppInit.register() 注册初始化函数。
  *
  * 初始化阶段（按顺序执行）：

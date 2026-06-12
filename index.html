@@ -830,34 +830,33 @@
             }, 100);
         }
         
-        // 页面初始化（等待所有 deferred 脚本就绪）
+        // 页面初始化（使用 AppInit 统一管理初始化阶段）
         document.addEventListener('DOMContentLoaded', function() {
 
-            // 极光背景
-            initAurora({
-                selector: '#auroraContainer',
-                colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
-                amplitude: 0.45,
-                blend: 0.6,
-                speed: 0.35
+            AppInit.register('aurora', AppInit.PHASES.POST, function() {
+                initAurora({
+                    selector: '#auroraContainer',
+                    colorStops: ['#3A29FF', '#ec4899', '#FFD700'],
+                    amplitude: 0.45,
+                    blend: 0.6,
+                    speed: 0.35
+                });
             });
 
-            // 读取初始 hash 并切换到对应页面（支持直接链接 #history/#settings/#about）
-            const initialPage = location.hash.slice(1) || 'home';
-            showPage(initialPage);
+            AppInit.register('hash-routing', AppInit.PHASES.POST, function() {
+                const initialPage = location.hash.slice(1) || 'home';
+                showPage(initialPage);
+                window.addEventListener('hashchange', handleHashChange);
+            });
 
-            // 监听 hash 变化（浏览器前进/后退）
-            window.addEventListener('hashchange', handleHashChange);
+            AppInit.register('email-handler', AppInit.PHASES.POST, function() {
+                if (typeof setupEmailClickHandlers === 'function') {
+                    setupEmailClickHandlers();
+                }
+            });
 
-            // 初始化邮箱点击处理器
-            if (typeof setupEmailClickHandlers === 'function') {
-                setupEmailClickHandlers();
-            }
-
-            // 使用 AppInit 注册剩余初始化阶段（现有模块已迁移的可逐步移入）
-            if (typeof AppInit !== 'undefined') {
-                AppInit.run();
-            }
+            // 统一按阶段顺序执行
+            AppInit.run();
         });
 
         // 打开使用说明弹窗（用户使用协议）
