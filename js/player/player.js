@@ -78,6 +78,7 @@ let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
 let episodeSwitchTimeout = null; // 集数切换超时定时器（用于兜底重建）
 Artplayer.FULLSCREEN_WEB_IN_BODY = true;
+Artplayer.REMOVE_SRC_WHEN_DESTROY = true;
 
 // TMDB 影片详情配置（TMDB优先，视频源API兜底）
 const PLAYER_TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
