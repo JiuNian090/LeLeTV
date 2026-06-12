@@ -74,6 +74,11 @@ const PlayerManager = {
             this._art = null;
         }
 
+        // 同步全局变量
+        if (typeof art !== 'undefined') {
+            art = null;
+        }
+
         // 销毁 HLS
         if (this._hls) {
             try {

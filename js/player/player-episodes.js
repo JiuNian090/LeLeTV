@@ -149,7 +149,6 @@ function playEpisode(index) {
                 if (art) {
                     PlayerManager.destroy();
                 }
-                }
                 initPlayer(url);
             }
         }, 12000);
