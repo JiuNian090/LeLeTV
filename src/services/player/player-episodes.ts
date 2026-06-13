@@ -9,6 +9,7 @@ import {
   currentEpisodes,
   currentEpisodeIndex,
   currentVideoTitle,
+  currentVideoUrl,
   episodesReversed,
   episodeSwitchTimeout,
   setCurrentEpisodeIndex,
@@ -166,19 +167,75 @@ function clearProgressTimer(): void {
 }
 
 export function saveToHistory(): void {
-  if (!currentVideoTitle) return;
+  if (!currentVideoTitle || !currentEpisodes?.length || !currentVideoUrl) return;
   try {
     const history = JSON.parse(localStorage.getItem('viewingHistory') || '[]');
+    
+    // 获取 URL 参数
+    const u = new URLSearchParams(window.location.search);
+    const sourceName = u.get('source') || '';
+    const sourceCode = u.get('source') || '';
+    const idFromParams = u.get('id') || '';
+    
+    // 获取当前播放进度
+    let currentPosition = 0;
+    let videoDuration = 0;
+    if (art?.video) {
+      currentPosition = art.video.currentTime;
+      videoDuration = art.video.duration;
+    }
+    
+    // 获取封面
+    let currentVideoCover = '';
+    try {
+      const coverImg = document.getElementById('tmdbCover') as HTMLImageElement;
+      if (coverImg && coverImg.src && !coverImg.src.includes('nomedia')) {
+        currentVideoCover = coverImg.src;
+      }
+    } catch {}
+    
+    const showIdentifier = sourceName && idFromParams ? `${sourceName}_${idFromParams}` : (currentEpisodes[0] || currentVideoUrl);
+    
     const entry = {
       title: currentVideoTitle,
+      directVideoUrl: currentVideoUrl,
+      url: `player.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(idFromParams)}&index=${currentEpisodeIndex}`,
       episodeIndex: currentEpisodeIndex,
+      sourceName: sourceName,
+      vod_id: idFromParams,
+      sourceCode: sourceCode,
+      showIdentifier: showIdentifier,
       timestamp: Date.now(),
-      url: window.location.href,
+      playbackPosition: currentPosition,
+      duration: videoDuration,
+      episodes: [...currentEpisodes],
+      cover: currentVideoCover,
     };
-    const idx = history.findIndex((h: any) => h.title === currentVideoTitle);
-    if (idx >= 0) history[idx] = entry;
-    else history.unshift(entry);
-    if (history.length > 200) history.length = 200;
+    
+    const existingIdx = history.findIndex((h: any) => h.title === currentVideoTitle);
+    if (existingIdx >= 0) {
+      const existing = history[existingIdx];
+      existing.episodeIndex = entry.episodeIndex;
+      existing.timestamp = entry.timestamp;
+      existing.sourceName = entry.sourceName;
+      existing.sourceCode = entry.sourceCode;
+      existing.vod_id = entry.vod_id;
+      existing.directVideoUrl = entry.directVideoUrl;
+      existing.url = entry.url;
+      existing.playbackPosition = entry.playbackPosition > 10 ? entry.playbackPosition : (existing.playbackPosition || 0);
+      existing.duration = entry.duration || existing.duration;
+      if (entry.sourceName && entry.vod_id) {
+        existing.showIdentifier = `${entry.sourceName}_${entry.vod_id}`;
+      }
+      if (entry.cover) existing.cover = entry.cover;
+      if (entry.episodes?.length) existing.episodes = [...entry.episodes];
+      history.splice(existingIdx, 1);
+      history.unshift(existing);
+    } else {
+      history.unshift(entry);
+    }
+    
+    if (history.length > 50) history.length = 50;
     localStorage.setItem('viewingHistory', JSON.stringify(history));
   } catch {
     /* 静默 */

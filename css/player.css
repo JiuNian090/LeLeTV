@@ -429,6 +429,16 @@ body.fullscreen-active main.container {
     display: none !important;
 }
 
+/* ==================== 浏览器原生全屏防卡顿/屏闪 ==================== */
+/* 进入原生全屏时：关闭 backdrop-filter，防止 GPU 重绘卡顿 */
+body.native-fs-active .player-detail-info,
+body.native-fs-active .episode-section,
+body.native-fs-active #resourceInfoBarContainer,
+body.native-fs-active .control-buttons-container {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
 /* 视频详情信息区域 - 玻璃效果 */
 .player-detail-info {
     background: rgba(26,26,26,0.5);

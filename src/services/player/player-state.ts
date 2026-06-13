@@ -95,6 +95,15 @@ export function setUserClickedPosition(pos: number | null): void {
   userClickedPosition = pos;
 }
 
+// ==================== 进度保存节流 ====================
+
+/** 上次写入 viewingHistory 的时间戳 (ms)，用于防抖 */
+export let _lastHistoryWriteTime = 0;
+
+export function setLastHistoryWriteTime(t: number): void {
+  _lastHistoryWriteTime = t;
+}
+
 // ==================== 全局状态同步 ====================
 
 /** 暴露所有状态到 window 对象（向后兼容） */
@@ -111,4 +120,5 @@ export function syncToWindow(): void {
   w.adFilteringEnabled = adFilteringEnabled;
   w.autoFullscreened = autoFullscreened;
   w.userClickedPosition = userClickedPosition;
+  w._lastHistoryWriteTime = _lastHistoryWriteTime;
 }

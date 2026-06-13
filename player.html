@@ -11,10 +11,10 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <link rel="stylesheet" href="css/variables.css?v=v2.8.4">
-    <link rel="stylesheet" href="css/output.css?v=v2.8.4">
-    <link rel="stylesheet" href="css/styles.css?v=v2.8.4">
-    <link rel="stylesheet" href="css/player.css?v=v2.8.4">
+    <link rel="stylesheet" href="css/variables.css?v=v2.9.3">
+    <link rel="stylesheet" href="css/output.css?v=v2.9.3">
+    <link rel="stylesheet" href="css/styles.css?v=v2.9.3">
+    <link rel="stylesheet" href="css/player.css?v=v2.9.3">
     
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -192,14 +192,14 @@
     </div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v2.8.4"></script>
+    <script src="libs/sha256.min.js?v=v2.9.3"></script>
     <script>
         // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
         window._jsSha256 = window.sha256;
     </script>
     
-    <script src="libs/hls.min.js?v=v2.8.4" defer crossorigin="anonymous"></script>
-    <script src="libs/artplayer.min.js?v=v2.8.4" defer crossorigin="anonymous"></script>
+    <script src="libs/hls.min.js?v=v2.9.3" defer crossorigin="anonymous"></script>
+    <script src="libs/artplayer.min.js?v=v2.9.3" defer crossorigin="anonymous"></script>
 
 
     <!-- Vite 入口 -->
@@ -209,7 +209,7 @@
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
-        window.__LELETV_VERSION__ = "v2.8.4";
+        window.__LELETV_VERSION__ = "v2.9.3";
     </script>
 </body>
 </html>

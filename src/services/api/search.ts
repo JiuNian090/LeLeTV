@@ -3,9 +3,9 @@
  * 按 API 源搜索视频，支持缓存和分页
  */
 
-import { API_CONFIG, API_SITES, AGGREGATED_SEARCH_CONFIG, PROXY_URL } from './api-config';
+import { API_CONFIG, API_SITES, AGGREGATED_SEARCH_CONFIG } from './api-config';
+import { apiFetch } from './api';
 import { LoadBalancer } from './load-balancer';
-import { addAuthToProxyUrl } from '../auth/proxy-auth';
 
 // ==================== 搜索缓存 ====================
 
@@ -112,20 +112,11 @@ export async function searchByAPIAndKeyWord(
       loadBalancer.increaseApiLoad(apiId);
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
+    const response = await apiFetch(
+      apiUrl,
+      { ...API_CONFIG.search.headers },
       AGGREGATED_SEARCH_CONFIG?.timeout || 8000
     );
-
-    const proxiedUrl = await addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl));
-
-    const response = await fetch(proxiedUrl, {
-      headers: { ...API_CONFIG.search.headers },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`API请求失败: ${response.status}`);
@@ -165,22 +156,11 @@ export async function searchByAPIAndKeyWord(
 
         const pagePromise = (async (): Promise<SearchResult[]> => {
           try {
-            const pageController = new AbortController();
-            const pageTimeoutId = setTimeout(
-              () => pageController.abort(),
+            const pageResponse = await apiFetch(
+              pageUrl,
+              { ...API_CONFIG.search.headers },
               AGGREGATED_SEARCH_CONFIG?.timeout || 8000
             );
-
-            const proxiedPageUrl = await addAuthToProxyUrl(
-              PROXY_URL + encodeURIComponent(pageUrl)
-            );
-
-            const pageResponse = await fetch(proxiedPageUrl, {
-              headers: { ...API_CONFIG.search.headers },
-              signal: pageController.signal,
-            });
-
-            clearTimeout(pageTimeoutId);
 
             if (!pageResponse.ok) return [];
 

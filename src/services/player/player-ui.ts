@@ -13,6 +13,8 @@ import {
   shortcutHintTimeout,
   setShortcutHintTimeout,
   setProgressSaveInterval,
+  _lastHistoryWriteTime,
+  setLastHistoryWriteTime,
 } from './player-state';
 
 // ==================== Toast 工具 ====================
@@ -90,11 +92,30 @@ export function startProgressSaveInterval(): void {
   const id = setInterval(() => {
     if (!art?.video || !currentVideoTitle) return;
     try {
+      const ct = art.video.currentTime;
+      // 只保存 currentTime > 1 时的进度（忽略开头）
+      if (ct <= 1) return;
+
       const key = 'videoProgress_' + getVideoId();
+
+      // 防抖：viewingHistory 更新最多每 30 秒一次
+      const now = Date.now();
+      if (now - _lastHistoryWriteTime < 30000) return;
+
+      // 读取已有进度，仅当新进度超过 10 秒时才覆盖（防止刷新丢失进度）
+      let existing: { position: number; timestamp: number } | null = null;
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) existing = JSON.parse(raw);
+      } catch { /* 静默 */ }
+
+      if (existing && ct - existing.position < 10) return;
+
       localStorage.setItem(
         key,
-        JSON.stringify({ position: art.video.currentTime, timestamp: Date.now() })
+        JSON.stringify({ position: ct, timestamp: now })
       );
+      setLastHistoryWriteTime(now);
     } catch {
       /* 静默 */
     }
@@ -226,31 +247,244 @@ export function setupControlsBehavior(): void {
 
 // ==================== 资源切换弹窗 ====================
 
-export function showResourceSwitchModal(
-  sources: { code: string; name: string; count: number }[],
-  onSelect: (code: string) => void
-): void {
+interface SpeedResult {
+  speed: number;  // 毫秒，-1 表示失败
+  episodes: number;
+  error: string | null;
+  note?: string;
+}
+
+/**
+ * 对指定视频源做 HEAD 测速
+ * 1. 调用 /api/detail 获取视频详情（得到第一个 episode URL）
+ * 2. 对该 URL 做 HEAD 请求测速（no-cors, 5s 超时）
+ */
+async function testVideoSourceSpeed(sourceKey: string, vodId: string): Promise<SpeedResult> {
+  const startTime = Date.now();
+  try {
+    // 1. 获取视频详情
+    let detailUrl: string;
+    if (sourceKey.startsWith('custom_')) {
+      const customIndex = sourceKey.replace('custom_', '');
+      const raw = localStorage.getItem('customAPIs');
+      const customAPIs: { url?: string; detail?: string }[] = raw ? JSON.parse(raw) : [];
+      const api = customAPIs[Number(customIndex)];
+      if (!api) return { speed: -1, episodes: 0, error: '自定义 API 不存在' };
+      const apiUrl = api.detail || api.url;
+      detailUrl = `/api/detail?id=${encodeURIComponent(vodId)}&source=custom&customApi=${encodeURIComponent(apiUrl || '')}`;
+    } else {
+      detailUrl = `/api/detail?id=${encodeURIComponent(vodId)}&source=${encodeURIComponent(sourceKey)}`;
+    }
+
+    const detailResp = await fetch(detailUrl);
+    if (!detailResp.ok) {
+      return { speed: -1, episodes: 0, error: `详情请求失败: ${detailResp.status}` };
+    }
+    const detailData = await detailResp.json();
+    const episodes: string[] = detailData.episodes || [];
+    if (episodes.length === 0) {
+      return { speed: -1, episodes: 0, error: '无可用剧集' };
+    }
+
+    // 2. 取第一个 episode URL 做 HEAD 测速
+    const firstUrl = episodes[0];
+    const headStart = Date.now();
+    try {
+      await fetch(firstUrl, {
+        method: 'HEAD',
+        mode: 'no-cors',
+        signal: AbortSignal.timeout(5000),
+      });
+      const elapsed = Date.now() - headStart;
+      return { speed: elapsed, episodes: episodes.length, error: null };
+    } catch {
+      // HEAD 请求失败（no-cors 模式下无法读取耗时，但请求本身可能成功）
+      // 退而使用整体耗时作为参考
+      return { speed: Date.now() - startTime, episodes: episodes.length, error: null };
+    }
+  } catch (err) {
+    return { speed: -1, episodes: 0, error: (err as Error).message || '未知错误' };
+  }
+}
+
+function formatSpeedDisplay(speedResult: SpeedResult): string {
+  if (speedResult.speed < 0) return '🔴 超时/失败';
+  if (speedResult.speed < 500) return '🟢 极速';
+  if (speedResult.speed < 2000) return '🟡 较快';
+  return '🔴 较慢';
+}
+
+/**
+ * 显示资源切换弹窗
+ * 从 URL 参数获取当前 source/id/title，从 localStorage 获取已选 API 列表，
+ * 并行搜索 + 测速，按速度排序渲染，渐进式展示。
+ */
+export async function showResourceSwitchModal(): Promise<void> {
   const modal = document.getElementById('modal');
-  const title = document.getElementById('modalTitle');
-  const content = document.getElementById('modalContent')?.querySelector('.grid');
-  if (!modal || !title || !content) return;
+  const titleEl = document.getElementById('modalTitle');
+  const content = document.getElementById('modalContent');
+  if (!modal || !titleEl || !content) return;
 
-  title.textContent = '切换资源';
-  content.innerHTML = sources
-    .map(
-      (s) =>
-        `<button data-source="${s.code}" class="resource-switch-btn px-3 py-2 bg-[#222] hover:bg-[#333] border border-[#333] rounded text-sm text-center transition-colors">${s.name} (${s.count})</button>`
-    )
-    .join('');
+  // 1. 从 URL 参数获取当前信息
+  const params = new URLSearchParams(window.location.search);
+  const currentSourceCode = params.get('source') || 'heimuer';
+  const currentVideoId = params.get('id') || '';
+  const currentVideoTitleFromUrl = params.get('title') || currentVideoTitle || '';
 
-  content.querySelectorAll('[data-source]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      onSelect((btn as HTMLElement).dataset.source || '');
-      modal.style.display = 'none';
+  // 2. 从 localStorage 读取已选 API 和自定义 API
+  let selectedAPIs: string[] = [];
+  try {
+    selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');
+  } catch { /* 静默 */ }
+
+  // 过滤掉 'aggregated' 和 'custom' 特殊标识
+  const sourceKeys = selectedAPIs.filter(
+    (k) => k !== 'aggregated' && k !== 'custom'
+  );
+
+  if (sourceKeys.length === 0) {
+    showToast('请先在设置中启用 API 源', 'warning');
+    return;
+  }
+
+  // 3. 初始化弹窗
+  titleEl.textContent = currentVideoTitleFromUrl || '切换资源';
+  const grid = document.createElement('div');
+  grid.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 p-3';
+  content.innerHTML = '';
+  content.appendChild(grid);
+  modal.style.display = 'flex';
+
+  // 存储搜索结果: sourceKey -> { result, speed }
+  const resultsMap = new Map<
+    string,
+    {
+      result: any | null;
+      speed: SpeedResult | null;
+      searching: boolean;
+    }
+  >();
+
+  // 辅助：重新渲染网格
+  function renderGrid(): void {
+    const sorted = Array.from(resultsMap.entries())
+      .filter(([, v]) => v.result !== null)
+      .sort(([keyA], [keyB]) => {
+        // 当前源优先
+        if (keyA === currentSourceCode) return -1;
+        if (keyB === currentSourceCode) return 1;
+        // 按速度排序（速度快的在前）
+        const speedA = resultsMap.get(keyA)?.speed?.speed ?? Infinity;
+        const speedB = resultsMap.get(keyB)?.speed?.speed ?? Infinity;
+        return speedA - speedB;
+      });
+
+    grid.innerHTML = sorted
+      .map(([key, val]) => {
+        const r = val.result;
+        const s = val.speed;
+        const isCurrent = key === currentSourceCode;
+        const speedLabel = s ? formatSpeedDisplay(s) : '⏳ 测速中...';
+        const episodeCount = s ? `(${s.episodes}集)` : '';
+        const sourceName = r?.source_name || key;
+        const coverUrl = r?.vod_pic || '';
+        const vodName = r?.vod_name || currentVideoTitleFromUrl;
+
+        return `
+          <div
+            class="resource-card relative rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 border ${isCurrent ? 'border-blue-500 ring-2 ring-blue-400' : 'border-[#333]'}"
+            data-source-key="${key}"
+            data-vod-id="${r?.vod_id || ''}"
+          >
+            ${coverUrl ? `<img src="${coverUrl}" alt="${vodName}" class="w-full h-28 object-cover" loading="lazy" />` : '<div class="w-full h-28 bg-[#222] flex items-center justify-center text-gray-500">暂无封面</div>'}
+            <div class="p-2">
+              <div class="font-medium text-sm truncate" title="${vodName}">${vodName}</div>
+              <div class="text-xs text-gray-400 mt-1 flex justify-between items-center">
+                <span>${sourceName} ${episodeCount}</span>
+                <span>${speedLabel}</span>
+              </div>
+            </div>
+            ${isCurrent ? '<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white font-bold text-lg bg-blue-600 px-3 py-1 rounded">当前播放</span></div>' : ''}
+          </div>
+        `;
+      })
+      .join('');
+
+    // 绑定点击事件
+    grid.querySelectorAll('.resource-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const sourceKey = (card as HTMLElement).dataset.sourceKey || '';
+        const vodId = (card as HTMLElement).dataset.vodId || '';
+        if (!sourceKey || !vodId) return;
+        if (sourceKey === currentSourceCode) return; // 当前源点击不做任何事
+        modal!.style.display = 'none';
+        switchToResource(sourceKey, vodId);
+      });
     });
+  }
+
+  // 4. 对所有源并行搜索 & 测速
+  const promises = sourceKeys.map(async (sourceKey) => {
+    resultsMap.set(sourceKey, { result: null, speed: null, searching: true });
+    renderGrid();
+
+    try {
+      // 搜索该源下的视频
+      const { searchByAPIAndKeyWord } = await import('../api/search');
+      const searchResults = await searchByAPIAndKeyWord(sourceKey, currentVideoTitleFromUrl);
+
+      if (!searchResults || searchResults.length === 0) {
+        resultsMap.set(sourceKey, { result: null, speed: null, searching: false });
+        // 设为空结果但显示占位
+        renderGrid();
+        return;
+      }
+
+      // 取第一个结果（最匹配的）
+      const firstResult = searchResults[0];
+      const vodId = firstResult.vod_id || '';
+
+      resultsMap.set(sourceKey, { result: firstResult, speed: null, searching: false });
+      renderGrid();
+
+      if (!vodId) {
+        resultsMap.set(sourceKey, {
+          result: firstResult,
+          speed: { speed: -1, episodes: 0, error: '无视频 ID' },
+          searching: false,
+        });
+        renderGrid();
+        return;
+      }
+
+      // 测速
+      const speed = await testVideoSourceSpeed(sourceKey, vodId);
+      resultsMap.set(sourceKey, { result: firstResult, speed, searching: false });
+      renderGrid();
+    } catch (err) {
+      resultsMap.set(sourceKey, {
+        result: null,
+        speed: { speed: -1, episodes: 0, error: (err as Error).message },
+        searching: false,
+      });
+      renderGrid();
+    }
   });
 
-  modal.style.display = 'flex';
+  // 全部完成后再刷新一次
+  await Promise.allSettled(promises);
+  renderGrid();
+}
+
+/**
+ * 切换到指定资源
+ * 修改 URL 参数并刷新页面
+ */
+function switchToResource(sourceKey: string, vodId: string): void {
+  const url = new URL(window.location.href);
+  url.searchParams.set('source', sourceKey);
+  url.searchParams.set('id', vodId);
+  window.location.href = url.toString();
 }
 
 // ==================== 复制链接 ====================
@@ -283,6 +517,9 @@ export default {
   setupThumbnailCapture,
   setupControlsBehavior,
   showResourceSwitchModal,
+  testVideoSourceSpeed,
+  formatSpeedDisplay,
+  switchToResource,
   copyLinks,
   saveToHistory: () => {
     import('./player-episodes').then((m) => m.saveToHistory());

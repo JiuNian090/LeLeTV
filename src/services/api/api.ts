@@ -47,7 +47,7 @@ export interface ApiResult {
 /**
  * 通过代理获取 API 数据
  */
-async function apiFetch(
+export async function apiFetch(
   url: string,
   headers: Record<string, string>,
   timeout: number,

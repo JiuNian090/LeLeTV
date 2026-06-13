@@ -17,6 +17,7 @@ import {
   syncToWindow,
 } from './services/player/player-state';
 import { TIMING } from './core/timing';
+import { getTmdbWorkerUrl } from './services/api/api-config';
 
 // ==================== 全局向后兼容 ====================
 
@@ -66,6 +67,11 @@ function initPlayerPage(): void {
     initPlayer(videoUrl);
   }
 
+  // TMDB 数据获取
+  if (videoTitle && videoTitle !== 'Loading...') {
+    fetchTmdbPlayerDetail(videoTitle);
+  }
+
   // 注册邮箱点击处理
   setupEmailClickHandlers();
 }
@@ -97,6 +103,153 @@ function initPlayerPage(): void {
     }
   }, TIMING.FALLBACK_NAVIGATION_DELAY);
 };
+
+// ==================== TMDB 信息获取 ====================
+
+const PLAYER_TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
+
+interface TmdbSearchResult {
+  id: number;
+  media_type: 'movie' | 'tv' | 'person';
+  title?: string;
+  name?: string;
+}
+
+interface TmdbGenre {
+  name: string;
+}
+
+interface TmdbProductionCountry {
+  name: string;
+}
+
+interface TmdbDetail {
+  title?: string;
+  name?: string;
+  overview?: string;
+  poster_path?: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  genres?: TmdbGenre[];
+  production_countries?: TmdbProductionCountry[];
+}
+
+interface TmdbCrewMember {
+  job: string;
+  name: string;
+}
+
+interface TmdbCastMember {
+  name: string;
+}
+
+interface TmdbCredits {
+  crew?: TmdbCrewMember[];
+  cast?: TmdbCastMember[];
+}
+
+interface TmdbSearchResponse {
+  results?: TmdbSearchResult[];
+}
+
+interface PlayerDetailInfo {
+  title: string;
+  cover: string;
+  desc: string;
+  type: string;
+  year: string;
+  area: string;
+  director: string;
+  actor: string;
+  fromTmdb: boolean;
+}
+
+async function fetchTmdbPlayerDetail(title: string): Promise<void> {
+  try {
+    const baseUrl = getTmdbWorkerUrl();
+    if (!baseUrl) return;
+
+    const multiUrl = `${baseUrl}?endpoint=search/multi&query=${encodeURIComponent(title)}&language=zh-CN&page=1`;
+    const res = await fetch(multiUrl);
+    if (!res.ok) return;
+
+    const data: TmdbSearchResponse = await res.json();
+    if (!data.results || data.results.length === 0) return;
+
+    const result = data.results.find((r) => r.media_type === 'movie' || r.media_type === 'tv');
+    if (!result) return;
+
+    const mediaType = result.media_type;
+    const id = result.id;
+
+    const [detailRes, creditsRes] = await Promise.all([
+      fetch(`${baseUrl}?endpoint=${mediaType}/${id}&language=zh-CN`),
+      fetch(`${baseUrl}?endpoint=${mediaType}/${id}/credits&language=zh-CN`),
+    ]);
+
+    if (!detailRes.ok) return;
+
+    const [detail, credits]: [TmdbDetail, TmdbCredits] = await Promise.all([
+      detailRes.json(),
+      creditsRes.ok ? creditsRes.json() : Promise.resolve({ crew: [], cast: [] }),
+    ]);
+
+    const isMovie = mediaType === 'movie';
+    const director = credits.crew?.find((c) => c.job === 'Director')?.name || '';
+    const actors = credits.cast?.slice(0, 5).map((c) => c.name).join(' / ') || '';
+    const genres = detail.genres?.map((g) => g.name).join(' / ') || '';
+    const countries = detail.production_countries?.map((c) => c.name).join(' / ') || '';
+    const year = isMovie
+      ? (detail.release_date?.split('-')[0] || '')
+      : (detail.first_air_date?.split('-')[0] || '');
+    const posterPath = detail.poster_path
+      ? `${PLAYER_TMDB_IMAGE_BASE}/w342${detail.poster_path}`
+      : '';
+
+    const tmdbInfo: PlayerDetailInfo = {
+      title: isMovie ? (detail.title ?? '') : (detail.name ?? ''),
+      cover: posterPath,
+      desc: detail.overview || '',
+      type: genres,
+      year: year,
+      area: countries,
+      director: director,
+      actor: actors,
+      fromTmdb: true,
+    };
+
+    renderPlayerDetailInfo(tmdbInfo);
+  } catch (e) {
+    console.warn('获取TMDB详情失败:', e);
+  }
+}
+
+function renderPlayerDetailInfo(info: PlayerDetailInfo): void {
+  // 更新封面
+  const coverImg = document.getElementById('tmdbCover') as HTMLImageElement | null;
+  if (coverImg && info.cover) {
+    coverImg.src = info.cover;
+    coverImg.style.display = 'block';
+  }
+
+  // 更新详情信息
+  const detailContainer = document.getElementById('playerDetailInfo');
+  if (!detailContainer) return;
+
+  let html = '';
+  if (info.desc) html += `<p class="text-sm text-gray-300 leading-relaxed mb-2">${info.desc}</p>`;
+  if (info.type || info.year || info.area) {
+    html += '<div class="flex flex-wrap gap-1.5 mb-2">';
+    if (info.type) html += `<span class="px-2 py-0.5 bg-pink-500/10 text-pink-400 text-xs rounded">${info.type}</span>`;
+    if (info.year) html += `<span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded">${info.year}</span>`;
+    if (info.area) html += `<span class="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-xs rounded">${info.area}</span>`;
+    html += '</div>';
+  }
+  if (info.director) html += `<div class="text-xs text-gray-400 mb-1"><span class="text-gray-500">导演：</span>${info.director}</div>`;
+  if (info.actor) html += `<div class="text-xs text-gray-400 detail-meta-collapsible"><span class="text-gray-500">主演：</span>${info.actor}</div>`;
+
+  detailContainer.innerHTML = html;
+}
 
 // 邮箱点击处理器（向后兼容）
 function setupEmailClickHandlers(): void {
