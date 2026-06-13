@@ -79,6 +79,9 @@ export async function executeSearch(query: string): Promise<void> {
       }
     });
 
+    // 通知 Vue 组件搜索结果已更新
+    window.dispatchEvent(new CustomEvent('leletv:search-results-changed', { detail: { count: allResults.length, results: allResults } }));
+
     renderResults(allResults, 'all');
   } catch (error) {
     console.error('搜索失败:', error);
@@ -91,6 +94,15 @@ export async function executeSearch(query: string): Promise<void> {
 // ==================== 结果渲染 ====================
 
 export function renderResults(results: SearchResult[], activeFilter: string): void {
+  // 如果 Vue 组件已接管，跳过原生渲染
+  const vueResultsArea = document.querySelector('#resultsArea .source-filter-tabs');
+  if (vueResultsArea) {
+    window.dispatchEvent(new CustomEvent('leletv:search-results-changed', {
+      detail: { results, activeFilter }
+    }));
+    return;
+  }
+
   const container = document.getElementById('results');
   if (!container) return;
 
@@ -169,6 +181,18 @@ function renderSourceFilterTabs(results: SearchResult[], activeFilter: string): 
       btn.classList.add('active');
     });
   });
+}
+
+// 暴露到 window 供 Vue 组件调用
+(window as any).__nativeExecuteSearch = executeSearch;
+
+/**
+ * 更新搜索结果到 Vue Pinia store
+ */
+function updateVueStore(results: SearchResult[], activeFilter: string): void {
+  window.dispatchEvent(new CustomEvent('leletv:update-results', {
+    detail: { results, activeFilter }
+  }));
 }
 
 function escapeHtml(str: string): string {

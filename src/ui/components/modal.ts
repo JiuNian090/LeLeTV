@@ -1,6 +1,11 @@
 /**
  * 模态框组件
+ *
+ * 渐进式迁移：优先通过 Vue Pinia store 显示模态框，
+ * 回退到原生 DOM 操作。
  */
+
+import { useModalStore } from '../../vue/stores/modal';
 
 export interface ModalOptions {
   title?: string;
@@ -11,6 +16,16 @@ export interface ModalOptions {
 }
 
 export function closeModal(): void {
+  // 尝试通过 Vue 关闭
+  try {
+    const pinia = (window as any).__VUE_PINIA__;
+    if (pinia) {
+      const store = useModalStore();
+      store.close();
+      return;
+    }
+  } catch { /* noop */ }
+
   const modal = document.getElementById('modal');
   if (modal) modal.classList.add('hidden');
   const content = document.getElementById('modalContent');
@@ -25,6 +40,20 @@ export function showModal(options: ModalOptions): HTMLElement {
     closeOnBackdrop = true,
     onClose,
   } = options;
+
+  // 尝试通过 Vue Pinia store 显示（仅支持字符串内容）
+  try {
+    const pinia = (window as any).__VUE_PINIA__;
+    if (pinia && typeof content === 'string') {
+      const store = useModalStore();
+      store.open({
+        title: title || '',
+        content,
+        onClose,
+      });
+      return document.createElement('div'); // placeholder
+    }
+  } catch { /* noop */ }
 
   const existing = document.getElementById('leletv-modal');
   if (existing) existing.remove();

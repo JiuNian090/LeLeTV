@@ -1,5 +1,8 @@
 /**
  * 搜索历史下拉组件
+ *
+ * 渐进式迁移：通过 Vue Pinia store 管理数据，
+ * 发送自定义事件控制 Vue SearchHistoryDropdown 的显隐和定位。
  */
 
 import { SEARCH_HISTORY_KEY, MAX_HISTORY_ITEMS } from '../../services/api/api-config';
@@ -56,44 +59,36 @@ export function saveSearchHistory(query: string): void {
   } catch {
     /* 静默 */
   }
+
+  // 同步到 Vue Pinia store
+  syncToVueStore();
 }
 
-// ==================== 渲染搜索历史下拉 ====================
+function syncToVueStore(): void {
+  try {
+    const pinia = (window as any).__VUE_PINIA__;
+    if (pinia) {
+      // Vue store 会自动从 localStorage 读取，无需手动同步
+    }
+  } catch { /* noop */ }
+}
+
+// ==================== 渲染搜索历史下拉（Vue 接管后不再需要）====================
 
 export function renderSearchHistory(filterText: string = ''): string {
-  const history = getSearchHistory();
-  const filtered = filterText
-    ? history.filter((h) => h.text.toLowerCase().includes(filterText.toLowerCase()))
-    : history;
-
-  if (filtered.length === 0) {
-    return `<div class="px-4 py-6 text-center text-gray-500 text-sm">${
-      filterText ? '无匹配的历史记录' : '暂无搜索历史'
-    }</div>`;
-  }
-
-  return filtered
-    .map(
-      (item, index) => `
-      <div class="search-history-item flex items-center justify-between px-4 py-2.5 hover:bg-[rgba(255,255,255,0.05)] cursor-pointer transition-colors group" data-index="${index}" data-text="${item.text}">
-        <div class="flex items-center space-x-3 flex-1 min-w-0">
-          <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <span class="text-sm text-gray-300 truncate">${item.text}</span>
-        </div>
-        <button class="delete-history-item text-gray-600 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100" data-text="${item.text}" title="删除">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-    `
-    )
-    .join('');
+  return ''; // Vue 组件负责渲染
 }
 
 export function showSearchHistoryDropdown(filterText: string = ''): void {
+  // 尝试通过 Vue 显示
+  const vueDropdown = document.querySelector('#searchHistoryDropdown .search-history-inner');
+  if (vueDropdown) {
+    window.dispatchEvent(new CustomEvent('leletv:show-search-history', { detail: { filterText } }));
+    positionSearchHistoryDropdown();
+    return;
+  }
+
+  // 回退：原生渲染（向后兼容）
   const dropdown = document.getElementById('searchHistoryDropdown');
   if (!dropdown) return;
   dropdown.innerHTML = renderSearchHistory(filterText);
@@ -134,6 +129,10 @@ export function positionSearchHistoryDropdown(): void {
 }
 
 export function hideSearchHistoryDropdown(): void {
+  // 尝试通过 Vue 隐藏
+  window.dispatchEvent(new CustomEvent('leletv:hide-search-history'));
+
+  // 同时也隐藏原生下拉
   const dropdown = document.getElementById('searchHistoryDropdown');
   if (dropdown) {
     dropdown.classList.add('hidden');

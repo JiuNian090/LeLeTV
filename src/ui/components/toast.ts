@@ -1,6 +1,11 @@
 /**
  * Toast 消息组件
+ *
+ * 渐进式迁移：优先通过 Vue Pinia store 显示 Toast，
+ * 回退到原生 DOM 操作。
  */
+
+import { showToast as vueShowToast } from '../../vue/stores/toast';
 
 const toastQueue: { message: string; duration: number }[] = [];
 let isShowingToast = false;
@@ -9,7 +14,7 @@ let loadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 export function showToast(
   message: string,
-  _type: string = 'error',
+  type: string = 'error',
   duration: number = 3000
 ): void {
   if (!message || typeof message !== 'string') {
@@ -17,6 +22,18 @@ export function showToast(
     return;
   }
 
+  // 尝试通过 Vue Pinia store 显示
+  try {
+    const pinia = (window as any).__VUE_PINIA__;
+    if (pinia) {
+      vueShowToast(message, type as any, duration);
+      return;
+    }
+  } catch {
+    // Pinia 未就绪，回退到原生
+  }
+
+  // 回退：原生 DOM 操作（向后兼容）
   let toast = document.getElementById('toast');
   let toastMessage = document.getElementById('toastMessage');
 

@@ -243,17 +243,16 @@ function showPage(pageName: string): void {
   // 页面特定初始化
   switch (pageName) {
     case 'category':
-      initTmdbCategory();
+      // 由 Vue TmdbCategory 组件接管
       break;
     case 'history':
-      loadViewingHistory();
+      // 由 Vue ViewingHistory 组件接管
       break;
     case 'settings':
-      initAPICheckboxes();
-      renderCustomAPIsList();
+      // 由 Vue SettingsPanel 组件接管
       break;
     case 'about':
-      loadAboutPage();
+      // 由 Vue AboutPanel 组件接管
       break;
   }
 }
@@ -318,8 +317,10 @@ function handleHashChange(): void {
   if (modal) modal.style.display = 'none';
 };
 
-// ==================== 关于页面 ====================
+// ==================== 关于页面（已由 Vue AboutPanel 组件替换）====================
+// @deprecated — 保留以兼容旧代码，Vue 组件已接管
 
+/** @deprecated 由 Vue AboutPanel 组件处理 */
 function loadAboutPage(): void {
   const container = document.getElementById('aboutChangelogContent');
   if (!container || container.dataset.loaded === 'true') return;
@@ -340,6 +341,7 @@ function loadAboutPage(): void {
     });
 }
 
+/** @deprecated 由 Vue AboutPanel 组件处理 */
 function parseAndRenderChangelog(markdown: string): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className =

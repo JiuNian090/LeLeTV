@@ -130,7 +130,11 @@ export function importConfigFromUrl(): void {
 
 export function initAPICheckboxes(): void {
   const container = document.getElementById('apiCheckboxes');
-  if (!container) return;
+  if (!container) {
+    // Vue 已接管设置面板
+    loadSelectedAPIs();
+    return;
+  }
 
   loadSelectedAPIs();
   container.innerHTML = '';
@@ -264,7 +268,11 @@ function checkHiddenAPIsSelected(): void {
 
 export function renderCustomAPIsList(): void {
   const container = document.getElementById('customApisList');
-  if (!container) return;
+  if (!container) {
+    // Vue 已接管设置面板
+    loadCustomAPIs();
+    return;
+  }
 
   loadCustomAPIs();
   if (customAPIs.length === 0) {
