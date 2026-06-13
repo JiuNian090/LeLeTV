@@ -14,9 +14,22 @@ export let customAPIs: any[] = [];
 
 export function loadSelectedAPIs(): void {
   try {
-    selectedAPIs = JSON.parse(localStorage.getItem('selectedAPIs') || '[]');
+    const raw = localStorage.getItem('selectedAPIs');
+    if (!raw || raw === '[]') {
+      // 新用户默认勾选四个常用源
+      const defaults = ['bfzy', 'dbzy', 'zuid', 'wujin', 'mtzy'];
+      selectedAPIs = defaults;
+      localStorage.setItem('selectedAPIs', JSON.stringify(defaults));
+    } else {
+      selectedAPIs = JSON.parse(raw);
+      if (!Array.isArray(selectedAPIs) || selectedAPIs.length === 0) {
+        const defaults = ['bfzy', 'dbzy', 'zuid', 'wujin', 'mtzy'];
+        selectedAPIs = defaults;
+        localStorage.setItem('selectedAPIs', JSON.stringify(defaults));
+      }
+    }
   } catch {
-    selectedAPIs = [];
+    selectedAPIs = ['bfzy', 'dbzy', 'zuid', 'wujin', 'mtzy'];
   }
 }
 

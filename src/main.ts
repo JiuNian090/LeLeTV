@@ -5,5 +5,6 @@
 
 import './ui/app/app';
 import './core/leletv-global';
+import './ui/components/version-updater';
 
 console.log('[LeLeTV] Main entry loaded');

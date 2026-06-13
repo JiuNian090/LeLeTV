@@ -100,14 +100,17 @@ export function renderResults(results: SearchResult[], activeFilter: string): vo
       : results.filter((r) => r.source_code === activeFilter);
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">没有找到匹配的视频</div>';
+    // 仅在容器有实际卡片内容时才不覆盖（防止瞬时空白闪烁）
+    const hasCards = container.querySelector('.result-card');
+    if (hasCards) return;
+    container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400"><svg class="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg><p>没有找到匹配的视频</p></div>';
     return;
   }
 
   const fragment = document.createDocumentFragment();
   filtered.forEach((item) => {
     const card = document.createElement('div');
-    card.className = 'result-card bg-[rgba(34,34,34,0.5)] rounded-lg overflow-hidden border border-[var(--color-border-default)] hover:border-pink-500/30 transition-all duration-300 cursor-pointer';
+    card.className = 'result-card group bg-[rgba(26,26,30,0.6)] rounded-xl overflow-hidden border border-[var(--color-border-default)] hover:border-pink-500/40 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-pink-500/5';
     card.setAttribute('data-action', 'play-video');
     card.setAttribute('data-id', String(item.vod_id || ''));
     card.setAttribute('data-title', String(item.vod_name || ''));
@@ -118,12 +121,15 @@ export function renderResults(results: SearchResult[], activeFilter: string): vo
     const sourceName = String(item.source_name || '');
 
     card.innerHTML = `
-      <div class="aspect-[3/4] overflow-hidden bg-[#1a1a1a]">
-        <img src="${cover}" alt="${title}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" loading="lazy" onerror="this.src='image/nomedia.png'">
+      <div class="aspect-[2/3] overflow-hidden bg-[#1a1a1a]">
+        <img src="${cover}" alt="${title}" class="w-full h-full object-cover transition-all duration-300 group-hover:scale-110 group-hover:brightness-110" loading="lazy" onerror="this.src='image/nomedia.png'">
       </div>
-      <div class="p-2">
-        <h3 class="text-sm font-medium text-gray-200 truncate">${escapeHtml(title)}</h3>
-        <p class="text-xs text-gray-500 mt-1">${escapeHtml(sourceName)}</p>
+      <div class="p-3 space-y-1">
+        <h3 class="text-sm font-medium text-gray-200 truncate group-hover:text-white transition-colors">${escapeHtml(title)}</h3>
+        <div class="flex items-center gap-1.5">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-pink-500/60 flex-shrink-0"></span>
+          <p class="text-xs text-gray-500 truncate">${escapeHtml(sourceName)}</p>
+        </div>
       </div>
     `;
     fragment.appendChild(card);
