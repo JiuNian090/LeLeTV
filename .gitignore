@@ -116,3 +116,4 @@ VERSION.txt
 # skills
 .agents/
 skills-lock.json
+docs/

@@ -203,7 +203,19 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
             }
         }
 
-        // 后台静默同步
+        // 在跳转前将历史记录的正确数据写入 localStorage，
+        // 防止播放页读取到上一部剧的残留数据（playDirectly 也有类似的清理逻辑）
+        if (historyItem) {
+            if (historyItem.episodes && Array.isArray(historyItem.episodes) && historyItem.episodes.length > 0) {
+                localStorage.setItem('currentEpisodes', JSON.stringify(historyItem.episodes));
+            } else {
+                localStorage.removeItem('currentEpisodes');
+            }
+            localStorage.setItem('currentEpisodeIndex', String(episodeIndex || 0));
+            localStorage.removeItem('currentVideoInfo');
+        }
+
+        // 后台静默同步（异步刷新剧集列表，不阻塞导航）
         if (historyItem && historyItem.vod_id && historyItem.sourceName) {
             syncEpisodesInBackground(historyItem, url);
         } else if (historyItem) {
@@ -357,6 +369,9 @@ function addToViewingHistory(videoInfo) {
             // 找到相同标题的剧集：更新为最新播放源的信息
             const existingItem = history[existingIndex];
             
+            // 检测剧集是否已切换（用于重置播放进度，防止换集后保留旧集数的位置）
+            const episodeChanged = existingItem.episodeIndex !== videoInfo.episodeIndex;
+
             // 更新所有关键信息为最新播放源的
             existingItem.episodeIndex = videoInfo.episodeIndex;
             existingItem.timestamp = Date.now();
@@ -365,7 +380,7 @@ function addToViewingHistory(videoInfo) {
             existingItem.vod_id = videoInfo.vod_id || existingItem.vod_id; // 强制更新为最新播放源
             existingItem.directVideoUrl = videoInfo.directVideoUrl || existingItem.directVideoUrl; // 强制更新为最新播放源
             existingItem.url = videoInfo.url; // 强制更新为最新播放源
-            existingItem.playbackPosition = videoInfo.playbackPosition > 10 ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
+            existingItem.playbackPosition = (episodeChanged || videoInfo.playbackPosition > 10) ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
             
             // 更新showIdentifier为最新播放源的标识符

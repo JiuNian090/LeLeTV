@@ -613,6 +613,9 @@ function saveToHistory() {
             // 找到相同标题的剧集：更新为最新播放源的信息
             const existingItem = history[existingIndex];
             
+            // 检测剧集是否已切换（用于重置播放进度，防止换集后保留旧集数的位置）
+            const episodeChanged = existingItem.episodeIndex !== videoInfo.episodeIndex;
+
             // 强制更新所有信息为最新播放源的
             existingItem.episodeIndex = videoInfo.episodeIndex;
             existingItem.timestamp = videoInfo.timestamp;
@@ -625,7 +628,8 @@ function saveToHistory() {
             existingItem.url = videoInfo.url;
 
             // 更新播放进度信息
-            existingItem.playbackPosition = videoInfo.playbackPosition > 10 ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
+            // 剧集切换时，直接使用新位置（即使为0）；同集时用 >10 守卫避免覆盖
+            existingItem.playbackPosition = (episodeChanged || videoInfo.playbackPosition > 10) ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
             
             // 更新showIdentifier为最新播放源的标识符
