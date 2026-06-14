@@ -284,17 +284,17 @@ function setupLongPressSpeedControl() {
 function setupThumbnailCapture() {
     if (!art || !art.video) return;
 
-    const CAPTURE_INTERVAL = 1;
     const THUMBNAIL_WIDTH = 160;
     const TOTAL_THUMBNAILS = 100;
     const COLUMNS = 10;
 
-    let lastCapture = 0;
-    let captured = 0;
     let canvas = null;
     let ctx = null;
     let frameH = 90;
     let thumbnailUrl = null;
+    let captured = 0;
+    let captureInProgress = false;
+    let aborted = false;
 
     function ensureCanvas() {
         if (canvas) return true;
@@ -313,39 +313,129 @@ function setupThumbnailCapture() {
 
     function flushSprite() {
         if (!canvas || captured === 0) return;
-        canvas.toBlob(function (blob) {
-            if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
-            thumbnailUrl = URL.createObjectURL(blob);
-            art.thumbnails = {
-                url: thumbnailUrl,
-                number: captured,
-                column: COLUMNS,
-                width: THUMBNAIL_WIDTH,
-                height: frameH,
-            };
-        }, 'image/jpeg');
-    }
-
-    function onTimeUpdate() {
-        if (!art || !art.video || captured >= TOTAL_THUMBNAILS) return;
-        const ct = art.video.currentTime;
-        if (ct - lastCapture < CAPTURE_INTERVAL) return;
-        if (!ensureCanvas() || !ctx) return;
-        lastCapture = ct;
-
-        const col = captured % COLUMNS;
-        const row = Math.floor(captured / COLUMNS);
         try {
-            ctx.drawImage(art.video, col * THUMBNAIL_WIDTH, row * frameH, THUMBNAIL_WIDTH, frameH);
-            captured++;
-            // 每抓满一行（10帧）或全部抓完才刷新雪碧图
-            if (captured % COLUMNS === 0 || captured >= TOTAL_THUMBNAILS) {
-                flushSprite();
-            }
+            canvas.toBlob(function (blob) {
+                if (!blob) return;
+                if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+                thumbnailUrl = URL.createObjectURL(blob);
+                art.thumbnails = {
+                    url: thumbnailUrl,
+                    number: captured,
+                    column: COLUMNS,
+                    width: THUMBNAIL_WIDTH,
+                    height: frameH,
+                };
+            }, 'image/jpeg', 0.8);
         } catch (e) {}
     }
 
-    art.video.addEventListener('timeupdate', onTimeUpdate);
+    // 在视频有 duration 之后才开始采样
+    function onLoadedMeta() {
+        if (captureInProgress) return;
+        const duration = art.video.duration;
+        if (!duration || !isFinite(duration) || duration < 30) return;
+        if (!ensureCanvas() || !ctx) return;
+
+        captureInProgress = true;
+        const originalTime = art.video.currentTime;
+        const wasPaused = art.video.paused;
+
+        // 计算 100 个均匀采样点，跳过开头 3 秒（避免黑屏），保留结尾 10 秒（避免片尾）
+        const startOffset = 3;
+        const endOffset = Math.min(duration - 10, duration - 1);
+        const step = (endOffset - startOffset) / TOTAL_THUMBNAILS;
+        const timePoints = [];
+        for (let i = 0; i < TOTAL_THUMBNAILS; i++) {
+            timePoints.push(startOffset + i * step + step / 2);
+        }
+
+        captured = 0;
+        let idx = 0;
+
+        function captureOneFrame() {
+            if (aborted) {
+                captureInProgress = false;
+                return;
+            }
+            if (idx >= timePoints.length) {
+                // 抓完了，恢复原播放位置
+                if (captured > 0) flushSprite();
+                try {
+                    art.video.removeEventListener('seeked', captureOneFrame);
+                    art.video.currentTime = Math.min(originalTime, duration - 1);
+                    if (!wasPaused) art.video.play().catch(function () {});
+                } catch (e) {}
+                captureInProgress = false;
+                return;
+            }
+
+            const targetTime = timePoints[idx];
+            try {
+                art.video.currentTime = targetTime;
+            } catch (e) {
+                // seek 失败，尝试下一个
+                idx++;
+                captureOneFrame();
+                return;
+            }
+
+            // seeked 事件保证目标时间点的帧已解码
+            function onSeeked() {
+                art.video.removeEventListener('seeked', onSeeked);
+                if (aborted) {
+                    captureInProgress = false;
+                    return;
+                }
+
+                const col = captured % COLUMNS;
+                const row = Math.floor(captured / COLUMNS);
+                try {
+                    ctx.drawImage(art.video, col * THUMBNAIL_WIDTH, row * frameH, THUMBNAIL_WIDTH, frameH);
+                    captured++;
+                    // 每抓满一行刷新一次雪碧图
+                    if (captured % COLUMNS === 0) {
+                        flushSprite();
+                    }
+                } catch (e) {
+                    // CORS 或 canvas 污染，终止
+                    aborted = true;
+                    captureInProgress = false;
+                    return;
+                }
+
+                idx++;
+                // 延迟 200ms 再抓下一帧，给解码器喘气时间，避免卡顿
+                setTimeout(captureOneFrame, 200);
+            }
+
+            art.video.addEventListener('seeked', onSeeked, { once: true });
+
+            // 超时保护：500ms 内没有 seeked 就跳过这帧
+            setTimeout(function () {
+                art.video.removeEventListener('seeked', onSeeked);
+                if (!aborted && idx < timePoints.length) {
+                    idx++;
+                    captureOneFrame();
+                }
+            }, 500);
+        }
+
+        // 先暂停再开始采样
+        try {
+            art.video.pause();
+        } catch (e) {}
+        captureOneFrame();
+    }
+
+    // 避免重复绑定
+    if (!art.video._thumbCaptureBound) {
+        art.video._thumbCaptureBound = true;
+        art.video.addEventListener('loadedmetadata', onLoadedMeta);
+        // 如果此时已经加载完了，直接启动
+        if (art.video.duration && art.video.duration > 0) {
+            setTimeout(onLoadedMeta, 1500);
+        }
+    }
 }
 
 function setupControlsBehavior() {
@@ -543,6 +633,170 @@ function setupCustomControls(art) {
             }
         });
     }
+
+    // ===== 跳过片头层：在 0 ~ skipIntroTime 范围内显示一个按钮，点击直接跳到片尾时间点 =====
+    var skipIntroLayerEl = null;
+    try {
+        art.layers.add({
+            name: 'skip-intro',
+            html: '跳过片头 ▶',
+            style: {
+                position: 'absolute',
+                right: '24px',
+                bottom: '100px',
+                padding: '8px 16px',
+                background: 'rgba(236, 72, 153, 0.9)',
+                color: '#fff',
+                'font-size': '13px',
+                'border-radius': '20px',
+                cursor: 'pointer',
+                opacity: '0',
+                transition: 'opacity 0.3s ease',
+                'pointer-events': 'none',
+                'z-index': '12',
+                'user-select': 'none',
+                'box-shadow': '0 2px 8px rgba(0,0,0,0.3)'
+            },
+            click: function () {
+                if (typeof skipIntroTime !== 'undefined') {
+                    art.seek = skipIntroTime;
+                }
+                if (skipIntroLayerEl) {
+                    skipIntroLayerEl.style.opacity = '0';
+                    skipIntroLayerEl.style.pointerEvents = 'none';
+                }
+            },
+            mounted: function ($layer) {
+                skipIntroLayerEl = $layer;
+                // 视频 timeupdate 时根据时间决定是否显示
+                art.on('video:timeupdate', function () {
+                    if (!skipIntroLayerEl || !art || !art.video) return;
+                    if (typeof skipIntroEnabled !== 'undefined' && !skipIntroEnabled) return;
+                    const t = art.video.currentTime;
+                    const endT = typeof skipIntroTime !== 'undefined' ? skipIntroTime : 90;
+                    if (t > 5 && t < endT - 2) {
+                        skipIntroLayerEl.style.opacity = '1';
+                        skipIntroLayerEl.style.pointerEvents = 'auto';
+                    } else {
+                        skipIntroLayerEl.style.opacity = '0';
+                        skipIntroLayerEl.style.pointerEvents = 'none';
+                    }
+                });
+                // 自动跳过：首次进入片头范围内时直接跳过
+                var autoSkipped = false;
+                art.once('video:timeupdate', function () {
+                    if (!art.video) return;
+                    if (typeof skipIntroEnabled === 'undefined' || !skipIntroEnabled) return;
+                    if (autoSkipped) return;
+                    if (art.video.currentTime < skipIntroTime) {
+                        autoSkipped = true;
+                    }
+                });
+            }
+        });
+    } catch (e) {}
+
+    // ===== 新剧集更新提示（顶部浮层）=====
+    try {
+        art.layers.add({
+            name: 'new-episode-hint',
+            html: '📺 已加载第 ' + (currentEpisodeIndex + 1) + ' 集 / 共 ' + currentEpisodes.length + ' 集',
+            style: {
+                position: 'absolute',
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                padding: '8px 16px',
+                background: 'rgba(0,0,0,0.7)',
+                color: '#fff',
+                'font-size': '13px',
+                'border-radius': '4px',
+                opacity: '0',
+                transition: 'opacity 0.5s ease',
+                'z-index': '11',
+                'pointer-events': 'none',
+                'user-select': 'none'
+            },
+            mounted: function ($layer) {
+                // 切集后显示 3 秒
+                setTimeout(function () {
+                    if ($layer) $layer.style.opacity = '1';
+                }, 300);
+                setTimeout(function () {
+                    if ($layer) $layer.style.opacity = '0';
+                }, 3300);
+            }
+        });
+    } catch (e) {}
+
+    // ===== 自定义右键菜单 =====
+    try {
+        art.contextmenu.add({
+            html: '复制当前视频链接',
+            click: function () {
+                var url = art && art.video ? art.video.currentSrc || art.url : '';
+                if (url) {
+                    var copyIt = function () {
+                        try {
+                            var ta = document.createElement('textarea');
+                            ta.value = url;
+                            ta.style.position = 'fixed';
+                            ta.style.left = '-9999px';
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(ta);
+                            if (art && art.notice) art.notice.show = '链接已复制';
+                        } catch (err) {
+                            if (art && art.notice) art.notice.show = '复制失败';
+                        }
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(function () {
+                            if (art && art.notice) art.notice.show = '链接已复制';
+                        }).catch(copyIt);
+                    } else {
+                        copyIt();
+                    }
+                }
+            }
+        });
+        art.contextmenu.add({
+            html: '在新标签页打开',
+            click: function () {
+                var url = art && art.video ? art.video.currentSrc || art.url : '';
+                if (url) window.open(url, '_blank');
+            }
+        });
+    } catch (e) {}
+
+    // ===== 跳过片尾：快到结尾时若开启则自动切下一集 =====
+    var endingTriggered = false;
+    art.on('video:timeupdate', function () {
+        if (!art.video) return;
+        if (typeof skipEndingEnabled === 'undefined' || !skipEndingEnabled) return;
+        if (typeof autoplayEnabled === 'undefined' || !autoplayEnabled) return;
+        if (endingTriggered) return;
+        const duration = art.video.duration;
+        if (!duration || !isFinite(duration)) return;
+        const endingStart = duration - (typeof skipEndingTime !== 'undefined' ? skipEndingTime : 120);
+        if (art.video.currentTime > endingStart && art.video.currentTime < duration - 5) {
+            endingTriggered = true;
+            if (typeof playNextEpisode === 'function' &&
+                currentEpisodeIndex < currentEpisodes.length - 1) {
+                if (art.notice) art.notice.show = '即将跳过片尾，播放下一集...';
+                setTimeout(function () {
+                    playNextEpisode();
+                }, 800);
+            }
+        }
+    });
+    // 重置 endingTriggered，每集都能再次生效
+    art.on('video:seeked', function () {
+        if (art.video && art.video.currentTime < (art.video.duration - 300)) {
+            endingTriggered = false;
+        }
+    });
 }
 
 function refreshEpisodeButtons(art) {

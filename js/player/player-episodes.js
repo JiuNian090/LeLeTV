@@ -134,6 +134,30 @@ function playEpisode(index) {
     }
     userClickedPosition = null;
 
+    // 根据片头/片尾时间点生成章节标记（供原生 highlight 使用）
+    // 格式：[{ time: 秒数, text: '文字' }]
+    try {
+        if (typeof currentEpisodeHighlights !== 'undefined') {
+            currentEpisodeHighlights = [];
+            var introT = typeof skipIntroTime !== 'undefined' ? skipIntroTime : 90;
+            var endingT = typeof skipEndingTime !== 'undefined' ? skipEndingTime : 120;
+            if (typeof currentEpisodes !== 'undefined' && currentEpisodes && currentEpisodes.length && art && art.video) {
+                var d = art.video.duration || 0;
+                if (d > 60) {
+                    currentEpisodeHighlights.push({ time: introT, text: '片头结束' });
+                    if (d - endingT > introT) {
+                        currentEpisodeHighlights.push({ time: d - endingT, text: '片尾开始' });
+                    }
+                    // 按视频长度 30%/60% 加两处剧情标记
+                    if (d > 300) {
+                        currentEpisodeHighlights.push({ time: Math.floor(d * 0.3), text: '30% 进度' });
+                        currentEpisodeHighlights.push({ time: Math.floor(d * 0.6), text: '60% 进度' });
+                    }
+                }
+            }
+        }
+    } catch (e) {}
+
     // 尝试无缝切换，如果失败则回退到销毁重建播放器
     if (art) {
         // 清除之前的超时

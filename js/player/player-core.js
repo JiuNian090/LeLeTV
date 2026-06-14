@@ -133,6 +133,17 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
     });
 }
 
+/* ===== 每集元数据：由 playEpisode() 在切集前写入，createArtPlayerInstance 读取 ===== */
+// 画质选项：[{ label: '1080P', url: 'xxx.m3u8', default: true }]
+var currentEpisodeQualities = [];
+// 章节标记：[{ time: 90, text: '片头曲结束' }]
+var currentEpisodeHighlights = [];
+// 跳过片头/片尾配置
+var skipIntroEnabled = true;
+var skipIntroTime = 90;         // 片头秒数，从 0s 跳到此时间
+var skipEndingEnabled = true;
+var skipEndingTime = 120;       // 片尾开始前的秒数（distance from duration）
+
 function createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog) {
     return new Artplayer({
         container: '#player',
@@ -159,14 +170,58 @@ function createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog) {
         mutex: true,
         backdrop: true,
         playsInline: true,
-        autoPlayback: false,
+        autoPlayback: true,          // 原生记忆播放位置/倍速
         airplay: true,
-        hotkey: false,
+        hotkey: true,                // 原生快捷键（空格/方向键/F/M 等）
         theme: '#ec4899',
         lang: navigator.language.toLowerCase(),
         moreVideoAttr: {
             crossOrigin: 'anonymous',
         },
+        // ===== 原生设置面板扩展项 =====
+        settings: [
+            {
+                html: '自动连播下一集',
+                tooltip: autoplayEnabled ? '已开启' : '已关闭',
+                switch: !!autoplayEnabled,
+                onSwitch: function (item) {
+                    autoplayEnabled = item.switch;
+                    item.tooltip = item.switch ? '已开启' : '已关闭';
+                }
+            },
+            {
+                html: '跳过片头',
+                tooltip: skipIntroEnabled ? '已开启（' + skipIntroTime + 's）' : '已关闭',
+                switch: skipIntroEnabled,
+                onSwitch: function (item) {
+                    skipIntroEnabled = item.switch;
+                    item.tooltip = skipIntroEnabled ? '已开启（' + skipIntroTime + 's）' : '已关闭';
+                }
+            },
+            {
+                html: '跳过片尾',
+                tooltip: skipEndingEnabled ? '已开启（' + skipEndingTime + 's）' : '已关闭',
+                switch: skipEndingEnabled,
+                onSwitch: function (item) {
+                    skipEndingEnabled = item.switch;
+                    item.tooltip = skipEndingEnabled ? '已开启（' + skipEndingTime + 's）' : '已关闭';
+                }
+            },
+            {
+                html: '播放速度',
+                tooltip: '1.0x',
+                selector: [0.5, 0.75, 1, 1.25, 1.5, 2],
+                onSelect: function (item) {
+                    if (art && art.video) art.video.playbackRate = item.html;
+                    item.tooltip = item.html + 'x';
+                    return item.html;
+                }
+            }
+        ],
+        // ===== 章节标记（由 playEpisode 填充，没数据就不显示）=====
+        highlight: currentEpisodeHighlights && currentEpisodeHighlights.length ? currentEpisodeHighlights : [],
+        // ===== 画质选项（由 playEpisode 填充，没数据就不显示切换）=====
+        quality: currentEpisodeQualities && currentEpisodeQualities.length ? currentEpisodeQualities : [],
         customType: {
             m3u8: function (video, url) {
                 setupHlsCustomType(video, url, hlsConfig, loadingWatchdog);

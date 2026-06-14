@@ -1210,3 +1210,33 @@ main.container {
     opacity: 0 !important;
     pointer-events: none !important;
 }
+
+/* ===== 原生自定义控件样式微调 ===== */
+/* 上一集 / 下一集 / 锁定 按钮 hover 时稍亮一点 */
+.art-video-player .art-control-prev-episode,
+.art-video-player .art-control-next-episode,
+.art-video-player .art-control-lock-controls,
+.art-video-player .art-control-cast {
+    opacity: 0.9;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.art-video-player .art-control-prev-episode:hover,
+.art-video-player .art-control-next-episode:hover,
+.art-video-player .art-control-lock-controls:hover,
+.art-video-player .art-control-cast:hover {
+    opacity: 1;
+}
+
+/* 禁用状态（首集/末集） */
+.art-video-player .art-control[aria-disabled="true"],
+.art-video-player .art-control[style*="none"] {
+    opacity: 0.3 !important;
+    pointer-events: none;
+}
+
+/* 章节标记 tooltip 增强 */
+.art-video-player .art-progress-highlight-tip {
+    white-space: nowrap;
+}
