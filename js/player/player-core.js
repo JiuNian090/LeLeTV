@@ -261,17 +261,18 @@ function onPlayerReady(art, fullScreenController) {
         });
     }
 
-    addNextEpisodeDirectly(art);
-    addLockFloatingButton(art);
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_TERTIARY);
+    // 用 ArtPlayer 原生 API 注册自定义控件（一次性，不再需要反复重建）
+    if (typeof setupCustomControls === 'function') {
+        setupCustomControls(art);
+    }
+    if (typeof refreshEpisodeButtons === 'function') {
+        refreshEpisodeButtons(art);
+    }
 }
 
 function handleFullScreenChange(art, fullScreenController, isFullScreen) {
     fullScreenController.handleFullScreen(isFullScreen);
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
+    // 原生控件由 ArtPlayer 生命周期管理，无需在全屏切换后重建
 }
 
 function onPlayerRestart(art) {
@@ -280,8 +281,10 @@ function onPlayerRestart(art) {
         episodeSwitchTimeout = null;
     }
     window.isSwitchingVideo = false;
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
-    setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
+    // 刷新集数按钮状态（切源后确保禁用逻辑正确）
+    if (typeof refreshEpisodeButtons === 'function') {
+        refreshEpisodeButtons(art);
+    }
 }
 
 function onVideoLoadedMetadata(art, loadingWatchdog) {
@@ -370,11 +373,7 @@ function setupPlayerEventListeners(art, fullScreenController, loadingWatchdog) {
     });
 
     art.on('fullscreen', function (isFullScreen) {
-        // 浏览器全屏 API（requestFullscreen）由浏览器管理全屏元素
-        // 不切换 fullscreen-active，避免 main.container display:none 影响恢复
-        // 只需处理下一集按钮
-        setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
-        setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
+        // 原生控件由 ArtPlayer 管理，无需重建按钮
     });
 
     art.on('restart', () => {

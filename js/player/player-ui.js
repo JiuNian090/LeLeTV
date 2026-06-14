@@ -351,132 +351,69 @@ function setupThumbnailCapture() {
 function setupControlsBehavior() {
     if (!art) return;
 
-    const container = document.getElementById('playerContainer');
     const playerEl = document.getElementById('player');
-    if (!container || !playerEl) return;
+    if (!playerEl) return;
 
-    let controlsVisible = true;
     let hideTimer = null;
-    let clickTimer = null;
-
-    function showControls(resetTimer) {
-        controlsVisible = true;
-        container.classList.remove('controls-hidden');
-        if (resetTimer !== false) resetAutoHide();
-    }
-
-    function hideControls() {
-        controlsVisible = false;
-        container.classList.add('controls-hidden');
-        if (hideTimer) {
-            clearTimeout(hideTimer);
-            hideTimer = null;
-        }
-    }
-
-    function toggleControls() {
-        if (controlsVisible) hideControls();
-        else showControls();
-    }
 
     function resetAutoHide() {
         if (hideTimer) clearTimeout(hideTimer);
-        hideTimer = setTimeout(hideControls, TIMING.CONTROLS_HIDE_DELAY);
+        hideTimer = setTimeout(function () {
+            if (!art.isLock) art.controls.show = false;
+        }, TIMING.CONTROLS_HIDE_DELAY);
     }
 
-    // 在视频元素上方覆盖透明点击层（仅覆盖视频区域，不遮挡控件）
-    const videoWrapper = art.video && art.video.parentElement;
-    if (!videoWrapper) return;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'player-click-overlay';
-    overlay.style.cssText = 'position:absolute;inset:0;z-index:5;cursor:pointer';
-    videoWrapper.style.position = 'relative';
-    videoWrapper.appendChild(overlay);
-
-    overlay.addEventListener('mousedown', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    });
-
-    overlay.addEventListener('mouseup', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    });
-
-    overlay.addEventListener('touchstart', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    }, { passive: false });
-
-    overlay.addEventListener('touchmove', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    }, { passive: false });
-
-    overlay.addEventListener('touchend', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            return;
-        }
-    }, { passive: true });
-
-    overlay.addEventListener('dblclick', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    });
-
-    overlay.addEventListener('click', function (e) {
-        if (controlsLocked) {
-            e.stopPropagation();
-            return;
-        }
-        if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            if (art.video.paused) art.play();
-            else art.pause();
-            e.stopPropagation();
-            return;
-        }
-        clickTimer = setTimeout(function () {
-            clickTimer = null;
-            toggleControls();
-        }, 250);
-        e.stopPropagation();
-    });
-
+    // 鼠标移动显示控制栏
     playerEl.addEventListener('mousemove', function () {
-        if (controlsLocked) {
-            return;
-        }
-        if (!controlsVisible) showControls();
-        else resetAutoHide();
+        if (art.isLock) return;
+        art.controls.show = true;
+        resetAutoHide();
     });
 
     playerEl.addEventListener('mouseleave', function () {
-        if (controlsLocked) {
-            return;
-        }
-        if (controlsVisible) resetAutoHide();
+        if (art.isLock) return;
+        resetAutoHide();
     });
 
-    setTimeout(hideControls, TIMING.CONTROLS_INITIAL_HIDE_DELAY);
+    // 视频点击时短暂显示控制栏
+    art.on('video:click', function () {
+        if (art.isLock) return;
+        art.controls.show = true;
+        resetAutoHide();
+    });
+
+    // 键盘快捷键：Alt+← 上一集 / Alt+→ 下一集 / L 键锁定
+    document.addEventListener('keydown', function (e) {
+        if (!art) return;
+        if (e.altKey && e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if (typeof playPreviousEpisode === 'function') playPreviousEpisode();
+        } else if (e.altKey && e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (typeof playNextEpisode === 'function') playNextEpisode();
+        } else if (e.key && e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            // 仅在焦点在视频相关区域或全屏时生效，避免干扰页面输入
+            const active = document.activeElement;
+            const isInputActive = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+            if (isInputActive) return;
+            e.preventDefault();
+            art.isLock = !art.isLock;
+            // 同步锁定按钮图标
+            const lockBtn = document.querySelector('.art-control-lock-controls');
+            if (lockBtn) {
+                const svg = lockBtn.querySelector('svg');
+                if (svg) {
+                    svg.outerHTML = art.isLock ? SVG_LOCK_CLOSED : SVG_LOCK_OPEN;
+                }
+                lockBtn.setAttribute('title', art.isLock ? '点击解锁' : '锁定控制栏');
+            }
+        }
+    });
+
+    // 初始自动隐藏
+    setTimeout(function () {
+        if (!art.isLock) art.controls.show = false;
+    }, TIMING.CONTROLS_INITIAL_HIDE_DELAY);
 }
 
 function clearVideoProgress() {
@@ -497,135 +434,129 @@ function getVideoCover() {
     return '/image/logo-black.png';
 }
 
-function addNextEpisodeDirectly(art) {
-    
-    // 检查是否已存在
-    if (document.querySelector('.custom-next-episode-btn')) {
-        return;
-    }
-    
-    // 获取播放器容器
-    const playerEl = document.getElementById('player');
-    if (!playerEl) {
-        return;
-    }
-    
-    // 查找控制栏
-    const controlsContainer = playerEl.querySelector('.art-controls') || document.querySelector('.art-controls');
-    if (!controlsContainer) {
-        return;
-    }
-    
-    // 查找左侧控制区
-    const leftControls = controlsContainer.querySelector('.art-controls-left');
-    const targetContainer = leftControls || controlsContainer;
-    
-    // 查找播放按钮（暂停按钮）
-    const playBtn = targetContainer.querySelector('.art-control-playAndPause');
-    
-    // 创建按钮
-    const nextBtn = document.createElement('div');
-    nextBtn.className = 'custom-next-episode-btn art-control';
-    nextBtn.title = '下一集 (Alt+→)';
-    nextBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
-    
-    // 应用样式，和其他控制按钮一致
-    nextBtn.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 40px !important;
-        height: 40px !important;
-        cursor: pointer !important;
-        color: white !important;
-        opacity: 0.9 !important;
-        transition: opacity 0.2s !important;
-        padding: 8px !important;
-        box-sizing: border-box !important;
-        position: relative !important;
-    `;
-    
-    nextBtn.addEventListener('mouseenter', function() {
-        this.style.opacity = '1 !important';
-        this.style.backgroundColor = 'rgba(255, 255, 255, 0.1) !important';
-        this.style.borderRadius = '50% !important';
-    });
-    
-    nextBtn.addEventListener('mouseleave', function() {
-        this.style.backgroundColor = 'transparent !important';
-    });
-    
-    nextBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        if (typeof playNextEpisode === 'function') {
-            playNextEpisode();
+/* ===== ArtPlayer 原生 API 注册自定义控件 ===== */
+
+const SVG_PREV_EPISODE =
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">' +
+    '<path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg>';
+
+const SVG_NEXT_EPISODE =
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">' +
+    '<path d="M16 6v12h2V6h-2zM6 18l8.5-6L6 6v12z"/></svg>';
+
+const SVG_LOCK_OPEN =
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>' +
+    '<path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+const SVG_LOCK_CLOSED =
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>' +
+    '<path d="M7 11V7a5 5 0 0 1 10 0v4"/>' +
+    '<circle cx="12" cy="16" r="1"/></svg>';
+
+const SVG_CAST =
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">' +
+    '<path d="M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 12H2v3h12v-3zm0-5H2v3h12v-3z"/></svg>';
+
+function isCastAvailable() {
+    return !!(window.chrome && window.chrome.cast) ||
+           !!navigator.presentation ||
+           !!window.PresentationRequest ||
+           (typeof HTMLVideoElement !== 'undefined' &&
+            'webkitShowPlaybackTargetPicker' in HTMLVideoElement.prototype);
+}
+
+function setupCustomControls(art) {
+    if (!art || !art.controls) return;
+
+    art.controls.add({
+        name: 'prev-episode',
+        position: 'left',
+        index: 8,
+        html: SVG_PREV_EPISODE,
+        tooltip: '上一集 (Alt+←)',
+        click: function () {
+            if (typeof playPreviousEpisode === 'function') playPreviousEpisode();
         }
     });
-    
-    // 插入到播放按钮后面
-    if (playBtn && playBtn.nextSibling) {
-        targetContainer.insertBefore(nextBtn, playBtn.nextSibling);
-    } else if (playBtn) {
-        // 如果播放按钮是最后一个元素
-        targetContainer.appendChild(nextBtn);
-    } else {
-        // 如果找不到播放按钮，就插到开头
-        targetContainer.insertBefore(nextBtn, targetContainer.firstChild);
+
+    art.controls.add({
+        name: 'next-episode',
+        position: 'left',
+        index: 10,
+        html: SVG_NEXT_EPISODE,
+        tooltip: '下一集 (Alt+→)',
+        click: function () {
+            if (typeof playNextEpisode === 'function') playNextEpisode();
+        }
+    });
+
+    art.controls.add({
+        name: 'lock-controls',
+        position: 'right',
+        index: 90,
+        html: SVG_LOCK_OPEN,
+        tooltip: '锁定控制栏',
+        click: function (_, _e, control) {
+            art.isLock = !art.isLock;
+            if (control) {
+                control.$html = art.isLock ? SVG_LOCK_CLOSED : SVG_LOCK_OPEN;
+                control.$tooltip = art.isLock ? '点击解锁' : '锁定控制栏';
+            }
+        }
+    });
+
+    if (isCastAvailable()) {
+        art.controls.add({
+            name: 'cast',
+            position: 'right',
+            index: 85,
+            html: SVG_CAST,
+            tooltip: '投屏到电视',
+            click: function () {
+                const video = art && art.video;
+                if (!video) return;
+                if (video.webkitShowPlaybackTargetPicker &&
+                    typeof video.webkitShowPlaybackTargetPicker === 'function') {
+                    try {
+                        video.webkitShowPlaybackTargetPicker();
+                    } catch (e) {
+                        if (art && art.notice) art.notice.show = '当前浏览器不支持投屏';
+                    }
+                } else if (window.PresentationRequest) {
+                    try {
+                        const request = new PresentationRequest([window.location.href]);
+                        request.start().then(function () {
+                            if (art && art.notice) art.notice.show = '已开始投屏';
+                        }).catch(function () {
+                            if (art && art.notice) art.notice.show = '未选择投屏设备';
+                        });
+                    } catch (e) {
+                        if (art && art.notice) art.notice.show = '投屏启动失败';
+                    }
+                } else if (window.chrome && window.chrome.cast) {
+                    if (art && art.notice) art.notice.show = '请先安装 Google Cast 扩展';
+                } else {
+                    if (art && art.notice) art.notice.show = '当前浏览器不支持投屏';
+                }
+            }
+        });
     }
 }
 
-function addLockFloatingButton(art) {
-    if (!art) return;
-    const playerEl = document.getElementById('player');
-    if (!playerEl) return;
-    // 避免重复添加
-    if (playerEl.querySelector('.player-floating-lock-btn')) return;
-
-    const btn = document.createElement('div');
-    btn.className = 'player-floating-lock-btn';
-    btn.title = '锁定控制栏';
-    btn.innerHTML = getLockSvg(false);
-
-    btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        toggleControlsLock(art);
-    });
-
-    playerEl.appendChild(btn);
-}
-
-function getLockSvg(locked) {
-    if (locked) {
-        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>';
-    }
-    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function toggleControlsLock(art) {
-    controlsLocked = !controlsLocked;
-    const container = document.getElementById('playerContainer');
-
-    if (controlsLocked) {
-        if (art && art.template && art.template.$player) {
-            art.template.$player.classList.add('art-lock');
-        }
-        art.isLock = true;
-        if (container) container.classList.add('player-locked');
-    } else {
-        if (art && art.template && art.template.$player) {
-            art.template.$player.classList.remove('art-lock');
-        }
-        art.isLock = false;
-        if (container) container.classList.remove('player-locked');
-    }
-
-    // 更新浮动按钮图标
-    const btn = document.querySelector('.player-floating-lock-btn');
-    if (btn) {
-        btn.innerHTML = getLockSvg(controlsLocked);
-        btn.title = controlsLocked ? '点击解锁' : '锁定控制栏';
+function refreshEpisodeButtons(art) {
+    if (!art || !art.controls) return;
+    const isFirst = currentEpisodeIndex <= 0;
+    const isLast = currentEpisodeIndex >= currentEpisodes.length - 1;
+    try {
+        art.controls.update({ name: 'prev-episode', disable: isFirst });
+        art.controls.update({ name: 'next-episode', disable: isLast });
+    } catch (e) {
+        const prev = document.querySelector('.art-control-prev-episode');
+        const next = document.querySelector('.art-control-next-episode');
+        if (prev) prev.style.display = isFirst ? 'none' : '';
+        if (next) next.style.display = isLast ? 'none' : '';
     }
 }
 

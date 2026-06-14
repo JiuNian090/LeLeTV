@@ -128,6 +128,10 @@ function playEpisode(index) {
     updateButtonStates();
     renderEpisodes();
     updateMediaSession();
+    // 同步 ArtPlayer 原生控件状态（首集禁用上一集、末集禁用下一集）
+    if (typeof refreshEpisodeButtons === 'function' && typeof art !== 'undefined') {
+        refreshEpisodeButtons(art);
+    }
     userClickedPosition = null;
 
     // 尝试无缝切换，如果失败则回退到销毁重建播放器

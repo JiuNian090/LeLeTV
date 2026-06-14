@@ -10,61 +10,7 @@ body, html {
 
 /* ========== 下一集按钮 ========== */
 /* 匹配 ArtPlayer 原生控件的样式 */
-.art-control-next-episode {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 40px !important;
-    height: 40px !important;
-    cursor: pointer !important;
-    opacity: 0.9 !important;
-    transition: opacity 0.2s !important;
-    color: #fff !important;
-    padding: 8px !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-    z-index: 10 !important;
-}
-
-.art-control-next-episode:hover {
-    opacity: 1 !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 50% !important;
-}
-
-.art-control-next-episode svg {
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3)) !important;
-    width: 20px !important;
-    height: 20px !important;
-    display: block !important;
-}
-
-/* 自定义下一集按钮 */
-.custom-next-episode-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 44px !important;
-    height: 44px !important;
-    cursor: pointer !important;
-    color: white !important;
-    opacity: 0.9 !important;
-    transition: opacity 0.2s !important;
-    z-index: 9999 !important;
-    position: relative !important;
-}
-
-.custom-next-episode-btn:hover {
-    opacity: 1 !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 50% !important;
-}
-
-.custom-next-episode-btn svg {
-    width: 24px !important;
-    height: 24px !important;
-    display: block !important;
-}
+/* 上一集/下一集按钮由 ArtPlayer 原生 controls.add 注册，样式由库内置样式提供，此处不再自定义 */
 
 
 
@@ -952,10 +898,7 @@ body.native-fs-active .control-buttons-container {
     flex-shrink: 0 !important;
 }
 
-/* 确保我们的自定义下一集按钮位置正确 */
-.art-control-next-episode {
-    order: 2 !important;
-}
+/* 原生控件位置由 ArtPlayer controls.add 的 index 参数管理，无需手动 order */
 
 /* 隐藏用户名输入框 */
 #username {
@@ -1248,59 +1191,22 @@ main.container {
     box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.3);
 }
 
-/* 控制栏收起状态：隐藏 ArtPlayer 底部控件 + 进度条 + 返回按钮 */
-#playerContainer.controls-hidden .art-video-player .art-controls,
-#playerContainer.controls-hidden .art-video-player .art-bottom {
+/* ===== 控制栏显隐/锁定由 ArtPlayer 原生 API (art.controls.show / art.isLock) 驱动 ===== */
+/* 锁定时隐藏除锁定按钮外的所有控件，仅保留播放画面 */
+.art-video-player.art-lock .art-controls {
     opacity: 0 !important;
     pointer-events: none !important;
 }
 
-#playerContainer.controls-hidden .player-back-btn {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* ========== 播放器浮动锁定按钮（右侧居中） ========== */
-.player-floating-lock-btn {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    z-index: 61;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    pointer-events: auto;
-    opacity: 0;
-    transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
-}
-
-.player-floating-lock-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-50%) scale(1.1);
-}
-
-.player-floating-lock-btn svg {
-    width: 22px;
-    height: 22px;
-}
-
-/* 未锁定：随控制栏显隐 */
-#playerContainer:not(.controls-hidden):not(.player-locked) .player-floating-lock-btn,
-#playerContainer.controls-hidden:hover .player-floating-lock-btn,
-#playerContainer.player-locked .player-floating-lock-btn {
-    opacity: 1;
+/* 锁定状态下，锁定按钮仍保持可见（原生控件会自带 art-lock 状态） */
+.art-video-player.art-lock .art-control-lock-controls {
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
 /* 锁定状态下隐藏返回按钮 */
-#playerContainer.player-locked .player-back-btn {
+.art-video-player.art-lock ~ .player-back-btn,
+#playerContainer:has(.art-video-player.art-lock) .player-back-btn {
     opacity: 0 !important;
     pointer-events: none !important;
 }
