@@ -606,7 +606,7 @@ function setupCustomControls(art) {
     art.controls.add({
         name: 'prev-episode',
         position: 'left',
-        index: 8,
+        index: 5,
         html: SVG_PREV_EPISODE,
         tooltip: '上一集 (Alt+←)',
         click: function () {
@@ -617,7 +617,7 @@ function setupCustomControls(art) {
     art.controls.add({
         name: 'next-episode',
         position: 'left',
-        index: 10,
+        index: 15,
         html: SVG_NEXT_EPISODE,
         tooltip: '下一集 (Alt+→)',
         click: function () {
@@ -628,14 +628,17 @@ function setupCustomControls(art) {
     art.controls.add({
         name: 'lock-controls',
         position: 'right',
-        index: 90,
+        index: 75,
         html: SVG_LOCK_OPEN,
         tooltip: '锁定控制栏',
-        click: function (_, _e, control) {
+        click: function () {
             art.isLock = !art.isLock;
-            if (control) {
-                control.$html = art.isLock ? SVG_LOCK_CLOSED : SVG_LOCK_OPEN;
-                control.$tooltip = art.isLock ? '点击解锁' : '锁定控制栏';
+            var locked = art.controls.get ? art.controls.get('lock-controls') : document.querySelector('.art-control-lock-controls');
+            if (locked && locked.innerHTML) {
+                locked.innerHTML = art.isLock ? SVG_LOCK_CLOSED : SVG_LOCK_OPEN;
+            }
+            if (locked && locked.setAttribute) {
+                locked.setAttribute('data-tooltip', art.isLock ? '点击解锁' : '锁定控制栏');
             }
         }
     });
@@ -846,14 +849,31 @@ function refreshEpisodeButtons(art) {
     if (!art || !art.controls) return;
     const isFirst = currentEpisodeIndex <= 0;
     const isLast = currentEpisodeIndex >= currentEpisodes.length - 1;
-    try {
-        art.controls.update({ name: 'prev-episode', disable: isFirst });
-        art.controls.update({ name: 'next-episode', disable: isLast });
-    } catch (e) {
-        const prev = document.querySelector('.art-control-prev-episode');
-        const next = document.querySelector('.art-control-next-episode');
-        if (prev) prev.style.display = isFirst ? 'none' : '';
-        if (next) next.style.display = isLast ? 'none' : '';
+
+    // 使用 DOM 方式禁用/启用，避免 art.controls.update 的 disable 彻底移除控件
+    const prevEl = document.querySelector('.art-control-prev-episode');
+    const nextEl = document.querySelector('.art-control-next-episode');
+    if (prevEl) {
+        if (isFirst) {
+            prevEl.style.opacity = '0.3';
+            prevEl.style.pointerEvents = 'none';
+            prevEl.setAttribute('aria-disabled', 'true');
+        } else {
+            prevEl.style.opacity = '';
+            prevEl.style.pointerEvents = '';
+            prevEl.removeAttribute('aria-disabled');
+        }
+    }
+    if (nextEl) {
+        if (isLast) {
+            nextEl.style.opacity = '0.3';
+            nextEl.style.pointerEvents = 'none';
+            nextEl.setAttribute('aria-disabled', 'true');
+        } else {
+            nextEl.style.opacity = '';
+            nextEl.style.pointerEvents = '';
+            nextEl.removeAttribute('aria-disabled');
+        }
     }
 }
 

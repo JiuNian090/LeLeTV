@@ -1224,14 +1224,39 @@ main.container {
 }
 
 /* ===== 原生自定义控件样式微调 ===== */
-/* 上一集 / 下一集 / 锁定 按钮 hover 时稍亮一点 */
+/* 上一集 / 下一集 / 锁定 / 投屏 按钮 — 原生控件需要明确的尺寸和颜色 */
 .art-video-player .art-control-prev-episode,
 .art-video-player .art-control-next-episode,
 .art-video-player .art-control-lock-controls,
 .art-video-player .art-control-cast {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
     opacity: 0.9;
+    color: #ffffff !important;
     transition: opacity 0.2s ease, transform 0.2s ease;
     cursor: pointer;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+
+/* 确保 SVG 图标正确缩放并继承颜色 */
+.art-video-player .art-control-prev-episode svg,
+.art-video-player .art-control-next-episode svg,
+.art-video-player .art-control-lock-controls svg,
+.art-video-player .art-control-cast svg {
+    width: 22px !important;
+    height: 22px !important;
+    display: block;
+    color: inherit;
+    fill: currentColor;
+    stroke: currentColor;
 }
 
 .art-video-player .art-control-prev-episode:hover,
@@ -1242,8 +1267,7 @@ main.container {
 }
 
 /* 禁用状态（首集/末集） */
-.art-video-player .art-control[aria-disabled="true"],
-.art-video-player .art-control[style*="none"] {
+.art-video-player .art-control[aria-disabled="true"] {
     opacity: 0.3 !important;
     pointer-events: none;
 }
