@@ -284,6 +284,12 @@ function initializePageContent() {
         // 直接视频URL（历史记录播放），立即渲染并初始化
         renderPlayerDetailInfo();
         initPlayer(videoUrl);
+
+        // 如果有 id 和 source 参数（历史记录路径携带），异步获取详情信息更新 UI
+        const vodId = urlParams.get('id');
+        if (vodId && sourceCode) {
+            fetchDetailInfo(vodId, sourceCode);
+        }
     } else if (urlParams.get('id') && sourceCode) {
         // 从搜索卡片直接跳转（无url参数），异步加载剧集详情
         // 注意：不要在这里调用 renderPlayerDetailInfo 等渲染函数
@@ -315,8 +321,12 @@ function initializePageContent() {
                 } catch (e) {}
 
                 const mergedInfo = {
-                    ...(existingInfo || {}),
+                    // TMDB 数据作为默认值，视频源 API 已有数据优先保留
                     ...tmdbInfo,
+                    ...(existingInfo || {}),
+                    // 但 TMDB 的封面通常质量更好，优先使用
+                    cover: tmdbInfo.cover || existingInfo?.cover || '',
+                    // 始终保留源信息
                     remarks: existingInfo?.remarks || '',
                     source_name: existingInfo?.source_name || '',
                     source_code: existingInfo?.source_code || ''
@@ -904,6 +914,48 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
         }
     } catch (e) {
         showError('获取视频详情失败，请稍后重试');
+    }
+}
+
+// 静默获取视频详情并更新UI（用于历史记录路径，不重新初始化播放器）
+async function fetchDetailInfo(vodId, sourceCode) {
+    let apiParams = '';
+    if (sourceCode.startsWith('custom_')) {
+        const customIndex = sourceCode.replace('custom_', '');
+        const customApi = typeof getCustomApiInfo === 'function' ? getCustomApiInfo(customIndex) : null;
+        if (!customApi) return;
+        if (customApi.detail) {
+            apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&customDetail=' + encodeURIComponent(customApi.detail) + '&source=custom';
+        } else {
+            apiParams = '&customApi=' + encodeURIComponent(customApi.url) + '&source=custom';
+        }
+    } else {
+        apiParams = '&source=' + sourceCode;
+    }
+
+    try {
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}&_t=${timestamp}`);
+        if (!response.ok) return;
+        const data = await response.json();
+
+        // 保存视频详情到 localStorage，更新UI
+        if (data.videoInfo) {
+            StorageService.setCurrentVideoInfo(data.videoInfo);
+            renderPlayerDetailInfo();
+            renderResourceInfoBar();
+        }
+
+        // 如果历史记录的剧集列表为空，但API有返回，则补充
+        if (data.episodes && data.episodes.length > 0 && (!currentEpisodes || currentEpisodes.length === 0)) {
+            currentEpisodes = data.episodes;
+            localStorage.setItem('currentEpisodes', JSON.stringify(data.episodes));
+            renderEpisodes();
+            updateEpisodeInfo();
+            updateButtonStates();
+        }
+    } catch (e) {
+        // 静默失败，不影响当前播放
     }
 }
 
