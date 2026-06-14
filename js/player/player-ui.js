@@ -444,7 +444,14 @@ function setupControlsBehavior() {
     const playerEl = document.getElementById('player');
     if (!playerEl) return;
 
+    // 显示返回按钮（复用 fullScreenController 的 showBackBtn）
+    function showBackBtnNow() {
+        const btn = document.querySelector('.player-back-btn');
+        if (btn) btn.classList.add('show');
+    }
+
     let hideTimer = null;
+    let btnHideTimer = null;
 
     function resetAutoHide() {
         if (hideTimer) clearTimeout(hideTimer);
@@ -453,26 +460,48 @@ function setupControlsBehavior() {
         }, TIMING.CONTROLS_HIDE_DELAY);
     }
 
-    // 鼠标移动显示控制栏
+    function resetBtnHide() {
+        if (btnHideTimer) clearTimeout(btnHideTimer);
+        btnHideTimer = setTimeout(function () {
+            const btn = document.querySelector('.player-back-btn');
+            if (btn && !art.fullscreen) btn.classList.remove('show');
+        }, TIMING.CONTROLS_HIDE_DELAY);
+    }
+
+    // 鼠标移动显示控制栏 & 返回按钮
     playerEl.addEventListener('mousemove', function () {
         if (art.isLock) return;
         art.controls.show = true;
+        showBackBtnNow();
         resetAutoHide();
+        resetBtnHide();
     });
 
     playerEl.addEventListener('mouseleave', function () {
         if (art.isLock) return;
         resetAutoHide();
+        resetBtnHide();
     });
 
-    // 视频点击时短暂显示控制栏
+    // 触摸设备：触摸屏幕也显示控制栏和返回按钮
+    playerEl.addEventListener('touchstart', function () {
+        if (art.isLock) return;
+        art.controls.show = true;
+        showBackBtnNow();
+        resetAutoHide();
+        resetBtnHide();
+    }, { passive: true });
+
+    // 视频点击时短暂显示控制栏 & 返回按钮
     art.on('video:click', function () {
         if (art.isLock) return;
         art.controls.show = true;
+        showBackBtnNow();
         resetAutoHide();
+        resetBtnHide();
     });
 
-    // 键盘快捷键：Alt+← 上一集 / Alt+→ 下一集 / L 键锁定
+    // 键盘快捷键：Alt+← 上一集 / Alt+→ 下一集 / L 键锁定 / Esc 返回
     document.addEventListener('keydown', function (e) {
         if (!art) return;
         if (e.altKey && e.key === 'ArrowLeft') {
@@ -496,6 +525,20 @@ function setupControlsBehavior() {
                     svg.outerHTML = art.isLock ? SVG_LOCK_CLOSED : SVG_LOCK_OPEN;
                 }
                 lockBtn.setAttribute('title', art.isLock ? '点击解锁' : '锁定控制栏');
+            }
+        } else if (e.key === 'Escape') {
+            // Esc 键：先尝试退出全屏，再返回上一页
+            if (art.fullscreen) {
+                try { art.fullscreen = false; } catch (err) {}
+                return;
+            }
+            if (document.fullscreenElement) {
+                try { document.exitFullscreen(); } catch (err) {}
+                return;
+            }
+            // 普通页面 Esc → 返回上一页
+            if (typeof goHome === 'function') {
+                goHome(e);
             }
         }
     });

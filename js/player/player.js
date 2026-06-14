@@ -359,12 +359,16 @@ function initializePageContent() {
     document.addEventListener('keydown', handleKeyboardShortcuts);
 
     // 添加页面离开事件监听，保存播放位置
-    window.addEventListener('beforeunload', saveCurrentProgress);
+    window.addEventListener('beforeunload', function () {
+        saveCurrentProgress();
+        if (typeof saveToHistory === 'function') saveToHistory();
+    });
 
     // 新增：页面隐藏（切后台/切标签）时也保存
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') {
             saveCurrentProgress();
+            if (typeof saveToHistory === 'function') saveToHistory();
         } else if (document.visibilityState === 'visible') {
             // 页面恢复可见时，检查加载状态是否卡住
             const loadingEl = document.getElementById('player-loading');
@@ -375,6 +379,12 @@ function initializePageContent() {
                 }
             }
         }
+    });
+
+    // 移动端滑动退出：pagehide 事件（iOS Safari 和部分安卓浏览器）
+    window.addEventListener('pagehide', function () {
+        saveCurrentProgress();
+        if (typeof saveToHistory === 'function') saveToHistory();
     });
 
     // 视频暂停时也保存
@@ -907,7 +917,6 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
         if (episodeUrl) {
             currentVideoUrl = episodeUrl;
             currentEpisodeIndex = targetIndex;
-            document.getElementById('player-loading').style.display = 'none';
             initPlayer(episodeUrl);
         } else {
             showError('没有可播放的视频资源');

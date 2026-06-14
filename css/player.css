@@ -1028,11 +1028,23 @@ main.container {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    border: none;
 }
 
 .player-back-btn.show {
     opacity: 1;
     pointer-events: auto;
+}
+
+/* 移动端：返回按钮始终保持可见，确保触摸滑动退出后用户能主动返回 */
+@media (max-width: 768px) {
+    .player-back-btn {
+        opacity: 1;
+        pointer-events: auto;
+        background: rgba(0, 0, 0, 0.5);
+    }
 }
 
 .player-back-btn svg {

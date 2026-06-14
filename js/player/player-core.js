@@ -34,7 +34,11 @@ function createHlsConfig() {
 }
 
 function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
-    // 由 PlayerManager 管理 HLS 生命周期
+    // 销毁旧的 HLS 实例，避免事件冲突
+    const oldHls = PlayerManager.getHlsInstance();
+    if (oldHls) {
+        try { oldHls.destroy(); } catch (e) {}
+    }
     PlayerManager.setHlsInstance(null);
 
     const hls = new Hls(hlsConfig);
@@ -45,7 +49,7 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
     let playbackStarted = false;
     let bufferAppendErrorCount = 0;
 
-    video.addEventListener('playing', function () {
+    function onPlayingEvent() {
         playbackStarted = true;
         clearTimeout(loadingWatchdog);
         if (episodeSwitchTimeout) {
@@ -53,54 +57,44 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
             episodeSwitchTimeout = null;
         }
         window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
-        document.getElementById('error').style.display = 'none';
-    });
+        const loadingEl = document.getElementById('player-loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+        const errorEl = document.getElementById('error');
+        if (errorEl) errorEl.style.display = 'none';
+    }
 
+    video.addEventListener('playing', onPlayingEvent);
     video.addEventListener('timeupdate', function () {
         if (video.currentTime > 1) {
-            document.getElementById('error').style.display = 'none';
+            const errorEl = document.getElementById('error');
+            if (errorEl) errorEl.style.display = 'none';
         }
     });
 
     hls.loadSource(url);
     hls.attachMedia(video);
 
-    let sourceElement = video.querySelector('source');
-    if (sourceElement) {
-        sourceElement.src = url;
-    } else {
-        sourceElement = document.createElement('source');
-        sourceElement.src = url;
-        video.appendChild(sourceElement);
-    }
-    video.disableRemotePlayback = false;
-
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
-        video.play().catch(e => {
-        });
+        // 播放由 autoplay 或用户交互触发，这里不强制 play()，避免与 autoplay 策略冲突
     });
 
     hls.on(Hls.Events.ERROR, function (event, data) {
         errorCount++;
-
         if (data.details === 'bufferAppendError') {
             bufferAppendErrorCount++;
-            if (playbackStarted) {
-                return;
-            }
+            if (playbackStarted) return;
             if (bufferAppendErrorCount >= 3) {
-                hls.recoverMediaError();
+                try { hls.recoverMediaError(); } catch (e) {}
             }
+            return;
         }
-
         if (data.fatal && !playbackStarted) {
             switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
-                    hls.startLoad();
+                    try { hls.startLoad(); } catch (e) {}
                     break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
-                    hls.recoverMediaError();
+                    try { hls.recoverMediaError(); } catch (e) {}
                     break;
                 default:
                     if (errorCount > 3 && !errorDisplayed) {
@@ -119,7 +113,8 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
             episodeSwitchTimeout = null;
         }
         window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
+        const loadingEl = document.getElementById('player-loading');
+        if (loadingEl) loadingEl.style.display = 'none';
     });
 
     hls.on(Hls.Events.LEVEL_LOADED, function () {
@@ -129,7 +124,8 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
             episodeSwitchTimeout = null;
         }
         window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
+        const loadingEl = document.getElementById('player-loading');
+        if (loadingEl) loadingEl.style.display = 'none';
     });
 }
 
