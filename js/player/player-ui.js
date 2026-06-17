@@ -84,6 +84,10 @@ function setupProgressBarPreciseClicks() {
     const progressBar = document.querySelector('.art-progress');
     if (!progressBar || !art || !art.video) return;
 
+    // 防止重复绑定：剧集切换时此函数可能被多次调用
+    if (progressBar.dataset.leletvProgress === 'bound') return;
+    progressBar.dataset.leletvProgress = 'bound';
+
     let isDragging = false;
 
     // 统一的跳转处理函数
@@ -546,6 +550,7 @@ function clearVideoProgress() {
     try {
         localStorage.removeItem(progressKey);
     } catch (e) {
+        console.warn('[LeLeTV] 清除视频进度记录失败:', e);
     }
 }
 
@@ -555,7 +560,9 @@ function getVideoCover() {
         if (info) {
             if (info.cover && info.cover.startsWith('http')) return info.cover;
         }
-    } catch (e) {}
+    } catch (e) {
+        console.warn('[LeLeTV] 获取视频封面失败:', e);
+    }
     return '/image/logo-black.png';
 }
 
@@ -704,7 +711,7 @@ function renderPlayerDetailInfo() {
         videoInfo = StorageService.getCurrentVideoInfo();
 
     } catch (e) {
-        // ignore
+        console.warn('[LeLeTV] 获取视频详情失败:', e);
     }
 
     const descriptionText = videoInfo && videoInfo.desc ? videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';

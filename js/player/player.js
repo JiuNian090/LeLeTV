@@ -153,8 +153,16 @@ async function fetchTmdbPlayerDetail(title) {
 document.addEventListener('DOMContentLoaded', function () {
     // 先检查用户是否已通过密码验证
     if (!isPasswordVerified()) {
-        // 隐藏加载提示
-        document.getElementById('player-loading').style.display = 'none';
+        // 隐藏加载提示，显示请验证的提示
+        const loadingEl = document.getElementById('player-loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'flex';
+            loadingEl.innerHTML = `
+                <div style="font-size: 42px; margin-bottom: 14px;">🔒</div>
+                <div class="loading-text" style="color: rgba(255,255,255,0.7); font-size: 15px; margin-bottom: 6px;">请输入密码以访问播放器</div>
+                <div class="loading-text" style="font-size: 12px;">请在弹出的验证窗口中输入密码</div>
+            `;
+        }
         return;
     }
 
@@ -163,8 +171,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // 监听密码验证成功事件
 document.addEventListener('passwordVerified', () => {
-    document.getElementById('player-loading').style.display = 'block';
-
+    const loadingEl = document.getElementById('player-loading');
+    if (loadingEl) {
+        loadingEl.innerHTML = `
+            <div class="loading-spinner">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+                    <circle cx="16" cy="2" r="3" fill="#ec4899" class="orbit-dot">
+                        <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite"/>
+                    </circle>
+                </svg>
+            </div>
+            <div class="loading-text">正在加载视频...</div>
+        `;
+        loadingEl.style.display = 'flex';
+    }
     initializePageContent();
 });
 
@@ -212,10 +233,9 @@ function initializePageContent() {
                 showError('历史记录链接无效，请返回首页重新访问');
             }
         } catch (e) {
+            console.warn('[LeLeTV] 解析嵌套URL参数失败:', e);
         }
     }
-
-    // 保存当前视频URL
     currentVideoUrl = videoUrl || '';
 
     // 从localStorage获取数据
@@ -267,6 +287,7 @@ function initializePageContent() {
 
         episodesReversed = localStorage.getItem('episodesReversed') === 'true';
     } catch (e) {
+        console.warn('[LeLeTV] 解析剧集列表失败，使用默认值:', e);
         currentEpisodes = [];
         currentEpisodeIndex = 0;
         episodesReversed = false;
@@ -318,10 +339,10 @@ function initializePageContent() {
                 let existingInfo = null;
                 try {
                     existingInfo = StorageService.getCurrentVideoInfo();
-                } catch (e) {}
-
-                const mergedInfo = {
-                    // TMDB 数据作为默认值，视频源 API 已有数据优先保留
+                } catch (e) {
+                    console.warn('[LeLeTV] 获取 TMDB 已有详情失败:', e);
+                }
+                    const mergedInfo = {
                     ...tmdbInfo,
                     ...(existingInfo || {}),
                     // 但 TMDB 的封面通常质量更好，优先使用
@@ -344,7 +365,9 @@ function initializePageContent() {
                             history[idx].cover = tmdbInfo.cover;
                             StorageService.setViewingHistory(history);
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn('[LeLeTV] 更新历史记录TMDB封面失败:', e);
+                    }
                 }
             }
         });
@@ -592,9 +615,8 @@ function saveToHistory() {
             currentVideoCover = parsedInfo.cover || parsedInfo.vod_pic || '';
         }
     } catch (e) {
+        console.warn('[LeLeTV] saveToHistory 获取封面失败:', e);
     }
-
-    // 构建要保存的视频信息对象
     const videoInfo = {
         title: currentVideoTitle,
         directVideoUrl: currentVideoUrl, // Current episode's direct URL
@@ -670,10 +692,9 @@ function saveToHistory() {
 
         StorageService.setViewingHistory(history);
     } catch (e) {
+        console.warn('[LeLeTV] saveToHistory 写入失败:', e);
     }
 }
-
-// 显示恢复位置提示
 
 // 格式化时间为 mm:ss 格式
 
@@ -884,7 +905,9 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
             if (data.videoInfo) {
                 localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn('[LeLeTV] fetchDetailAndInit 保存本地状态失败:', e);
+        }
 
         // 更新页面标题和标题显示
         document.title = currentVideoTitle + ' - LeLeTV播放器';
@@ -913,6 +936,7 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
             showError('没有可播放的视频资源');
         }
     } catch (e) {
+        console.error('[LeLeTV] fetchDetailAndInit 失败:', e);
         showError('获取视频详情失败，请稍后重试');
     }
 }
@@ -955,7 +979,7 @@ async function fetchDetailInfo(vodId, sourceCode) {
             updateButtonStates();
         }
     } catch (e) {
-        // 静默失败，不影响当前播放
+        console.warn('[LeLeTV] fetchDetailInfo 静默刷新详情失败:', e);
     }
 }
 

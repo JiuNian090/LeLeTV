@@ -77,7 +77,8 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
     video.disableRemotePlayback = false;
 
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
-        video.play().catch(e => {
+        video.play().catch(function (e) {
+            console.warn('[LeLeTV] 自动播放被浏览器阻止:', e.message);
         });
     });
 
@@ -317,6 +318,7 @@ function onVideoLoadedMetadata(art, loadingWatchdog) {
                 }
             }
         } catch (e) {
+            console.warn('[LeLeTV] 解析本地播放进度失败:', e);
         }
     }
 
@@ -411,9 +413,16 @@ function setupLongLoadingWarning() {
         const loadingElement = document.getElementById('player-loading');
         if (loadingElement && loadingElement.style.display !== 'none') {
             loadingElement.innerHTML = `
-                <div class="loading-spinner"></div>
-                <div>视频加载时间较长，请耐心等待...</div>
-                <div style="font-size: 12px; color: #aaa; margin-top: 10px;">如长时间无响应，请尝试其他视频源</div>
+                <div class="loading-spinner">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+                        <circle cx="16" cy="2" r="3" fill="#ec4899" class="orbit-dot">
+                            <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite"/>
+                        </circle>
+                    </svg>
+                </div>
+                <div class="loading-text">视频加载时间较长，请耐心等待...</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 8px;">如长时间无响应，请尝试其他视频源</div>
             `;
         }
     }, 10000);

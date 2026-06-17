@@ -95,6 +95,18 @@ const PlayerManager = {
             this._tracker = null;
         }
 
+        // 清理自定义 overlay（setupControlsBehavior 创建）
+        const overlay = document.querySelector('.player-click-overlay');
+        if (overlay && overlay.parentElement) {
+            overlay.parentElement.removeChild(overlay);
+        }
+
+        // 清理长按播放的右键菜单禁用（setupLongPressSpeedControl 设置）
+        const playerEl = document.getElementById('player');
+        if (playerEl) {
+            playerEl.oncontextmenu = null;
+        }
+
         this._clearAllTimers();
     },
 
