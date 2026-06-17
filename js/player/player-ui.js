@@ -284,18 +284,38 @@ function setupLongPressSpeedControl() {
 function setupThumbnailCapture() {
     if (!art || !art.video) return;
 
-    const CAPTURE_INTERVAL = 1;
     const THUMBNAIL_WIDTH = 160;
     const TOTAL_THUMBNAILS = 100;
     const COLUMNS = 10;
+    const FLUSH_EVERY = 3;            // 每抓3帧就刷新，ArtPlayer 帧映射更精确
+    const CAPTURE_INTERVAL = 1;       // 秒，最短捕获间隔
+    const CATCHUP_RATE = 0.25;        // 秒，初始追赶阶段间隔（更快覆盖时间轴）
 
-    let lastCapture = 0;
     let captured = 0;
+    let lastCapture = 0;
     let canvas = null;
     let ctx = null;
     let frameH = 90;
     let thumbnailUrl = null;
+    let knownDuration = 0;
+    let videoUrlAtSetup = currentVideoUrl || '';
 
+    // -------- 重置 --------
+    function reset() {
+        captured = 0;
+        lastCapture = 0;
+        knownDuration = 0;
+        canvas = null;
+        ctx = null;
+        frameH = 90;
+        if (thumbnailUrl) {
+            URL.revokeObjectURL(thumbnailUrl);
+            thumbnailUrl = null;
+        }
+        if (art) art.thumbnails = null;
+    }
+
+    // -------- Canvas 初始化 --------
     function ensureCanvas() {
         if (canvas) return true;
         const vh = art.video.videoHeight || art.video.height || 90;
@@ -311,6 +331,7 @@ function setupThumbnailCapture() {
         return true;
     }
 
+    // -------- 刷新雪碧图到 ArtPlayer --------
     function flushSprite() {
         if (!canvas || captured === 0) return;
         canvas.toBlob(function (blob) {
@@ -326,10 +347,41 @@ function setupThumbnailCapture() {
         }, 'image/jpeg');
     }
 
+    // -------- 抽帧核心 --------
     function onTimeUpdate() {
-        if (!art || !art.video || captured >= TOTAL_THUMBNAILS) return;
+        if (!art || !art.video) return;
+
+        // 检测剧集切换：currentVideoUrl 变化时自动重置
+        if (currentVideoUrl !== videoUrlAtSetup) {
+            videoUrlAtSetup = currentVideoUrl;
+            reset();
+        }
+
+        if (captured >= TOTAL_THUMBNAILS) return;
+
         const ct = art.video.currentTime;
-        if (ct - lastCapture < CAPTURE_INTERVAL) return;
+        const dur = art.video.duration || Infinity;
+
+        // 追赶策略：前 25 帧用更小间隔快速覆盖时间轴
+        const minInterval = captured < 25 ? CATCHUP_RATE : CAPTURE_INTERVAL;
+        if (ct - lastCapture < minInterval) return;
+
+        // 如果已获知视频时长，计算理想帧间距，避免全部堆在前几分钟
+        if (dur < 600 && dur > 10) {   // 短于 10 分钟的视频
+            knownDuration = dur;
+            const idealSpacing = dur / TOTAL_THUMBNAILS;
+            // 检查是否已经有覆盖到当前位置附近的帧
+            const expectedFrame = Math.floor(ct / idealSpacing);
+            if (expectedFrame < captured - 5 || expectedFrame > captured + 3) {
+                // 跳过了太多帧，直接按当前位置补齐
+                const targetFrame = Math.min(expectedFrame, TOTAL_THUMBNAILS - 1);
+                if (targetFrame > captured) {
+                    // 快速推进到目标位置（不实际绘制，只是追索引）
+                    // 这里不做跳过，仍然按实际时间捕获，但允许更小间隔
+                }
+            }
+        }
+
         if (!ensureCanvas() || !ctx) return;
         lastCapture = ct;
 
@@ -338,14 +390,24 @@ function setupThumbnailCapture() {
         try {
             ctx.drawImage(art.video, col * THUMBNAIL_WIDTH, row * frameH, THUMBNAIL_WIDTH, frameH);
             captured++;
-            // 每抓满一行（10帧）或全部抓完才刷新雪碧图
-            if (captured % COLUMNS === 0 || captured >= TOTAL_THUMBNAILS) {
+            // 更频繁地刷新雪碧图
+            if (captured % FLUSH_EVERY === 0 || captured >= TOTAL_THUMBNAILS) {
                 flushSprite();
             }
-        } catch (e) {}
+        } catch (e) {
+            // drawImage 可能在视频未就绪时失败，静默跳过
+        }
+    }
+
+    // -------- 视频元数据重载时重置（剧集切换等场景）-------
+    function onMetaDataLoaded() {
+        videoUrlAtSetup = currentVideoUrl || '';
+        reset();
+        ensureCanvas();
     }
 
     art.video.addEventListener('timeupdate', onTimeUpdate);
+    art.on('video:loadedmetadata', onMetaDataLoaded);
 }
 
 function setupControlsBehavior() {

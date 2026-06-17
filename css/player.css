@@ -1277,9 +1277,14 @@ main.container {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    pointer-events: auto;
+    pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+/* 全屏时允许交互 */
+#playerContainer.fullscreen-active .player-floating-lock-btn {
+    pointer-events: auto;
 }
 
 .player-floating-lock-btn:hover {
@@ -1292,10 +1297,10 @@ main.container {
     height: 22px;
 }
 
-/* 未锁定：随控制栏显隐 */
-#playerContainer:not(.controls-hidden):not(.player-locked) .player-floating-lock-btn,
-#playerContainer.controls-hidden:hover .player-floating-lock-btn,
-#playerContainer.player-locked .player-floating-lock-btn {
+/* 全屏时：未锁定随控制栏显隐；非全屏始终隐藏 */
+#playerContainer.fullscreen-active:not(.controls-hidden):not(.player-locked) .player-floating-lock-btn,
+#playerContainer.fullscreen-active.controls-hidden:hover .player-floating-lock-btn,
+#playerContainer.fullscreen-active.player-locked .player-floating-lock-btn {
     opacity: 1;
 }
 
