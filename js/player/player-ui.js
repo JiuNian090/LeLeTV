@@ -554,18 +554,6 @@ function clearVideoProgress() {
     }
 }
 
-function getVideoCover() {
-    try {
-        const info = StorageService.getCurrentVideoInfo();
-        if (info) {
-            if (info.cover && info.cover.startsWith('http')) return info.cover;
-        }
-    } catch (e) {
-        console.warn('[LeLeTV] 获取视频封面失败:', e);
-    }
-    return '/image/logo-black.png';
-}
-
 function addNextEpisodeDirectly(art) {
     
     // 检查是否已存在
@@ -698,156 +686,6 @@ function toggleControlsLock(art) {
     }
 }
 
-function renderPlayerDetailInfo() {
-    const container = document.getElementById('playerDetailInfo');
-    if (!container) return;
-
-    const metaContainer = document.getElementById('detailMetaContainer');
-    const descBody = document.getElementById('detailDescBody');
-    const arrow = container.querySelector('.detail-toggle-arrow');
-
-    let videoInfo = null;
-    try {
-        videoInfo = StorageService.getCurrentVideoInfo();
-
-    } catch (e) {
-        console.warn('[LeLeTV] 获取视频详情失败:', e);
-    }
-
-    const descriptionText = videoInfo && videoInfo.desc ? videoInfo.desc.replace(/<[^>]+>/g, '').trim() : '';
-    const hasMeta = videoInfo && (videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.remarks);
-    const hasActorOrDesc = videoInfo && (videoInfo.actor || descriptionText);
-
-    container.style.display = 'block';
-
-    // 渲染基本信息（始终显示）- 不含主演
-    if (metaContainer && hasMeta) {
-        let metaHtml = '<div class="detail-meta">';
-        if (videoInfo.type) {
-            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">类型:</span><span class="detail-meta-value">${videoInfo.type}</span></div>`;
-        }
-        if (videoInfo.year) {
-            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">年份:</span><span class="detail-meta-value">${videoInfo.year}</span></div>`;
-        }
-        if (videoInfo.area) {
-            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">地区:</span><span class="detail-meta-value">${videoInfo.area}</span></div>`;
-        }
-        if (videoInfo.director) {
-            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">导演:</span><span class="detail-meta-value">${videoInfo.director}</span></div>`;
-        }
-        if (videoInfo.remarks) {
-            metaHtml += `<div class="detail-meta-item"><span class="detail-meta-label">备注:</span><span class="detail-meta-value">${videoInfo.remarks}</span></div>`;
-        }
-        metaHtml += '</div>';
-        metaContainer.innerHTML = metaHtml;
-    } else if (metaContainer) {
-        metaContainer.innerHTML = '';
-    }
-
-    // 渲染详情部分（可折叠）- 包含主演和简介
-    if (descBody) {
-        let detailHtml = '';
-
-        // 先添加主演
-        if (videoInfo && videoInfo.actor) {
-            detailHtml += '<div class="detail-meta detail-meta-collapsible">';
-            detailHtml += `<div class="detail-meta-item"><span class="detail-meta-label">主演:</span><span class="detail-meta-value">${videoInfo.actor}</span></div>`;
-            detailHtml += '</div>';
-        }
-        
-        // 再添加简介
-        if (descriptionText) {
-            detailHtml += `<div class="detail-desc-content"><span class="detail-meta-label">简介:</span>${descriptionText}</div>`;
-        }
-
-        if (detailHtml) {
-            descBody.innerHTML = detailHtml;
-            if (arrow) arrow.style.display = '';
-        } else {
-            descBody.innerHTML = '';
-            if (arrow) arrow.style.display = 'none';
-        }
-    }
-
-    // 详情默认收起
-    if (hasActorOrDesc) {
-        container.classList.add('detail-collapsed');
-    }
-}
-
-function toggleDetailInfo() {
-    const container = document.getElementById('playerDetailInfo');
-    if (!container) return;
-    const body = container.querySelector('.detail-collapse-body');
-    if (!body || !body.innerHTML.trim()) return;
-    container.classList.toggle('detail-collapsed');
-}
-
-function toggleEpisodeSection() {
-    const section = document.getElementById('episodeSection');
-    if (!section) return;
-    section.classList.toggle('episode-collapsed');
-}
-
-function updateEpisodeCollapseState() {
-    const section = document.getElementById('episodeSection');
-    if (!section) return;
-    section.classList.remove('episode-collapsed');
-}
-
-function renderResourceInfoBar() {
-    // 获取容器元素
-    const container = document.getElementById('resourceInfoBarContainer');
-    if (!container) {
-        console.error('找不到资源信息卡片容器');
-        return;
-    }
-    
-    // 获取当前视频 source_code
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentSource = urlParams.get('source') || '';
-    
-    // 显示临时加载状态
-    container.innerHTML = `
-      <div class="resource-info-bar-left flex">
-        <span>加载中...</span>
-        <span class="resource-info-bar-videos">-</span>
-      </div>
-      <button class="resource-switch-btn flex" id="switchResourceBtn" data-action="show-switch-resource">
-        <span class="resource-switch-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="#a67c2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        切换资源
-      </button>
-    `;
-
-    // 查找当前源名称，从 API_SITES 和 custom_api 中查找即可
-    let resourceName = currentSource
-    if (currentSource && API_SITES[currentSource]) {
-        resourceName = API_SITES[currentSource].name;
-    }
-    if (resourceName === currentSource) {
-        const customAPIs = JSON.parse(localStorage.getItem('customAPIs') || '[]');
-        const customIndex = parseInt(currentSource.replace('custom_', ''), 10);
-        if (customAPIs[customIndex]) {
-            resourceName = customAPIs[customIndex].name || '自定义资源';
-        }
-    }
-
-    container.innerHTML = `
-      <div class="resource-info-bar-left flex">
-        <span>${resourceName}</span>
-        <span class="resource-info-bar-videos">${currentEpisodes.length} 个视频</span>
-      </div>
-      <button class="resource-switch-btn flex" id="switchResourceBtn" data-action="show-switch-resource">
-        <span class="resource-switch-icon">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="#a67c2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        切换资源
-      </button>
-    `;
-}
-
 async function testVideoSourceSpeed(sourceKey, vodId) {
     try {
         const startTime = performance.now();
@@ -931,27 +769,6 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
             error: error.name === 'AbortError' ? '超时' : '测试失败' 
         };
     }
-}
-
-function formatSpeedDisplay(speedResult) {
-    if (speedResult.speed === -1) {
-        return `<span class="speed-indicator error">❌ ${speedResult.error}</span>`;
-    }
-    
-    const speed = speedResult.speed;
-    let className = 'speed-indicator good';
-    let icon = '🟢';
-    
-    if (speed > 500) {
-        className = 'speed-indicator poor';
-        icon = '🔴';
-    } else if (speed > 200) {
-        className = 'speed-indicator medium';
-        icon = '🟡';
-    }
-    
-    const note = speedResult.note ? ` (${speedResult.note})` : '';
-    return `<span class="${className}">${icon} ${speed}ms${note}</span>`;
 }
 
 async function showSwitchResourceModal() {

@@ -1,3 +1,8 @@
+// Toast queue variables (moved from ui.js for self-containment)
+const toastQueue = [];
+let isShowingToast = false;
+let currentToastTimeout = null;
+
 function showToast(message, type = 'error', duration = 3000) {
     if (!message || typeof message !== 'string') {
         console.warn('Invalid toast message:', message);
