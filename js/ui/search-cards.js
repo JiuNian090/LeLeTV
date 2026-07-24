@@ -18,7 +18,9 @@ function _buildSearchCardsHtml(items) {
     if (item.vod_year) h += "<span>" + item.vod_year + "</span>";
     h += "</div></div>";
     h += "<p class='card-content-description'>" + (item.vod_remarks || "暂无介绍").toString().replace(/</g, "&lt;") + "</p>";
-    h += "<div class='card-content-footer'>" + (srcInfo || "") + "</div></div></div></div>";
+    h += "<div class='card-content-footer'>" + (srcInfo || "") + "</div></div></div>";
+    h += "<button class='card-share-btn' data-action='share-video' data-title='" + sn + "' data-url='" + (item.vod_id ? window.location.origin + "/player.html?id=" + encodeURIComponent(item.vod_id) + "&source=" + encodeURIComponent(sc || "") + "&title=" + encodeURIComponent(sn) : "") + "' onclick='event.stopPropagation();_shareVideo(this.dataset.title, this.dataset.url)' title='分享'>&#x2197;</button></div>";
+    return h;
     return h;
   }).join("");
 }

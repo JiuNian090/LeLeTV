@@ -2872,3 +2872,20 @@ body > header {
 ::view-transition-new(root) {
   animation: fade-in 0.25s ease-out both;
 }
+
+/* 分享按钮 */
+.card-share-btn {
+  position: absolute; top: 6px; right: 6px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); color: #fff;
+  border: none; cursor: pointer; font-size: 16px; line-height: 28px;
+  text-align: center; opacity: 0; transition: opacity 0.2s;
+  z-index: 2; display: flex; align-items: center; justify-content: center;
+}
+.search-result-card:hover .card-share-btn,
+.search-result-card .card-share-btn:focus {
+  opacity: 1;
+}
+.card-share-btn:hover {
+  background: #ec4899;
+}

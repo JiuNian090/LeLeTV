@@ -143,3 +143,86 @@ window.toggleSettings = toggleSettings;
 window.focusSearch = focusSearch;
 window.openDisclaimerModal = openDisclaimerModal;
 window.closeDisclaimerModal = closeDisclaimerModal;
+
+// ===================== 移动端滑动手势 =====================
+(function() {
+  var startX, startY, startTime;
+  var SWIPE_THRESHOLD = 60;    // px
+  var VERTICAL_LIMIT = 30;     // px - 垂直偏移超过此值不触发水平滑动
+  var MAX_TIME = 300;          // ms - 超过此时间不触发
+
+  var pages = ['home', 'category', 'history', 'settings', 'about'];
+
+  document.addEventListener('touchstart', function(e) {
+    // 不在播放器页面或搜索输入框内触发
+    if (e.target.closest('#player') || e.target.closest('#searchInput') || 
+        e.target.closest('.art-controls') || e.target.closest('input, textarea, select')) {
+      startX = null;
+      return;
+    }
+    var t = e.changedTouches[0];
+    startX = t.screenX;
+    startY = t.screenY;
+    startTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (startX === null) return;
+    var t = e.changedTouches[0];
+    var dx = t.screenX - startX;
+    var dy = t.screenY - startY;
+    var dt = Date.now() - startTime;
+
+    // 垂直滑动太多或太慢，忽略
+    if (Math.abs(dy) > VERTICAL_LIMIT || dt > MAX_TIME) {
+      startX = null;
+      return;
+    }
+
+    // 水平滑动距离不够
+    if (Math.abs(dx) < SWIPE_THRESHOLD) {
+      startX = null;
+      return;
+    }
+
+    var curIdx = pages.indexOf(currentPage);
+    if (curIdx === -1) { startX = null; return; }
+
+    if (dx > 0) {
+      // 右滑 → 上一页
+      if (curIdx > 0) switchPage(pages[curIdx - 1]);
+    } else {
+      // 左滑 → 下一页
+      if (curIdx < pages.length - 1) switchPage(pages[curIdx + 1]);
+    }
+
+    startX = null;
+  }, { passive: true });
+})();
+
+
+// ===================== 全局错误边界 =====================
+(function() {
+  var reportedErrors = {};
+  
+  window.addEventListener("error", function(e) {
+    // 过滤常见无害错误
+    if (e.message && (
+      e.message.indexOf("ResizeObserver") >= 0 ||
+      e.message.indexOf("NetworkError") >= 0 ||
+      e.message.indexOf("AbortError") >= 0 ||
+      e.message.indexOf("Failed to fetch") >= 0
+    )) return;
+    
+    var key = e.message + ":" + (e.filename || "");
+    if (reportedErrors[key]) return;
+    reportedErrors[key] = true;
+    
+    console.warn("[LeLeTV] 捕获错误:", e.message, e.filename, e.lineno);
+  });
+  
+  window.addEventListener("unhandledrejection", function(e) {
+    var msg = e.reason ? (e.reason.message || String(e.reason)) : "Unknown";
+    console.warn("[LeLeTV] 未处理的 Promise 错误:", msg);
+  });
+})();

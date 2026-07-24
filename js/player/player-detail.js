@@ -87,3 +87,16 @@ function formatSpeedDisplay(speedResult) {
 function escHtml(str) {
   return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+
+function _shareCurrentVideo() {
+  var url = window.location.href;
+  var title = currentVideoTitle || document.title;
+  if (navigator.share) {
+    navigator.share({ title: title, url: url }).catch(function() {});
+  } else {
+    navigator.clipboard.writeText(url).then(function() {
+      if (typeof showToast === "function") showToast("链接已复制", "success");
+    }).catch(function() {});
+  }
+}
