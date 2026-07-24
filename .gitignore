@@ -20,7 +20,9 @@ coverage
 .nyc_output
 
 # Production build outputs
-dist
+# 注意：dist/ 目录需提交到 git，供 Cloudflare Pages 直接部署（无云端构建）
+# 仅忽略 sourcemap，避免泄露源码结构
+dist/*.js.map
 dist-ssr
 build
 out

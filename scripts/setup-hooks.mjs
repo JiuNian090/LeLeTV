@@ -51,35 +51,43 @@ function err(msg) {
 
 try {
   const stagedFiles = run('git diff --cached --name-only').split('\\n').filter(Boolean);
-  
-  if (!stagedFiles.includes('VERSION.txt')) {
-    process.exit(0);
+
+  // 1. 版本号同步：VERSION.txt 变更时，把版本号注入 HTML / service-worker
+  if (stagedFiles.includes('VERSION.txt')) {
+    info('检测到 VERSION.txt 变更，开始同步版本号...');
+    const syncScript = path.join(ROOT, 'scripts', 'generate-version.mjs');
+    if (!fs.existsSync(syncScript)) {
+      warn(\`generate-version.mjs 不存在: \${syncScript}\`);
+    } else {
+      execSync(\`node "\${syncScript}"\`, { cwd: ROOT, stdio: 'inherit' });
+      const filesToStage = ['index.html', 'player.html', 'service-worker.js']
+        .filter(f => fs.existsSync(path.join(ROOT, f)));
+      if (filesToStage.length > 0) {
+        run(\`git add \${filesToStage.join(' ')}\`);
+        ok(\`已重新暂存: \${filesToStage.join(', ')}\`);
+      }
+    }
   }
 
-  info('检测到 VERSION.txt 变更，开始同步版本号...');
-
-  const syncScript = path.join(ROOT, 'scripts', 'generate-version.mjs');
-  
-  if (!fs.existsSync(syncScript)) {
-    warn(\`generate-version.mjs 不存在: \${syncScript}\`);
-    process.exit(0);
-  }
-
-  execSync(\`node "\${syncScript}"\`, { cwd: ROOT, stdio: 'inherit' });
-
-  const filesToStage = [
-    'index.html',
-    'player.html',
-    'service-worker.js'
-  ].filter(f => fs.existsSync(path.join(ROOT, f)));
-
-  if (filesToStage.length > 0) {
-    run(\`git add \${filesToStage.join(' ')}\`);
-    ok(\`已重新暂存: \${filesToStage.join(', ')}\`);
+  // 2. Bundle 自动构建：检测到 js/ 变更但 dist/ 未暂存时，自动构建 bundle
+  //    避免开发者忘记 npm run build 导致线上 dist 产物过时
+  const jsChanged = stagedFiles.some(f => f.startsWith('js/'));
+  const distChanged = stagedFiles.some(f => f.startsWith('dist/'));
+  if (jsChanged && !distChanged) {
+    info('检测到 js/ 变更但 dist/ 未暂存，自动构建 bundle...');
+    try {
+      execSync('node scripts/build-bundles.mjs', { cwd: ROOT, stdio: 'inherit' });
+      // build-bundles.mjs 内部已自动 git add dist/ index.html player.html
+      ok('已自动构建 bundle 并暂存 dist/ 与 HTML 引用');
+    } catch (e) {
+      err('bundle 构建失败，请手动运行 npm run build 排查错误');
+      err(\`错误: \${e.message}\`);
+      process.exit(1);
+    }
   }
 
 } catch (e) {
-  err(\`版本同步失败: \${e.message}\`);
+  err(\`pre-commit 失败: \${e.message}\`);
   process.exit(1);
 }
 `;
@@ -95,13 +103,13 @@ function main() {
 
   if (fs.existsSync(preCommitPath)) {
     const existingContent = fs.readFileSync(preCommitPath, 'utf8');
-    if (!existingContent.includes('VERSION.txt')) {
-      warn('检测到已存在 pre-commit 钩子，已备份到 pre-commit.backup');
-      fs.writeFileSync(backupPath, existingContent, 'utf8');
-    } else {
-      info('pre-commit 钩子已存在且包含版本同步逻辑，跳过安装');
+    // 用 'build-bundles' 作为新版本 hook 的标志
+    if (existingContent.includes('build-bundles')) {
+      info('pre-commit 钩子已是最新版本（含 bundle 自动构建），跳过安装');
       process.exit(0);
     }
+    warn('检测到旧版 pre-commit 钩子，已备份到 pre-commit.backup');
+    fs.writeFileSync(backupPath, existingContent, 'utf8');
   }
 
   fs.writeFileSync(preCommitPath, PRE_COMMIT_HOOK, 'utf8');
@@ -111,7 +119,8 @@ function main() {
   }
 
   ok('pre-commit 钩子安装成功！');
-  info('功能：当 VERSION.txt 变更时自动同步 index.html、player.html、service-worker.js 中的版本号');
+  info('功能 1：VERSION.txt 变更时自动同步版本号到 HTML / service-worker');
+  info('功能 2：js/ 变更但 dist/ 未暂存时，自动构建 bundle 并暂存');
 }
 
 main();
