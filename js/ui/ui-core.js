@@ -2,6 +2,7 @@
 const toastQueue = [];
 let isShowingToast = false;
 let currentToastTimeout = null;
+let loadingTimeoutId = null;
 
 function showToast(message, type = 'error', duration = 3000) {
     if (!message || typeof message !== 'string') {

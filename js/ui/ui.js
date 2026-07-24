@@ -1,13 +1,4 @@
-
-
-const toastQueue = [];
-let isShowingToast = false;
-let currentToastTimeout = null;
-
-
-
 // 添加显示/隐藏 loading 的函数
-let loadingTimeoutId = null;
 
 
 
