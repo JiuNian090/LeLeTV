@@ -1,6 +1,16 @@
 // LeLeTV — 搜索结果卡片渲染模块
 // 从 app-search.js 拆分
 
+// 封面加载失败的本地 fallback（内联 SVG data URI，永不失效）
+// 注意：必须在替换 src 前先添加 loaded 类，否则 img.loading-fade 仍为 opacity:0
+var _CARD_IMG_FALLBACK_SRC = "data:image/svg+xml;charset=utf-8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect width="300" height="450" fill="#191919"/><g fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="100" y="160" width="100" height="80" rx="4"/><circle cx="120" cy="182" r="6" fill="#444"/><path d="M100 235 L145 195 L200 250"/></g><text x="150" y="290" font-size="18" fill="#666" text-anchor="middle" font-family="sans-serif">无封面</text></svg>');
+function _cardImgFallback(img) {
+  img.onerror = null;
+  img.classList.add('loaded');
+  img.classList.add('object-contain');
+  img.src = _CARD_IMG_FALLBACK_SRC;
+}
+
 function _buildSearchCardsHtml(items) {
   return items.map(function(item) {
     var sid = (item.vod_id || "").toString().replace(/[^\w-]/g, "");
@@ -11,7 +21,7 @@ function _buildSearchCardsHtml(items) {
     var cv = item.vod_pic && item.vod_pic.indexOf("http") === 0;
     var h = "<div class='card-hover search-result-card rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md' data-action='play-directly' data-id='" + sid + "' data-name='" + sn + "' data-source='" + sc + "'" + au + ">";
     h += "<div class='flex h-full'>";
-    if (cv) { h += "<div class='search-card-img-container'><img src='" + item.vod_pic + "' alt='" + sn + "' loading='lazy' class='loading-fade' onerror='this.onerror=null;this.src=\u0027https://via.placeholder.com/300x450?text=无封面\u0027;this.classList.add(\u0027object-contain\u0027);' onload='this.classList.add(\u0027loaded\u0027)'></div>"; }
+    if (cv) { h += "<div class='search-card-img-container'><img src='" + item.vod_pic + "' alt='" + sn + "' loading='lazy' class='loading-fade' onerror=\"_cardImgFallback(this)\" onload=\"this.classList.add('loaded')\"></div>"; }
     h += "<div class='card-content'><div class='card-content-header'><h3 title='" + sn + "'>" + sn + "</h3><div class='card-content-tags'>";
     var tn = (item.type_name || "").toString().replace(/</g, "&lt;");
     if (tn) h += "<span>" + tn + "</span>";
