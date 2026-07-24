@@ -38,7 +38,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "psmgr": "^1.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.5.0",

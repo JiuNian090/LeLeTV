@@ -209,11 +209,28 @@ async function handleApiRequest(url) {
     }
 }
 
-// 处理自定义API的特殊详情页
-async function handleCustomApiSpecialDetail(id, customApi) {
+// 特殊源正则表达式配置
+const SPECIAL_SOURCE_PATTERNS = {
+    ffzy: /\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g
+};
+
+// 统一的特殊源详情处理函数
+/**
+ * 统一的特殊源详情处理函数
+ * @param {string} id - 视频ID
+ * @param {Object} sourceConfig - 源配置对象
+ * @param {string} sourceConfig.detailUrl - 详情页URL基础地址
+ * @param {string} sourceConfig.sourceName - 源名称
+ * @param {string} sourceConfig.sourceCode - 源代码
+ * @param {RegExp} [sourceConfig.customPattern] - 可选的自定义正则表达式
+ * @returns {Promise<string>} JSON格式的详情数据
+ */
+async function handleSpecialDetail通用(id, sourceConfig) {
+    const startTime = Date.now();
+    
     try {
         // 构建详情页URL
-        const detailUrl = `${customApi}/index.php/vod/detail/id/${id}.html`;
+        const detailUrl = `${sourceConfig.detailUrl}/index.php/vod/detail/id/${id}.html`;
         
         // 添加超时处理
         const controller = new AbortController();
@@ -235,15 +252,28 @@ async function handleCustomApiSpecialDetail(id, customApi) {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-            throw new Error(`自定义API详情页请求失败: ${response.status}`);
+            throw new Error(`${sourceConfig.sourceName}详情页请求失败: ${response.status}`);
         }
         
         // 获取HTML内容
         const html = await response.text();
         
-        // 使用通用模式提取m3u8链接
-        const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
-        let matches = html.match(generalPattern) || [];
+        // 提取m3u8链接
+        let matches = [];
+        
+        // 优先使用自定义正则表达式
+        if (sourceConfig.customPattern) {
+            matches = html.match(sourceConfig.customPattern) || [];
+        }
+        
+        // 如果没有找到链接，使用通用模式
+        if (matches.length === 0) {
+            const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
+            matches = html.match(generalPattern) || [];
+        }
+        
+        // 去重处理
+        matches = [...new Set(matches)];
         
         // 处理链接
         matches = matches.map(link => {
@@ -259,6 +289,9 @@ async function handleCustomApiSpecialDetail(id, customApi) {
         const descMatch = html.match(/<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/);
         const descText = descMatch ? descMatch[1].replace(/<[^>]+>/g, ' ').trim() : '';
         
+        const duration = Date.now() - startTime;
+        console.log(`[特殊源详情] ${sourceConfig.sourceName} 请求成功，耗时: ${duration}ms，找到 ${matches.length} 个视频链接`);
+        
         return JSON.stringify({
             code: 200,
             episodes: matches,
@@ -266,93 +299,47 @@ async function handleCustomApiSpecialDetail(id, customApi) {
             videoInfo: {
                 title: titleText,
                 desc: descText,
-                source_name: '自定义源',
-                source_code: 'custom'
+                source_name: sourceConfig.sourceName,
+                source_code: sourceConfig.sourceCode
             }
         });
     } catch (error) {
-        console.error(`自定义API详情获取失败:`, error);
-        throw error;
+        const duration = Date.now() - startTime;
+        console.error(`[特殊源详情] ${sourceConfig.sourceName} 请求失败，耗时: ${duration}ms，错误:`, error);
+        
+        // 返回标准化的错误响应
+        return JSON.stringify({
+            code: 500,
+            msg: `${sourceConfig.sourceName}详情获取失败: ${error.message}`,
+            episodes: [],
+            videoInfo: null
+        });
     }
 }
 
-// 通用特殊源详情处理函数
+// 处理自定义API的特殊详情页（重构后）
+async function handleCustomApiSpecialDetail(id, customApi) {
+    return await handleSpecialDetail通用(id, {
+        detailUrl: customApi,
+        sourceName: '自定义源',
+        sourceCode: 'custom'
+    });
+}
+
+// 通用特殊源详情处理函数（重构后）
 async function handleSpecialSourceDetail(id, sourceCode) {
-    try {
-        // 构建详情页URL（使用配置中的detail URL而不是api URL）
-        const detailUrl = `${API_SITES[sourceCode].detail}/index.php/vod/detail/id/${id}.html`;
-        
-        // 添加超时处理
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), TIMING.API_REQUEST_TIMEOUT);
-        
-        // 添加鉴权参数到代理URL
-        const proxiedUrl = await window.ProxyAuth?.addAuthToProxyUrl ? 
-            await window.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
-            PROXY_URL + encodeURIComponent(detailUrl);
-            
-        // 获取详情页HTML
-        const response = await fetch(proxiedUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            },
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`详情页请求失败: ${response.status}`);
-        }
-        
-        // 获取HTML内容
-        const html = await response.text();
-        
-        // 根据不同源类型使用不同的正则表达式
-        let matches = [];
-        
-        if (sourceCode === 'ffzy') {
-            // 非凡影视使用特定的正则表达式
-            const ffzyPattern = /\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g;
-            matches = html.match(ffzyPattern) || [];
-        }
-        
-        // 如果没有找到链接或者是其他源类型，尝试一个更通用的模式
-        if (matches.length === 0) {
-            const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
-            matches = html.match(generalPattern) || [];
-        }
-        // 去重处理，避免一个播放源多集显示
-        matches = [...new Set(matches)];
-        // 处理链接
-        matches = matches.map(link => {
-            link = link.substring(1, link.length);
-            const parenIndex = link.indexOf('(');
-            return parenIndex > 0 ? link.substring(0, parenIndex) : link;
-        });
-        
-        // 提取可能存在的标题、简介等基本信息
-        const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
-        const titleText = titleMatch ? titleMatch[1].trim() : '';
-        
-        const descMatch = html.match(/<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/);
-        const descText = descMatch ? descMatch[1].replace(/<[^>]+>/g, ' ').trim() : '';
-        
-        return JSON.stringify({
-            code: 200,
-            episodes: matches,
-            detailUrl: detailUrl,
-            videoInfo: {
-                title: titleText,
-                desc: descText,
-                source_name: API_SITES[sourceCode].name,
-                source_code: sourceCode
-            }
-        });
-    } catch (error) {
-        console.error(`${API_SITES[sourceCode].name}详情获取失败:`, error);
-        throw error;
+    const config = {
+        detailUrl: API_SITES[sourceCode].detail,
+        sourceName: API_SITES[sourceCode].name,
+        sourceCode: sourceCode
+    };
+    
+    // 为ffzy源添加自定义正则表达式
+    if (SPECIAL_SOURCE_PATTERNS[sourceCode]) {
+        config.customPattern = SPECIAL_SOURCE_PATTERNS[sourceCode];
     }
+    
+    return await handleSpecialDetail通用(id, config);
 }
 
 // 处理聚合搜索

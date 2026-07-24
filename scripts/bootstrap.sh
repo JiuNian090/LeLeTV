@@ -9,9 +9,26 @@
 #   bash scripts/bootstrap.sh          # Detection + guidance
 #   bash scripts/bootstrap.sh --check  # Just check status, exit 0/1
 # ============================================================
+# NOTE: A cross-platform Node.js version is also available:
+#   node scripts/bootstrap.js
+# ============================================================
 
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# ---- Windows detection ----
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || -n "$WINDIR" ]]; then
+    echo ""
+    echo "============================================"
+    echo "  Windows detected"
+    echo "============================================"
+    echo ""
+    echo "  For better Windows support, use the Node.js version:"
+    echo "    node scripts/bootstrap.js"
+    echo ""
+    echo "  Or run this script with Git Bash / WSL."
+    echo ""
+fi
 
 # ---- Colour helpers ----
 RED='\033[0;31m'
@@ -96,9 +113,10 @@ print_guidance() {
         installed:*)
             local count="${skills_status#installed:}"
             ok "已安装 ${count} 个技能"
-            info "运行以下命令查看技能清单:"
+            info "查看技能清单:"
             echo "  ls ${ROOT_DIR}/.agents/skills/"
-            info "如需更新技能，在 IDE 中输入「更新技能和规则」"
+            info "如需更新技能，在 IDE 中输入「更新技能和规则」或运行:"
+            echo "  npx psmgr install --yes"
             ;;
     esac
 
