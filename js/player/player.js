@@ -152,17 +152,19 @@ async function fetchTmdbPlayerDetail(title) {
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
     // 先检查用户是否已通过密码验证
-    if (!isPasswordVerified()) {
-        // 隐藏加载提示，显示请验证的提示
-        if (loadingEl) {
-            loadingEl.style.display = 'flex';
-            loadingEl.innerHTML = `
-                <div style="font-size: 42px; margin-bottom: 14px;">🔒</div>
-                <div class="loading-text" style="color: rgba(255,255,255,0.7); font-size: 15px; margin-bottom: 6px;">请输入密码以访问播放器</div>
-                <div class="loading-text" style="font-size: 12px;">请在弹出的验证窗口中输入密码</div>
-            `;
+    if (window.isPasswordProtected && window.isPasswordVerified) {
+        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+            const loadingEl = document.getElementById('player-loading');
+            if (loadingEl) {
+                loadingEl.style.display = 'flex';
+                loadingEl.innerHTML = `
+                    <div style="font-size: 42px; margin-bottom: 14px;">🔒</div>
+                    <div class="loading-text" style="color: rgba(255,255,255,0.7); font-size: 15px; margin-bottom: 6px;">请输入密码以访问播放器</div>
+                    <div class="loading-text" style="font-size: 12px;">请在弹出的验证窗口中输入密码</div>
+                `;
+            }
+            return;
         }
-        return;
     }
 
     initializePageContent();
@@ -372,6 +374,7 @@ function initializePageContent() {
             saveCurrentProgress();
         } else if (document.visibilityState === 'visible') {
             // 页面恢复可见时，检查加载状态是否卡住
+            const loadingEl = document.getElementById('player-loading');
             if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
                 // 如果视频已初始化但加载状态卡住，尝试隐藏
                 if (art && art.video && art.video.currentTime > 0) {
@@ -763,6 +766,7 @@ function updateMediaSession() {
 
 // 异步获取视频详情并初始化播放器（用于搜索卡片直接跳转场景）
 async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
+    const loadingEl = document.getElementById('player-loading');
     if (loadingEl) loadingEl.style.display = 'flex';
 
     // 构建API参数（支持自定义源）

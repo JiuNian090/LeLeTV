@@ -93,8 +93,7 @@ async function buildBundle(config) {
 }
 
 function stripJsScripts(html) {
-  // Remove lines like:     <script src="js/..." ...></script>
-  return html.replace(/    <script src="js\/.*?"[^>]*><\/script>\r?\n/g, '');
+  return html.replace(/    <script src="(js|dist)\/.*?"[^>]*><\/script>\r?\n/g, '');
 }
 
 async function main() {
@@ -125,10 +124,10 @@ async function main() {
   // --- player.html ---
   let ply = fs.readFileSync(path.join(ROOT, 'player.html'), 'utf8');
   ply = stripJsScripts(ply);
-  // Use the __ENV__ script block as insertion anchor
-  const plyAnchor = '        window.__ENV__ = window.__ENV__ || {};';
-  const plyBundle = '    <script src="dist/' + coreFile + '" defer></script>\n    <script src="dist/' + playerFile + '" defer></script>\n';
-  ply = ply.replace(plyAnchor, plyBundle + plyAnchor);
+  // Insert after artplayer script (outside any <script> block)
+  const plyAnchor = '    <script src="libs/artplayer.min.js?v=' + version + '" defer crossorigin="anonymous"></script>';
+  const plyBundle = '    <script src="dist/' + coreFile + '" defer></script>\n    <script src="dist/' + playerFile + '" defer></script>';
+  ply = ply.replace(plyAnchor, plyAnchor + '\n' + plyBundle);
   ply = ply.replace(/\n{3,}/g, '\n\n');
   fs.writeFileSync(path.join(ROOT, 'player.html'), ply, 'utf8');
   console.log('[player.html] -> dist/' + coreFile + ' + dist/' + playerFile);
