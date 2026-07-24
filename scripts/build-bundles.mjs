@@ -44,7 +44,7 @@ const PLAYER = {
     'js/api/api.js', 'js/api/search.js',
     'js/player/player-manager.js', 'js/player/player-shortcuts.js',
     'js/player/player-core.js', 'js/player/player-episodes.js',
-    'js/player/player-ui.js', 'js/player/player-detail.js', 'js/player/player.js',
+    'js/player/player-ui.js', 'js/player/player-detail.js', 'js/player/player-quality.js', 'js/player/player.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/aurora-bg.js',
   ],

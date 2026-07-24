@@ -40,6 +40,9 @@ function setupHlsCustomType(video, url, hlsConfig) {
     const hls = new Hls(hlsConfig);
     PlayerManager.setHlsInstance(hls);
 
+    // 设置清晰度切换
+    if (typeof setupQualitySwitcher === "function") setupQualitySwitcher(hls);
+
     let errorDisplayed = false;
     let errorCount = 0;
     let playbackStarted = false;

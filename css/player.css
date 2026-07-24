@@ -1262,3 +1262,16 @@ main.container {
     opacity: 0 !important;
     pointer-events: none !important;
 }
+
+/* HLS \u6e05\u6670\u5ea6\u5207\u6362\u83dc\u5355 */
+.hls-quality-menu {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.hls-quality-menu div:hover {
+  background: rgba(255,255,255,0.1) !important;
+}
+.art-control-quality:hover {
+  opacity: 1 !important;
+}
