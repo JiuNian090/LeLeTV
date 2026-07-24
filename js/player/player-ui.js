@@ -42,7 +42,6 @@ function showError(message) {
     if (art && art.video && art.video.currentTime > 1) {
         return;
     }
-    const loadingEl = document.getElementById('player-loading');
     if (loadingEl) loadingEl.style.display = 'none';
     const errorEl = document.getElementById('error');
     if (errorEl) errorEl.style.display = 'flex';

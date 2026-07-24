@@ -33,7 +33,7 @@ function createHlsConfig() {
     };
 }
 
-function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
+function setupHlsCustomType(video, url, hlsConfig) {
     // 由 PlayerManager 管理 HLS 生命周期
     PlayerManager.setHlsInstance(null);
 
@@ -46,14 +46,12 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
     let bufferAppendErrorCount = 0;
 
     video.addEventListener('playing', function () {
-        playbackStarted = true;
-        clearTimeout(loadingWatchdog);
+        playbackStarted = true;
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
         }
-        window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
+        window.isSwitchingVideo = false;
         document.getElementById('error').style.display = 'none';
     });
 
@@ -113,28 +111,24 @@ function setupHlsCustomType(video, url, hlsConfig, loadingWatchdog) {
         }
     });
 
-    hls.on(Hls.Events.FRAG_LOADED, function () {
-        clearTimeout(loadingWatchdog);
+    hls.on(Hls.Events.FRAG_LOADED, function () {
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
         }
-        window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
+        window.isSwitchingVideo = false;
     });
 
-    hls.on(Hls.Events.LEVEL_LOADED, function () {
-        clearTimeout(loadingWatchdog);
+    hls.on(Hls.Events.LEVEL_LOADED, function () {
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
         }
-        window.isSwitchingVideo = false;
-        document.getElementById('player-loading').style.display = 'none';
+        window.isSwitchingVideo = false;
     });
 }
 
-function createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog) {
+function createArtPlayerInstance(videoUrl, hlsConfig) {
     return new Artplayer({
         container: '#player',
         url: videoUrl,
@@ -170,7 +164,7 @@ function createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog) {
         },
         customType: {
             m3u8: function (video, url) {
-                setupHlsCustomType(video, url, hlsConfig, loadingWatchdog);
+                setupHlsCustomType(video, url, hlsConfig);
             }
         }
     });
@@ -285,14 +279,12 @@ function onPlayerRestart(art) {
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
 }
 
-function onVideoLoadedMetadata(art, loadingWatchdog) {
-    clearTimeout(loadingWatchdog);
+function onVideoLoadedMetadata(art) {
     if (episodeSwitchTimeout) {
         clearTimeout(episodeSwitchTimeout);
         episodeSwitchTimeout = null;
     }
-    window.isSwitchingVideo = false;
-    document.getElementById('player-loading').style.display = 'none';
+    window.isSwitchingVideo = false;
     videoHasEnded = false;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -362,7 +354,7 @@ function onVideoEnded(art) {
     }
 }
 
-function setupPlayerEventListeners(art, fullScreenController, loadingWatchdog) {
+function setupPlayerEventListeners(art, fullScreenController) {
     art.on('ready', () => {
         onPlayerReady(art, fullScreenController);
     });
@@ -384,7 +376,7 @@ function setupPlayerEventListeners(art, fullScreenController, loadingWatchdog) {
     });
 
     art.on('video:loadedmetadata', function() {
-        onVideoLoadedMetadata(art, loadingWatchdog);
+        onVideoLoadedMetadata(art);
     });
 
     art.on('video:error', function (error) {
@@ -469,12 +461,12 @@ function initPlayer(videoUrl) {
 
     const hlsConfig = createHlsConfig();
 
-    art = createArtPlayerInstance(videoUrl, hlsConfig, loadingWatchdog);
+    art = createArtPlayerInstance(videoUrl, hlsConfig);
     PlayerManager.setInstance(art);
 
     const fullScreenController = createFullScreenController();
 
-    setupPlayerEventListeners(art, fullScreenController, loadingWatchdog);
+    setupPlayerEventListeners(art, fullScreenController);
 
     setupNativeFullscreenHandler();
 

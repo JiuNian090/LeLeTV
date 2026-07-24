@@ -154,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // 先检查用户是否已通过密码验证
     if (!isPasswordVerified()) {
         // 隐藏加载提示，显示请验证的提示
-        const loadingEl = document.getElementById('player-loading');
         if (loadingEl) {
             loadingEl.style.display = 'flex';
             loadingEl.innerHTML = `
@@ -170,24 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // 监听密码验证成功事件
-document.addEventListener('passwordVerified', () => {
-    const loadingEl = document.getElementById('player-loading');
-    if (loadingEl) {
-        loadingEl.innerHTML = `
-            <div class="loading-spinner">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
-                    <circle cx="16" cy="2" r="3" fill="#ec4899" class="orbit-dot">
-                        <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite"/>
-                    </circle>
-                </svg>
-            </div>
-            <div class="loading-text">正在加载视频...</div>
-        `;
-        loadingEl.style.display = 'flex';
-    }
-    initializePageContent();
-});
+
 
 // 初始化页面内容
 function initializePageContent() {
@@ -390,7 +372,6 @@ function initializePageContent() {
             saveCurrentProgress();
         } else if (document.visibilityState === 'visible') {
             // 页面恢复可见时，检查加载状态是否卡住
-            const loadingEl = document.getElementById('player-loading');
             if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
                 // 如果视频已初始化但加载状态卡住，尝试隐藏
                 if (art && art.video && art.video.currentTime > 0) {
@@ -782,7 +763,6 @@ function updateMediaSession() {
 
 // 异步获取视频详情并初始化播放器（用于搜索卡片直接跳转场景）
 async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
-    const loadingEl = document.getElementById('player-loading');
     if (loadingEl) loadingEl.style.display = 'flex';
 
     // 构建API参数（支持自定义源）
@@ -853,7 +833,6 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
         if (episodeUrl) {
             currentVideoUrl = episodeUrl;
             currentEpisodeIndex = targetIndex;
-            document.getElementById('player-loading').style.display = 'none';
             initPlayer(episodeUrl);
         } else {
             showError('没有可播放的视频资源');

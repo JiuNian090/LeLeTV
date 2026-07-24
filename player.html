@@ -56,17 +56,7 @@
                     <div class="relative">
                         <div id="player" class="player-placeholder">
                         </div>
-                        <div class="loading-container" id="player-loading">
-                            <div class="loading-spinner">
-                                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                                    <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
-                                    <circle cx="16" cy="2" r="3" fill="#ec4899" class="orbit-dot">
-                                        <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite"/>
-                                    </circle>
-                                </svg>
-                            </div>
-                            <div class="loading-text">正在加载视频...</div>
-                        </div>
+                        
                         <div class="error-container" id="error">
                             <div class="error-icon">
                             <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -207,8 +197,12 @@
 
     <script>
         // 创建全局环境变量对象
+    <script src="dist/leletv-core.k7chnz.js?v=v2.9.6" defer></script>
+    <script src="dist/leletv-player.6al0o.js?v=v2.9.6" defer></script>
+    <script src="dist/leletv-core.k7chnz.js?v=v2.9.6" defer></script>
+    <script src="dist/leletv-player.x4d2bu.js?v=v2.9.6" defer></script>
     <script src="dist/leletv-core.k7chnz.js" defer></script>
-    <script src="dist/leletv-player.6al0o.js" defer></script>
+    <script src="dist/leletv-player.x4d2bu.js" defer></script>
         window.__ENV__ = window.__ENV__ || {};
         
         // 注入服务器端环境变量 (将由服务器端替换)
