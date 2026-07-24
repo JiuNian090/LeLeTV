@@ -2858,3 +2858,17 @@ body > header {
         max-width: 340px;
     }
 }
+
+/* ==================== View Transitions ==================== */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@keyframes fade-out {
+  to { opacity: 0; transform: translateY(-8px); }
+}
+::view-transition-old(root) {
+  animation: fade-out 0.2s ease-out both;
+}
+::view-transition-new(root) {
+  animation: fade-in 0.25s ease-out both;
+}

@@ -11,14 +11,21 @@ function handleHashChange() { showPage(location.hash.slice(1) || 'home'); }
 
 function showPage(n) {
   currentPage = n;
-  document.querySelectorAll('.page-content').forEach(function(e) { e.classList.remove('active'); });
-  var t = document.getElementById('page-' + n);
-  if (t) t.classList.add('active');
-  var m = document.querySelector('.main-container');
-  if (m) m.setAttribute('data-page', n);
-  updateNavButtons(n);
-  handlePageLoad(n);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  function _apply() {
+    document.querySelectorAll('.page-content').forEach(function(e) { e.classList.remove('active'); });
+    var t = document.getElementById('page-' + n);
+    if (t) t.classList.add("active");
+    var m = document.querySelector('.main-container');
+    if (m) m.setAttribute("data-page", n);
+    updateNavButtons(n);
+    handlePageLoad(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (document.startViewTransition) {
+    document.startViewTransition(_apply);
+  } else {
+    _apply();
+  }
 }
 
 function updateNavButtons(a) {
