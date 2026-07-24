@@ -3,7 +3,7 @@
 
 function _buildSearchCardsHtml(items) {
   return items.map(function(item) {
-    var sid = (item.vod_id || "").toString().replace(/[^w-]/g, "");
+    var sid = (item.vod_id || "").toString().replace(/[^\w-]/g, "");
     var sn = (item.vod_name || "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     var srcInfo = item.source_name ? "<span class='source-label-tag'>" + item.source_name + "</span>" : "";
     var sc = item.source_code || "";
