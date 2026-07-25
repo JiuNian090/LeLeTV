@@ -2037,6 +2037,10 @@ img.loading-fade.loaded {
     .settings-dashboard-grid {
         grid-template-columns: 1fr 1fr;
     }
+
+    .invite-full-width {
+        grid-column: 1 / -1;
+    }
 }
 
 .dash-card {
