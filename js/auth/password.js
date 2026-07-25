@@ -57,6 +57,14 @@ async function verifyPassword(password) {
                 timestamp: Date.now(),
                 passwordHash: correctHash
             }));
+            
+            // 保存管理员 session token（sha256 原始密码）
+            // 用于邀请码管理 API 鉴权
+            const adminToken = await sha256(password);
+            localStorage.setItem('leletv_admin_session', JSON.stringify({
+                token: adminToken,
+                verified_at: Date.now()
+            }));
         }
         return isValid;
     } catch (error) {
