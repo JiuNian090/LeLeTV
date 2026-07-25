@@ -55,9 +55,6 @@ var TIMING = {
     /** "下一集"按钮三次注入延迟 (ms) */
     NEXT_EPISODE_BTN_TERTIARY: 1500,
 
-    /** 视频加载看门狗超时 (ms) */
-    PLAYER_LOADING_WATCHDOG: 30000,
-
     /** 集数切换超时兜底 (ms) */
     EPISODE_SWITCH_TIMEOUT: 12000,
 

@@ -95,19 +95,6 @@ function playEpisode(index) {
 
     // 首先隐藏之前可能显示的错误
     document.getElementById('error').style.display = 'none';
-    // 显示加载指示器
-    document.getElementById('player-loading').style.display = 'flex';
-    document.getElementById('player-loading').innerHTML = `
-        <div class="loading-spinner">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
-                <circle cx="16" cy="2" r="3" fill="#ec4899" class="orbit-dot">
-                    <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite"/>
-                </circle>
-            </svg>
-        </div>
-        <div class="loading-text">正在加载视频...</div>
-    `;
 
     // 获取 sourceCode
     const urlParams2 = new URLSearchParams(window.location.search);
@@ -149,15 +136,11 @@ function playEpisode(index) {
             episodeSwitchTimeout = null;
             window.isSwitchingVideo = false;
 
-            // 检查加载状态是否仍未消失
-            const loadingEl = document.getElementById('player-loading');
-            if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
-                // 兜底：销毁现有播放器，重新初始化
-                if (art) {
-                    PlayerManager.destroy();
-                }
-                initPlayer(url);
+            // 兜底：销毁现有播放器，重新初始化
+            if (art) {
+                PlayerManager.destroy();
             }
+            initPlayer(url);
         }, 12000);
 
         art.url = url;

@@ -328,11 +328,6 @@ function onVideoError(error) {
         return;
     }
 
-    const loadingElements = document.querySelectorAll('#player-loading, .player-loading-container');
-    loadingElements.forEach(el => {
-        if (el) el.style.display = 'none';
-    });
-
     showError('视频播放失败: ' + (error.message || '未知错误'));
 }
 
@@ -399,30 +394,6 @@ function setupPlayerEventListeners(art, fullScreenController) {
     });
 }
 
-function setupLongLoadingWarning() {
-    setTimeout(function () {
-        if (art && art.video && art.video.currentTime > 0) {
-            return;
-        }
-
-        const loadingElement = document.getElementById('player-loading');
-        if (loadingElement && loadingElement.style.display !== 'none') {
-            loadingElement.innerHTML = `
-                <div class="loading-spinner">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                        <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
-                        <circle cx="16" cy="2" r="3" fill="#ec4899" class="orbit-dot">
-                            <animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite"/>
-                        </circle>
-                    </svg>
-                </div>
-                <div class="loading-text">视频加载时间较长，请耐心等待...</div>
-                <div style="font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 8px;">如长时间无响应，请尝试其他视频源</div>
-            `;
-        }
-    }, 10000);
-}
-
 /**
  * 监听浏览器原生全屏变化（区别于 ArtPlayer 的 fullscreen/fullscreenWeb）
  * 用于在华为等浏览器原生视频播放器全屏时关闭高耗 CSS 效果，防止卡顿和屏闪
@@ -452,13 +423,6 @@ function initPlayer(videoUrl) {
         return
     }
 
-    const loadingWatchdog = setTimeout(function () {
-        const loadingEl = document.getElementById('player-loading');
-        if (loadingEl && loadingEl.style.display !== 'none' && loadingEl.style.display !== '') {
-            loadingEl.style.display = 'none';
-        }
-    }, TIMING.PLAYER_LOADING_WATCHDOG);
-
     // 由 PlayerManager 统一销毁旧实例
     PlayerManager.destroy();
 
@@ -478,8 +442,6 @@ function initPlayer(videoUrl) {
     setupThumbnailCapture();
 
     setupControlsBehavior();
-
-    setupLongLoadingWarning();
 }
 
 class CustomHlsJsLoader extends Hls.DefaultConfig.loader {

@@ -160,39 +160,6 @@ body, html {
     flex-direction: column;
 }
 
-/* ========== 播放器轨道小点加载动画 ========== */
-#player-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 100;
-    flex-direction: column;
-}
-#player-loading .loading-spinner {
-    width: 32px;
-    height: 32px;
-    margin-bottom: 14px;
-    flex-shrink: 0;
-}
-
-#player-loading .loading-spinner .orbit-dot {
-    filter: drop-shadow(0 0 4px rgba(236, 72, 153, 0.5));
-}
-
-/* 加载文本 */
-#player-loading .loading-text {
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 13px;
-    font-weight: 400;
-    letter-spacing: 0.5px;
-}
-
 .error-container {
     position: absolute;
     top: 0;
