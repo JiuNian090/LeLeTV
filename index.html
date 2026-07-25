@@ -308,6 +308,9 @@
                             </div>
                         </div>
 
+                        <!-- 设备管理（普通用户可见） -->
+                        <div id="userDeviceContainer" class="hidden"></div>
+
                         <!-- 邀请码管理（仅管理员可见，桌面端占两栏宽） -->
                         <div id="inviteAdminContainer" class="hidden invite-full-width"></div>
                     </div>
@@ -572,8 +575,8 @@
 
 
 
-    <script src="dist/leletv-core.v9m2kn.js?v=v3.0.0" defer></script>
-    <script src="dist/leletv-app.wvxxa5.js?v=v3.0.0" defer></script>
+    <script src="dist/leletv-core.vjnezy.js?v=v3.0.0" defer></script>
+    <script src="dist/leletv-app.prfjxn.js?v=v3.0.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -594,6 +597,7 @@
 
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
 
+    <script defer src="js/auth/user-devices.js?v=v3.0.0"></script>
     <script defer src="js/auth/invite-auth.js?v=v3.0.0"></script>
     <script defer src="js/auth/admin-panel.js?v=v3.0.0"></script>
 
@@ -675,6 +679,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (adminPwdClose) {
         adminPwdClose.addEventListener('click', function() {
             document.getElementById('adminPasswordModal').style.display = 'none';
+            // 恢复邀请码登录弹窗
+            const inviteModal = document.getElementById('inviteLoginModal');
+            if (inviteModal && !window.INVITE_AUTH?.isVerified()) {
+                inviteModal.style.display = 'flex';
+            }
         });
     }
     

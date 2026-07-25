@@ -213,20 +213,47 @@ document.addEventListener('DOMContentLoaded', hookInput);
 
 // 卡片交错入场动画
 
-// 监听管理员验证事件，显示邀请码管理面板
+// 设置页面板：根据角色显示不同管理面板
+// 管理员 → 邀请码管理，普通用户 → 设备管理
+
 document.addEventListener('passwordVerified', function() {
-    const container = document.getElementById('inviteAdminContainer');
-    if (container && window.INVITE_ADMIN_PANEL) {
-        container.classList.remove('hidden');
-        window.INVITE_ADMIN_PANEL.render(container);
+    // 隐藏设备管理（管理员不需要）
+    const userContainer = document.getElementById('userDeviceContainer');
+    if (userContainer) userContainer.classList.add('hidden');
+
+    // 显示邀请码管理
+    const adminContainer = document.getElementById('inviteAdminContainer');
+    if (adminContainer && window.INVITE_ADMIN_PANEL) {
+        adminContainer.classList.remove('hidden');
+        window.INVITE_ADMIN_PANEL.render(adminContainer);
     }
 });
 
-// 页面加载时检查是否已是管理员
-if (localStorage.getItem('leletv_is_admin') === 'true' && window.INVITE_ADMIN_PANEL) {
-    const container = document.getElementById('inviteAdminContainer');
-    if (container) {
-        container.classList.remove('hidden');
-        window.INVITE_ADMIN_PANEL.render(container);
+document.addEventListener('inviteVerified', function() {
+    // 显示设备管理
+    const userContainer = document.getElementById('userDeviceContainer');
+    if (userContainer && window.USER_DEVICES_PANEL) {
+        userContainer.classList.remove('hidden');
+        window.USER_DEVICES_PANEL.render(userContainer);
     }
-}
+});
+
+// 页面加载时根据身份显示对应面板
+(function initSettingsPanels() {
+    const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
+    const hasInviteAuth = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
+
+    if (isAdmin && window.INVITE_ADMIN_PANEL) {
+        const adminContainer = document.getElementById('inviteAdminContainer');
+        if (adminContainer) {
+            adminContainer.classList.remove('hidden');
+            window.INVITE_ADMIN_PANEL.render(adminContainer);
+        }
+    } else if (hasInviteAuth && window.USER_DEVICES_PANEL) {
+        const userContainer = document.getElementById('userDeviceContainer');
+        if (userContainer) {
+            userContainer.classList.remove('hidden');
+            window.USER_DEVICES_PANEL.render(userContainer);
+        }
+    }
+})();

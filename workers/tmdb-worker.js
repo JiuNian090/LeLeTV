@@ -338,6 +338,9 @@ async function handleInviteRequest(request, env) {
     if (path === '/invite/stats' && request.method === 'GET') {
       return handleStats(request, env);
     }
+    if (path === '/invite/my-devices' && request.method === 'POST') {
+      return handleMyDevices(request, env);
+    }
     
     return jsonResponse({ ok: false, error: '未找到路由' }, 404);
   } catch (error) {
@@ -506,6 +509,44 @@ async function handleStats(request, env) {
     total_codes: totalCodes.count,
     active_codes: activeCodes.count,
     total_devices: totalDevices.count
+  });
+}
+
+// POST /invite/my-devices - 普通用户查询自己的设备
+async function handleMyDevices(request, env) {
+  const body = await request.json();
+  const { code, device_fingerprint } = body;
+  
+  if (!code || !device_fingerprint) {
+    return jsonResponse({ ok: false, error: '缺少参数' }, 400);
+  }
+  
+  // 验证该 fingerprint 确实属于此邀请码
+  const device = await env.INVITE_DB.prepare(
+    'SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?'
+  ).bind(code, device_fingerprint).first();
+  
+  if (!device) {
+    return jsonResponse({ ok: false, error: '验证失败' }, 403);
+  }
+  
+  // 查询邀请码信息和设备列表
+  const invite = await env.INVITE_DB.prepare(
+    'SELECT * FROM invitation_codes WHERE code = ?'
+  ).bind(code).first();
+  
+  const devices = await env.INVITE_DB.prepare(
+    'SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC'
+  ).bind(code).all();
+  
+  return jsonResponse({
+    ok: true,
+    code: invite.code,
+    created_at: invite.created_at,
+    is_active: !!invite.is_active,
+    max_devices: invite.max_devices,
+    device_count: devices.results.length,
+    devices: devices.results
   });
 }
 

@@ -562,6 +562,33 @@ app.get('/api/invite/stats', (req, res) => {
   res.json({ ok: true, total_codes: totalCodes.count, active_codes: activeCodes.count, total_devices: totalDevices.count });
 });
 
+// POST /api/invite/my-devices - 普通用户查询自己的设备
+app.post('/api/invite/my-devices', express.json(), (req, res) => {
+  try {
+    const { code, device_fingerprint } = req.body;
+    if (!code || !device_fingerprint) return res.status(400).json({ ok: false, error: '缺少参数' });
+    
+    const device = inviteDb.prepare('SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?').get(code, device_fingerprint);
+    if (!device) return res.status(403).json({ ok: false, error: '验证失败' });
+    
+    const invite = inviteDb.prepare('SELECT * FROM invitation_codes WHERE code = ?').get(code);
+    const devices = inviteDb.prepare('SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(code);
+    
+    res.json({
+      ok: true,
+      code: invite.code,
+      created_at: invite.created_at,
+      is_active: !!invite.is_active,
+      max_devices: invite.max_devices,
+      device_count: devices.length,
+      devices
+    });
+  } catch (error) {
+    console.error('查询设备失败:', error);
+    res.status(500).json({ ok: false, error: '服务器错误' });
+  }
+});
+
 app.use(express.static(join(__dirname), {
   maxAge: config.cacheMaxAge,
   setHeaders: function (res, path) {
