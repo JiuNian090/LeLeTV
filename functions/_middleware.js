@@ -1,4 +1,11 @@
-import { sha256 } from '../js/auth/sha256.js';
+// Cloudflare Pages Functions 使用的 sha256 实现
+// 注意：Cloudflare Pages Functions 运行在 Workers 环境中，不能直接导入前端 JS 文件
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export async function onRequest(context) {
   try {
@@ -12,7 +19,6 @@ export async function onRequest(context) {
 
     let html = await response.text();
 
-    // 处理普通密码
     const password = env.PASSWORD || '';
     let passwordHash = '';
     if (password) {
@@ -21,7 +27,6 @@ export async function onRequest(context) {
     html = html.replace('window.__ENV__.PASSWORD = "{{PASSWORD}}";',
       `window.__ENV__.PASSWORD = "${passwordHash}";`);
 
-    // 处理管理员密码
     const adminPassword = env.ADMINPASSWORD || '';
     let adminPasswordHash = '';
     if (adminPassword) {
@@ -30,7 +35,6 @@ export async function onRequest(context) {
     html = html.replace('window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";',
       `window.__ENV__.ADMINPASSWORD = "${adminPasswordHash}";`);
 
-    // 注入 TMDB Worker URL
     const tmdbWorkerUrl = env.TMDB_WORKER_URL || '';
     html = html.replace('window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";',
       `window.__ENV__.TMDB_WORKER_URL = "${tmdbWorkerUrl}";`);
@@ -42,7 +46,6 @@ export async function onRequest(context) {
     });
   } catch (error) {
     console.error('[Middleware Error]', error);
-    // 即使是内部错误，也返回一个正常的响应而非崩溃
     try {
       const { next } = context;
       return await next();

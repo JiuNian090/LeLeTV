@@ -12,6 +12,7 @@
 - 🔧 修复 search-cards.js 中 sid 生成正则的转义问题，补全 `\w` 字符匹配
 - 🔧 修复 播放页 showError 函数引用未声明变量 loadingEl 导致错误信息无法显示的回归 bug
 - 🔧 修复 showPasswordModal 在 player.html 中因 passwordCancelBtn 元素缺失而抛 TypeError 的问题
+- 🔧 修复 Cloudflare Pages Functions middleware 导入前端 JS 文件失败导致环境变量注入失败的问题
 
 ### v2.9.7 (2026-07-25)
 - 🎉 新增 视频分享功能和移动端滑动导航
