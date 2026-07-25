@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "INVITE_DB"
 database_name = "leletv-invite-db"
-database_id = "your-database-id-here"
+database_id = "61d94379-ae28-42d9-841f-33c0e13f1fa6"
 
 # TMDB API Key (通过 Cloudflare Dashboard 或 --secret 设置)
 # wrangler secret put TMDB_API_KEY
