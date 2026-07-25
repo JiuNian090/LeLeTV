@@ -69,6 +69,8 @@ function initInviteDatabase() {
     CREATE INDEX IF NOT EXISTS idx_devices_fingerprint ON devices(device_fingerprint);
     CREATE INDEX IF NOT EXISTS idx_devices_last_active ON devices(last_active_at);
   `);
+  // 兼容旧表：添加 remark 列（已存在则忽略）
+  try { inviteDb.exec('ALTER TABLE invitation_codes ADD COLUMN remark TEXT DEFAULT "";'); } catch(e) {}
 }
 
 // 生成邀请码（与 Worker 端保持一致）
@@ -506,6 +508,8 @@ app.post('/api/invite/heartbeat', express.json(), (req, res) => {
 app.post('/api/invite/generate', express.json(), (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
+  const remark = (req.body.remark || '').trim();
+  
   let code;
   for (let i = 0; i < 10; i++) {
     code = generateInviteCode();
@@ -516,8 +520,8 @@ app.post('/api/invite/generate', express.json(), (req, res) => {
   
   if (!code) return res.status(500).json({ ok: false, error: '生成失败' });
   
-  inviteDb.prepare('INSERT INTO invitation_codes (code, created_at) VALUES (?, ?)').run(code, Date.now());
-  res.json({ ok: true, code, created_at: Date.now() });
+  inviteDb.prepare('INSERT INTO invitation_codes (code, created_at, remark) VALUES (?, ?, ?)').run(code, Date.now(), remark);
+  res.json({ ok: true, code, remark, created_at: Date.now() });
 });
 
 // GET /api/invite/list
@@ -532,6 +536,7 @@ app.get('/api/invite/list', (req, res) => {
       created_at: invite.created_at,
       is_active: !!invite.is_active,
       max_devices: invite.max_devices,
+      remark: invite.remark || '',
       device_count: devices.length,
       devices
     };
@@ -607,6 +612,17 @@ app.post('/api/invite/remove-device', express.json(), (req, res) => {
     console.error('删除设备失败:', error);
     res.status(500).json({ ok: false, error: '服务器错误' });
   }
+});
+
+// POST /api/invite/set-remark - 设置邀请码备注
+app.post('/api/invite/set-remark', express.json(), (req, res) => {
+  if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
+  
+  const { code, remark } = req.body;
+  if (!code) return res.status(400).json({ ok: false, error: '缺少 code' });
+  
+  inviteDb.prepare('UPDATE invitation_codes SET remark = ? WHERE code = ?').run(remark || '', code);
+  res.json({ ok: true });
 });
 
 app.use(express.static(join(__dirname), {

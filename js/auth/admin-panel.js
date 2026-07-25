@@ -86,6 +86,22 @@ const INVITE_ADMIN_PANEL = {
     }
   },
   
+  async setRemark(code, remark) {
+    try {
+      const response = await fetch(this._baseUrl('/invite/set-remark'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this._getAdminToken()}`
+        },
+        body: JSON.stringify({ code, remark })
+      });
+      return (await response.json()).ok;
+    } catch {
+      return false;
+    }
+  },
+
   async render(container) {
     container.innerHTML = `
       <div class="dash-card" id="inviteAdminCard">
@@ -105,7 +121,10 @@ const INVITE_ADMIN_PANEL = {
           <div id="inviteStats" class="flex justify-around text-center mb-4 text-sm text-gray-400">
             <div>加载中...</div>
           </div>
-          <button id="inviteGenerateBtn" class="dash-btn dash-btn-green w-full mb-4">＋ 生成邀请码</button>
+          <div class="flex gap-2 mb-4">
+            <input type="text" id="inviteRemarkInput" class="flex-1 bg-[#111] border border-[#333] text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[#ec4899]" placeholder="备注（可选）" maxlength="30" autocomplete="off">
+            <button id="inviteGenerateBtn" class="dash-btn dash-btn-green flex-shrink-0">＋ 生成</button>
+          </div>
           <div id="inviteCodeList" class="space-y-2 max-h-80 overflow-y-auto">
             <p class="text-gray-500 text-sm text-center">点击刷新加载列表</p>
           </div>
@@ -148,11 +167,14 @@ const INVITE_ADMIN_PANEL = {
     listEl.innerHTML = codes.map(invite => `
       <div class="bg-[#1a1a1a] rounded-lg border border-[#333] p-3">
         <div class="flex justify-between items-center">
-          <div>
-            <code class="invite-code-text text-sm font-mono text-pink-400" data-code="${invite.code}" title="点击复制">${invite.code}</code>
-            <span class="text-xs text-gray-500 ml-2">${_formatTime(invite.created_at)}</span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1 flex-wrap">
+              <code class="invite-code-text text-sm font-mono text-pink-400" data-code="${invite.code}" title="点击复制">${invite.code}</code>
+              <span class="invite-remark-text text-sm text-pink-400/70 cursor-pointer hover:text-pink-300" data-code="${invite.code}" title="点击编辑备注">${invite.remark ? `（${invite.remark}）` : ''}</span>
+              <span class="text-xs text-gray-500">${_formatTime(invite.created_at)}</span>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-shrink-0">
             <span class="text-xs ${invite.is_active ? 'text-green-400' : 'text-red-400'}">
               ${invite.is_active ? '✅ 启用' : '❌ 禁用'}
             </span>
@@ -203,12 +225,30 @@ const INVITE_ADMIN_PANEL = {
         }
       });
     });
+    
+    // 点击备注编辑
+    listEl.querySelectorAll('.invite-remark-text').forEach(el => {
+      el.addEventListener('click', async () => {
+        const code = el.dataset.code;
+        const current = el.textContent.replace(/[（）]/g, '').trim();
+        const remark = prompt('编辑备注（留空则清除）：', current);
+        if (remark === null) return;
+        const ok = await this.setRemark(code, remark.trim());
+        if (ok) this._refresh(container);
+        else showToast('设置失败', 'error');
+      });
+    });
   },
   
   async _handleGenerate(container) {
+    const remarkInput = document.getElementById('inviteRemarkInput');
+    const remark = remarkInput ? remarkInput.value.trim() : '';
     const result = await this.generateCode();
     if (result.ok) {
       showToast(`邀请码已生成: ${result.code}`, 'success');
+      // 生成成功后设置备注
+      if (remark) await this.setRemark(result.code, remark);
+      if (remarkInput) remarkInput.value = '';
       this._refresh(container);
     } else {
       showToast(result.error || '生成失败', 'error');

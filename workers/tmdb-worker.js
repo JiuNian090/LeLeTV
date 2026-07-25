@@ -344,6 +344,9 @@ async function handleInviteRequest(request, env) {
     if (path === '/invite/remove-device' && request.method === 'POST') {
       return handleRemoveDevice(request, env);
     }
+    if (path === '/invite/set-remark' && request.method === 'POST') {
+      return handleSetRemark(request, env);
+    }
     
     return jsonResponse({ ok: false, error: '未找到路由' }, 404);
   } catch (error) {
@@ -428,6 +431,9 @@ async function handleGenerate(request, env) {
     return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
   }
   
+  const body = await request.json().catch(() => ({}));
+  const remark = (body.remark || '').trim();
+  
   let code;
   for (let i = 0; i < 10; i++) {
     code = generateInviteCode();
@@ -443,10 +449,10 @@ async function handleGenerate(request, env) {
   }
   
   await env.INVITE_DB.prepare(
-    'INSERT INTO invitation_codes (code, created_at) VALUES (?, ?)'
-  ).bind(code, Date.now()).run();
+    'INSERT INTO invitation_codes (code, created_at, remark) VALUES (?, ?, ?)'
+  ).bind(code, Date.now(), remark).run();
   
-  return jsonResponse({ ok: true, code, created_at: Date.now() });
+  return jsonResponse({ ok: true, code, remark, created_at: Date.now() });
 }
 
 async function handleList(request, env) {
@@ -469,6 +475,7 @@ async function handleList(request, env) {
       created_at: invite.created_at,
       is_active: !!invite.is_active,
       max_devices: invite.max_devices,
+      remark: invite.remark || '',
       device_count: devices.results.length,
       devices: devices.results
     };
@@ -578,6 +585,27 @@ async function handleRemoveDevice(request, env) {
   ).bind(code, target_fingerprint).run();
   
   return jsonResponse({ ok: true, removed: result.changes > 0 });
+}
+
+// POST /invite/set-remark - 设置邀请码备注（管理员）
+async function handleSetRemark(request, env) {
+  const isAdmin = await verifyAdminPassword(request, env);
+  if (!isAdmin) {
+    return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
+  }
+  
+  const body = await request.json();
+  const { code, remark } = body;
+  
+  if (!code) {
+    return jsonResponse({ ok: false, error: '缺少 code' }, 400);
+  }
+  
+  await env.INVITE_DB.prepare(
+    'UPDATE invitation_codes SET remark = ? WHERE code = ?'
+  ).bind(remark || '', code).run();
+  
+  return jsonResponse({ ok: true });
 }
 
 // ====== Worker 入口（ES Module 格式）======
