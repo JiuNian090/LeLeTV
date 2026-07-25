@@ -96,7 +96,10 @@ const INVITE_ADMIN_PANEL = {
             </svg>
           </span>
           <h3 class="dash-card-title">邀请码管理</h3>
-          <button id="inviteRefreshBtn" class="dash-add-btn" title="刷新">⟳</button>
+          <div class="flex items-center gap-1">
+            <button id="inviteAdminLogoutBtn" class="dash-add-btn text-xs" title="退出登录">⏻</button>
+            <button id="inviteRefreshBtn" class="dash-add-btn" title="刷新">⟳</button>
+          </div>
         </div>
         <div class="dash-card-body">
           <div id="inviteStats" class="flex justify-around text-center mb-4 text-sm text-gray-400">
@@ -106,9 +109,6 @@ const INVITE_ADMIN_PANEL = {
           <div id="inviteCodeList" class="space-y-2 max-h-80 overflow-y-auto">
             <p class="text-gray-500 text-sm text-center">点击刷新加载列表</p>
           </div>
-          <div class="mt-4 pt-3 border-t border-[#333] text-center">
-            <button id="inviteAdminLogoutBtn" class="text-xs text-gray-500 hover:text-[#ec4899] transition-colors">退出登录</button>
-          </div>
         </div>
       </div>
     `;
@@ -116,7 +116,9 @@ const INVITE_ADMIN_PANEL = {
     container.querySelector('#inviteGenerateBtn').addEventListener('click', () => this._handleGenerate(container));
     container.querySelector('#inviteRefreshBtn').addEventListener('click', () => this._refresh(container));
     container.querySelector('#inviteAdminLogoutBtn').addEventListener('click', () => {
-      if (window.INVITE_AUTH) window.INVITE_AUTH.logout();
+      if (window.INVITE_AUTH && confirm('确定退出登录吗？')) {
+        window.INVITE_AUTH.logout();
+      }
     });
     this._refresh(container);
   },

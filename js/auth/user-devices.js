@@ -43,7 +43,10 @@ const USER_DEVICES_PANEL = {
             </svg>
           </span>
           <h3 class="dash-card-title">设备管理</h3>
-          <button id="userDeviceRefreshBtn" class="dash-add-btn" title="刷新">⟳</button>
+          <div class="flex items-center gap-1">
+            <button id="userDeviceLogoutBtn" class="dash-add-btn text-xs" title="退出登录">⏻</button>
+            <button id="userDeviceRefreshBtn" class="dash-add-btn" title="刷新">⟳</button>
+          </div>
         </div>
         <div class="dash-card-body">
           <div id="userDeviceInfo" class="text-sm mb-3">
@@ -53,16 +56,15 @@ const USER_DEVICES_PANEL = {
           <div id="userDeviceList" class="space-y-2">
             <p class="text-gray-500 text-sm text-center">加载中...</p>
           </div>
-          <div class="mt-4 pt-3 border-t border-[#333] text-center">
-            <button id="userDeviceLogoutBtn" class="text-xs text-gray-500 hover:text-[#ec4899] transition-colors">退出登录</button>
-          </div>
         </div>
       </div>
     `;
 
     container.querySelector('#userDeviceRefreshBtn').addEventListener('click', () => this._refresh(container));
     container.querySelector('#userDeviceLogoutBtn').addEventListener('click', () => {
-      if (window.INVITE_AUTH) window.INVITE_AUTH.logout();
+      if (window.INVITE_AUTH && confirm('确定退出登录吗？')) {
+        window.INVITE_AUTH.logout();
+      }
     });
     this._refresh(container);
   },
