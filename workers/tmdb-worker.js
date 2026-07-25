@@ -601,9 +601,23 @@ async function handleSetRemark(request, env) {
     return jsonResponse({ ok: false, error: '缺少 code' }, 400);
   }
   
-  await env.INVITE_DB.prepare(
-    'UPDATE invitation_codes SET remark = ? WHERE code = ?'
-  ).bind(remark || '', code).run();
+  try {
+    await env.INVITE_DB.prepare(
+      'UPDATE invitation_codes SET remark = ? WHERE code = ?'
+    ).bind(remark || '', code).run();
+  } catch (err) {
+    // D1 表可能缺少 remark 列，自动添加
+    if (err.message && err.message.includes('no such column')) {
+      await env.INVITE_DB.prepare(
+        'ALTER TABLE invitation_codes ADD COLUMN remark TEXT DEFAULT \'\''
+      ).run();
+      await env.INVITE_DB.prepare(
+        'UPDATE invitation_codes SET remark = ? WHERE code = ?'
+      ).bind(remark || '', code).run();
+    } else {
+      throw err;
+    }
+  }
   
   return jsonResponse({ ok: true });
 }

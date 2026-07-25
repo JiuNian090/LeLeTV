@@ -14,8 +14,4 @@ database_id = "1552a435-fb37-4090-831d-5fe3ed67a755"
 [vars]
 # TMDB_WORKER_URL = "https://tmdb-proxy.example.com"
 
-[env.production]
 
-[[routes]]
-# pattern = "tmdb-proxy.example.com"
-# zone_id = "your-zone-id"
