@@ -238,8 +238,8 @@ document.addEventListener('inviteVerified', function() {
     }
 });
 
-// 页面加载时根据身份显示对应面板
-(function initSettingsPanels() {
+// 页面加载完成后（所有 defer 脚本就绪）根据身份显示对应面板
+document.addEventListener('DOMContentLoaded', function initSettingsPanels() {
     const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
     const hasInviteAuth = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
 
@@ -256,4 +256,4 @@ document.addEventListener('inviteVerified', function() {
             window.USER_DEVICES_PANEL.render(userContainer);
         }
     }
-})();
+});
