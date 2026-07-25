@@ -289,6 +289,9 @@
                             </div>
                         </div>
 
+                        <!-- 邀请码管理（仅管理员可见） -->
+                        <div id="inviteAdminContainer" class="hidden"></div>
+
                         <!-- 一般功能 -->
                         <div class="dash-card">
                             <div class="dash-card-header">
@@ -437,24 +440,43 @@
         </div>
     </div>
 
-    <!-- 密码验证弹窗 -->
-    <div id="passwordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333] max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-6 flex-none">
-                <h2 class="text-2xl font-bold gradient-text">访问验证</h2>
+    <!-- 邀请码登录弹窗 -->
+    <div id="inviteLoginModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
+        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold gradient-text">🔑 乐乐影视</h2>
+                <p class="text-gray-400 text-sm mt-2">输入邀请码和设备名进入</p>
+            </div>
+            <div class="mb-4">
+                <label class="text-gray-300 text-sm block mb-1">设备名</label>
+                <input type="text" id="inviteDeviceName" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#ec4899] transition-colors" placeholder="例如：我的手机 / 办公电脑" autocomplete="off" maxlength="30">
             </div>
             <div class="mb-6">
-                <p class="text-gray-300 mb-4">请输入密码继续访问，进入后请仔细阅读使用说明，包含了使用方法和反诈警告⚠️，如若密码错误可以☞<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取密码</p>
-                <form id="passwordForm" onsubmit="handlePasswordSubmit(); return false;">
-                    <input type="text" name="username" id="username" autocomplete="username" style="display:none" tabindex="-1" aria-hidden="true">
-                    <input type="password" id="passwordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="密码..." autocomplete="new-password">
-                    <div class="mt-4 w-full flex space-x-4">
-                        <button id="passwordSubmitBtn" type="submit" class="flex-1 gradient-btn">提交</button>
-                        <button id="passwordCancelBtn" type="button" data-action="hide-password-modal" class="flex-1 gradient-btn">取消</button>
-                    </div>
-                </form>
-                <p id="passwordError" class="text-red-500 mt-2 hidden">密码错误，请重试</p>
+                <label class="text-gray-300 text-sm block mb-1">邀请码</label>
+                <input type="text" id="inviteCodeInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#ec4899] transition-colors uppercase tracking-widest" placeholder="LELE-XXXX-XXXX" autocomplete="off" maxlength="19">
             </div>
+            <button id="inviteLoginBtn" class="w-full gradient-btn py-3 rounded-lg font-semibold text-base mb-4">🎬 进入影视大厅</button>
+            <p id="inviteLoginError" class="text-red-500 text-sm text-center hidden mb-4"></p>
+            <p class="text-gray-500 text-xs text-center mb-4">没有邀请码？☞ <span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300">联系乐乐</span></p>
+            <div class="text-center border-t border-[#333] pt-4">
+                <button id="inviteAdminEntry" class="text-gray-500 hover:text-[#ec4899] text-sm transition-colors">🔒 管理员入口</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员密码弹窗 -->
+    <div id="adminPasswordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[66] transition-opacity duration-300">
+        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold gradient-text">管理员验证</h2>
+                <button id="adminPwdCloseBtn" class="text-gray-400 hover:text-white text-2xl transition-colors">&times;</button>
+            </div>
+            <div class="mb-4">
+                <p class="text-gray-300 mb-4">请输入管理员密码</p>
+                <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="管理员密码..." autocomplete="new-password">
+                <p id="adminPasswordError" class="text-red-500 mt-2 hidden">密码错误</p>
+            </div>
+            <button id="adminPwdSubmitBtn" class="w-full gradient-btn py-3 rounded-lg">确认</button>
         </div>
     </div>
 
@@ -573,6 +595,9 @@
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
     <script>
         // 当前页面状态
+
+    <script defer src="js/auth/invite-auth.js?v=v3.0.0"></script>
+    <script defer src="js/auth/admin-panel.js?v=v3.0.0"></script>
 
 </body>
 </html>
