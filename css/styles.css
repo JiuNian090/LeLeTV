@@ -2744,6 +2744,12 @@ body > header {
         height: 100dvh;
         z-index: 2147483647;
         background: #000;
+        animation: mobileSearchFadeIn 0.18s ease-out;
+    }
+
+    @keyframes mobileSearchFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .mobile-search-header {

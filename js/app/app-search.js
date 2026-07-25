@@ -193,13 +193,30 @@ function setupEventListeners() {
         });
     }
 
-    // 移动端键盘适配：覆盖层跟随 visualViewport
+    // 移动端键盘适配：覆盖层跟随 visualViewport（键盘弹出/收起时）
+    // 利用 CSS dvh 自动处理大部分情况，JS 仅作为兜底修正
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', function () {
             const overlay = document.getElementById('mobileSearchOverlay');
-            if (overlay && overlay.classList.contains('active')) {
-                overlay.style.height = window.visualViewport.height + 'px';
-                overlay.style.top = window.visualViewport.offsetTop + 'px';
+            if (!overlay || !overlay.classList.contains('active')) return;
+            const vv = window.visualViewport;
+            const isKeyboardVisible = vv.height < vv.width * 0.6; // 典型宽高比判断键盘是否弹出
+            if (isKeyboardVisible) {
+                // 键盘弹出时用 visualViewport 精确尺寸覆盖
+                overlay.style.height = vv.height + 'px';
+                overlay.style.top = '0px';
+                // 调整搜索历史列表高度：visualViewport 高度减去 header 高度
+                const header = overlay.querySelector('.mobile-search-header');
+                const list = overlay.querySelector('.mobile-search-history-list');
+                if (header && list) {
+                    list.style.height = (vv.height - header.offsetHeight) + 'px';
+                }
+            } else {
+                // 键盘收起时移除内联样式，让 CSS dvh 接管
+                overlay.style.height = '';
+                overlay.style.top = '';
+                const list = overlay.querySelector('.mobile-search-history-list');
+                if (list) list.style.height = '';
             }
         });
     }
@@ -631,4 +648,4 @@ async function performTraditionalSearch(query) {
     });
     
     return allResults;
-}
+}

@@ -153,16 +153,28 @@ function openMobileSearch() {
     const overlay = document.getElementById('mobileSearchOverlay');
     const input = document.getElementById('mobileSearchInput');
     if (!overlay || !input) return;
+    // 先 blur 桌面搜索框，防止键盘干扰
+    document.getElementById('searchInput')?.blur();
+    // 同步已有输入文本
     input.value = document.getElementById('searchInput').value;
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
+    // 移除之前可能残留的 visualViewport 内联样式，让 CSS dvh 接管
+    overlay.style.height = '';
+    overlay.style.top = '';
     renderMobileSearchHistory(input.value);
-    setTimeout(function () { input.focus(); }, 100);
+    // 聚焦移动端输入框（聚焦前确保覆盖层已激活）
+    input.focus();
 }
 
 function closeMobileSearch() {
     const overlay = document.getElementById('mobileSearchOverlay');
     if (!overlay) return;
+    // blur 输入框以收起键盘
+    document.getElementById('mobileSearchInput')?.blur();
     overlay.classList.remove('active');
+    // 清除 visualViewport 内联样式，防止残留
+    overlay.style.height = '';
+    overlay.style.top = '';
     document.body.style.overflow = '';
 }
