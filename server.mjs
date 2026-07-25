@@ -526,7 +526,7 @@ app.get('/api/invite/list', (req, res) => {
   
   const codes = inviteDb.prepare('SELECT * FROM invitation_codes ORDER BY created_at DESC').all();
   const result = codes.map(invite => {
-    const devices = inviteDb.prepare('SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(invite.code);
+    const devices = inviteDb.prepare('SELECT device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(invite.code);
     return {
       code: invite.code,
       created_at: invite.created_at,
@@ -572,7 +572,7 @@ app.post('/api/invite/my-devices', express.json(), (req, res) => {
     if (!device) return res.status(403).json({ ok: false, error: '验证失败' });
     
     const invite = inviteDb.prepare('SELECT * FROM invitation_codes WHERE code = ?').get(code);
-    const devices = inviteDb.prepare('SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(code);
+    const devices = inviteDb.prepare('SELECT device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(code);
     
     res.json({
       ok: true,
@@ -585,6 +585,26 @@ app.post('/api/invite/my-devices', express.json(), (req, res) => {
     });
   } catch (error) {
     console.error('查询设备失败:', error);
+    res.status(500).json({ ok: false, error: '服务器错误' });
+  }
+});
+
+// POST /api/invite/remove-device - 删除设备
+app.post('/api/invite/remove-device', express.json(), (req, res) => {
+  try {
+    const { code, device_fingerprint, target_fingerprint } = req.body;
+    if (!code || !target_fingerprint) return res.status(400).json({ ok: false, error: '缺少参数' });
+
+    const isAdmin = validateAdminPassword(req);
+    if (!isAdmin) {
+      const device = inviteDb.prepare('SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?').get(code, device_fingerprint);
+      if (!device) return res.status(403).json({ ok: false, error: '无权限' });
+    }
+
+    const info = inviteDb.prepare('DELETE FROM devices WHERE code = ? AND device_fingerprint = ?').run(code, target_fingerprint);
+    res.json({ ok: true, removed: info.changes > 0 });
+  } catch (error) {
+    console.error('删除设备失败:', error);
     res.status(500).json({ ok: false, error: '服务器错误' });
   }
 });

@@ -341,6 +341,9 @@ async function handleInviteRequest(request, env) {
     if (path === '/invite/my-devices' && request.method === 'POST') {
       return handleMyDevices(request, env);
     }
+    if (path === '/invite/remove-device' && request.method === 'POST') {
+      return handleRemoveDevice(request, env);
+    }
     
     return jsonResponse({ ok: false, error: '未找到路由' }, 404);
   } catch (error) {
@@ -458,7 +461,7 @@ async function handleList(request, env) {
   
   const result = await Promise.all(codes.results.map(async (invite) => {
     const devices = await env.INVITE_DB.prepare(
-      'SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC'
+      'SELECT device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC'
     ).bind(invite.code).all();
     
     return {
@@ -536,7 +539,7 @@ async function handleMyDevices(request, env) {
   ).bind(code).first();
   
   const devices = await env.INVITE_DB.prepare(
-    'SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC'
+    'SELECT device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC'
   ).bind(code).all();
   
   return jsonResponse({
@@ -548,6 +551,33 @@ async function handleMyDevices(request, env) {
     device_count: devices.results.length,
     devices: devices.results
   });
+}
+
+// POST /invite/remove-device - 删除设备（管理员或同码用户可操作）
+async function handleRemoveDevice(request, env) {
+  const body = await request.json();
+  const { code, device_fingerprint, target_fingerprint } = body;
+  
+  if (!code || !target_fingerprint) {
+    return jsonResponse({ ok: false, error: '缺少参数' }, 400);
+  }
+  
+  // 鉴权：管理员（Bearer token）或同邀请码下的用户
+  const isAdmin = await verifyAdminPassword(request, env);
+  if (!isAdmin) {
+    const device = await env.INVITE_DB.prepare(
+      'SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?'
+    ).bind(code, device_fingerprint).first();
+    if (!device) {
+      return jsonResponse({ ok: false, error: '无权限' }, 403);
+    }
+  }
+  
+  const result = await env.INVITE_DB.prepare(
+    'DELETE FROM devices WHERE code = ? AND device_fingerprint = ?'
+  ).bind(code, target_fingerprint).run();
+  
+  return jsonResponse({ ok: true, removed: result.changes > 0 });
 }
 
 // ====== Worker 入口（ES Module 格式）======

@@ -33,6 +33,27 @@ const USER_DEVICES_PANEL = {
     }
   },
 
+  async removeDevice(targetFingerprint) {
+    const auth = window.INVITE_AUTH?.getAuth();
+    if (!auth) return false;
+
+    try {
+      const res = await fetch(this._inviteUrl('/invite/remove-device'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: auth.code,
+          device_fingerprint: auth.device_fingerprint,
+          target_fingerprint: targetFingerprint
+        })
+      });
+      const data = await res.json();
+      return data.ok;
+    } catch {
+      return false;
+    }
+  },
+
   async render(container) {
     container.innerHTML = `
       <div class="dash-card">
@@ -75,6 +96,7 @@ const USER_DEVICES_PANEL = {
     const codeEl = container.querySelector('#userDeviceCode');
     const countEl = container.querySelector('#userDeviceCount');
     const maxEl = container.querySelector('#userDeviceMax');
+    const currentFingerprint = window.INVITE_AUTH?.getAuth()?.device_fingerprint;
 
     if (!data) {
       listEl.innerHTML = '<p class="text-gray-500 text-sm text-center">加载失败</p>';
@@ -90,18 +112,36 @@ const USER_DEVICES_PANEL = {
       return;
     }
 
-    listEl.innerHTML = data.devices.map(d => `
+    listEl.innerHTML = data.devices.map(d => {
+      const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
+      return `
       <div class="flex justify-between items-center bg-[#1a1a1a] rounded-lg px-3 py-2 border border-[#333]">
         <div class="flex items-center gap-2 min-w-0">
           <span class="text-gray-400 text-sm">${_deviceIcon(d.browser)}</span>
-          <span class="text-white text-sm truncate">${d.device_name}</span>
+          <span class="text-white text-sm truncate">${d.device_name}${isCurrent ? ' <span class="text-xs text-green-500">(当前)</span>' : ''}</span>
         </div>
         <div class="flex items-center gap-3 flex-shrink-0">
           <span class="text-xs text-gray-500">${d.browser || ''}</span>
           <span class="text-xs text-gray-500">${_timeAgo(d.last_active_at)}</span>
+          ${!isCurrent ? `<button class="text-xs text-gray-500 hover:text-red-400 del-device-btn transition-colors" data-fp="${d.device_fingerprint}" title="删除设备">✕</button>` : ''}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
+
+    // 绑定删除事件
+    listEl.querySelectorAll('.del-device-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const fp = btn.dataset.fp;
+        if (!confirm('确定删除该设备？删除后该设备需要重新验证邀请码。')) return;
+        const ok = await this.removeDevice(fp);
+        if (ok) {
+          showToast('设备已删除', 'success');
+          this._refresh(container);
+        } else {
+          showToast('删除失败', 'error');
+        }
+      });
+    });
   }
 };
 
