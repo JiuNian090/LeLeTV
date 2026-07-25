@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://leletv.776645.xyz" target="_blank">在线访问</a> · 
+  <a href="#-邀请码验证系统">邀请码验证</a> · 
   <a href="#-功能特性">功能特性</a> · 
   <a href="#-技术栈">技术栈</a> · 
   <a href="#-部署指南">部署指南</a> ·
@@ -30,26 +31,85 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 指标 | 数据 |
 |------|------|
-| JS 模块 | 32 个核心模块，按功能分 8 个子目录（api/app/auth/core/effects/player/ui/utils） |
+| JS 模块 | 35 个核心模块（js/ + js/auth/），按功能分 9 个子目录 |
 | CSS 样式 | 5 个手写样式文件（variables + styles + player + tailwind + output）+ Tailwind 编译 |
 | 搜索源 | 21 个内置采集站 API（含 7 个隐藏标记） |
+| 数据库 | Cloudflare D1（invitation_codes + devices 表）|
 | 页面数 | 2 个 HTML 文件（index.html SPA + player.html 独立播放页）|
-| 部署配置 | Cloudflare Pages + Workers + Functions |
+| 部署配置 | Cloudflare Pages + Workers + Functions + D1 |
 
 ## 重要声明
 
 - 本项目**仅供个人学习使用**，禁止用于任何商业用途
-- 本项目**必须设置密码保护**，禁止公开分享或部署为公共服务
+- 本项目**必须设置访问密码或部署邀请码系统**，禁止公开分享或部署为公共服务
 - 如因违反上述规定导致的任何法律问题，使用者需自行承担责任
 - 本项目开发者不对用户的使用行为承担任何法律责任
 
-## 密码保护
+## 邀请码验证系统
 
-所有部署都必须设置 `PASSWORD` 环境变量，否则用户将看到设置密码的提示。
+项目内置了基于 **Cloudflare D1 数据库**的邀请码验证系统，替代了传统的统一密码保护。邀请码系统通过设备指纹 + 心跳机制实现对访问权限的精细化管理。
 
-您还可以设置 `ADMINPASSWORD` 环境变量来启用隐藏内容过滤功能的管理权限。
+### 工作原理
 
-> 注意：在 Cloudflare Pages 部署时，密码通过 Pages Functions Middleware 注入到 HTML 模板中，前端使用 SHA-256 哈希进行代理认证。
+```
+用户打开页面
+    │
+    ├── 已登录 ───── 自动校验设备心跳，进入首页
+    │
+    └── 未登录 ───── 弹出邀请码登录界面
+            │
+            ├── 输入设备名 + 邀请码
+            │
+            ├── POST /invite/verify
+            │       ├── 邀请码无效 ─── 拒绝访问
+            │       ├── 邀请码已禁用 ── 拒绝访问
+            │       └── 验证成功
+            │               ├── 已有指纹记录 ── 更新活跃时间
+            │               └── 新设备
+            │                       ├── 未超设备上限 ── 注册新设备
+            │                       └── 超上限 ── 移除最久未活跃设备
+            │
+            └── 启动心跳（每 5 分钟）── 更新设备最后活跃时间
+```
+
+### 核心机制
+
+| 机制 | 说明 |
+|------|------|
+| **设备指纹** | 基于浏览器特征（navigator.userAgent、screen 属性等）生成唯一 SHA-256 哈希，绑定设备身份 |
+| **心跳** | 每 5 分钟向服务端发送心跳请求，维持设备活跃状态 |
+| **设备上限** | 每个邀请码默认最多绑定 5 台设备，超限时自动剔除最久未活跃设备 |
+| **持久登录** | 验证成功后，设备信息保存至 localStorage，关闭页面无需重新登录 |
+| **邀请码格式** | `LELE-XXXX-XXXX`（随机字母数字，排除易混淆字符 O/0/I/1） |
+
+### 功能特性
+
+- **邀请码登录**：首次打开页面弹出登录弹窗，输入设备名和邀请码即可进入
+- **设备管理（普通用户）**：设置页面可查看自己的邀请码和名下的设备列表，支持删除设备
+- **管理员面板**：管理员登录后可生成/禁用/删除邀请码、查看邀请码使用统计、设置备注、管理设备
+- **邀请码备注**：管理员可为邀请码添加备注，方便管理用途
+- **退出登录**：一键清除所有登录状态，恢复邀请码登录界面
+
+### 相关文件
+
+| 文件 | 说明 |
+|------|------|
+| `js/auth/invite-auth.js` | 邀请码验证核心模块（生成指纹、验证、心跳、登录状态管理） |
+| `js/auth/admin-panel.js` | 管理员面板（生成/列表/启用禁用/统计/备注/设备管理） |
+| `js/auth/user-devices.js` | 普通用户设备管理面板 |
+| `workers/tmdb-worker.js` | Worker 端 API 路由（verify/heartbeat/generate/list/toggle/stats/remove-device/set-remark） |
+| `migrations/001_create_tables.sql` | D1 数据库表结构（invitation_codes + devices） |
+| `server.mjs` | 本地开发服务器邀请码 API（570 行，Better-SQLite3 实现） |
+
+### 环境变量
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `PASSWORD` | 否* | 旧版访问密码（当未部署邀请码系统时作为降级方案） |
+| `ADMINPASSWORD` | 是 | 管理员密码，用于登录管理面板 |
+| `TMDB_WORKER_URL` | 推荐 | Cloudflare Worker 地址 |
+
+> *如果未部署邀请码系统，仍需设置 `PASSWORD`；部署邀请码系统后，`PASSWORD` 为可选。
 
 ## 功能特性
 
@@ -127,7 +187,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | **播放器** | ArtPlayer + HLS.js v1.x | M3U8 流媒体 + 广告过滤 |
 | **后端（本地开发）** | Node.js + Express 5.x | 静态服务 + 视频代理 + TMDB 代理 |
 | **部署平台** | Cloudflare Pages | 纯静态资源托管 |
-| **无服务器函数** | Cloudflare Workers | TMDB API 代理 |
+| **无服务器函数** | Cloudflare Workers + D1 | TMDB API 代理 + 邀请码 API + 数据库 |
 | **Pages Functions** | Cloudflare Pages Functions | 密码注入 + 视频代理 |
 | **PWA** | Service Worker + Web App Manifest | 离线缓存 + 可安装 |
 | **密码安全** | SHA-256 哈希（Web Crypto API） | 客户端 + 服务端双重验证 |
@@ -161,11 +221,15 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     │
     ├── Cloudflare Pages ─────────── 静态资源（HTML/CSS/JS）
     │       ├── Pages Functions ──── 密码注入（环境变量 → HTML 模板）
-    │       └── Pages Functions ──── 视频代理（/proxy/*）
+    │       ├── Pages Functions ──── 视频代理（/proxy/*）
+    │       └── Cloudflare D1 ───── 邀请码系统数据库
+    │               ├── invitation_codes 表 ── 邀请码、状态、备注、设备上限
+    │               └── devices 表 ────────── 设备指纹、名称、浏览器、IP、活跃时间
     │
-    ├── Cloudflare Worker ────────── TMDB API 代理
-    │       └── workers/tmdb-worker.js ──── TMDB API v3
-    │       └── /health 健康检查端点
+    ├── Cloudflare Worker ────────── TMDB API 代理 + 邀请码 API
+    │       ├── workers/tmdb-worker.js ──── TMDB API v3
+    │       ├── /health 健康检查端点
+    │       └── /invite/* 邀请码 API 路由（verify/heartbeat/generate/list/toggle/stats/my-devices/remove-device/set-remark）
     │
     ├── 第三方采集站 API (17 个) ──── 视频搜索和播放源
     │       └── 通过 Cloudflare Pages Functions 代理
@@ -179,11 +243,12 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 ```
 用户浏览器
     │
-    ├── Node.js + Express（server.mjs: 412 行）
+    ├── Node.js + Express（server.mjs: 669 行）
     │       ├── 静态资源服务（express.static）
     │       ├── / → HTML 模板注入（密码哈希、TMDB_URL、版本号）
     │       ├── /proxy/:encodedUrl → 视频源代理（鉴权 + URL 安全验证）
     │       ├── /api/tmdb → TMDB API 代理
+    │       ├── /api/invite/* → 邀请码 API（本地 Better-SQLite3）
     │       └── /api/version → 版本号 API
     │
     └── 第三方采集站 API ──── 视频搜索和播放源
@@ -219,6 +284,9 @@ js/app.js                       ← 主入口（初始化、事件监听、配�
 js/version-utils.js             ← 版本工具函数
 js/version-updater.js           ← 版本更新自动检测
 js/index-page.js                ← 首页弹窗 + URL 搜索参数
+js/auth/user-devices.js         ← 用户设备管理面板
+js/auth/invite-auth.js          ← 邀请码验证（指纹/心跳/登录状态管理）
+js/auth/admin-panel.js          ← 管理员面板（生成/列表/统计）
 ```
 
 ## 部署指南
@@ -258,6 +326,19 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
 
 > **验证 Worker 是否正常工作**：在浏览器中访问 `https://你的worker域名/health`，返回 `{"status":"ok"}` 即表示部署成功。
 
+### 第二步（可选）：创建 D1 数据库（邀请码系统）
+
+如需使用邀请码验证系统，需要创建 Cloudflare D1 数据库并绑定到 Worker：
+
+1. 在 **Cloudflare Dashboard** → **Workers & Pages** → **D1** → **创建数据库**
+2. 命名数据库（例如 `leletv-invite-db`），点击 **创建**
+3. 创建完成后，进入数据库页面，点击 **迁移** → **创建迁移**
+4. 在 `migrations/001_create_tables.sql` 和 `migrations/002_add_remark.sql` 中找到 SQL 语句，在 D1 控制台执行
+5. 回到 **Workers & Pages**，进入你的 TMDB Worker，选择 **设置** → **绑定** → **添加绑定**
+   - **绑定名称**：`INVITE_DB`
+   - **数据名称**：选择刚才创建的数据库
+6. 在 `wrangler.toml` 中添加对应的 `[[d1_databases]]` 配置后重新部署 Worker
+
 ### 第三步：部署 Cloudflare Pages（前端）
 
 1. Fork 或克隆本仓库到你的 GitHub 账户
@@ -272,14 +353,15 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
 
    | 变量名 | 必填 | 值 |
    |--------|------|-----|
-   | `PASSWORD` | **是** | 设置你的访问密码（纯文本，前端会做 SHA-256 哈希验证）|
+   | `PASSWORD` | 否 | 访问密码（部署邀请码系统后可省略，未部署时必须设置）|
    | `TMDB_WORKER_URL` | 推荐 | 第二步中记录的 Worker 地址，例如 `https://tmdb-proxy.yourdomain.com` |
-   | `ADMINPASSWORD` | 否 | 管理员密码，用于管理隐藏内容过滤 |
+   | `ADMINPASSWORD` | 推荐 | 管理员密码，用于管理邀请码和隐藏内容过滤 |
 
 7. 添加完成后，进入 Pages **部署** 页面，点击最后一个部署的 **...** → **重试部署**，让新环境变量生效
 
 > **注意**：
-> - 部署前端时必须设置 `PASSWORD` 变量，否则页面会一直提示设置密码
+> - 如果未部署邀请码系统，**必须设置 `PASSWORD` 变量**，否则页面会一直提示设置密码
+> - 如果已部署邀请码系统，`PASSWORD` 可省略，访问控制由邀请码系统管理
 > - `TMDB_WORKER_URL` **不要加末尾斜杠**
 > - `TMDB_API_KEY` 是 Worker 的环境变量，**不要**填到 Pages 的环境变量中
 
@@ -288,8 +370,8 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
 ### 验证整个流程
 
 部署完成后，按以下顺序验证：
-1. 访问你的 Pages 域名（如 `https://你的项目.pages.dev`），应该弹出密码验证
-2. 输入你在 `PASSWORD` 中设置的密码，进入首页
+1. 访问你的 Pages 域名（如 `https://你的项目.pages.dev`），应该弹出邀请码登录界面或旧版密码验证
+2. 使用邀请码登录（或输入密码），进入首页
 3. 点击导航栏的 **分类** 按钮，应该能看到 TMDB 的电影/电视剧列表
 4. 如果分类页面无法加载内容，检查：
    - Worker 的 `/health` 端点是否返回 `{"status":"ok"}`
@@ -324,8 +406,8 @@ npm run dev
 
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
-| `PASSWORD` | **是** | 用户访问密码（明文，服务端做 SHA-256 后注入页面） |
-| `ADMINPASSWORD` | 否 | 管理员密码（控制隐藏内容过滤开关） |
+| `ADMINPASSWORD` | **是** | 管理员密码（用于管理邀请码和隐藏内容过滤） |
+| `PASSWORD` | 否 | 旧版用户访问密码（部署邀请码系统后可省略） |
 | `TMDB_WORKER_URL` | 推荐 | Cloudflare Worker 地址（`TMDB_API_KEY` 配置在 Worker 环境变量中） |
 | `TMDB_API_KEY` | 否 | TMDB API v3 密钥（本地直连时使用，生产环境配在 Worker 中） |
 | `PORT` | 否 | 本地服务器端口（默认 8080） |
@@ -357,7 +439,11 @@ LeLeTV/
 │   ├── logo.png                  #   网站 Logo
 │   ├── logo-black.png            #   PWA 图标
 │   └── nomedia.png               #   无封面占位图
-├── js/                           # 20 个核心模块
+├── js/                           # 23 个核心模块
+│   ├── auth/                     #   邀请码验证系统（3 个模块）
+│   │   ├── invite-auth.js        #     邀请码验证核心（指纹/心跳/登录）
+│   │   ├── admin-panel.js        #     管理员面板
+│   │   └── user-devices.js       #     用户设备管理面板
 │   ├── config.js                 #   全局常量与配置（284 行）
 │   ├── api-config.js             #   API 管理（复选框、自定义 API、隐藏过滤）
 │   ├── app.js                    #   主入口（~765 行）
@@ -380,6 +466,9 @@ LeLeTV/
 │   ├── artplayer.min.js          #   ArtPlayer 播放器
 │   ├── hls.min.js                #   HLS.js
 │   └── sha256.min.js             #   js-sha256
+├── migrations/                   # D1 数据库迁移文件
+│   ├── 001_create_tables.sql     #   初始表结构（invitation_codes + devices）
+│   └── 002_add_remark.sql        #   添加邀请码备注列
 ├── scripts/                      # 自动化脚本
 │   ├── generate-version.mjs      #   版本号生成
 │   ├── create-tag.js             #   Git 标签创建
@@ -387,7 +476,7 @@ LeLeTV/
 │   ├── version-tracker.js        #   版本跟踪
 │   └── ...（共 9 个脚本）
 ├── workers/
-│   └── tmdb-worker.js            #   Cloudflare Worker 脚本
+│   └── tmdb-worker.js            #   Cloudflare Worker 脚本（含 TMDB API 代理 + 邀请码 API）
 ├── .claude/                      # GitNexus 技能文件
 │   └── skills/gitnexus/          #   6 个技能（exploring/impact/debug 等）
 ├── .env                          # 本地环境变量（不提交）
