@@ -568,9 +568,13 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
         const requestUrl = typeof input === 'string' ? new URL(input, window.location.origin) : input.url;
         
         if (requestUrl.pathname.startsWith('/api/')) {
-            if (window.isPasswordProtected && window.isPasswordVerified) {
-                if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                    return;
+            // 已通过邀请码验证的用户跳过密码检查
+            const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
+            if (!_isInviteVerified) {
+                if (window.isPasswordProtected && window.isPasswordVerified) {
+                    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+                        return;
+                    }
                 }
             }
             try {

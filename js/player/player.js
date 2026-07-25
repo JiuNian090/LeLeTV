@@ -151,10 +151,14 @@ async function fetchTmdbPlayerDetail(title) {
 
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
-    // 先检查用户是否已通过密码验证
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            return;
+    // 已通过邀请码验证的用户跳过密码检查
+    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
+    if (!_isInviteVerified) {
+        // 先检查用户是否已通过密码验证
+        if (window.isPasswordProtected && window.isPasswordVerified) {
+            if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+                return;
+            }
         }
     }
 
