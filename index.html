@@ -575,7 +575,7 @@
 
 
 
-    <script src="dist/leletv-core.vjnezy.js?v=v3.0.0" defer></script>
+    <script src="dist/leletv-core.ey2rbk.js?v=v3.0.0" defer></script>
     <script src="dist/leletv-app.prfjxn.js?v=v3.0.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
@@ -612,6 +612,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const adminEntry = document.getElementById('inviteAdminEntry');
     
     if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
+        if (loginModal) loginModal.style.display = 'none';
+    }
+    if (typeof isPasswordVerified === 'function' && isPasswordVerified()) {
         if (loginModal) loginModal.style.display = 'none';
     }
     

@@ -84,8 +84,7 @@ function isPasswordVerified() {
         const { timestamp, passwordHash } = JSON.parse(stored);
         const currentHash = window.__ENV__?.PASSWORD;
 
-        return timestamp && passwordHash === currentHash &&
-            Date.now() - timestamp < PASSWORD_CONFIG.verificationTTL;
+        return timestamp && passwordHash === currentHash;
     } catch (error) {
         console.error('检查密码验证状态时出错:', error);
         return false;
@@ -238,6 +237,10 @@ function showAdminPasswordModal() {
     const modal = document.getElementById('adminPasswordModal');
     if (!modal) return;
     
+    // 先隐藏邀请码登录弹窗，避免叠加遮挡
+    const loginModal = document.getElementById('inviteLoginModal');
+    if (loginModal) loginModal.style.display = 'none';
+    
     const errorEl = document.getElementById('adminPasswordError');
     const input = document.getElementById('adminPasswordInput');
     if (errorEl) errorEl.classList.add('hidden');
@@ -258,7 +261,11 @@ document.addEventListener('DOMContentLoaded', function () {
         setupEmailClickHandlers();
     }
     
+    // 已通过邀请码或管理员验证的，跳过登录
     if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
+        if (loginModal) loginModal.style.display = 'none';
+    }
+    if (isPasswordVerified()) {
         if (loginModal) loginModal.style.display = 'none';
     }
 });
