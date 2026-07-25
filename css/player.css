@@ -80,32 +80,6 @@ body, html {
     overflow: hidden !important;
 }
 
-.player-loading-container {
-    width: 100% !important;
-    height: 0 !important;
-    padding-bottom: 56.25% !important;
-    position: relative !important;
-    background-color: #1f2937 !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    display: block !important;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
-}
-
-@-moz-keyframes spin {
-    0% { -moz-transform: rotate(0deg); }
-    100% { -moz-transform: rotate(360deg); }
-}
-
 /* ArtPlayer specific styles */
 .art-video-player, .art-video-player video {
     width: 100% !important;
