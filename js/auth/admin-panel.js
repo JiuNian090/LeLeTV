@@ -265,9 +265,24 @@ function _formatTime(ts) {
 function _timeAgo(ts) {
   const diff = Date.now() - ts;
   if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return `${Math.floor(diff/60000)}分钟前`;
-  if (diff < 86400000) return `${Math.floor(diff/3600000)}小时前`;
-  return `${Math.floor(diff/86400000)}天前`;
+
+  const MS_MIN = 60000;
+  const MS_HOUR = 3600000;
+  const MS_DAY = 86400000;
+  const MS_WEEK = 604800000;
+
+  const weeks = Math.floor(diff / MS_WEEK);
+  const days = Math.floor((diff % MS_WEEK) / MS_DAY);
+  const hours = Math.floor((diff % MS_DAY) / MS_HOUR);
+  const minutes = Math.floor((diff % MS_HOUR) / MS_MIN);
+
+  const parts = [];
+  if (weeks > 0) parts.push(`${weeks}周`);
+  if (days > 0) parts.push(`${days}天`);
+  if (hours > 0) parts.push(`${hours}小时`);
+  if (minutes > 0) parts.push(`${minutes}分钟`);
+
+  return parts.slice(0, 2).join('') + '前';
 }
 
 window.INVITE_ADMIN_PANEL = INVITE_ADMIN_PANEL;

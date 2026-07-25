@@ -152,6 +152,29 @@ const USER_DEVICES_PANEL = {
   }
 };
 
+function _timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '刚刚';
+
+  const MS_MIN = 60000;
+  const MS_HOUR = 3600000;
+  const MS_DAY = 86400000;
+  const MS_WEEK = 604800000;
+
+  const weeks = Math.floor(diff / MS_WEEK);
+  const days = Math.floor((diff % MS_WEEK) / MS_DAY);
+  const hours = Math.floor((diff % MS_DAY) / MS_HOUR);
+  const minutes = Math.floor((diff % MS_HOUR) / MS_MIN);
+
+  const parts = [];
+  if (weeks > 0) parts.push(`${weeks}周`);
+  if (days > 0) parts.push(`${days}天`);
+  if (hours > 0) parts.push(`${hours}小时`);
+  if (minutes > 0) parts.push(`${minutes}分钟`);
+
+  return parts.slice(0, 2).join('') + '前';
+}
+
 function _deviceIcon(browser) {
   if (!browser) return '📱';
   if (browser.includes('Chrome')) return '🌐';
