@@ -4,6 +4,12 @@
 
 ## 版本历史
 
+### v3.0.0 (2026-07-25)
+- 🎉 新增 播放页全局加载遮罩动画
+- 🔧 修复 CSP 安全策略，添加 Cloudflare Insights 和 blob 媒体/Worker 来源
+- ⚡ 调整 默认数据源为固定选择（bfzy, dbzy, zuid, wujin, mtzy）
+- 🧹 清理 删除无用的测试临时文件
+
 ### v2.9.9 (2026-07-25)
 - 🔧 修复 播放页 showError 函数引用未声明变量 loadingEl 导致错误信息无法显示的回归 bug
 - 🔧 修复 showPasswordModal 在 player.html 中因 passwordCancelBtn 元素缺失而抛 TypeError 的问题
