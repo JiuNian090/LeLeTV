@@ -572,8 +572,8 @@
 
 
 
-    <script src="dist/leletv-core.qwx673.js?v=v3.0.0" defer></script>
-    <script src="dist/leletv-app.4np1ov.js?v=v3.0.0" defer></script>
+    <script src="dist/leletv-core.v9m2kn.js?v=v3.0.0" defer></script>
+    <script src="dist/leletv-app.wvxxa5.js?v=v3.0.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -598,6 +598,129 @@
 
     <script defer src="js/auth/invite-auth.js?v=v3.0.0"></script>
     <script defer src="js/auth/admin-panel.js?v=v3.0.0"></script>
+
+<script>
+// 邀请码登录事件绑定
+document.addEventListener('DOMContentLoaded', function() {
+    const loginModal = document.getElementById('inviteLoginModal');
+    const deviceNameInput = document.getElementById('inviteDeviceName');
+    const codeInput = document.getElementById('inviteCodeInput');
+    const loginBtn = document.getElementById('inviteLoginBtn');
+    const loginError = document.getElementById('inviteLoginError');
+    const adminEntry = document.getElementById('inviteAdminEntry');
+    
+    if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
+        if (loginModal) loginModal.style.display = 'none';
+    }
+    
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleInviteLogin);
+    }
+    
+    if (codeInput) {
+        codeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleInviteLogin();
+        });
+    }
+    if (deviceNameInput) {
+        deviceNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') codeInput?.focus();
+        });
+    }
+    
+    if (adminEntry) {
+        adminEntry.addEventListener('click', function() {
+            if (typeof showAdminPasswordModal === 'function') {
+                showAdminPasswordModal();
+            }
+        });
+    }
+    
+    const adminPwdSubmit = document.getElementById('adminPwdSubmitBtn');
+    const adminPwdInput = document.getElementById('adminPasswordInput');
+    const adminPwdClose = document.getElementById('adminPwdCloseBtn');
+    
+    async function handleAdminPwdSubmit() {
+        const pwd = adminPwdInput?.value?.trim();
+        if (!pwd) return;
+        
+        if (typeof verifyPassword === 'function') {
+            const ok = await verifyPassword(pwd);
+            if (ok) {
+                const adminModal = document.getElementById('adminPasswordModal');
+                if (adminModal) adminModal.style.display = 'none';
+                if (loginModal) loginModal.style.display = 'none';
+                
+                localStorage.setItem('leletv_is_admin', 'true');
+                
+                document.dispatchEvent(new CustomEvent('passwordVerified'));
+                showToast('管理员身份已验证', 'success');
+            } else {
+                const errEl = document.getElementById('adminPasswordError');
+                if (errEl) {
+                    errEl.textContent = '密码错误';
+                    errEl.classList.remove('hidden');
+                }
+                adminPwdInput?.select();
+            }
+        }
+    }
+    
+    if (adminPwdSubmit) {
+        adminPwdSubmit.addEventListener('click', handleAdminPwdSubmit);
+    }
+    if (adminPwdInput) {
+        adminPwdInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleAdminPwdSubmit();
+        });
+    }
+    if (adminPwdClose) {
+        adminPwdClose.addEventListener('click', function() {
+            document.getElementById('adminPasswordModal').style.display = 'none';
+        });
+    }
+    
+    async function handleInviteLogin() {
+        const deviceName = deviceNameInput?.value?.trim();
+        const code = codeInput?.value?.trim();
+        
+        if (!deviceName) {
+            if (loginError) {
+                loginError.textContent = '请输入设备名';
+                loginError.classList.remove('hidden');
+            }
+            deviceNameInput?.focus();
+            return;
+        }
+        if (!code) {
+            if (loginError) {
+                loginError.textContent = '请输入邀请码';
+                loginError.classList.remove('hidden');
+            }
+            codeInput?.focus();
+            return;
+        }
+        
+        if (loginBtn) loginBtn.disabled = true;
+        if (loginError) loginError.classList.add('hidden');
+        
+        const result = await window.INVITE_AUTH.verify(code, deviceName);
+        
+        if (loginBtn) loginBtn.disabled = false;
+        
+        if (result.ok) {
+            if (loginModal) loginModal.style.display = 'none';
+            document.dispatchEvent(new CustomEvent('inviteVerified'));
+            showToast(result.message || '欢迎进入', 'success');
+        } else {
+            if (loginError) {
+                loginError.textContent = result.error || '验证失败';
+                loginError.classList.remove('hidden');
+            }
+        }
+    }
+});
+</script>
 
 </body>
 </html>

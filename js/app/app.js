@@ -212,3 +212,21 @@ document.addEventListener('DOMContentLoaded', hookInput);
 // 传统搜索方式（作为降级选项）
 
 // 卡片交错入场动画
+
+// 监听管理员验证事件，显示邀请码管理面板
+document.addEventListener('passwordVerified', function() {
+    const container = document.getElementById('inviteAdminContainer');
+    if (container && window.INVITE_ADMIN_PANEL) {
+        container.classList.remove('hidden');
+        window.INVITE_ADMIN_PANEL.render(container);
+    }
+});
+
+// 页面加载时检查是否已是管理员
+if (localStorage.getItem('leletv_is_admin') === 'true' && window.INVITE_ADMIN_PANEL) {
+    const container = document.getElementById('inviteAdminContainer');
+    if (container) {
+        container.classList.remove('hidden');
+        window.INVITE_ADMIN_PANEL.render(container);
+    }
+}

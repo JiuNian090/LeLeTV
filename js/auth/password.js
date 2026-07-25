@@ -98,6 +98,7 @@ window.isPasswordRequired = isPasswordRequired;
 window.isPasswordVerified = isPasswordVerified;
 window.verifyPassword = verifyPassword;
 window.ensurePasswordProtection = ensurePasswordProtection;
+window.showAdminPasswordModal = showAdminPasswordModal;
 
 // SHA-256实现，可用Web Crypto API
 async function sha256(message) {
@@ -227,25 +228,37 @@ async function handlePasswordSubmit() {
  * 初始化密码验证系统
  */
 function initPasswordProtection() {
-    // 如果需要强制设置密码，显示警告弹窗
     if (isPasswordRequired()) {
-        showPasswordModal();
-        return;
-    }
-    
-    // 如果设置了密码但用户未验证，显示密码输入框
-    if (isPasswordProtected() && !isPasswordVerified()) {
-        showPasswordModal();
+        console.warn('管理员密码未设置');
         return;
     }
 }
 
+function showAdminPasswordModal() {
+    const modal = document.getElementById('adminPasswordModal');
+    if (!modal) return;
+    
+    const errorEl = document.getElementById('adminPasswordError');
+    const input = document.getElementById('adminPasswordInput');
+    if (errorEl) errorEl.classList.add('hidden');
+    if (input) input.value = '';
+    
+    modal.style.display = 'flex';
+    setTimeout(() => input?.focus(), 100);
+}
+
 // 在页面加载完成后初始化密码保护
 document.addEventListener('DOMContentLoaded', function () {
-    initPasswordProtection();
+    const loginModal = document.getElementById('inviteLoginModal');
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+    }
     
-    // 初始化邮箱点击处理器
     if (typeof setupEmailClickHandlers === 'function') {
         setupEmailClickHandlers();
+    }
+    
+    if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
+        if (loginModal) loginModal.style.display = 'none';
     }
 });
