@@ -12,7 +12,17 @@ const INVITE_AUTH = {
   // localStorage key
   STORAGE_KEY: 'leletv_invite_auth',
   HEARTBEAT_INTERVAL: 5 * 60 * 1000, // 5分钟
-  WORKER_BASE: window.__ENV__?.TMDB_WORKER_URL || '',
+  
+  // 本地开发环境强制走本地 API
+  _isLocalhost: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
+  
+  _inviteUrl(path) {
+    const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
+    if (workerBase && !this._isLocalhost) {
+      return `${workerBase}${path}`;
+    }
+    return `/api${path}`;
+  },
   
   /**
    * 生成设备指纹
@@ -90,9 +100,7 @@ const INVITE_AUTH = {
     const fingerprint = await INVITE_AUTH.generateFingerprint();
     
     try {
-      const url = INVITE_AUTH.WORKER_BASE 
-        ? `${INVITE_AUTH.WORKER_BASE}/invite/verify`
-        : '/api/invite/verify';
+      const url = INVITE_AUTH._inviteUrl('/invite/verify');
       
       const response = await fetch(url, {
         method: 'POST',
@@ -131,9 +139,7 @@ const INVITE_AUTH = {
    */
   async heartbeat(fingerprint) {
     try {
-      const url = INVITE_AUTH.WORKER_BASE
-        ? `${INVITE_AUTH.WORKER_BASE}/invite/heartbeat`
-        : '/api/invite/heartbeat';
+      const url = INVITE_AUTH._inviteUrl('/invite/heartbeat');
       
       await fetch(url, {
         method: 'POST',
