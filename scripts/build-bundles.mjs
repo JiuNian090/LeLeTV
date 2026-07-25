@@ -20,7 +20,7 @@ const CORE = {
   files: [
     'js/core/config.js', 'js/core/leletv-global.js', 'js/core/storage-service.js',
     'js/core/listener-tracker.js', 'js/core/timing.js',
-    'js/auth/proxy-auth.js', 'js/auth/password.js',
+    'js/auth/proxy-auth.js', 'js/auth/password.js', 'js/auth/invite-auth.js',
     'js/ui/ui-core.js',
   ],
 };
