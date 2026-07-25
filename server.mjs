@@ -7,6 +7,8 @@ import { dirname, join } from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import Database from 'better-sqlite3';
+import { mkdirSync } from 'fs';
 
 dotenv.config();
 
@@ -27,6 +29,83 @@ const config = {
   userAgent: process.env.USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
   debug: process.env.DEBUG !== 'false'
 };
+
+// ====== 本地邀请码数据库（better-sqlite3 模拟 D1）======
+
+const INVITE_DB_PATH = process.env.INVITE_DB_PATH || './data/invite.db';
+let inviteDb;
+
+function initInviteDatabase() {
+  const dbDir = path.dirname(INVITE_DB_PATH);
+  try {
+    mkdirSync(dbDir, { recursive: true });
+  } catch (e) { /* 目录已存在 */ }
+  
+  inviteDb = new Database(INVITE_DB_PATH);
+  inviteDb.pragma('journal_mode = WAL');
+  
+  inviteDb.exec(`
+    CREATE TABLE IF NOT EXISTS invitation_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      created_at INTEGER NOT NULL,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      max_devices INTEGER NOT NULL DEFAULT 5
+    );
+    
+    CREATE TABLE IF NOT EXISTS devices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL,
+      device_name TEXT NOT NULL,
+      device_fingerprint TEXT NOT NULL,
+      browser TEXT DEFAULT '',
+      ip_address TEXT DEFAULT '',
+      first_active_at INTEGER NOT NULL,
+      last_active_at INTEGER NOT NULL,
+      FOREIGN KEY (code) REFERENCES invitation_codes(code)
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_devices_code ON devices(code);
+    CREATE INDEX IF NOT EXISTS idx_devices_fingerprint ON devices(device_fingerprint);
+    CREATE INDEX IF NOT EXISTS idx_devices_last_active ON devices(last_active_at);
+  `);
+}
+
+// 生成邀请码（与 Worker 端保持一致）
+function generateInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function segment(len) {
+    let s = '';
+    const array = crypto.randomBytes(len);
+    for (let i = 0; i < len; i++) {
+      s += chars[array[i] % chars.length];
+    }
+    return s;
+  }
+  return `LELE-${segment(4)}-${segment(4)}`;
+}
+
+// 获取浏览器摘要
+function getBrowserSummary(req) {
+  const ua = req.headers['user-agent'] || '';
+  if (ua.includes('Chrome/')) {
+    const match = ua.match(/Chrome\/(\d+)/);
+    return match ? `Chrome ${match[1]}` : 'Chrome';
+  }
+  if (ua.includes('Firefox/')) return 'Firefox';
+  if (ua.includes('Safari/') && !ua.includes('Chrome')) return 'Safari';
+  if (ua.includes('Edg/')) return 'Edge';
+  return 'Unknown';
+}
+
+// 验证管理员密码
+function validateAdminPassword(req) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '').trim();
+  if (!token || !config.password) return false;
+  const expectedHash = crypto.createHash('sha256').update(config.password).digest('hex');
+  return token === expectedHash;
+}
 
 // 日志记录函数
 const log = (...args) => {
@@ -371,6 +450,118 @@ app.get('/api/version', async (req, res) => {
   }
 });
 
+// ====== 邀请码 API 路由（本地开发）======
+
+// POST /api/invite/verify
+app.post('/api/invite/verify', express.json(), (req, res) => {
+  try {
+    const { code, device_name, device_fingerprint } = req.body;
+    if (!code || !device_name || !device_fingerprint) {
+      return res.status(400).json({ ok: false, error: '缺少必填参数' });
+    }
+    
+    const invite = inviteDb.prepare('SELECT * FROM invitation_codes WHERE code = ?').get(code);
+    if (!invite) return res.status(403).json({ ok: false, error: '邀请码无效' });
+    if (!invite.is_active) return res.status(403).json({ ok: false, error: '邀请码已被禁用' });
+    
+    const existingDevice = inviteDb.prepare('SELECT * FROM devices WHERE device_fingerprint = ?').get(device_fingerprint);
+    if (existingDevice) {
+      inviteDb.prepare('UPDATE devices SET last_active_at = ?, ip_address = ?, browser = ?, device_name = ? WHERE id = ?')
+        .run(Date.now(), req.ip, getBrowserSummary(req), device_name, existingDevice.id);
+      return res.json({ ok: true, action: 'renewed', message: '欢迎回来' });
+    }
+    
+    const deviceCount = inviteDb.prepare('SELECT COUNT(*) as count FROM devices WHERE code = ?').get(code);
+    if (deviceCount.count >= invite.max_devices) {
+      const oldest = inviteDb.prepare('SELECT id FROM devices WHERE code = ? ORDER BY last_active_at ASC LIMIT 1').get(code);
+      if (oldest) inviteDb.prepare('DELETE FROM devices WHERE id = ?').run(oldest.id);
+    }
+    
+    const now = Date.now();
+    inviteDb.prepare('INSERT INTO devices (code, device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(code, device_name, device_fingerprint, getBrowserSummary(req), req.ip, now, now);
+    
+    const action = deviceCount.count >= invite.max_devices ? 'evicted' : 'registered';
+    res.json({ ok: true, action, message: '验证成功' });
+  } catch (error) {
+    console.error('验证邀请码失败:', error);
+    res.status(500).json({ ok: false, error: '服务器错误' });
+  }
+});
+
+// POST /api/invite/heartbeat
+app.post('/api/invite/heartbeat', express.json(), (req, res) => {
+  try {
+    const { device_fingerprint } = req.body;
+    if (!device_fingerprint) return res.status(400).json({ ok: false, error: '缺少 device_fingerprint' });
+    
+    const info = inviteDb.prepare('UPDATE devices SET last_active_at = ? WHERE device_fingerprint = ?').run(Date.now(), device_fingerprint);
+    res.json({ ok: true, updated: info.changes > 0 });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: '服务器错误' });
+  }
+});
+
+// POST /api/invite/generate
+app.post('/api/invite/generate', express.json(), (req, res) => {
+  if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
+  
+  let code;
+  for (let i = 0; i < 10; i++) {
+    code = generateInviteCode();
+    const existing = inviteDb.prepare('SELECT id FROM invitation_codes WHERE code = ?').get(code);
+    if (!existing) break;
+    code = null;
+  }
+  
+  if (!code) return res.status(500).json({ ok: false, error: '生成失败' });
+  
+  inviteDb.prepare('INSERT INTO invitation_codes (code, created_at) VALUES (?, ?)').run(code, Date.now());
+  res.json({ ok: true, code, created_at: Date.now() });
+});
+
+// GET /api/invite/list
+app.get('/api/invite/list', (req, res) => {
+  if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
+  
+  const codes = inviteDb.prepare('SELECT * FROM invitation_codes ORDER BY created_at DESC').all();
+  const result = codes.map(invite => {
+    const devices = inviteDb.prepare('SELECT device_name, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(invite.code);
+    return {
+      code: invite.code,
+      created_at: invite.created_at,
+      is_active: !!invite.is_active,
+      max_devices: invite.max_devices,
+      device_count: devices.length,
+      devices
+    };
+  });
+  
+  res.json({ ok: true, codes: result });
+});
+
+// POST /api/invite/toggle
+app.post('/api/invite/toggle', express.json(), (req, res) => {
+  if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
+  
+  const { code, is_active } = req.body;
+  if (!code || typeof is_active !== 'boolean') return res.status(400).json({ ok: false, error: '缺少必填参数' });
+  
+  const info = inviteDb.prepare('UPDATE invitation_codes SET is_active = ? WHERE code = ?').run(is_active ? 1 : 0, code);
+  res.json({ ok: true, updated: info.changes > 0 });
+});
+
+// GET /api/invite/stats
+app.get('/api/invite/stats', (req, res) => {
+  if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
+  
+  const totalCodes = inviteDb.prepare('SELECT COUNT(*) as count FROM invitation_codes').get();
+  const activeCodes = inviteDb.prepare('SELECT COUNT(*) as count FROM invitation_codes WHERE is_active = 1').get();
+  const totalDevices = inviteDb.prepare('SELECT COUNT(*) as count FROM devices').get();
+  
+  res.json({ ok: true, total_codes: totalCodes.count, active_codes: activeCodes.count, total_devices: totalDevices.count });
+});
+
 app.use(express.static(join(__dirname), {
   maxAge: config.cacheMaxAge,
   setHeaders: function (res, path) {
@@ -393,6 +584,9 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).send('页面未找到');
 });
+
+// 初始化邀请码数据库
+initInviteDatabase();
 
 // 启动服务器
 app.listen(config.port, () => {
