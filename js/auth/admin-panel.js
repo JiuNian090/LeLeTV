@@ -170,7 +170,7 @@ const INVITE_ADMIN_PANEL = {
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1 flex-wrap">
               <code class="invite-code-text text-sm font-mono text-pink-400" data-code="${invite.code}" title="点击复制">${invite.code}</code>
-              <span class="invite-remark-text text-sm text-pink-400/70 cursor-pointer hover:text-pink-300" data-code="${invite.code}" title="点击编辑备注">${invite.remark ? `（${invite.remark}）` : ''}</span>
+              <span class="invite-remark-text text-sm text-pink-400/70 cursor-pointer hover:text-pink-300" data-code="${invite.code}" title="点击编辑备注">${invite.remark ? '（' + invite.remark + '）' : '<span class="text-gray-600">+ 添加备注</span>'}</span>
               <span class="text-xs text-gray-500">${_formatTime(invite.created_at)}</span>
             </div>
           </div>
