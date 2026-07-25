@@ -106,12 +106,18 @@ const INVITE_ADMIN_PANEL = {
           <div id="inviteCodeList" class="space-y-2 max-h-80 overflow-y-auto">
             <p class="text-gray-500 text-sm text-center">点击刷新加载列表</p>
           </div>
+          <div class="mt-4 pt-3 border-t border-[#333] text-center">
+            <button id="inviteAdminLogoutBtn" class="text-xs text-gray-500 hover:text-[#ec4899] transition-colors">退出登录</button>
+          </div>
         </div>
       </div>
     `;
     
     container.querySelector('#inviteGenerateBtn').addEventListener('click', () => this._handleGenerate(container));
     container.querySelector('#inviteRefreshBtn').addEventListener('click', () => this._refresh(container));
+    container.querySelector('#inviteAdminLogoutBtn').addEventListener('click', () => {
+      if (window.INVITE_AUTH) window.INVITE_AUTH.logout();
+    });
     this._refresh(container);
   },
   

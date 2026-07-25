@@ -87,6 +87,40 @@ const INVITE_AUTH = {
   },
   
   /**
+   * 清除所有登录状态（登出），保留其他数据
+   * 恢复邀请码登录界面
+   */
+  logout() {
+    // 停止心跳
+    this.stopHeartbeat();
+    
+    // 清除邀请码验证
+    this.clearAuth();
+    
+    // 清除管理员验证
+    localStorage.removeItem('leletv_admin_session');
+    localStorage.removeItem('leletv_is_admin');
+    const pwdKey = typeof PASSWORD_CONFIG !== 'undefined' ? PASSWORD_CONFIG.localStorageKey : 'passwordVerified';
+    localStorage.removeItem(pwdKey);
+    
+    // 隐藏管理面板
+    const adminContainer = document.getElementById('inviteAdminContainer');
+    if (adminContainer) adminContainer.classList.add('hidden');
+    const userContainer = document.getElementById('userDeviceContainer');
+    if (userContainer) userContainer.classList.add('hidden');
+    
+    // 显示邀请码登录弹窗
+    const loginModal = document.getElementById('inviteLoginModal');
+    if (loginModal) loginModal.style.display = 'flex';
+    
+    // 聚焦到设备名输入框
+    setTimeout(() => {
+      const deviceInput = document.getElementById('inviteDeviceName');
+      if (deviceInput) deviceInput.focus();
+    }, 100);
+  },
+  
+  /**
    * 检查是否已验证
    */
   isVerified() {
