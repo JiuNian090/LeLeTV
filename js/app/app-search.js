@@ -425,23 +425,27 @@ async function search() {
     hideSearchHistory();
     const releaseThrottle = () => { _searchThrottled = false; };
     // 强化的密码保护校验 - 防止绕过
-    try {
-        if (window.ensurePasswordProtection) {
-            window.ensurePasswordProtection();
-        } else {
-            // 兼容性检查
-            if (window.isPasswordProtected && window.isPasswordVerified) {
-                if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                    showPasswordModal && showPasswordModal();
-                    releaseThrottle();
-                    return;
+    // 已通过邀请码验证的用户跳过密码检查
+    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
+    if (!_isInviteVerified) {
+        try {
+            if (window.ensurePasswordProtection) {
+                window.ensurePasswordProtection();
+            } else {
+                // 兼容性检查
+                if (window.isPasswordProtected && window.isPasswordVerified) {
+                    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+                        showPasswordModal && showPasswordModal();
+                        releaseThrottle();
+                        return;
+                    }
                 }
             }
+        } catch (error) {
+            console.warn('Password protection check failed:', error.message);
+            releaseThrottle();
+            return;
         }
-    } catch (error) {
-        console.warn('Password protection check failed:', error.message);
-        releaseThrottle();
-        return;
     }
     const query = document.getElementById('searchInput').value.trim();
 
