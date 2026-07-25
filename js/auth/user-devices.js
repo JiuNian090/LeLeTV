@@ -123,15 +123,22 @@ const USER_DEVICES_PANEL = {
         <div class="flex items-center gap-3 flex-shrink-0">
           <span class="text-xs text-gray-500">${d.browser || ''}</span>
           <span class="text-xs text-gray-500">${_timeAgo(d.last_active_at)}</span>
-          ${!isCurrent ? `<button class="text-xs text-gray-500 hover:text-red-400 del-device-btn transition-colors" data-fp="${d.device_fingerprint}" title="删除设备">✕</button>` : ''}
+          <button class="text-xs text-gray-500 hover:text-red-400 del-device-btn transition-colors" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}">✕</button>
         </div>
       </div>`;
     }).join('');
 
-    // 绑定删除事件
+    // 绑定删除/退出事件
     listEl.querySelectorAll('.del-device-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const fp = btn.dataset.fp;
+        const isCurrent = btn.dataset.current === 'true';
+        
+        if (isCurrent) {
+          if (window.INVITE_AUTH) window.INVITE_AUTH.logout();
+          return;
+        }
+        
         if (!confirm('确定删除该设备？删除后该设备需要重新验证邀请码。')) return;
         const ok = await this.removeDevice(fp);
         if (ok) {
