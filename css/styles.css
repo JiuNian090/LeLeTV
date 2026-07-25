@@ -2940,18 +2940,4 @@ body > header {
     opacity: 1;
 }
 
-#inviteAdminCard .copy-code-btn {
-    opacity: 0.5;
-    transition: opacity 0.2s;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0 2px;
-    font-size: 12px;
-    line-height: 1;
-    vertical-align: middle;
-}
 
-#inviteAdminCard .copy-code-btn:hover {
-    opacity: 1;
-}

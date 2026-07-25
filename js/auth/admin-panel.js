@@ -141,8 +141,7 @@ const INVITE_ADMIN_PANEL = {
       <div class="bg-[#1a1a1a] rounded-lg border border-[#333] p-3">
         <div class="flex justify-between items-center">
           <div>
-            <code class="text-sm font-mono text-pink-400">${invite.code}</code>
-            <button class="copy-code-btn text-xs text-gray-500 hover:text-white ml-1" data-code="${invite.code}" title="复制邀请码">📋</button>
+            <code class="invite-code-text text-sm font-mono text-pink-400" data-code="${invite.code}" title="点击复制">${invite.code}</code>
             <span class="text-xs text-gray-500 ml-2">${_formatTime(invite.created_at)}</span>
           </div>
           <div class="flex items-center gap-2">
@@ -178,15 +177,14 @@ const INVITE_ADMIN_PANEL = {
       });
     });
     
-    // 复制邀请码
-    listEl.querySelectorAll('.copy-code-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const code = btn.dataset.code;
+    // 点击邀请码复制
+    listEl.querySelectorAll('.invite-code-text').forEach(el => {
+      el.addEventListener('click', async () => {
+        const code = el.dataset.code;
         try {
           await navigator.clipboard.writeText(code);
-          showToast('邀请码已复制: ' + code, 'success');
+          showToast('邀请码已复制', 'success');
         } catch {
-          // fallback
           const ta = document.createElement('textarea');
           ta.value = code;
           document.body.appendChild(ta);
