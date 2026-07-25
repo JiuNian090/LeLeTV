@@ -112,7 +112,8 @@ async function sha256(message) {
 function showPasswordModal() {
     const passwordModal = document.getElementById('passwordModal');
     if (passwordModal) {
-        document.getElementById('passwordCancelBtn').classList.add('hidden');
+        const cancelBtn = document.getElementById('passwordCancelBtn');
+        if (cancelBtn) cancelBtn.classList.add('hidden');
 
         // 检查是否需要强制设置密码
         if (isPasswordRequired()) {

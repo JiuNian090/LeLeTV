@@ -10,6 +10,8 @@
 - ⚡ 调整 更新 .gitignore，仅忽略 dist 目录下的 sourcemap 文件
 - 🔧 修复 搜索卡片封面加载失败时改用内置 SVG 占位图，避免依赖外部资源
 - 🔧 修复 search-cards.js 中 sid 生成正则的转义问题，补全 `\w` 字符匹配
+- 🔧 修复 播放页 showError 函数引用未声明变量 loadingEl 导致错误信息无法显示的回归 bug
+- 🔧 修复 showPasswordModal 在 player.html 中因 passwordCancelBtn 元素缺失而抛 TypeError 的问题
 
 ### v2.9.7 (2026-07-25)
 - 🎉 新增 视频分享功能和移动端滑动导航
