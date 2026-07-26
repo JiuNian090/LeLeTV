@@ -48,6 +48,31 @@
         }
     </style>
 
+    <!-- README 弹窗 Markdown 样式 -->
+    <style>
+        .markdown-body { color: #d1d5db; line-height: 1.7; font-size: 14px; word-wrap: break-word; }
+        .markdown-body h1 { color: #ec4899; font-size: 1.5em; margin: 1em 0 0.5em; padding-bottom: 0.3em; border-bottom: 1px solid #333; }
+        .markdown-body h2 { color: #f472b6; font-size: 1.25em; margin: 1em 0 0.4em; }
+        .markdown-body h3 { color: #f9a8d4; font-size: 1.1em; margin: 0.8em 0 0.3em; }
+        .markdown-body h4 { color: #fbcfe8; font-size: 1em; margin: 0.6em 0 0.3em; }
+        .markdown-body p { margin: 0.5em 0; }
+        .markdown-body a { color: #60a5fa; text-decoration: underline; }
+        .markdown-body a:hover { color: #93c5fd; }
+        .markdown-body ul, .markdown-body ol { margin: 0.5em 0; padding-left: 1.5em; }
+        .markdown-body li { margin: 0.25em 0; }
+        .markdown-body code { background: #1f2937; color: #f472b6; padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+        .markdown-body pre { background: #1a1a2e; padding: 1em; border-radius: 8px; overflow-x: auto; margin: 0.8em 0; border: 1px solid #333; }
+        .markdown-body pre code { background: transparent; color: #d1d5db; padding: 0; font-size: 0.85em; }
+        .markdown-body blockquote { border-left: 3px solid #ec4899; padding: 0.25em 1em; margin: 0.8em 0; background: #1a1a2e; border-radius: 0 8px 8px 0; color: #9ca3af; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 0.8em 0; }
+        .markdown-body th, .markdown-body td { border: 1px solid #333; padding: 0.5em 0.75em; text-align: left; }
+        .markdown-body th { background: #1f2937; color: #f472b6; font-weight: 600; }
+        .markdown-body td { background: #111; }
+        .markdown-body hr { border: none; border-top: 1px solid #333; margin: 1.5em 0; }
+        .markdown-body img { max-width: 100%; border-radius: 6px; margin: 0.8em 0; }
+        .markdown-body strong { color: #f3f4f6; }
+    </style>
+
     <!-- 桌面端图标声明 -->
     <link rel="icon" href="/image/logo-black.png" sizes="48x48">
     <link rel="icon" href="/image/logo-black.png" sizes="96x96">
@@ -56,6 +81,9 @@
     <link rel="icon" href="/image/logo-black.png" sizes="1024x1024">
     <link rel="icon" href="/image/logo-black.png" sizes="256x256">
     <link rel="icon" href="/image/logo-black.png" sizes="384x384">
+
+    <!-- marked.js: Markdown 渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 </head>
 <body class="page-bg text-white">
     <!-- Aurora 极光背景 -->
@@ -334,12 +362,12 @@
                                         LeLeTV 是自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
                                     </p>
                                     <div class="flex flex-row justify-center gap-3">
-                                        <a href="https://letvport.776645.xyz/" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 bg-[#ec4899] hover:bg-[#db2777] text-white rounded-lg transition-all duration-300 flex items-center justify-center font-semibold text-sm">
-                                            访问我的网站
-                                            <svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <button data-action="switch-page" data-page="readme" class="flex-1 px-4 py-2.5 bg-[#ec4899] hover:bg-[#db2777] text-white rounded-lg transition-all duration-300 flex items-center justify-center font-semibold text-sm cursor-pointer">
+                                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                             </svg>
-                                        </a>
+                                            项目说明
+                                        </button>
                                         <a href="https://github.com/JiuNian090/LeLeTV" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center justify-center text-sm">
                                             <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -416,6 +444,37 @@
                 </div>
             </div>
         </div>
+
+    </div>  <!-- 关闭 page-about -->
+
+    <!-- README 页面（项目说明） -->
+    <div id="page-readme" class="page-content">
+        <div class="readme-page-wrapper">
+            <!-- 顶部返回栏 -->
+            <div class="readme-topbar">
+                <button data-action="switch-page" data-page="about" class="readme-back-btn">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5m7-7l-7 7 7 7"/>
+                    </svg>
+                    <span>返回</span>
+                </button>
+                <h2 class="readme-title">项目说明</h2>
+                <div class="readme-topbar-spacer"></div>
+            </div>
+            <!-- 内容区域 -->
+            <div class="readme-body">
+                <div id="readmeLoading" class="flex flex-col items-center justify-center py-20">
+                    <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-gray-400 mt-3">加载中...</span>
+                </div>
+                <div id="readmeContent" class="markdown-body hidden"></div>
+                <div id="readmeError" class="hidden flex flex-col items-center justify-center py-20">
+                    <p class="text-red-400 mb-4">加载失败，请检查网络后重试</p>
+                    <button id="retryReadmeBtn" class="px-5 py-2 gradient-btn rounded-lg text-sm cursor-pointer">重新加载</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 页脚区域 -->
     <footer class="footer py-4 bg-[#0a0a0a] max-sm:py-2.5">
@@ -571,7 +630,7 @@
     </script>
 
     <script src="dist/leletv-core.1bemxl.js?v=v3.1.7" defer></script>
-    <script src="dist/leletv-app.izdnas.js?v=v3.1.7" defer></script>
+    <script src="dist/leletv-app.oj2oru.js?v=v3.1.7" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>

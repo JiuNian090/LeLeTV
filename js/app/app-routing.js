@@ -39,8 +39,50 @@ function handlePageLoad(n) {
     case 'category': if (typeof initTmdbCategory === 'function') initTmdbCategory(); break;
     case 'history': if (typeof loadViewingHistory === 'function') loadViewingHistory(); break;
     case 'about': loadAboutPageChangelog(); break;
+    case 'readme': loadReadmePage(); break;
   }
 }
+
+function loadReadmePage() {
+  var content = document.getElementById('readmeContent');
+  if (!content || content.getAttribute('data-loaded') === 'true') return;
+  content.setAttribute('data-loaded', 'true');
+
+  var loading = document.getElementById('readmeLoading');
+  var error = document.getElementById('readmeError');
+
+  loading.classList.remove('hidden');
+  content.classList.add('hidden');
+  error.classList.add('hidden');
+
+  fetch('https://raw.githubusercontent.com/JiuNian090/LeLeTV/main/README.md')
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(function(md) {
+      if (typeof marked !== 'undefined') {
+        content.innerHTML = marked.parse(md);
+      } else {
+        content.textContent = md;
+      }
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    })
+    .catch(function() {
+      loading.classList.add('hidden');
+      error.classList.remove('hidden');
+    });
+}
+
+document.addEventListener('click', function(e) {
+  var retryBtn = e.target.closest('#retryReadmeBtn');
+  if (retryBtn) {
+    var content = document.getElementById('readmeContent');
+    if (content) content.removeAttribute('data-loaded');
+    loadReadmePage();
+  }
+});
 
 function switchToAbout(s) {
   switchPage('about');
