@@ -11,10 +11,10 @@
     <link rel="apple-touch-icon" href="/image/logo-black.png">
     <link rel="manifest" href="/manifest.json">
     
-    <link rel="stylesheet" href="css/variables.css?v=v3.1.10">
-    <link rel="stylesheet" href="css/output.css?v=v3.1.10">
-    <link rel="stylesheet" href="css/styles.css?v=v3.1.10">
-    <link rel="stylesheet" href="css/player.css?v=v3.1.10">
+    <link rel="stylesheet" href="css/variables.css?v=v3.2.0">
+    <link rel="stylesheet" href="css/output.css?v=v3.2.0">
+    <link rel="stylesheet" href="css/styles.css?v=v3.2.0">
+    <link rel="stylesheet" href="css/player.css?v=v3.2.0">
     
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -186,16 +186,16 @@
     </div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v3.1.10"></script>
+    <script src="libs/sha256.min.js?v=v3.2.0"></script>
     <script>
         // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
         window._jsSha256 = window.sha256;
     </script>
     
-    <script src="libs/hls.min.js?v=v3.1.10" defer crossorigin="anonymous"></script>
-    <script src="libs/artplayer.min.js?v=v3.1.10" defer crossorigin="anonymous"></script>
-    <script src="dist/leletv-core.nfm4kv.js?v=v3.1.10" defer></script>
-    <script src="dist/leletv-player.p8a5gp.js?v=v3.1.10" defer></script>
+    <script src="libs/hls.min.js?v=v3.2.0" defer crossorigin="anonymous"></script>
+    <script src="libs/artplayer.min.js?v=v3.2.0" defer crossorigin="anonymous"></script>
+    <script src="dist/leletv-core.nfm4kv.js?v=v3.2.0" defer></script>
+    <script src="dist/leletv-player.p8a5gp.js?v=v3.2.0" defer></script>
 
     <script>
         // 创建全局环境变量对象
@@ -204,7 +204,7 @@
         // 注入服务器端环境变量 (将由服务器端替换)
         // PASSWORD 变量将在这里被服务器端注入
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
-        window.__LELETV_VERSION__ = "v3.1.10";
+        window.__LELETV_VERSION__ = "v3.2.0";
 
         // 确保首页按钮功能正常
         function ensureGoHome() {
