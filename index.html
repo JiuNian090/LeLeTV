@@ -728,6 +728,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // 邀请码获取指南弹窗开关
+    document.querySelectorAll('[data-action="open-invite-guide"]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var modal = document.getElementById('inviteGuideModal');
+            if (modal) modal.style.display = 'flex';
+        });
+    });
+    document.querySelectorAll('[data-action="close-invite-guide"]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var modal = document.getElementById('inviteGuideModal');
+            if (modal) modal.style.display = 'none';
+        });
+    });
     
     const adminPwdSubmit = document.getElementById('adminPwdSubmitBtn');
     const adminPwdInput = document.getElementById('adminPasswordInput');
