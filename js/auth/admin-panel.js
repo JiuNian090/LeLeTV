@@ -136,7 +136,7 @@ const INVITE_ADMIN_PANEL = {
 
   async render(container) {
     container.innerHTML = `
-      <div class="dash-card" id="inviteAdminCard">
+      <div class="dash-card">
         <div class="dash-card-header">
           <span class="dash-card-icon">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -144,21 +144,28 @@ const INVITE_ADMIN_PANEL = {
             </svg>
           </span>
           <h3 class="dash-card-title">邀请码管理</h3>
-          <div class="flex items-center gap-1">
-            <button id="inviteAdminLogoutBtn" class="dash-add-btn text-xs" title="退出登录">⏻</button>
-            <button id="inviteRefreshBtn" class="dash-add-btn" title="刷新">⟳</button>
+          <div class="header-actions">
+            <button id="inviteGenerateBtn" class="gen-btn">＋ 生成</button>
+            <button id="inviteRefreshBtn" class="header-btn" title="刷新">⟳</button>
+            <button id="inviteAdminLogoutBtn" class="header-btn" title="退出登录">⏻</button>
           </div>
         </div>
         <div class="dash-card-body">
-          <div id="inviteStats" class="flex justify-around text-center mb-4 text-sm text-gray-400">
-            <div>加载中...</div>
+          <div id="inviteStats" class="invite-stats-grid">
+            <div class="invite-stat-card"><div class="text-gray-500 text-xs text-center py-2">加载中...</div></div>
           </div>
-          <div class="flex gap-2 mb-4">
-            <input type="text" id="inviteRemarkInput" class="flex-1 bg-[#111] border border-[#333] text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[#ec4899]" placeholder="备注（可选）" maxlength="30" autocomplete="off">
-            <button id="inviteGenerateBtn" class="dash-btn dash-btn-green flex-shrink-0">＋ 生成</button>
-          </div>
-          <div id="inviteCodeList" class="space-y-2 max-h-80 overflow-y-auto">
+          <div id="inviteCodeList" class="invite-code-list">
             <p class="text-gray-500 text-sm text-center">点击刷新加载列表</p>
+          </div>
+        </div>
+      </div>
+      <div id="inviteGenModal" class="gen-modal-overlay">
+        <div class="gen-modal-box">
+          <div class="gen-modal-title">生成邀请码</div>
+          <input id="inviteGenRemarkInput" class="gen-modal-input" placeholder="备注（可选，如：朋友、家人）" maxlength="30" autocomplete="off">
+          <div class="gen-modal-actions">
+            <button id="inviteGenCancel" class="gen-modal-btn">取消</button>
+            <button id="inviteGenConfirm" class="gen-modal-btn gen-modal-btn-primary">确定生成</button>
           </div>
         </div>
       </div>
@@ -171,7 +178,44 @@ const INVITE_ADMIN_PANEL = {
         window.INVITE_AUTH.logout();
       }
     });
+    // 生成弹窗事件
+    container.querySelector('#inviteGenCancel').addEventListener('click', () => this._closeGenModal());
+    container.querySelector('#inviteGenConfirm').addEventListener('click', () => this._confirmGenerate(container));
+    // Enter 键确认
+    const modalInput = container.querySelector('#inviteGenRemarkInput');
+    modalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this._confirmGenerate(container);
+    });
+    
     this._refresh(container);
+  },
+  
+  _openGenModal() {
+    const modal = document.getElementById('inviteGenModal');
+    if (!modal) return;
+    modal.classList.add('show');
+    const input = document.getElementById('inviteGenRemarkInput');
+    if (input) { input.value = ''; setTimeout(() => input.focus(), 100); }
+  },
+  
+  _closeGenModal() {
+    const modal = document.getElementById('inviteGenModal');
+    if (modal) modal.classList.remove('show');
+  },
+  
+  async _confirmGenerate(container) {
+    const remark = document.getElementById('inviteGenRemarkInput')?.value?.trim() || '';
+    this._closeGenModal();
+    
+    const result = await this.generateCode();
+    if (result.ok) {
+      if (remark) await this.setRemark(result.code, remark);
+      const display = remark ? `${result.code}（${remark}）` : result.code;
+      showToast(`邀请码已生成: ${display}`, 'success');
+      this._refresh(container);
+    } else {
+      showToast(result.error || '生成失败', 'error');
+    }
   },
   
   async _refresh(container) {
@@ -185,53 +229,55 @@ const INVITE_ADMIN_PANEL = {
     
     if (stats) {
       statsEl.innerHTML = `
-        <div>总邀请码 <span class="text-white font-bold">${stats.total_codes}</span></div>
-        <div>活跃 <span class="text-green-400 font-bold">${stats.active_codes}</span></div>
-        <div>总设备 <span class="text-blue-400 font-bold">${stats.total_devices}</span></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#f472b6">${stats.total_codes}</div><div class="invite-stat-label">总邀请码</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#22c55e">${stats.active_codes}</div><div class="invite-stat-label">活跃</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#ef4444">${stats.total_codes - stats.active_codes}</div><div class="invite-stat-label">已禁用</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#60a5fa">${stats.total_devices}</div><div class="invite-stat-label">总设备数</div></div>
       `;
     }
     
     if (codes.length === 0) {
-      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center">暂无邀请码</p>';
+      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">暂无邀请码</p>';
       return;
     }
     
-    listEl.innerHTML = codes.map(invite => `
-      <div class="bg-[#1a1a1a] rounded-lg border border-[#333] p-3">
-        <div class="flex justify-between items-center">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-1 flex-wrap">
-              <code class="invite-code-text text-sm font-mono text-pink-400" data-code="${invite.code}" title="点击复制">${invite.code}</code>
-              ${invite.remark ? '<span class="text-sm text-pink-400/70">（' + invite.remark + '）</span>' : ''}
-              <span class="invite-remark-btn text-xs text-gray-500 hover:text-pink-400 cursor-pointer transition-colors" data-code="${invite.code}" title="添加/编辑备注">✎</span>
-              <span class="text-xs text-gray-500">${_formatTime(invite.created_at)}</span>
-            </div>
+    listEl.innerHTML = codes.map(invite => {
+      const devices = invite.devices || [];
+      const lastActive = devices.length > 0 ? devices[0].last_active_at : null;
+      return `
+      <div class="invite-card">
+        <div class="invite-card-top">
+          <div>
+            <span class="invite-code-text" data-code="${invite.code}" title="点击复制">${invite.code}</span>
+            ${invite.remark ? `<span class="invite-remark-text">（${invite.remark}）</span>` : ''}
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <span class="text-xs ${invite.is_active ? 'text-green-400' : 'text-red-400'}">
-              ${invite.is_active ? '✅ 启用' : '❌ 禁用'}
-            </span>
-            <span class="text-xs text-gray-400">${invite.device_count}/${invite.max_devices}</span>
-            <button class="text-xs text-gray-500 hover:text-white toggle-btn" data-code="${invite.code}" data-active="${invite.is_active}">
-              ${invite.is_active ? '禁用' : '启用'}
-            </button>
-            <button class="text-xs text-gray-500 hover:text-red-400 delete-code-btn transition-colors" data-code="${invite.code}" title="删除邀请码">🗑️</button>
+          <div class="invite-card-actions" style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;flex-wrap:wrap;">
+            <span class="invite-status-badge ${invite.is_active ? 'invite-status-active' : 'invite-status-disabled'}">● ${invite.is_active ? '启用' : '禁用'}</span>
+            <button class="invite-action-btn toggle-btn" data-code="${invite.code}" data-active="${invite.is_active}">${invite.is_active ? '禁用' : '启用'}</button>
+            <button class="invite-action-btn remark-btn" data-code="${invite.code}" title="编辑备注">✎</button>
+            <button class="invite-action-btn invite-action-btn-danger delete-code-btn" data-code="${invite.code}" title="删除">🗑️</button>
           </div>
         </div>
-        ${invite.devices.length > 0 ? `
-        <div class="mt-2 pl-2 border-l-2 border-gray-700 space-y-1">
-          ${invite.devices.map(d => `
-            <div class="flex justify-between items-center text-xs text-gray-400">
-              <span>${d.device_name}</span>
-              <span>${d.browser || ''} · ${_timeAgo(d.last_active_at)}</span>
-              <button class="text-gray-500 hover:text-red-400 ml-2 delete-device-btn transition-colors" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button>
-            </div>
+        <div class="invite-card-meta">
+          <span>${_formatTime(invite.created_at)}</span>
+          <span>设备：${invite.device_count}/${invite.max_devices}</span>
+          ${lastActive ? `<span>最近使用：${_timeAgo(lastActive)}</span>` : '<span class="text-gray-600">暂无使用</span>'}
+        </div>
+        ${devices.length > 0 ? `
+        <details class="invite-devices" open>
+          <summary class="invite-device-toggle">设备详情（${devices.length}）</summary>
+          ${devices.map(d => `
+          <div class="invite-device-item">
+            <span class="invite-device-name">${_deviceIcon(d.browser)} ${d.device_name}</span>
+            <span>${_timeAgo(d.last_active_at)} <button class="invite-action-btn invite-action-btn-danger delete-device-btn" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button></span>
+          </div>
           `).join('')}
-        </div>
+        </details>
         ` : ''}
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
     
+    // 启用/禁用
     listEl.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
@@ -261,11 +307,11 @@ const INVITE_ADMIN_PANEL = {
       });
     });
     
-    // 点击 ✎ 编辑备注
-    listEl.querySelectorAll('.invite-remark-btn').forEach(el => {
+    // 编辑备注
+    listEl.querySelectorAll('.remark-btn').forEach(el => {
       el.addEventListener('click', async () => {
         const code = el.dataset.code;
-        const current = el.textContent.replace(/[（）]/g, '').trim();
+        const current = el.closest('.invite-card')?.querySelector('.invite-remark-text')?.textContent?.replace(/[（）]/g, '').trim() || '';
         const remark = prompt('编辑备注（留空则清除）：', current);
         if (remark === null) return;
         const ok = await this.setRemark(code, remark.trim());
@@ -279,7 +325,8 @@ const INVITE_ADMIN_PANEL = {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
         const fp = btn.dataset.fp;
-        if (!confirm(`确定删除设备「${btn.closest('.flex')?.querySelector('span')?.textContent?.trim() || fp}」？`)) return;
+        const deviceName = btn.closest('.invite-device-item')?.querySelector('.invite-device-name')?.textContent?.trim() || fp;
+        if (!confirm(`确定删除设备「${deviceName}」？`)) return;
         const ok = await this.deleteDevice(code, fp);
         if (ok) {
           showToast('设备已删除', 'success');
@@ -308,18 +355,7 @@ const INVITE_ADMIN_PANEL = {
   },
   
   async _handleGenerate(container) {
-    const remarkInput = document.getElementById('inviteRemarkInput');
-    const remark = remarkInput ? remarkInput.value.trim() : '';
-    const result = await this.generateCode();
-    if (result.ok) {
-      showToast(`邀请码已生成: ${result.code}`, 'success');
-      // 生成成功后设置备注
-      if (remark) await this.setRemark(result.code, remark);
-      if (remarkInput) remarkInput.value = '';
-      this._refresh(container);
-    } else {
-      showToast(result.error || '生成失败', 'error');
-    }
+    this._openGenModal();
   }
 };
 
@@ -349,6 +385,15 @@ function _timeAgo(ts) {
   if (minutes > 0) parts.push(`${minutes}分钟`);
 
   return parts.slice(0, 2).join('') + '前';
+}
+
+function _deviceIcon(browser) {
+  if (!browser) return '📱';
+  if (browser.includes('Chrome')) return '🌐';
+  if (browser.includes('Firefox')) return '🦊';
+  if (browser.includes('Safari')) return '🧭';
+  if (browser.includes('Edge')) return '🌙';
+  return '📱';
 }
 
 window.INVITE_ADMIN_PANEL = INVITE_ADMIN_PANEL;

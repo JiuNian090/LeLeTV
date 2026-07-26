@@ -256,4 +256,9 @@ document.addEventListener('DOMContentLoaded', function initSettingsPanels() {
             window.USER_DEVICES_PANEL.render(userContainer);
         }
     }
+
+    // 确保已验证用户的心跳在页面加载后立即运行
+    if (hasInviteAuth && window.INVITE_AUTH) {
+        window.INVITE_AUTH.ensureHeartbeat();
+    }
 });

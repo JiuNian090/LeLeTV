@@ -2917,26 +2917,349 @@ body > header {
 }
 
 /* ====== 邀请码管理面板 ====== */
-#inviteCodeList::-webkit-scrollbar {
+
+/* Stats grid */
+.invite-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+.invite-stat-card {
+    background: #1a1a1a;
+    border: 1px solid #222;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    text-align: center;
+}
+.invite-stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+.invite-stat-label {
+    font-size: 0.65rem;
+    color: #6b7280;
+    margin-top: 0.1rem;
+}
+
+/* Invite code list */
+.invite-code-list {
+    max-height: 24rem;
+    overflow-y: auto;
+}
+.invite-code-list::-webkit-scrollbar {
     width: 4px;
 }
-
-#inviteCodeList::-webkit-scrollbar-track {
+.invite-code-list::-webkit-scrollbar-track {
     background: transparent;
 }
-
-#inviteCodeList::-webkit-scrollbar-thumb {
+.invite-code-list::-webkit-scrollbar-thumb {
     background: #333;
     border-radius: 2px;
 }
 
-#inviteAdminCard .toggle-btn {
-    opacity: 0.6;
-    transition: opacity 0.2s;
+/* Invite code card */
+.invite-card {
+    background: #1a1a1a;
+    border: 1px solid #222;
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.4rem;
+    transition: border-color 0.2s;
+}
+.invite-card:hover {
+    border-color: #333;
+}
+.invite-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.invite-card-top > div:first-child {
+    min-width: 0;
+    flex: 1;
+}
+.invite-code-text {
+    color: #f472b6;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: color 0.15s;
+}
+.invite-code-text:hover {
+    color: #ec4899;
+}
+.invite-remark-text {
+    color: #f472b6;
+    font-size: 0.8rem;
+    opacity: 0.75;
 }
 
-#inviteAdminCard .toggle-btn:hover {
-    opacity: 1;
+/* Card meta row */
+.invite-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-top: 0.3rem;
+    flex-wrap: wrap;
+}
+
+/* Status badge */
+.invite-status-badge {
+    font-size: 0.63rem;
+    padding: 0.12rem 0.35rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.invite-status-active {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+.invite-status-disabled {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+}
+
+/* Unified action buttons */
+.invite-action-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #333;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 0.68rem;
+    padding: 0.18rem 0.4rem;
+    border-radius: 0.3rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.invite-action-btn:hover {
+    border-color: #ec4899;
+    color: #ec4899;
+    background: rgba(236,72,153,0.1);
+}
+.invite-action-btn-danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239,68,68,0.1);
+}
+
+/* Header action buttons (generate/refresh/logout) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.header-btn {
+    background: none;
+    border: 1px solid #333;
+    color: #9ca3af;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+.header-btn:hover {
+    border-color: #ec4899;
+    color: #ec4899;
+    background: rgba(236,72,153,0.1);
+}
+.gen-btn {
+    background: rgba(236,72,153,0.15);
+    border: 1px solid rgba(236,72,153,0.3);
+    color: #ec4899;
+    padding: 0.25rem 0.55rem;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.gen-btn:hover {
+    background: rgba(236,72,153,0.25);
+    border-color: #ec4899;
+}
+
+/* Device list in card */
+.invite-devices {
+    margin-top: 0.4rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid #333;
+}
+.invite-device-toggle {
+    color: #6b7280;
+    font-size: 0.68rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-top: 0.3rem;
+    transition: color 0.15s;
+}
+.invite-device-toggle:hover {
+    color: #9ca3af;
+}
+.invite-device-toggle::before {
+    content: '\25B6 ';
+    font-size: 0.55rem;
+}
+details[open] .invite-device-toggle::before {
+    content: '\25BC ';
+    font-size: 0.55rem;
+}
+.invite-device-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.72rem;
+    color: #9ca3af;
+}
+.invite-device-item:not(:last-child) {
+    border-bottom: 1px solid #222;
+}
+.invite-device-name {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    flex: 1;
+}
+
+/* Generate modal */
+.gen-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+}
+.gen-modal-overlay.show {
+    display: flex;
+}
+.gen-modal-box {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    width: 90%;
+    max-width: 340px;
+}
+.gen-modal-title {
+    color: #f3f4f6;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+.gen-modal-input {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 0.55rem 0.7rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.gen-modal-input:focus {
+    border-color: #ec4899;
+}
+.gen-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.gen-modal-btn {
+    padding: 0.35rem 0.9rem;
+    border-radius: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #333;
+    background: transparent;
+    color: #9ca3af;
+    transition: all 0.2s;
+}
+.gen-modal-btn:hover {
+    border-color: #555;
+    color: #fff;
+}
+.gen-modal-btn-primary {
+    background: #ec4899;
+    border-color: #ec4899;
+    color: #fff;
+}
+.gen-modal-btn-primary:hover {
+    background: #db2777;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .invite-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 639px) {
+    .invite-card-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+    }
+    .invite-card-top > div:first-child {
+        width: 100%;
+    }
+    .invite-card-actions {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 0.1rem;
+        padding-top: 0.3rem;
+        border-top: 1px solid #222;
+    }
+    .invite-stat-value {
+        font-size: 1rem;
+    }
+    .invite-action-btn {
+        font-size: 0.63rem;
+        padding: 0.15rem 0.3rem;
+    }
+}
+@media (max-width: 399px) {
+    .invite-card {
+        padding: 0.5rem;
+    }
+    .header-actions {
+        gap: 0.2rem;
+    }
+    .gen-btn {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
+    }
+    .invite-device-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+    }
 }
 
 /* ====== README 项目说明页面 ====== */

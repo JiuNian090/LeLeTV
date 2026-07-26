@@ -163,7 +163,7 @@ const INVITE_AUTH = {
         });
         
         // 启动心跳
-        INVITE_AUTH.startHeartbeat(fingerprint);
+        INVITE_AUTH.ensureHeartbeat();
         
         return { ok: true, action: data.action, message: data.message };
       }
@@ -196,14 +196,34 @@ const INVITE_AUTH = {
    * 启动心跳定时器
    */
   startHeartbeat(fingerprint) {
+    // 防止重复创建定时器和 beforeunload 监听
+    if (INVITE_AUTH._heartbeatTimer) {
+      clearInterval(INVITE_AUTH._heartbeatTimer);
+    }
+    if (INVITE_AUTH._heartbeatBound) {
+      window.removeEventListener('beforeunload', INVITE_AUTH._heartbeatBound);
+    }
+    
     INVITE_AUTH._heartbeatTimer = setInterval(() => {
       INVITE_AUTH.heartbeat(fingerprint);
     }, INVITE_AUTH.HEARTBEAT_INTERVAL);
     
-    // 页面关闭前发送最后一次心跳
-    window.addEventListener('beforeunload', () => {
-      INVITE_AUTH.heartbeat(fingerprint);
-    });
+    INVITE_AUTH._heartbeatBound = () => INVITE_AUTH.heartbeat(fingerprint);
+    window.addEventListener('beforeunload', INVITE_AUTH._heartbeatBound);
+  },
+  
+  /**
+   * 确保心跳运行（从 localStorage 读取指纹，页面加载时调用）
+   */
+  ensureHeartbeat() {
+    const auth = INVITE_AUTH.getAuth();
+    if (!auth || !auth.device_fingerprint) return;
+    
+    // 立即发送一次心跳，记录本次访问
+    INVITE_AUTH.heartbeat(auth.device_fingerprint);
+    
+    // 启动定时心跳
+    INVITE_AUTH.startHeartbeat(auth.device_fingerprint);
   },
   
   /**
@@ -213,6 +233,10 @@ const INVITE_AUTH = {
     if (INVITE_AUTH._heartbeatTimer) {
       clearInterval(INVITE_AUTH._heartbeatTimer);
       INVITE_AUTH._heartbeatTimer = null;
+    }
+    if (INVITE_AUTH._heartbeatBound) {
+      window.removeEventListener('beforeunload', INVITE_AUTH._heartbeatBound);
+      INVITE_AUTH._heartbeatBound = null;
     }
   }
 };

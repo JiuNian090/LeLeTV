@@ -64,18 +64,18 @@ const USER_DEVICES_PANEL = {
             </svg>
           </span>
           <h3 class="dash-card-title">设备管理</h3>
-          <div class="flex items-center gap-1">
-            <button id="userDeviceLogoutBtn" class="dash-add-btn text-xs" title="退出登录">⏻</button>
-            <button id="userDeviceRefreshBtn" class="dash-add-btn" title="刷新">⟳</button>
+          <div class="header-actions">
+            <button id="userDeviceRefreshBtn" class="header-btn" title="刷新">⟳</button>
+            <button id="userDeviceLogoutBtn" class="header-btn" title="退出登录">⏻</button>
           </div>
         </div>
         <div class="dash-card-body">
-          <div id="userDeviceInfo" class="text-sm mb-3">
-            <p class="text-gray-400">邀请码：<code class="text-pink-400 font-mono" id="userDeviceCode"></code></p>
-            <p class="text-gray-500 text-xs mt-1">设备数 <span id="userDeviceCount" class="text-white font-semibold">0</span> / <span id="userDeviceMax">5</span></p>
+          <div id="userDeviceInfo" class="invite-card-meta" style="margin-top:0;margin-bottom:0.5rem;">
+            <span>邀请码：<code class="invite-code-text" style="font-size:0.8rem;" id="userDeviceCode"></code></span>
+            <span>设备数 <strong id="userDeviceCount" style="color:#fff;">0</strong> / <span id="userDeviceMax">5</span></span>
           </div>
-          <div id="userDeviceList" class="space-y-2">
-            <p class="text-gray-500 text-sm text-center">加载中...</p>
+          <div id="userDeviceList" class="invite-code-list">
+            <p class="text-gray-500 text-sm text-center py-4">加载中...</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ const USER_DEVICES_PANEL = {
     const currentFingerprint = window.INVITE_AUTH?.getAuth()?.device_fingerprint;
 
     if (!data) {
-      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center">加载失败</p>';
+      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">加载失败</p>';
       return;
     }
 
@@ -108,22 +108,24 @@ const USER_DEVICES_PANEL = {
     if (maxEl) maxEl.textContent = data.max_devices;
 
     if (data.devices.length === 0) {
-      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center">暂无设备</p>';
+      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">暂无设备</p>';
       return;
     }
 
     listEl.innerHTML = data.devices.map(d => {
       const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
       return `
-      <div class="flex justify-between items-center bg-[#1a1a1a] rounded-lg px-3 py-2 border border-[#333]">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-gray-400 text-sm">${_deviceIcon(d.browser)}</span>
-          <span class="text-white text-sm truncate">${d.device_name}${isCurrent ? ' <span class="text-xs text-green-500">(当前)</span>' : ''}</span>
-        </div>
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <span class="text-xs text-gray-500">${d.browser || ''}</span>
-          <span class="text-xs text-gray-500">${_timeAgo(d.last_active_at)}</span>
-          <button class="text-xs text-gray-500 hover:text-red-400 del-device-btn transition-colors" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}">✕</button>
+      <div class="invite-card" style="margin-bottom:0.35rem;">
+        <div class="invite-card-top">
+          <div>
+            <span class="invite-device-name" style="font-size:0.82rem;color:#e2e8f0;">
+              ${_deviceIcon(d.browser)} ${d.device_name}${isCurrent ? ' <span class="invite-status-badge invite-status-active" style="font-size:0.6rem;">当前</span>' : ''}
+            </span>
+          </div>
+          <div class="invite-card-actions" style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;">
+            <span class="text-xs text-gray-500">${_timeAgo(d.last_active_at)}</span>
+            <button class="invite-action-btn ${isCurrent ? '' : 'invite-action-btn-danger'} del-device-btn" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}">${isCurrent ? '退出' : '✕'}</button>
+          </div>
         </div>
       </div>`;
     }).join('');
