@@ -594,4 +594,4 @@ npm run dev
 
 ## 联系方式
 
-如有好的功能建议或问题，欢迎联系作者：jiunian929@gmail.com
+如有好的功能建议或问题，欢迎[联系作者](mailto:jiunian929@gmail.com)

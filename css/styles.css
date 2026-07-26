@@ -564,7 +564,7 @@ body {
 
 /* 隐藏内容API标记样式 */
 .api-hidden + label {
-    color: #ff6b8b !important;
+    color: var(--color-primary) !important;
 }
 
 /* 添加警告图标和标签样式 */
@@ -572,7 +572,7 @@ body {
     display: inline-flex;
     align-items: center;
     margin-left: 0.25rem;
-    color: #ff6b8b;
+    color: var(--color-primary);
 }
 
 .hidden-warning svg {
@@ -601,7 +601,7 @@ body {
 }
 
 .api-group-title.hidden {
-    color: #ff6b8b;
+    color: var(--color-primary);
 }
 
 /* 修改过滤器禁用样式，确保文字清晰可见 */
@@ -628,7 +628,7 @@ body {
 
 /* 改进过滤器禁用状态下的描述样式 */
 .filter-disabled .filter-description {
-    color: #ff7b9d !important; /* 更亮的粉色 */
+    color: var(--color-primary) !important;
     font-style: italic;
     font-weight: 500;
     text-shadow: 0 0 2px rgba(0,0,0,0.8); /* 添加文字阴影提高对比度 */
@@ -779,7 +779,7 @@ body {
 }
 
 .history-episode {
-    color: #60a5fa;
+    color: var(--color-primary);
     font-size: 0.75rem;
     font-weight: 500;
 }
@@ -978,8 +978,8 @@ body {
     font-size: 0.75rem;
     padding: 0.125rem 0.5rem;
     border-radius: 0.25rem;
-    background-color: rgba(59, 130, 246, 0.2);
-    color: #93c5fd;
+    background-color: rgba(236, 72, 153, 0.15);
+    color: #f472b6;
 }
 
 .card-hover.search-result-card .card-content-description {
@@ -1210,12 +1210,12 @@ img.loading-fade.loaded {
 
 @keyframes emailHighlight {
     0% {
-        background-color: rgba(37, 99, 235, 0.2);
+        background-color: rgba(236, 72, 153, 0.15);
         border-radius: 4px;
         padding: 0 2px;
     }
     50% {
-        background-color: rgba(37, 99, 235, 0.4);
+        background-color: rgba(236, 72, 153, 0.3);
         transform: scale(1.05);
     }
     100% {
@@ -1915,13 +1915,13 @@ img.loading-fade.loaded {
     top: 0.5rem;
     right: 0.5rem;
     background: rgba(0, 0, 0, 0.7);
-    color: #93c5fd;
+    color: #f472b6;
     font-size: 0.625rem;
     font-weight: 500;
     padding: 0.15rem 0.4rem;
     border-radius: 0.25rem;
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(147, 197, 253, 0.25);
+    border: 1px solid rgba(236, 72, 153, 0.25);
 }
 
 /* 卡片元信息行 */
@@ -2294,7 +2294,7 @@ img.loading-fade.loaded {
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
-    background: #fff;
+    background: #d1d5db;
     position: absolute;
     top: 2px;
     left: 2px;
@@ -2408,13 +2408,13 @@ img.loading-fade.loaded {
 
 .year-toggle-btn {
   flex-shrink: 0;
-  color: #93c5fd !important;
-  border-color: rgba(147, 197, 253, 0.3) !important;
+  color: #ec4899 !important;
+  border-color: rgba(236, 72, 153, 0.3) !important;
 }
 
 .year-toggle-btn:hover {
-  border-color: #93c5fd !important;
-  background: rgba(147, 197, 253, 0.1) !important;
+  border-color: #ec4899 !important;
+  background: rgba(236, 72, 153, 0.1) !important;
 }
 
 /* 类型标签折叠样式 */
@@ -2429,13 +2429,13 @@ img.loading-fade.loaded {
 
 .genre-toggle-btn {
   flex-shrink: 0;
-  color: #93c5fd !important;
-  border-color: rgba(147, 197, 253, 0.3) !important;
+  color: #ec4899 !important;
+  border-color: rgba(236, 72, 153, 0.3) !important;
 }
 
 .genre-toggle-btn:hover {
-  border-color: #93c5fd !important;
-  background: rgba(147, 197, 253, 0.1) !important;
+  border-color: #ec4899 !important;
+  background: rgba(236, 72, 153, 0.1) !important;
 }
 
 /* 超宽屏幕搜索框更宽 - 占屏幕一半宽度，居中 */

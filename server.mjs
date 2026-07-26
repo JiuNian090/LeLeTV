@@ -7,7 +7,16 @@ import { dirname, join } from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import Database from 'better-sqlite3';
+
+// better-sqlite3 可选安装，缺失时邀请码功能降级
+let Database;
+try {
+  const mod = await import('better-sqlite3');
+  Database = mod.default;
+} catch (e) {
+  Database = null;
+  console.warn('[邀请码] better-sqlite3 未安装，邀请码功能不可用（仅影响本地开发）');
+}
 import { mkdirSync } from 'fs';
 
 dotenv.config();
@@ -36,6 +45,7 @@ const INVITE_DB_PATH = process.env.INVITE_DB_PATH || './data/invite.db';
 let inviteDb;
 
 function initInviteDatabase() {
+  if (!Database) return;
   const dbDir = path.dirname(INVITE_DB_PATH);
   try {
     mkdirSync(dbDir, { recursive: true });
@@ -453,9 +463,16 @@ app.get('/api/version', async (req, res) => {
 });
 
 // ====== 邀请码 API 路由（本地开发）======
+// 数据库不可用时的降级响应
+function inviteDbGuard(req, res, next) {
+  if (!inviteDb) {
+    return res.status(503).json({ ok: false, error: '邀请码数据库未初始化（需安装 better-sqlite3）' });
+  }
+  next();
+}
 
 // POST /api/invite/verify
-app.post('/api/invite/verify', express.json(), (req, res) => {
+app.post('/api/invite/verify', express.json(), inviteDbGuard, (req, res) => {
   try {
     const { code, device_name, device_fingerprint } = req.body;
     if (!code || !device_name || !device_fingerprint) {
@@ -492,7 +509,7 @@ app.post('/api/invite/verify', express.json(), (req, res) => {
 });
 
 // POST /api/invite/heartbeat
-app.post('/api/invite/heartbeat', express.json(), (req, res) => {
+app.post('/api/invite/heartbeat', express.json(), inviteDbGuard, (req, res) => {
   try {
     const { device_fingerprint } = req.body;
     if (!device_fingerprint) return res.status(400).json({ ok: false, error: '缺少 device_fingerprint' });
@@ -505,7 +522,7 @@ app.post('/api/invite/heartbeat', express.json(), (req, res) => {
 });
 
 // POST /api/invite/generate
-app.post('/api/invite/generate', express.json(), (req, res) => {
+app.post('/api/invite/generate', express.json(), inviteDbGuard, (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
   const remark = (req.body.remark || '').trim();
@@ -525,7 +542,7 @@ app.post('/api/invite/generate', express.json(), (req, res) => {
 });
 
 // GET /api/invite/list
-app.get('/api/invite/list', (req, res) => {
+app.get('/api/invite/list', inviteDbGuard, (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
   const codes = inviteDb.prepare('SELECT * FROM invitation_codes ORDER BY created_at DESC').all();
@@ -546,7 +563,7 @@ app.get('/api/invite/list', (req, res) => {
 });
 
 // POST /api/invite/toggle
-app.post('/api/invite/toggle', express.json(), (req, res) => {
+app.post('/api/invite/toggle', express.json(), inviteDbGuard, (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
   const { code, is_active } = req.body;
@@ -557,7 +574,7 @@ app.post('/api/invite/toggle', express.json(), (req, res) => {
 });
 
 // GET /api/invite/stats
-app.get('/api/invite/stats', (req, res) => {
+app.get('/api/invite/stats', inviteDbGuard, (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
   const totalCodes = inviteDb.prepare('SELECT COUNT(*) as count FROM invitation_codes').get();
@@ -568,7 +585,7 @@ app.get('/api/invite/stats', (req, res) => {
 });
 
 // POST /api/invite/my-devices - 普通用户查询自己的设备
-app.post('/api/invite/my-devices', express.json(), (req, res) => {
+app.post('/api/invite/my-devices', express.json(), inviteDbGuard, (req, res) => {
   try {
     const { code, device_fingerprint } = req.body;
     if (!code || !device_fingerprint) return res.status(400).json({ ok: false, error: '缺少参数' });
@@ -595,7 +612,7 @@ app.post('/api/invite/my-devices', express.json(), (req, res) => {
 });
 
 // POST /api/invite/remove-device - 删除设备
-app.post('/api/invite/remove-device', express.json(), (req, res) => {
+app.post('/api/invite/remove-device', express.json(), inviteDbGuard, (req, res) => {
   try {
     const { code, device_fingerprint, target_fingerprint } = req.body;
     if (!code || !target_fingerprint) return res.status(400).json({ ok: false, error: '缺少参数' });
@@ -615,7 +632,7 @@ app.post('/api/invite/remove-device', express.json(), (req, res) => {
 });
 
 // POST /api/invite/delete-code - 删除邀请码（管理员专属）
-app.post('/api/invite/delete-code', express.json(), (req, res) => {
+app.post('/api/invite/delete-code', express.json(), inviteDbGuard, (req, res) => {
   try {
     if (!validateAdminPassword(req)) return res.status(403).json({ ok: false, error: '无权限' });
 
@@ -633,7 +650,7 @@ app.post('/api/invite/delete-code', express.json(), (req, res) => {
 });
 
 // POST /api/invite/set-remark - 设置邀请码备注
-app.post('/api/invite/set-remark', express.json(), (req, res) => {
+app.post('/api/invite/set-remark', express.json(), inviteDbGuard, (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
   const { code, remark } = req.body;
