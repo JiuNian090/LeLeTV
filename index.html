@@ -529,7 +529,7 @@
             </div>
             <button id="inviteLoginBtn" class="w-full gradient-btn py-3 rounded-lg font-semibold text-base mb-4">🎬 进入影视大厅</button>
             <p id="inviteLoginError" class="text-red-500 text-sm text-center hidden mb-4"></p>
-            <p class="text-gray-500 text-xs text-center mb-4">没有邀请码？☞ <span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300">联系乐乐</span></p>
+            <p class="text-gray-500 text-xs text-center mb-4">没有邀请码？☞ <span class="text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300" data-action="open-invite-guide">获取</span></p>
             <div class="text-center border-t border-[#333] pt-4">
                 <button id="inviteAdminEntry" class="text-gray-500 hover:text-[#ec4899] text-sm transition-colors">🔒 管理员入口</button>
             </div>
@@ -549,6 +549,29 @@
                 <p id="adminPasswordError" class="text-red-500 mt-2 hidden">密码错误</p>
             </div>
             <button id="adminPwdSubmitBtn" class="w-full gradient-btn py-3 rounded-lg">确认</button>
+        </div>
+    </div>
+
+    <!-- 邀请码获取指南弹窗 -->
+    <div id="inviteGuideModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]">
+        <div class="bg-[#111] p-6 rounded-lg border border-[#333] w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold gradient-text mb-5 text-center">获取邀请码</h2>
+            <div class="text-gray-300 space-y-4 text-sm">
+                <p>邀请码是访问 LeLeTV 的通行凭证，目前获取方式如下：</p>
+                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
+                    <p class="text-pink-400 font-semibold mb-2">📧 联系作者获取</p>
+                    <p class="text-gray-400">发送邮件至 <span class="contact-link text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300">jiunian929@gmail.com</span>，说明来意即可获赠邀请码。</p>
+                </div>
+                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
+                    <p class="text-pink-400 font-semibold mb-2">🔑 已有邀请码？</p>
+                    <p class="text-gray-400">返回登录界面，输入设备名（xxx的手机或者昵称）和邀请码即可进入。一个邀请码可绑定 5 台设备。</p>
+                </div>
+                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
+                    <p class="text-pink-400 font-semibold mb-2">💡 使用提示</p>
+                    <p class="text-gray-400">登录后可在「设置」中查看已绑定的设备和管理邀请码。播放卡顿可切换视频源或刷新页面。</p>
+                </div>
+            </div>
+            <button class="w-full gradient-btn py-2.5 rounded-lg mt-5 text-sm font-semibold" data-action="close-invite-guide">知道了</button>
         </div>
     </div>
 
@@ -642,7 +665,7 @@
     </script>
 
     <script src="dist/leletv-core.nfm4kv.js?v=v3.1.10" defer></script>
-    <script src="dist/leletv-app.bg0q9w.js?v=v3.1.10" defer></script>
+    <script src="dist/leletv-app.8vy8ql.js?v=v3.1.10" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>

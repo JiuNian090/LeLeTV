@@ -295,6 +295,8 @@ function setupEventListeners() {
             case 'search': search(); break;
             case 'close-modal': closeModal(); break;
             case 'open-disclaimer': openDisclaimerModal(); break;
+            case 'open-invite-guide': openInviteGuideModal(); break;
+            case 'close-invite-guide': closeInviteGuideModal(); break;
             case 'hide-password-modal': hidePasswordModal(); break;
             case 'accept-disclaimer': closeDisclaimerModal(); break;
             case 'select-all-apis': selectAllAPIs(true, true); break;

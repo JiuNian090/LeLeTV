@@ -160,6 +160,14 @@ function closeDisclaimerModal() {
   document.getElementById('disclaimerModal').style.display = 'none';
 }
 
+function openInviteGuideModal() {
+  document.getElementById('inviteGuideModal').style.display = 'flex';
+}
+
+function closeInviteGuideModal() {
+  document.getElementById('inviteGuideModal').style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   AppInit.register('aurora', AppInit.PHASES.POST, function() {
     initAurora({ selector: '#auroraContainer', colorStops: ['#3A29FF', '#ec4899', '#FFD700'], amplitude: 0.45, blend: 0.6, speed: 0.35 });

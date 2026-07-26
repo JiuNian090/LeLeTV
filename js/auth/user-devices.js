@@ -71,7 +71,7 @@ const USER_DEVICES_PANEL = {
         </div>
         <div class="dash-card-body">
           <div id="userDeviceInfo" class="invite-card-meta" style="margin-top:0;margin-bottom:0.5rem;">
-            <span>邀请码：<code class="invite-code-text" style="font-size:0.8rem;" id="userDeviceCode"></code></span>
+            <span>邀请码：<code class="invite-code-text" style="font-size:0.8rem;cursor:pointer;" id="userDeviceCode" title="点击复制"></code></span>
             <span>设备数 <strong id="userDeviceCount" style="color:#fff;">0</strong> / <span id="userDeviceMax">5</span></span>
           </div>
           <div id="userDeviceList" class="invite-code-list">
@@ -103,7 +103,10 @@ const USER_DEVICES_PANEL = {
       return;
     }
 
-    if (codeEl) codeEl.textContent = data.code;
+    if (codeEl) {
+      codeEl.textContent = data.code;
+      codeEl.dataset.code = data.code;
+    }
     if (countEl) countEl.textContent = data.device_count;
     if (maxEl) maxEl.textContent = data.max_devices;
 
@@ -116,19 +119,39 @@ const USER_DEVICES_PANEL = {
       const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
       return `
       <div class="invite-card" style="margin-bottom:0.35rem;">
-        <div class="invite-card-top">
-          <div>
-            <span class="invite-device-name" style="font-size:0.82rem;color:#e2e8f0;">
-              ${_deviceIcon(d.browser)} ${d.device_name}${isCurrent ? ' <span class="invite-status-badge invite-status-active" style="font-size:0.6rem;">当前</span>' : ''}
-            </span>
+        <div class="invite-card-top" style="gap:0.4rem;">
+          <div class="invite-device-name" style="font-size:0.82rem;color:#e2e8f0;display:flex;align-items:center;gap:0.3rem;flex:1;min-width:0;">
+            <span class="truncate">${_deviceIcon(d.browser)} ${d.device_name}</span>
+            ${isCurrent ? '<span class="invite-status-badge invite-status-active" style="font-size:0.6rem;flex-shrink:0;">当前</span>' : ''}
           </div>
-          <div class="invite-card-actions" style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;">
-            <span class="text-xs text-gray-500">${_timeAgo(d.last_active_at)}</span>
-            <button class="invite-action-btn ${isCurrent ? '' : 'invite-action-btn-danger'} del-device-btn" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}">${isCurrent ? '退出' : '✕'}</button>
+          <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;">
+            <span class="text-xs text-gray-500" style="white-space:nowrap;">${_timeAgo(d.last_active_at)}</span>
+            <button class="invite-action-btn ${isCurrent ? '' : 'invite-action-btn-danger'} del-device-btn" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}" style="flex-shrink:0;">${isCurrent ? '退出' : '✕'}</button>
           </div>
         </div>
       </div>`;
     }).join('');
+
+    // 邀请码点击复制（防重复绑定）
+    if (codeEl && !codeEl.dataset.copyBound) {
+      codeEl.dataset.copyBound = 'true';
+      codeEl.addEventListener('click', async () => {
+        const code = codeEl.dataset.code;
+        if (!code) return;
+        try {
+          await navigator.clipboard.writeText(code);
+          showToast('邀请码已复制', 'success');
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = code;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('邀请码已复制', 'success');
+        }
+      });
+    }
 
     // 绑定删除/退出事件
     listEl.querySelectorAll('.del-device-btn').forEach(btn => {
