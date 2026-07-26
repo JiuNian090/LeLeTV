@@ -86,6 +86,38 @@ const INVITE_ADMIN_PANEL = {
     }
   },
   
+  async deleteDevice(code, targetFingerprint) {
+    try {
+      const response = await fetch(this._baseUrl('/invite/remove-device'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this._getAdminToken()}`
+        },
+        body: JSON.stringify({ code, device_fingerprint: '', target_fingerprint: targetFingerprint })
+      });
+      return (await response.json()).ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async deleteCode(code) {
+    try {
+      const response = await fetch(this._baseUrl('/invite/delete-code'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this._getAdminToken()}`
+        },
+        body: JSON.stringify({ code })
+      });
+      return (await response.json()).ok;
+    } catch {
+      return false;
+    }
+  },
+
   async setRemark(code, remark) {
     try {
       const response = await fetch(this._baseUrl('/invite/set-remark'), {
@@ -183,14 +215,16 @@ const INVITE_ADMIN_PANEL = {
             <button class="text-xs text-gray-500 hover:text-white toggle-btn" data-code="${invite.code}" data-active="${invite.is_active}">
               ${invite.is_active ? '禁用' : '启用'}
             </button>
+            <button class="text-xs text-gray-500 hover:text-red-400 delete-code-btn transition-colors" data-code="${invite.code}" title="删除邀请码">🗑️</button>
           </div>
         </div>
         ${invite.devices.length > 0 ? `
         <div class="mt-2 pl-2 border-l-2 border-gray-700 space-y-1">
           ${invite.devices.map(d => `
-            <div class="flex justify-between text-xs text-gray-400">
+            <div class="flex justify-between items-center text-xs text-gray-400">
               <span>${d.device_name}</span>
               <span>${d.browser || ''} · ${_timeAgo(d.last_active_at)}</span>
+              <button class="text-gray-500 hover:text-red-400 ml-2 delete-device-btn transition-colors" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button>
             </div>
           `).join('')}
         </div>
@@ -237,6 +271,38 @@ const INVITE_ADMIN_PANEL = {
         const ok = await this.setRemark(code, remark.trim());
         if (ok) this._refresh(container);
         else showToast('设置失败', 'error');
+      });
+    });
+
+    // 删除设备
+    listEl.querySelectorAll('.delete-device-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const code = btn.dataset.code;
+        const fp = btn.dataset.fp;
+        if (!confirm(`确定删除设备「${btn.closest('.flex')?.querySelector('span')?.textContent?.trim() || fp}」？`)) return;
+        const ok = await this.deleteDevice(code, fp);
+        if (ok) {
+          showToast('设备已删除', 'success');
+          this._refresh(container);
+        } else {
+          showToast('删除失败', 'error');
+        }
+      });
+    });
+
+    // 删除邀请码
+    listEl.querySelectorAll('.delete-code-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const code = btn.dataset.code;
+        if (!confirm(`确定删除邀请码「${code}」？关联的设备也将一并删除。`)) return;
+        if (!confirm('此操作不可恢复，再次确认？')) return;
+        const ok = await this.deleteCode(code);
+        if (ok) {
+          showToast('邀请码已删除', 'success');
+          this._refresh(container);
+        } else {
+          showToast('删除失败', 'error');
+        }
       });
     });
   },

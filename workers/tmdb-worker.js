@@ -344,6 +344,9 @@ async function handleInviteRequest(request, env) {
     if (path === '/invite/remove-device' && request.method === 'POST') {
       return handleRemoveDevice(request, env);
     }
+    if (path === '/invite/delete-code' && request.method === 'POST') {
+      return handleDeleteCode(request, env);
+    }
     if (path === '/invite/set-remark' && request.method === 'POST') {
       return handleSetRemark(request, env);
     }
@@ -620,6 +623,31 @@ async function handleSetRemark(request, env) {
   }
   
   return jsonResponse({ ok: true });
+}
+
+// POST /invite/delete-code - 删除邀请码（管理员专属）
+async function handleDeleteCode(request, env) {
+  const isAdmin = await verifyAdminPassword(request, env);
+  if (!isAdmin) {
+    return jsonResponse({ ok: false, error: '无权限' }, 403);
+  }
+
+  const body = await request.json();
+  const { code } = body;
+
+  if (!code) {
+    return jsonResponse({ ok: false, error: '缺少参数' }, 400);
+  }
+
+  try {
+    // 先删除关联设备，再删除邀请码
+    await env.INVITE_DB.prepare('DELETE FROM devices WHERE code = ?').bind(code).run();
+    const result = await env.INVITE_DB.prepare('DELETE FROM invitation_codes WHERE code = ?').bind(code).run();
+    return jsonResponse({ ok: true, deleted: result.changes > 0 });
+  } catch (error) {
+    console.error('删除邀请码失败:', error);
+    return jsonResponse({ ok: false, error: '服务器错误' }, 500);
+  }
 }
 
 // ====== Worker 入口（ES Module 格式）======

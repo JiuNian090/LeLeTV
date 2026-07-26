@@ -614,6 +614,24 @@ app.post('/api/invite/remove-device', express.json(), (req, res) => {
   }
 });
 
+// POST /api/invite/delete-code - 删除邀请码（管理员专属）
+app.post('/api/invite/delete-code', express.json(), (req, res) => {
+  try {
+    if (!validateAdminPassword(req)) return res.status(403).json({ ok: false, error: '无权限' });
+
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ ok: false, error: '缺少参数' });
+
+    // 先删除关联设备，再删除邀请码
+    inviteDb.prepare('DELETE FROM devices WHERE code = ?').run(code);
+    const info = inviteDb.prepare('DELETE FROM invitation_codes WHERE code = ?').run(code);
+    res.json({ ok: true, deleted: info.changes > 0 });
+  } catch (error) {
+    console.error('删除邀请码失败:', error);
+    res.status(500).json({ ok: false, error: '服务器错误' });
+  }
+});
+
 // POST /api/invite/set-remark - 设置邀请码备注
 app.post('/api/invite/set-remark', express.json(), (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
