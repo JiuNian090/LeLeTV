@@ -23,10 +23,6 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 部署采用 **Cloudflare Pages + Cloudflare Workers** 的纯静态+无服务器架构，无需后端服务器即可运行。
 
-<div align="center">
-  <img src="image/image-screenshot.png" alt="项目截图" width="800">
-</div>
-
 ### 项目规模
 
 | 指标 | 数据 |

@@ -64,13 +64,25 @@
         .markdown-body pre { background: #1a1a2e; padding: 1em; border-radius: 8px; overflow-x: auto; margin: 0.8em 0; border: 1px solid #333; }
         .markdown-body pre code { background: transparent; color: #d1d5db; padding: 0; font-size: 0.85em; }
         .markdown-body blockquote { border-left: 3px solid #ec4899; padding: 0.25em 1em; margin: 0.8em 0; background: #1a1a2e; border-radius: 0 8px 8px 0; color: #9ca3af; }
-        .markdown-body table { width: 100%; border-collapse: collapse; margin: 0.8em 0; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 0.8em 0; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .markdown-body th, .markdown-body td { border: 1px solid #333; padding: 0.5em 0.75em; text-align: left; }
         .markdown-body th { background: #1f2937; color: #f472b6; font-weight: 600; }
         .markdown-body td { background: #111; }
         .markdown-body hr { border: none; border-top: 1px solid #333; margin: 1.5em 0; }
         .markdown-body img { max-width: 100%; border-radius: 6px; margin: 0.8em 0; }
         .markdown-body strong { color: #f3f4f6; }
+        @media (max-width: 768px) {
+            .markdown-body { font-size: 13px; }
+            .markdown-body h1 { font-size: 1.35em; }
+            .markdown-body h2 { font-size: 1.15em; }
+            .markdown-body h3 { font-size: 1.05em; }
+        }
+        @media (max-width: 399px) {
+            .markdown-body { font-size: 12px; }
+            .markdown-body h1 { font-size: 1.2em; }
+            .markdown-body h2 { font-size: 1.05em; }
+            .markdown-body h3 { font-size: 0.95em; }
+        }
     </style>
 
     <!-- 桌面端图标声明 -->
@@ -468,7 +480,7 @@
                     <span class="text-gray-400 mt-3">加载中...</span>
                 </div>
                 <div id="readmeContent" class="markdown-body hidden"></div>
-                <div id="readmeError" class="hidden flex flex-col items-center justify-center py-20">
+                <div id="readmeError" class="flex flex-col items-center justify-center py-20">
                     <p class="text-red-400 mb-4">加载失败，请检查网络后重试</p>
                     <button id="retryReadmeBtn" class="px-5 py-2 gradient-btn rounded-lg text-sm cursor-pointer">重新加载</button>
                 </div>
