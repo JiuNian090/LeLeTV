@@ -55,13 +55,32 @@ function generateInviteCode() {
 async function verifyAdminPassword(request, env) {
   const authHeader = request.headers.get('Authorization') || '';
   const token = authHeader.replace('Bearer ', '').trim();
-  if (!token || !env.PASSWORD) return false;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(env.PASSWORD);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const expectedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return token === expectedHash;
+  if (!token) return false;
+  
+  // 检查原始 HIDDENKEY（兼容旧版 PASSWORD）
+  if (env.HIDDENKEY) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(env.HIDDENKEY);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const expectedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    if (token === expectedHash) return true;
+  }
+  
+  // 检查管理员设备凭证（ADMINUSER + ADMINKEY）
+  const adminName = env.ADMINUSER || '';
+  const adminCode = env.ADMINKEY || '';
+  if (adminName && adminCode) {
+    const raw = adminName + '::' + adminCode;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(raw);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    if (token === expectedToken) return true;
+  }
+  
+  return false;
 }
 
 function getClientIP(request) {
@@ -367,6 +386,15 @@ async function handleVerify(request, env) {
   
   if (!code || !device_name || !device_fingerprint) {
     return jsonResponse({ ok: false, error: '缺少必填参数: code, device_name, device_fingerprint' }, 400);
+  }
+  
+  // 检查是否是管理员账号（通过环境变量配置）
+  const adminName = env.ADMINUSER || '';
+  const adminCode = env.ADMINKEY || '';
+  if (adminName && adminCode &&
+      device_name.trim().toLowerCase() === adminName.toLowerCase() &&
+      code.trim().toUpperCase() === adminCode.toUpperCase()) {
+    return jsonResponse({ ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' });
   }
   
   const invite = await env.INVITE_DB.prepare(

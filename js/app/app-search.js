@@ -297,7 +297,6 @@ function setupEventListeners() {
             case 'open-disclaimer': openDisclaimerModal(); break;
             case 'open-invite-guide': openInviteGuideModal(); break;
             case 'close-invite-guide': closeInviteGuideModal(); break;
-            case 'hide-password-modal': hidePasswordModal(); break;
             case 'accept-disclaimer': closeDisclaimerModal(); break;
             case 'select-all-apis': selectAllAPIs(true, true); break;
             case 'deselect-all-apis': selectAllAPIs(false); break;
@@ -447,24 +446,7 @@ async function search() {
     // 已通过邀请码验证的用户跳过密码检查
     const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
     if (!_isInviteVerified) {
-        try {
-            if (window.ensurePasswordProtection) {
-                window.ensurePasswordProtection();
-            } else {
-                // 兼容性检查
-                if (window.isPasswordProtected && window.isPasswordVerified) {
-                    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                        showPasswordModal && showPasswordModal();
-                        releaseThrottle();
-                        return;
-                    }
-                }
-            }
-        } catch (error) {
-            console.warn('Password protection check failed:', error.message);
-            releaseThrottle();
-            return;
-        }
+        // 未验证邀请码 - 搜索需要弹登录框，由角色逻辑控制
     }
     const query = document.getElementById('searchInput').value.trim();
 

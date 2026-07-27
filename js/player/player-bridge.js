@@ -29,16 +29,6 @@ async function buildApiParamsAndFetch(id, sourceCode) {
 
 // 点击搜索结果直接跳转播放器（立即跳转，不等待API响应）
 async function playDirectly(id, vod_name, sourceCode) {
-    // 已通过邀请码验证的用户跳过密码检查
-    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
-    if (!_isInviteVerified) {
-        if (window.isPasswordProtected && window.isPasswordVerified) {
-            if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                showPasswordModal && showPasswordModal();
-                return;
-            }
-        }
-    }
     if (!id) {
         showToast('视频ID无效', 'error');
         return;
@@ -71,17 +61,6 @@ async function playDirectly(id, vod_name, sourceCode) {
 
 // 显示详情 - 修改为支持自定义API
 async function showDetails(id, vod_name, sourceCode) {
-    // 已通过邀请码验证的用户跳过密码检查
-    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
-    if (!_isInviteVerified) {
-        // 密码保护校验
-        if (window.isPasswordProtected && window.isPasswordVerified) {
-            if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                showPasswordModal && showPasswordModal();
-                return;
-            }
-        }
-    }
     if (!id) {
         showToast('视频ID无效', 'error');
         return;
@@ -195,16 +174,6 @@ async function showDetails(id, vod_name, sourceCode) {
 }
 
 function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
-    // 已通过邀请码验证的用户跳过密码检查
-    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
-    if (!_isInviteVerified) {
-        if (window.isPasswordProtected && window.isPasswordVerified) {
-            if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                showPasswordModal && showPasswordModal();
-                return;
-            }
-        }
-    }
 
     let currentPath = window.location.href;
 

@@ -99,8 +99,7 @@ const INVITE_AUTH = {
       localStorage.removeItem(INVITE_AUTH.STORAGE_KEY);
       localStorage.removeItem('leletv_admin_session');
       localStorage.removeItem('leletv_is_admin');
-      const pwdKey = typeof PASSWORD_CONFIG !== 'undefined' ? PASSWORD_CONFIG.localStorageKey : 'passwordVerified';
-      localStorage.removeItem(pwdKey);
+      localStorage.removeItem('passwordVerified');
       
       // 隐藏管理面板
       document.getElementById('inviteAdminContainer')?.classList.add('hidden');
@@ -156,6 +155,18 @@ const INVITE_AUTH = {
       const data = await response.json();
       
       if (data.ok) {
+        // 管理员登录 - 不保存普通设备信息，直接存储管理员 session
+        if (data.is_admin) {
+          const adminToken = await sha256(code.trim().toUpperCase() + '::' + deviceName.trim());
+          localStorage.setItem('leletv_admin_session', JSON.stringify({
+            token: adminToken,
+            verified_at: Date.now()
+          }));
+          localStorage.setItem('leletv_is_admin', 'true');
+          document.dispatchEvent(new CustomEvent('passwordVerified'));
+          return { ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' };
+        }
+        
         INVITE_AUTH.saveAuth({
           code: code.trim().toUpperCase(),
           device_name: deviceName.trim(),

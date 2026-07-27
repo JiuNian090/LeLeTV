@@ -46,9 +46,9 @@ async function getPasswordHash() {
     }
     
     // 4. 如果用户没有设置密码，尝试使用环境变量中的密码哈希
-    if (window.__ENV__ && window.__ENV__.PASSWORD) {
-        cachedPasswordHash = window.__ENV__.PASSWORD;
-        return window.__ENV__.PASSWORD;
+    if (window.__ENV__ && window.__ENV__.HIDDENKEY) {
+        cachedPasswordHash = window.__ENV__.HIDDENKEY;
+        return window.__ENV__.HIDDENKEY;
     }
     
     return null;
@@ -113,7 +113,7 @@ function clearAuthCache() {
 
 // 监听密码变化，清除缓存
 window.addEventListener('storage', (e) => {
-    if (e.key === 'userPassword' || (window.PASSWORD_CONFIG && e.key === window.PASSWORD_CONFIG.localStorageKey)) {
+    if (e.key === 'userPassword') {
         clearAuthCache();
     }
 });

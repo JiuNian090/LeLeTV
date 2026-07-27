@@ -337,17 +337,6 @@ async function syncEpisodesInBackground(historyItem, url) {
 }
 
 function addToViewingHistory(videoInfo) {
-    // 已通过邀请码验证的用户跳过密码检查
-    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
-    if (!_isInviteVerified) {
-        // 密码保护校验
-        if (window.isPasswordProtected && window.isPasswordVerified) {
-            if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-                showPasswordModal && showPasswordModal();
-                return;
-            }
-        }
-    }
     try {
         const history = getViewingHistory();
 

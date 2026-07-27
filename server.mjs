@@ -27,8 +27,9 @@ const __dirname = dirname(__filename);
 // 配置对象
 const config = {
   port: parseInt(process.env.PORT || '8080'),
-  password: process.env.PASSWORD || '',
-  adminPassword: process.env.ADMINPASSWORD || '',
+  hiddenKey: process.env.HIDDENKEY || '',
+  adminUser: process.env.ADMINUSER || '',
+  adminKey: process.env.ADMINKEY || '',
   tmdbApiKey: process.env.TMDB_API_KEY || '',
   tmdbWorkerUrl: process.env.TMDB_WORKER_URL || '',
   corsOrigin: process.env.CORS_ORIGIN || '*',
@@ -114,9 +115,23 @@ function getBrowserSummary(req) {
 function validateAdminPassword(req) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '').trim();
-  if (!token || !config.password) return false;
-  const expectedHash = crypto.createHash('sha256').update(config.password).digest('hex');
-  return token === expectedHash;
+  if (!token) return false;
+  
+  // 检查 HIDDENKEY（兼容旧版 PASSWORD）
+  if (config.hiddenKey) {
+    const expectedHash = crypto.createHash('sha256').update(config.hiddenKey).digest('hex');
+    if (token === expectedHash) return true;
+  }
+  
+  // 检查管理员设备凭证（ADMINUSER + ADMINKEY）
+  const adminName = config.adminUser;
+  const adminCode = config.adminKey;
+  if (adminName && adminCode) {
+    const expectedToken = crypto.createHash('sha256').update(adminName + '::' + adminCode).digest('hex');
+    if (token === expectedToken) return true;
+  }
+  
+  return false;
 }
 
 // 日志记录函数
@@ -166,24 +181,16 @@ async function getVersion() {
 }
 
 // 渲染页面并注入密码哈希、Worker URL、版本号
-async function renderPage(filePath, password, adminPassword = '') {
+async function renderPage(filePath, hiddenKey) {
   try {
     let content = await fs.readFile(filePath, 'utf8');
 
-    // 注入用户密码
-    if (password !== '') {
-      const sha256 = await sha256Hash(password);
-      content = content.replace('{{PASSWORD}}', sha256);
+    // 注入隐藏内容密码
+    if (hiddenKey !== '') {
+      const sha256 = await sha256Hash(hiddenKey);
+      content = content.replace('{{HIDDENKEY}}', sha256);
     } else {
-      content = content.replace('{{PASSWORD}}', '');
-    }
-
-    // 注入管理员密码
-    if (adminPassword !== '') {
-      const adminSha256 = await sha256Hash(adminPassword);
-      content = content.replace('{{ADMINPASSWORD}}', adminSha256);
-    } else {
-      content = content.replace('{{ADMINPASSWORD}}', '');
+      content = content.replace('{{HIDDENKEY}}', '');
     }
 
     // 注入 TMDB Worker URL
@@ -212,7 +219,7 @@ app.get(['/', '/index.html', '/player.html'], async (req, res) => {
         break;
     }
     
-    const content = await renderPage(filePath, config.password, config.adminPassword);
+    const content = await renderPage(filePath, config.hiddenKey);
     res.send(content);
   } catch (error) {
       errorLog('页面渲染错误:', error);
@@ -223,7 +230,7 @@ app.get(['/', '/index.html', '/player.html'], async (req, res) => {
 app.get('/s=:keyword', async (req, res) => {
   try {
     const filePath = join(__dirname, 'index.html');
-    const content = await renderPage(filePath, config.password, config.adminPassword);
+    const content = await renderPage(filePath, config.hiddenKey);
     res.send(content);
   } catch (error) {
     errorLog('搜索页面渲染错误:', error);
@@ -477,6 +484,15 @@ app.post('/api/invite/verify', express.json(), inviteDbGuard, (req, res) => {
     const { code, device_name, device_fingerprint } = req.body;
     if (!code || !device_name || !device_fingerprint) {
       return res.status(400).json({ ok: false, error: '缺少必填参数' });
+    }
+    
+    // 检查是否是管理员账号（通过环境变量配置）
+    const adminName = config.adminUser;
+    const adminCode = config.adminKey;
+    if (adminName && adminCode &&
+        device_name.trim().toLowerCase() === adminName.toLowerCase() &&
+        code.trim().toUpperCase() === adminCode.toUpperCase()) {
+      return res.json({ ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' });
     }
     
     const invite = inviteDb.prepare('SELECT * FROM invitation_codes WHERE code = ?').get(code);

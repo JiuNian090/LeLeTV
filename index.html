@@ -530,25 +530,6 @@
             <button id="inviteLoginBtn" class="w-full gradient-btn py-3 rounded-lg font-semibold text-base mb-4">🎬 进入影视大厅</button>
             <p id="inviteLoginError" class="text-red-500 text-sm text-center hidden mb-4"></p>
             <p class="text-gray-500 text-xs text-center mb-4">没有邀请码？☞ <span class="text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300" data-action="open-invite-guide">获取</span></p>
-            <div class="text-center border-t border-[#333] pt-4">
-                <button id="inviteAdminEntry" class="text-gray-500 hover:text-[#ec4899] text-sm transition-colors">🔒 管理员入口</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 管理员密码弹窗 -->
-    <div id="adminPasswordModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[66] transition-opacity duration-300">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold gradient-text">管理员验证</h2>
-                <button id="adminPwdCloseBtn" class="text-gray-400 hover:text-white text-2xl transition-colors">&times;</button>
-            </div>
-            <div class="mb-4">
-                <p class="text-gray-300 mb-4">请输入管理员密码</p>
-                <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="管理员密码..." autocomplete="new-password">
-                <p id="adminPasswordError" class="text-red-500 mt-2 hidden">密码错误</p>
-            </div>
-            <button id="adminPwdSubmitBtn" class="w-full gradient-btn py-3 rounded-lg">确认</button>
         </div>
     </div>
 
@@ -664,14 +645,13 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.nfm4kv.js?v=v3.2.0" defer></script>
-    <script src="dist/leletv-app.c24oxr.js?v=v3.2.0" defer></script>
+    <script src="dist/leletv-core.p3ua74.js?v=v3.2.0" defer></script>
+    <script src="dist/leletv-app.8bvx7g.js?v=v3.2.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
-        window.__ENV__.PASSWORD = "{{PASSWORD}}";
-        window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";
+        window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
         window.__LELETV_VERSION__ = "v3.2.0";
     </script>
@@ -697,12 +677,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const codeInput = document.getElementById('inviteCodeInput');
     const loginBtn = document.getElementById('inviteLoginBtn');
     const loginError = document.getElementById('inviteLoginError');
-    const adminEntry = document.getElementById('inviteAdminEntry');
     
     if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
-        if (loginModal) loginModal.style.display = 'none';
-    }
-    if (typeof isPasswordVerified === 'function' && isPasswordVerified()) {
         if (loginModal) loginModal.style.display = 'none';
     }
     
@@ -720,18 +696,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.key === 'Enter') codeInput?.focus();
         });
     }
-    
-    if (adminEntry) {
-        adminEntry.addEventListener('click', function() {
-            if (typeof showAdminPasswordModal === 'function') {
-                showAdminPasswordModal();
-            }
-        });
-    }
 
     // 邀请码获取指南弹窗开关
     document.querySelectorAll('[data-action="open-invite-guide"]').forEach(function(el) {
         el.addEventListener('click', function() {
+            var loginModal = document.getElementById('inviteLoginModal');
+            if (loginModal) loginModal.style.display = 'none';
             var modal = document.getElementById('inviteGuideModal');
             if (modal) modal.style.display = 'flex';
         });
@@ -740,57 +710,12 @@ document.addEventListener('DOMContentLoaded', function() {
         el.addEventListener('click', function() {
             var modal = document.getElementById('inviteGuideModal');
             if (modal) modal.style.display = 'none';
+            var loginModal = document.getElementById('inviteLoginModal');
+            if (loginModal && !window.INVITE_AUTH?.isVerified()) {
+                loginModal.style.display = 'flex';
+            }
         });
     });
-    
-    const adminPwdSubmit = document.getElementById('adminPwdSubmitBtn');
-    const adminPwdInput = document.getElementById('adminPasswordInput');
-    const adminPwdClose = document.getElementById('adminPwdCloseBtn');
-    
-    async function handleAdminPwdSubmit() {
-        const pwd = adminPwdInput?.value?.trim();
-        if (!pwd) return;
-        
-        if (typeof verifyPassword === 'function') {
-            const ok = await verifyPassword(pwd);
-            if (ok) {
-                const adminModal = document.getElementById('adminPasswordModal');
-                if (adminModal) adminModal.style.display = 'none';
-                if (loginModal) loginModal.style.display = 'none';
-                
-                localStorage.setItem('leletv_is_admin', 'true');
-                
-                document.dispatchEvent(new CustomEvent('passwordVerified'));
-                showToast('管理员身份已验证', 'success');
-            } else {
-                const errEl = document.getElementById('adminPasswordError');
-                if (errEl) {
-                    errEl.textContent = '密码错误';
-                    errEl.classList.remove('hidden');
-                }
-                adminPwdInput?.select();
-            }
-        }
-    }
-    
-    if (adminPwdSubmit) {
-        adminPwdSubmit.addEventListener('click', handleAdminPwdSubmit);
-    }
-    if (adminPwdInput) {
-        adminPwdInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleAdminPwdSubmit();
-        });
-    }
-    if (adminPwdClose) {
-        adminPwdClose.addEventListener('click', function() {
-            document.getElementById('adminPasswordModal').style.display = 'none';
-            // 恢复邀请码登录弹窗
-            const inviteModal = document.getElementById('inviteLoginModal');
-            if (inviteModal && !window.INVITE_AUTH?.isVerified()) {
-                inviteModal.style.display = 'flex';
-            }
-        });
-    }
     
     async function handleInviteLogin() {
         const deviceName = deviceNameInput?.value?.trim();
@@ -822,7 +747,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (result.ok) {
             if (loginModal) loginModal.style.display = 'none';
-            document.dispatchEvent(new CustomEvent('inviteVerified'));
+            // 管理员登录已由 invite-auth.js 内部触发 passwordVerified 事件
+            if (!result.is_admin) {
+                document.dispatchEvent(new CustomEvent('inviteVerified'));
+            }
             showToast(result.message || '欢迎进入', 'success');
         } else {
             if (loginError) {

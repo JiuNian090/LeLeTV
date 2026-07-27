@@ -19,21 +19,13 @@ export async function onRequest(context) {
 
     let html = await response.text();
 
-    const password = env.PASSWORD || '';
+    const password = env.HIDDENKEY || '';
     let passwordHash = '';
     if (password) {
       passwordHash = await sha256(password);
     }
-    html = html.replace('window.__ENV__.PASSWORD = "{{PASSWORD}}";',
-      `window.__ENV__.PASSWORD = "${passwordHash}";`);
-
-    const adminPassword = env.ADMINPASSWORD || '';
-    let adminPasswordHash = '';
-    if (adminPassword) {
-      adminPasswordHash = await sha256(adminPassword);
-    }
-    html = html.replace('window.__ENV__.ADMINPASSWORD = "{{ADMINPASSWORD}}";',
-      `window.__ENV__.ADMINPASSWORD = "${adminPasswordHash}";`);
+    html = html.replace('window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";',
+      `window.__ENV__.HIDDENKEY = "${passwordHash}";`);
 
     const tmdbWorkerUrl = env.TMDB_WORKER_URL || '';
     html = html.replace('window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";',

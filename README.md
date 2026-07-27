@@ -37,13 +37,13 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 ## 重要声明
 
 - 本项目**仅供个人学习使用**，禁止用于任何商业用途
-- 本项目**必须设置访问密码或部署邀请码系统**，禁止公开分享或部署为公共服务
+- 本项目**必须部署邀请码系统**（Cloudflare D1 + Worker），否则无法访问
 - 如因违反上述规定导致的任何法律问题，使用者需自行承担责任
 - 本项目开发者不对用户的使用行为承担任何法律责任
 
 ## 邀请码验证系统
 
-项目内置了基于 **Cloudflare D1 数据库**的邀请码验证系统，替代了传统的统一密码保护。邀请码系统通过设备指纹 + 心跳机制实现对访问权限的精细化管理。
+项目内置了基于 **Cloudflare D1 数据库**的邀请码验证系统，是**唯一**的访问控制方式。邀请码系统通过设备指纹 + 心跳机制实现对访问权限的精细化管理。
 
 ### 工作原理
 
@@ -54,16 +54,21 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     │
     └── 未登录 ───── 弹出邀请码登录界面
             │
-            ├── 输入设备名 + 邀请码
+            ├── 普通用户：输入设备名 + 邀请码
+            │       │
+            │       └── POST /invite/verify
+            │               ├── 邀请码无效 ─── 拒绝访问
+            │               ├── 邀请码已禁用 ── 拒绝访问
+            │               └── 验证成功
+            │                       ├── 已有指纹记录 ── 更新活跃时间
+            │                       └── 新设备
+            │                               ├── 未超设备上限 ── 注册新设备
+            │                               └── 超上限 ── 移除最久未活跃设备
             │
-            ├── POST /invite/verify
-            │       ├── 邀请码无效 ─── 拒绝访问
-            │       ├── 邀请码已禁用 ── 拒绝访问
-            │       └── 验证成功
-            │               ├── 已有指纹记录 ── 更新活跃时间
-            │               └── 新设备
-            │                       ├── 未超设备上限 ── 注册新设备
-            │                       └── 超上限 ── 移除最久未活跃设备
+            ├── 管理员：输入 ADMINUSER + ADMINKEY（环境变量配置）
+            │       │
+            │       └── POST /invite/verify
+            │               └── 匹配管理员凭证 ── 跳过数据库验证，进入管理员模式
             │
             └── 启动心跳（每 5 分钟）── 更新设备最后活跃时间
 ```
@@ -77,12 +82,16 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | **设备上限** | 每个邀请码默认最多绑定 5 台设备，超限时自动剔除最久未活跃设备 |
 | **持久登录** | 验证成功后，设备信息保存至 localStorage，关闭页面无需重新登录 |
 | **邀请码格式** | `LELE-XXXX-XXXX`（随机字母数字，排除易混淆字符 O/0/I/1） |
+| **管理员登录** | 在登录弹窗输入环境变量 `ADMINUSER` 和 `ADMINKEY` 配置的凭证即可进入管理员模式，无需额外密码弹窗 |
 
 ### 功能特性
 
 - **邀请码登录**：首次打开页面弹出登录弹窗，输入设备名和邀请码即可进入
-- **设备管理（普通用户）**：设置页面可查看自己的邀请码和名下的设备列表，支持删除设备
+- **设备管理（普通用户）**：设置页面可查看自己的邀请码和名下的设备列表，支持删除设备和重命名本设备名
+- **设备名编辑**：当前设备名可点击直接重命名（仅限本设备）
 - **管理员面板**：管理员登录后可生成/禁用/删除邀请码、查看邀请码使用统计、设置备注、管理设备
+- **邀请码排序**：按最近设备活跃时间排序，高频使用的邀请码排在最前面
+- **活跃度指示器**：绿点（1h内）/淡绿（24h内）/黄点（7天内）直观显示设备活跃状态
 - **邀请码备注**：管理员可为邀请码添加备注，方便管理用途
 - **退出登录**：一键清除所有登录状态，恢复邀请码登录界面
 
@@ -90,22 +99,24 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 文件 | 说明 |
 |------|------|
-| `js/auth/invite-auth.js` | 邀请码验证核心模块（生成指纹、验证、心跳、登录状态管理） |
-| `js/auth/admin-panel.js` | 管理员面板（生成/列表/启用禁用/统计/备注/设备管理） |
-| `js/auth/user-devices.js` | 普通用户设备管理面板 |
-| `workers/tmdb-worker.js` | Worker 端 API 路由（verify/heartbeat/generate/list/toggle/stats/remove-device/set-remark） |
+| `js/auth/invite-auth.js` | 邀请码验证核心模块（生成指纹、验证、心跳、登录状态管理、管理员 token 计算） |
+| `js/auth/admin-panel.js` | 管理员面板（生成/列表/启用禁用/统计/备注/设备管理/活跃度指示器） |
+| `js/auth/user-devices.js` | 普通用户设备管理面板（删除设备、重命名本设备） |
+| `workers/tmdb-worker.js` | Worker 端 API 路由（verify/heartbeat/generate/list/toggle/stats/remove-device/set-remark/rename-device） |
 | `migrations/001_create_tables.sql` | D1 数据库表结构（invitation_codes + devices） |
-| `server.mjs` | 本地开发服务器邀请码 API（570 行，Better-SQLite3 实现） |
+| `server.mjs` | 本地开发服务器邀请码 API（Better-SQLite3 实现） |
 
-### 环境变量
+### 管理员凭证
 
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `PASSWORD` | 否* | 旧版访问密码（当未部署邀请码系统时作为降级方案） |
-| `ADMINPASSWORD` | 是 | 管理员密码，用于登录管理面板 |
-| `TMDB_WORKER_URL` | 推荐 | Cloudflare Worker 地址 |
+管理员登录不再依赖单独的密码弹窗，而是通过环境变量 `ADMINUSER`（设备名）和 `ADMINKEY`（邀请码）配置：
 
-> *如果未部署邀请码系统，仍需设置 `PASSWORD`；部署邀请码系统后，`PASSWORD` 为可选。
+```bash
+# 设置管理员凭证
+ADMINUSER=admin           # 管理员登录账号（设备名）
+ADMINKEY=123456           # 管理员登录密码（邀请码）
+```
+
+登录时在弹窗输入对应的设备名和邀请码即可自动识别为管理员，进入管理员面板。
 
 ## 功能特性
 
@@ -186,7 +197,6 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | **无服务器函数** | Cloudflare Workers + D1 | TMDB API 代理 + 邀请码 API + 数据库 |
 | **Pages Functions** | Cloudflare Pages Functions | 密码注入 + 视频代理 |
 | **PWA** | Service Worker + Web App Manifest | 离线缓存 + 可安装 |
-| **密码安全** | SHA-256 哈希（Web Crypto API） | 客户端 + 服务端双重验证 |
 | **构建工具** | Node.js 脚本 + npm scripts | 版本生成、Tailwind 构建 |
 | **AI 辅助开发** | GitNexus MCP | 代码知识图谱索引（1638 符号，140 流） |
 
@@ -216,7 +226,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 用户浏览器
     │
     ├── Cloudflare Pages ─────────── 静态资源（HTML/CSS/JS）
-    │       ├── Pages Functions ──── 密码注入（环境变量 → HTML 模板）
+    │       ├── Pages Functions ──── 环境变量注入（ADMINUSER/ADMINKEY/HIDDENKEY → HTML 模板）
     │       ├── Pages Functions ──── 视频代理（/proxy/*）
     │       └── Cloudflare D1 ───── 邀请码系统数据库
     │               ├── invitation_codes 表 ── 邀请码、状态、备注、设备上限
@@ -225,7 +235,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     ├── Cloudflare Worker ────────── TMDB API 代理 + 邀请码 API
     │       ├── workers/tmdb-worker.js ──── TMDB API v3
     │       ├── /health 健康检查端点
-    │       └── /invite/* 邀请码 API 路由（verify/heartbeat/generate/list/toggle/stats/my-devices/remove-device/set-remark）
+    │       ├── /invite/* 邀请码 API 路由（verify/heartbeat/generate/list/toggle/stats/my-devices/remove-device/set-remark/rename-device/delete-code）
     │
     ├── 第三方采集站 API (17 个) ──── 视频搜索和播放源
     │       └── 通过 Cloudflare Pages Functions 代理
@@ -241,7 +251,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     │
     ├── Node.js + Express（server.mjs: 669 行）
     │       ├── 静态资源服务（express.static）
-    │       ├── / → HTML 模板注入（密码哈希、TMDB_URL、版本号）
+    │       ├── / → HTML 模板注入（ADMINUSER/ADMINKEY/HIDDENKEY 哈希、TMDB_URL、版本号）
     │       ├── /proxy/:encodedUrl → 视频源代理（鉴权 + URL 安全验证）
     │       ├── /api/tmdb → TMDB API 代理
     │       ├── /api/invite/* → 邀请码 API（本地 Better-SQLite3）
@@ -272,7 +282,7 @@ js/loadBalancer.js              ← 负载均衡核心（自动实例化）
 js/loadBalancerUI.js            ← 负载均衡状态面板 UI
 js/ui.js                        ← UI 工具（Toast / Loading / 历史管理）
 js/api.js                       ← API 请求工具
-js/password.js                  ← 密码保护系统
+js/auth/password.js             ← SHA-256 工具函数（管理员 token 计算）
 js/search.js                    ← 搜索模块
 js/tmdb.js                      ← TMDB 分类浏览
 js/player-bridge.js             ← 播放器桥接（播放跳转、详情弹窗）
@@ -349,15 +359,15 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
 
    | 变量名 | 必填 | 值 |
    |--------|------|-----|
-   | `PASSWORD` | 否 | 访问密码（部署邀请码系统后可省略，未部署时必须设置）|
+   | `ADMINUSER` | **是** | 管理员登录设备名，例如 `admin` |
+   | `ADMINKEY` | **是** | 管理员登录邀请码，例如 `123456` |
    | `TMDB_WORKER_URL` | 推荐 | 第二步中记录的 Worker 地址，例如 `https://tmdb-proxy.yourdomain.com` |
-   | `ADMINPASSWORD` | 推荐 | 管理员密码，用于管理邀请码和隐藏内容过滤 |
+   | `HIDDENKEY` | 否 | 隐藏内容过滤密码（可选功能） |
 
 7. 添加完成后，进入 Pages **部署** 页面，点击最后一个部署的 **...** → **重试部署**，让新环境变量生效
 
 > **注意**：
-> - 如果未部署邀请码系统，**必须设置 `PASSWORD` 变量**，否则页面会一直提示设置密码
-> - 如果已部署邀请码系统，`PASSWORD` 可省略，访问控制由邀请码系统管理
+> - 必须设置 `ADMINUSER` 和 `ADMINKEY`，否则无法使用管理员功能
 > - `TMDB_WORKER_URL` **不要加末尾斜杠**
 > - `TMDB_API_KEY` 是 Worker 的环境变量，**不要**填到 Pages 的环境变量中
 
@@ -366,8 +376,8 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
 ### 验证整个流程
 
 部署完成后，按以下顺序验证：
-1. 访问你的 Pages 域名（如 `https://你的项目.pages.dev`），应该弹出邀请码登录界面或旧版密码验证
-2. 使用邀请码登录（或输入密码），进入首页
+1. 访问你的 Pages 域名（如 `https://你的项目.pages.dev`），应该弹出邀请码登录界面
+2. 使用有效邀请码登录（或使用 `ADMINUSER`/`ADMINKEY` 管理员凭证登录），进入首页
 3. 点击导航栏的 **分类** 按钮，应该能看到 TMDB 的电影/电视剧列表
 4. 如果分类页面无法加载内容，检查：
    - Worker 的 `/health` 端点是否返回 `{"status":"ok"}`
@@ -386,7 +396,7 @@ npm install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，设置 PASSWORD 等变量
+# 编辑 .env，设置 ADMINUSER、ADMINKEY 等变量
 
 # 构建样式
 npm run build
@@ -402,10 +412,11 @@ npm run dev
 
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
-| `ADMINPASSWORD` | **是** | 管理员密码（用于管理邀请码和隐藏内容过滤） |
-| `PASSWORD` | 否 | 旧版用户访问密码（部署邀请码系统后可省略） |
+| `ADMINUSER` | **是** | 管理员登录设备名，例如 `admin` |
+| `ADMINKEY` | **是** | 管理员登录邀请码，例如 `123456` |
 | `TMDB_WORKER_URL` | 推荐 | Cloudflare Worker 地址（`TMDB_API_KEY` 配置在 Worker 环境变量中） |
 | `TMDB_API_KEY` | 否 | TMDB API v3 密钥（本地直连时使用，生产环境配在 Worker 中） |
+| `HIDDENKEY` | 否 | 隐藏内容过滤密码（可选功能） |
 | `PORT` | 否 | 本地服务器端口（默认 8080） |
 | `CORS_ORIGIN` | 否 | CORS 允许的源（默认 *） |
 | `REQUEST_TIMEOUT` | 否 | 请求超时毫秒（默认 5000） |
@@ -451,7 +462,7 @@ LeLeTV/
 │   ├── loadBalancer.js           #   负载均衡核心（类实现）
 │   ├── loadBalancerUI.js         #   负载均衡状态面板 UI
 │   ├── cache-manager.js          #   智能缓存管理（类实现）
-│   ├── password.js               #   密码保护系统
+│   ├── password.js               #   SHA-256 工具函数（管理员 token 计算）
 │   ├── proxy-auth.js             #   代理请求鉴权
 │   ├── api.js                    #   API 请求工具函数
 │   ├── index-page.js             #   首页弹窗 + URL 搜索参数
@@ -533,7 +544,7 @@ npm install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，设置 PASSWORD 等变量
+# 编辑 .env，设置 ADMINUSER、ADMINKEY 等变量
 
 # 构建样式
 npm run build
@@ -569,7 +580,6 @@ npm run dev
 | 缓存 | 存储位置 | TTL | 说明 |
 |------|---------|-----|------|
 | 搜索结果缓存 | 内存 Map | 5 分钟 | `_searchCache` 对象 |
-| 密码验证状态 | localStorage | 30 天 | `passwordVerified` |
 | 搜索历史 | localStorage | 2 个月 | `videoSearchHistory` |
 | 观看历史 | localStorage | 永久（最多 50 条） | `viewingHistory` |
 | API 负载均衡统计 | localStorage | 永久 | `loadBalancerStats` |

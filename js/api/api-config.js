@@ -13,7 +13,7 @@ var customAPIs = window.customAPIs;
 function verifyAdminPassword() {
     return new Promise((resolve) => {
         // 检查是否设置了管理员密码
-        const adminPasswordHash = window.__ENV__ && window.__ENV__.ADMINPASSWORD;
+        const adminPasswordHash = window.__ENV__ && window.__ENV__.HIDDENKEY;
         if (!adminPasswordHash) {
             showToast('未设置隐藏内容密码，无法修改隐藏内容过滤设置', 'error');
             resolve(false);

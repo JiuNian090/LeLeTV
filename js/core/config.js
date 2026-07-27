@@ -8,12 +8,8 @@ const MAX_HISTORY_ITEMS = 5;
 // 留空则使用本地 Node.js 代理 /api/tmdb
 const TMDB_WORKER_URL = (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.TMDB_WORKER_URL) || '';
 
-// 密码保护配置
-// 注意：PASSWORD 环境变量是必需的，所有部署都必须设置密码以确保安全
-const PASSWORD_CONFIG = {
-    localStorageKey: 'passwordVerified',  // 存储验证状态的键名
-    verificationTTL: 30 * 24 * 60 * 60 * 1000  // 验证有效期（30天）
-};
+// SHA-256 兼容性检查（用于 invite-auth 管理员 token 计算）
+window._sha256Available = typeof window.crypto?.subtle?.digest === 'function' || typeof window._jsSha256 === 'function';
 
 // 网站信息配置
 const SITE_CONFIG = {
