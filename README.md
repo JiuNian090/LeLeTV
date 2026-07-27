@@ -123,13 +123,12 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 本地开发时，在项目根目录创建 `.env` 文件：
 
 ```env
-PORT=8080
 TMDB_API_KEY=your_tmdb_api_key
-ADMINUSER=admin
-ADMINKEY=123456
-HIDDENKEY=your_hidden_password
 TMDB_WORKER_URL=https://leletv-tmdb-proxy.xxx.workers.dev
+PORT=8080
 ```
+
+> 注意：`ADMINUSER`、`ADMINKEY`、`HIDDENKEY` 只需在 **Worker** 中设置，本地开发不需要。
 
 #### Worker 部署
 
@@ -435,9 +434,9 @@ npm install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，设置 ADMINUSER、ADMINKEY 等变量
+# 编辑 .env，填写 TMDB_WORKER_URL（Worker 地址）和 TMDB_API_KEY
 
-# 构建样式
+# 构建
 npm run build
 
 # 启动开发服务器（带热重载）
@@ -447,15 +446,34 @@ npm run dev
 # http://localhost:8080
 ```
 
+本地开发时，所有邀请码验证和设备管理请求都通过 Worker 处理。请确保：
+1. Worker 已部署并设置了 `ADMINUSER`、`ADMINKEY` 环境变量
+2. `.env` 中 `TMDB_WORKER_URL` 指向正确的 Worker 地址
+3. 首次启动会弹出邀请码登录弹窗，输入管理员凭证即可进入
+
 ## 环境变量配置
+
+### Worker（生产环境）
 
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
-| `ADMINUSER` | **是** | 管理员登录设备名，例如 `admin` |
-| `ADMINKEY` | **是** | 管理员登录邀请码，例如 `123456` |
-| `TMDB_WORKER_URL` | 推荐 | Cloudflare Worker 地址（`TMDB_API_KEY` 配置在 Worker 环境变量中） |
-| `TMDB_API_KEY` | 否 | TMDB API v3 密钥（本地直连时使用，生产环境配在 Worker 中） |
-| `HIDDENKEY` | 否 | 隐藏内容过滤密码（可选功能） |
+| `TMDB_API_KEY` | **是** | TMDB API 密钥（加密变量） |
+| `ADMINUSER` | **是** | 管理员登录设备名（加密变量） |
+| `ADMINKEY` | **是** | 管理员登录邀请码（加密变量） |
+| `HIDDENKEY` | 否 | 隐藏内容过滤密码（加密变量，可选） |
+
+### Pages（生产环境）
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `TMDB_WORKER_URL` | **是** | Worker 地址，例如 `https://leletv-tmdb-proxy.xxx.workers.dev` |
+
+### 本地开发（`.env` 文件）
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `TMDB_WORKER_URL` | **是** | Worker 地址，所有请求通过 Worker |
+| `TMDB_API_KEY` | **是** | TMDB API 密钥 |
 | `PORT` | 否 | 本地服务器端口（默认 8080） |
 | `CORS_ORIGIN` | 否 | CORS 允许的源（默认 *） |
 | `REQUEST_TIMEOUT` | 否 | 请求超时毫秒（默认 5000） |
@@ -463,6 +481,8 @@ npm run dev
 | `CACHE_MAX_AGE` | 否 | 静态资源缓存时间（默认 1d） |
 | `USER_AGENT` | 否 | 代理请求 UA |
 | `DEBUG` | 否 | 调试模式（默认 false） |
+
+> 本地开发**不需要**设置 `ADMINUSER`、`ADMINKEY`、`HIDDENKEY`，这些都在 Worker 端配置。
 
 ## 目录结构
 
