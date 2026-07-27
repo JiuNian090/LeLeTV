@@ -242,4 +242,4 @@ function clearSearchHistory() {
         console.error('清除搜索历史失败:', e);
         showToast('清除搜索历史失败:', 'error');
     }
-}
+}

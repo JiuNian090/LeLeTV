@@ -514,42 +514,44 @@
 
     <!-- 邀请码登录弹窗 -->
     <div id="inviteLoginModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-md border border-[#333]">
+        <div class="bg-[#111] p-7 rounded-xl w-11/12 max-w-md border border-[#222] shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(236,72,153,0.1)]">
             <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold gradient-text">🔑 乐乐影视</h2>
+                <h2 class="text-2xl font-bold gradient-text">🎬 LeLeTV</h2>
                 <p class="text-gray-400 text-sm mt-2">输入邀请码和设备名进入</p>
             </div>
             <div class="mb-4">
-                <label class="text-gray-300 text-sm block mb-1">设备名</label>
-                <input type="text" id="inviteDeviceName" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#ec4899] transition-colors" placeholder="例如：我的手机 / 办公电脑" autocomplete="off" maxlength="30">
+                <label class="text-gray-300 text-sm block mb-1">设备名（昵称）</label>
+                <input type="text" id="inviteDeviceName" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200" placeholder="例如：我的手机 / 办公电脑" autocomplete="off" maxlength="30">
+                <p class="text-gray-600 text-[10px] mt-1">用于标识当前设备，最多 30 个字符</p>
             </div>
-            <div class="mb-6">
+            <div class="mb-5">
                 <label class="text-gray-300 text-sm block mb-1">邀请码</label>
-                <input type="text" id="inviteCodeInput" class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#ec4899] transition-colors uppercase tracking-widest" placeholder="LELE-XXXX-XXXX" autocomplete="off" maxlength="19">
+                <input type="text" id="inviteCodeInput" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200 uppercase tracking-widest" placeholder="LELE-XXXX-XXXX" autocomplete="off" maxlength="19">
             </div>
-            <button id="inviteLoginBtn" class="w-full gradient-btn py-3 rounded-lg font-semibold text-base mb-4">🎬 进入影视大厅</button>
-            <p id="inviteLoginError" class="text-red-500 text-sm text-center hidden mb-4"></p>
-            <p class="text-gray-500 text-xs text-center mb-4">没有邀请码？☞ <span class="text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300" data-action="open-invite-guide">获取</span></p>
+            <button id="inviteLoginBtn" class="w-full gradient-btn py-2.5 rounded-lg font-semibold text-sm tracking-wide">进入 LeLeTV</button>
+            <p id="inviteLoginError" class="text-red-400 text-xs text-center mt-3 hidden"></p>
+            <div class="h-px bg-[rgba(255,255,255,0.06)] my-4"></div>
+            <p class="text-gray-500 text-xs text-center">没有邀请码？☞ <span class="text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300" data-action="open-invite-guide">获取</span></p>
         </div>
     </div>
 
     <!-- 邀请码获取指南弹窗 -->
     <div id="inviteGuideModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]">
         <div class="bg-[#111] p-6 rounded-lg border border-[#333] w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 class="text-xl font-bold gradient-text mb-5 text-center">获取邀请码</h2>
+            <h2 class="text-xl font-bold text-[#ec4899] mb-5 text-center">获取邀请码</h2>
             <div class="text-gray-300 space-y-4 text-sm">
                 <p>邀请码是访问 LeLeTV 的通行凭证，目前获取方式如下：</p>
                 <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
-                    <p class="text-pink-400 font-semibold mb-2">📧 联系作者获取</p>
-                    <p class="text-gray-400"> ☞<a href="mailto:jiunian929@gmail.com" class="contact-link text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300">联系LeLe</a>，说明来意即可获赠邀请码。</p>
+                    <p class="text-pink-400 font-semibold mb-2 text-xs flex items-center gap-1.5"><span>✉️</span> 联系作者获取</p>
+                    <p class="text-gray-400 text-xs"><a href="mailto:jiunian929@gmail.com" class="contact-link text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300">☞联系LeLe</a>，说明来意即可获赠邀请码。</p>
                 </div>
                 <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
-                    <p class="text-pink-400 font-semibold mb-2">🔑 已有邀请码？</p>
-                    <p class="text-gray-400">返回登录界面，输入设备名（xxx的手机或者昵称）和邀请码即可进入。一个邀请码可绑定 5 台设备。</p>
+                    <p class="text-pink-400 font-semibold mb-2 text-xs flex items-center gap-1.5"><span>🔑</span> 已有邀请码？</p>
+                    <p class="text-gray-400 text-xs">返回登录界面，输入设备名和邀请码即可进入。一个邀请码可绑定 5 台设备。</p>
                 </div>
                 <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
-                    <p class="text-pink-400 font-semibold mb-2">💡 使用提示</p>
-                    <p class="text-gray-400">登录后可在「设置」中查看已绑定的设备和管理邀请码。播放卡顿可切换视频源或刷新页面。</p>
+                    <p class="text-pink-400 font-semibold mb-2 text-xs flex items-center gap-1.5"><span>💡</span> 使用提示</p>
+                    <p class="text-gray-400 text-xs">登录后可在「设置」中查看已绑定的设备和管理邀请码。播放卡顿可切换视频源或刷新页面。</p>
                 </div>
             </div>
             <button class="w-full gradient-btn py-2.5 rounded-lg mt-5 text-sm font-semibold" data-action="close-invite-guide">知道了</button>
@@ -645,8 +647,8 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.p3ua74.js?v=v3.2.0" defer></script>
-    <script src="dist/leletv-app.8bvx7g.js?v=v3.2.0" defer></script>
+    <script src="dist/leletv-core.kmf60q.js?v=v3.2.0" defer></script>
+    <script src="dist/leletv-app.hzirfn.js?v=v3.2.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
