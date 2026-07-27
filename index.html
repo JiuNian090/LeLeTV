@@ -541,7 +541,7 @@
                 <p>邀请码是访问 LeLeTV 的通行凭证，目前获取方式如下：</p>
                 <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
                     <p class="text-pink-400 font-semibold mb-2">📧 联系作者获取</p>
-                    <p class="text-gray-400">发送邮件至 <span class="contact-link text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300">jiunian929@gmail.com</span>，说明来意即可获赠邀请码。</p>
+                    <p class="text-gray-400"> ☞<a href="mailto:jiunian929@gmail.com" class="contact-link text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300">联系LeLe</a>，说明来意即可获赠邀请码。</p>
                 </div>
                 <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
                     <p class="text-pink-400 font-semibold mb-2">🔑 已有邀请码？</p>
@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!deviceName) {
             if (loginError) {
-                loginError.textContent = '请输入设备名';
+                loginError.textContent = '请输入设备名（昵称）';
                 loginError.classList.remove('hidden');
             }
             deviceNameInput?.focus();

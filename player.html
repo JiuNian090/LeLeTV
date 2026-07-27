@@ -173,6 +173,17 @@
         // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
         window._jsSha256 = window.sha256;
     </script>
+
+    <!-- 邀请码验证检查：未登录直接跳回首页 -->
+    <script>
+        (function() {
+            const inviteAuth = localStorage.getItem('leletv_invite_auth');
+            const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
+            if (!inviteAuth && !isAdmin) {
+                window.location.replace('/');
+            }
+        })();
+    </script>
     
     <script src="libs/hls.min.js?v=v3.2.0" defer crossorigin="anonymous"></script>
     <script src="libs/artplayer.min.js?v=v3.2.0" defer crossorigin="anonymous"></script>
