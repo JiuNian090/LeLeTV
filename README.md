@@ -106,17 +106,52 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | `migrations/001_create_tables.sql` | D1 数据库表结构（invitation_codes + devices） |
 | `server.mjs` | 本地开发服务器邀请码 API（Better-SQLite3 实现） |
 
-### 管理员凭证
+### 环境变量配置
 
-管理员登录不再依赖单独的密码弹窗，而是通过环境变量 `ADMINUSER`（设备名）和 `ADMINKEY`（邀请码）配置：
+| 变量名 | 设置位置 | 必填 | 说明 |
+|--------|----------|------|------|
+| `TMDB_API_KEY` | **Worker**（加密） | **是** | TMDB API 密钥，用于获取影片数据 |
+| `ADMINUSER` | **Worker**（加密） | **是** | 管理员登录设备名，例如 `admin` |
+| `ADMINKEY` | **Worker**（加密） | **是** | 管理员登录邀请码，例如 `123456` |
+| `HIDDENKEY` | **Worker**（加密） | 否 | 隐藏内容过滤密码（可选功能） |
+| `TMDB_WORKER_URL` | **Pages**（明文） | 推荐 | Worker 地址，例如 `https://leletv-tmdb-proxy.xxx.workers.dev` |
 
-```bash
-# 设置管理员凭证
-ADMINUSER=admin           # 管理员登录账号（设备名）
-ADMINKEY=123456           # 管理员登录密码（邀请码）
+> **注意**：`ADMINUSER`、`ADMINKEY`、`HIDDENKEY` 只需在 **Worker** 中设置。Pages 仅托管静态文件，不参与校验逻辑，所以不需要这些变量。Pages 只需要 `TMDB_WORKER_URL` 来让前端知道请求发到哪个 Worker。
+
+#### 本地开发
+
+本地开发时，在项目根目录创建 `.env` 文件：
+
+```env
+PORT=8080
+TMDB_API_KEY=your_tmdb_api_key
+ADMINUSER=admin
+ADMINKEY=123456
+HIDDENKEY=your_hidden_password
+TMDB_WORKER_URL=https://leletv-tmdb-proxy.xxx.workers.dev
 ```
 
-登录时在弹窗输入对应的设备名和邀请码即可自动识别为管理员，进入管理员面板。
+#### Worker 部署
+
+```bash
+# 加密变量（通过 CLI 设置）
+npx wrangler secret put TMDB_API_KEY
+npx wrangler secret put ADMINUSER
+npx wrangler secret put ADMINKEY
+npx wrangler secret put HIDDENKEY   # 可选
+```
+
+或在 Cloudflare Dashboard → Worker → **设置** → **变量** → 添加加密变量。
+
+#### Pages 部署
+
+Pages 项目 → **设置** → **环境变量** → **生产环境**：
+
+| 变量名 | 类型 | 值 |
+|--------|------|-----|
+| `TMDB_WORKER_URL` | 明文 | `https://leletv-tmdb-proxy.xxx.workers.dev` |
+
+添加后重试部署使变量生效。
 
 ## 功能特性
 
@@ -226,7 +261,6 @@ ADMINKEY=123456           # 管理员登录密码（邀请码）
 用户浏览器
     │
     ├── Cloudflare Pages ─────────── 静态资源（HTML/CSS/JS）
-    │       ├── Pages Functions ──── 环境变量注入（ADMINUSER/ADMINKEY/HIDDENKEY → HTML 模板）
     │       ├── Pages Functions ──── 视频代理（/proxy/*）
     │       └── Cloudflare D1 ───── 邀请码系统数据库
     │               ├── invitation_codes 表 ── 邀请码、状态、备注、设备上限
@@ -321,8 +355,16 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
 3. 给 Worker 命名（例如 `leletv-tmdb-proxy`），点击 **部署**
 4. 部署后点击 **编辑代码**，将项目 `workers/tmdb-worker.js` 的全部内容粘贴覆盖默认代码，点击 **保存并部署**
 5. 回到 Worker 页面，进入 **设置** → **变量**：
-   - 在 **环境变量** 栏，添加变量名 `TMDB_API_KEY`，值填入第一步获取的 API 密钥
-   - 点击 **保存并部署**
+   - 在 **环境变量** 栏，添加以下加密变量：
+
+     | 变量名 | 必填 | 值 |
+     |--------|------|-----|
+     | `TMDB_API_KEY` | **是** | 第一步获取的 TMDB API 密钥 |
+     | `ADMINUSER` | **是** | 管理员登录设备名，例如 `admin` |
+     | `ADMINKEY` | **是** | 管理员登录邀请码，例如 `123456` |
+     | `HIDDENKEY` | 否 | 隐藏内容过滤密码（可选） |
+
+   - 添加时勾选 **加密**，点击 **保存并部署**
 6. （可选，但推荐）绑定自定义域名：
    - 在 Worker **设置** → **触发器** → **自定义域名**，添加一个你拥有的域名（如 `tmdb-proxy.yourdomain.com`）
    - 没有自定义域名也可以使用 Cloudflare 提供的 `*.workers.dev` 域名
@@ -355,21 +397,18 @@ TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Wo
    - **输出目录**：`dist`
    - **根目录**：`/`（使用默认即可）
 5. 点击 **保存并部署**，首次部署会自动运行
-6. 部署完成后，进入 Pages 项目的 **设置** → **环境变量**，添加以下变量：
+6. 部署完成后，进入 Pages 项目的 **设置** → **环境变量** → **生产环境**，添加以下变量：
 
    | 变量名 | 必填 | 值 |
    |--------|------|-----|
-   | `ADMINUSER` | **是** | 管理员登录设备名，例如 `admin` |
-   | `ADMINKEY` | **是** | 管理员登录邀请码，例如 `123456` |
-   | `TMDB_WORKER_URL` | 推荐 | 第二步中记录的 Worker 地址，例如 `https://tmdb-proxy.yourdomain.com` |
-   | `HIDDENKEY` | 否 | 隐藏内容过滤密码（可选功能） |
+   | `TMDB_WORKER_URL` | **是** | Worker 地址，例如 `https://leletv-tmdb-proxy.xxx.workers.dev` |
 
 7. 添加完成后，进入 Pages **部署** 页面，点击最后一个部署的 **...** → **重试部署**，让新环境变量生效
 
 > **注意**：
-> - 必须设置 `ADMINUSER` 和 `ADMINKEY`，否则无法使用管理员功能
 > - `TMDB_WORKER_URL` **不要加末尾斜杠**
-> - `TMDB_API_KEY` 是 Worker 的环境变量，**不要**填到 Pages 的环境变量中
+> - `ADMINUSER`、`ADMINKEY`、`HIDDENKEY` 是 **Worker** 的环境变量，**不要**填到 Pages 的环境变量中
+> - `TMDB_API_KEY` 也是 Worker 的环境变量，同样不要填到 Pages
 
 > **提示**：每次构建时会自动运行 `generate-version.mjs` 脚本，生成基于时间戳的版本号，更新 HTML 中的资源缓存参数和 Service Worker 缓存版本。
 
