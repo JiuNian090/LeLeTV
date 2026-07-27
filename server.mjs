@@ -545,7 +545,9 @@ app.post('/api/invite/generate', express.json(), inviteDbGuard, (req, res) => {
 app.get('/api/invite/list', inviteDbGuard, (req, res) => {
   if (!validateAdminPassword(req)) return res.status(401).json({ ok: false, error: '管理员验证失败' });
   
-  const codes = inviteDb.prepare('SELECT * FROM invitation_codes ORDER BY created_at DESC').all();
+  const codes = inviteDb.prepare(`SELECT ic.* FROM invitation_codes ic
+    LEFT JOIN (SELECT code, MAX(last_active_at) as max_active FROM devices GROUP BY code) d ON ic.code = d.code
+    ORDER BY COALESCE(d.max_active, ic.created_at) DESC`).all();
   const result = codes.map(invite => {
     const devices = inviteDb.prepare('SELECT device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at FROM devices WHERE code = ? ORDER BY last_active_at DESC').all(invite.code);
     return {
@@ -658,6 +660,29 @@ app.post('/api/invite/set-remark', express.json(), inviteDbGuard, (req, res) => 
   
   inviteDb.prepare('UPDATE invitation_codes SET remark = ? WHERE code = ?').run(remark || '', code);
   res.json({ ok: true });
+});
+
+// POST /api/invite/rename-device - 重命名设备（同码用户可操作，仅限当前设备）
+app.post('/api/invite/rename-device', express.json(), inviteDbGuard, (req, res) => {
+  try {
+    const { code, device_fingerprint, new_name } = req.body;
+    if (!code || !device_fingerprint || !new_name) {
+      return res.status(400).json({ ok: false, error: '缺少参数' });
+    }
+
+    // 仅允许操作同邀请码下的本设备
+    const device = inviteDb.prepare('SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?').get(code, device_fingerprint);
+    if (!device) return res.status(403).json({ ok: false, error: '无权限' });
+
+    const name = new_name.trim().slice(0, 30);
+    if (!name) return res.status(400).json({ ok: false, error: '设备名不能为空' });
+
+    inviteDb.prepare('UPDATE devices SET device_name = ? WHERE code = ? AND device_fingerprint = ?').run(name, code, device_fingerprint);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('重命名设备失败:', error);
+    res.status(500).json({ ok: false, error: '服务器错误' });
+  }
 });
 
 app.use(express.static(join(__dirname), {

@@ -172,7 +172,14 @@ const INVITE_ADMIN_PANEL = {
     `;
     
     container.querySelector('#inviteGenerateBtn').addEventListener('click', () => this._handleGenerate(container));
-    container.querySelector('#inviteRefreshBtn').addEventListener('click', () => this._refresh(container));
+    container.querySelector('#inviteRefreshBtn').addEventListener('click', async function clickRefresh() {
+      const btn = this;
+      btn.classList.add('refreshing');
+      await INVITE_ADMIN_PANEL._refresh(container);
+      btn.classList.remove('refreshing');
+      btn.blur();
+      showToast('已刷新', 'success');
+    });
     container.querySelector('#inviteAdminLogoutBtn').addEventListener('click', () => {
       if (window.INVITE_AUTH && confirm('确定退出登录吗？')) {
         window.INVITE_AUTH.logout();
@@ -244,8 +251,9 @@ const INVITE_ADMIN_PANEL = {
     listEl.innerHTML = codes.map(invite => {
       const devices = invite.devices || [];
       const lastActive = devices.length > 0 ? devices[0].last_active_at : null;
+      const recentDot = lastActive ? _recentDot(lastActive) : '';
       return `
-      <div class="invite-card">
+      <div class="invite-card ${lastActive ? '' : 'invite-card-idle'}">
         <div class="invite-card-top">
           <div>
             <span class="invite-code-text" data-code="${invite.code}" title="点击复制">${invite.code}</span>
@@ -261,14 +269,14 @@ const INVITE_ADMIN_PANEL = {
         <div class="invite-card-meta">
           <span>${_formatTime(invite.created_at)}</span>
           <span>设备：${invite.device_count}/${invite.max_devices}</span>
-          ${lastActive ? `<span>最近使用：${_timeAgo(lastActive)}</span>` : '<span class="text-gray-600">暂无使用</span>'}
+          ${lastActive ? `<span>${recentDot} 最近使用：${_timeAgo(lastActive)}</span>` : '<span class="text-gray-600">暂无使用</span>'}
         </div>
         ${devices.length > 0 ? `
         <details class="invite-devices" open>
           <summary class="invite-device-toggle">设备详情（${devices.length}）</summary>
           ${devices.map(d => `
-          <div class="invite-device-item">
-            <span class="invite-device-name">${_deviceIcon(d.browser)} ${d.device_name}</span>
+          <div class="invite-device-item ${_isRecentlyActive(d.last_active_at) ? 'invite-device-recent' : ''}">
+            <span class="invite-device-name">${_recentDot(d.last_active_at)} ${_deviceIcon(d.browser)} ${d.device_name}</span>
             <span>${_timeAgo(d.last_active_at)} <button class="invite-action-btn invite-action-btn-danger delete-device-btn" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button></span>
           </div>
           `).join('')}
@@ -394,6 +402,22 @@ function _deviceIcon(browser) {
   if (browser.includes('Safari')) return '🧭';
   if (browser.includes('Edge')) return '🌙';
   return '📱';
+}
+
+const _RECENT_DOT_GREEN = '<span class="invite-recent-dot" style="color:#22c55e;">●</span>';
+const _RECENT_DOT_FADED = '<span class="invite-recent-dot" style="color:#22c55e80;">●</span>';
+const _RECENT_DOT_YELLOW = '<span class="invite-recent-dot" style="color:#eab30880;">●</span>';
+
+function _recentDot(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 3600000) return _RECENT_DOT_GREEN;      // < 1h
+  if (diff < 86400000) return _RECENT_DOT_FADED;     // < 24h
+  if (diff < 604800000) return _RECENT_DOT_YELLOW;   // < 7d
+  return '';
+}
+
+function _isRecentlyActive(ts) {
+  return Date.now() - ts < 86400000;  // 24h 内
 }
 
 window.INVITE_ADMIN_PANEL = INVITE_ADMIN_PANEL;

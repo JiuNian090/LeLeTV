@@ -350,6 +350,9 @@ async function handleInviteRequest(request, env) {
     if (path === '/invite/set-remark' && request.method === 'POST') {
       return handleSetRemark(request, env);
     }
+    if (path === '/invite/rename-device' && request.method === 'POST') {
+      return handleRenameDevice(request, env);
+    }
     
     return jsonResponse({ ok: false, error: '未找到路由' }, 404);
   } catch (error) {
@@ -465,7 +468,9 @@ async function handleList(request, env) {
   }
   
   const codes = await env.INVITE_DB.prepare(
-    'SELECT * FROM invitation_codes ORDER BY created_at DESC'
+    `SELECT ic.* FROM invitation_codes ic
+     LEFT JOIN (SELECT code, MAX(last_active_at) as max_active FROM devices GROUP BY code) d ON ic.code = d.code
+     ORDER BY COALESCE(d.max_active, ic.created_at) DESC`
   ).all();
   
   const result = await Promise.all(codes.results.map(async (invite) => {
@@ -621,6 +626,37 @@ async function handleSetRemark(request, env) {
       throw err;
     }
   }
+  
+  return jsonResponse({ ok: true });
+}
+
+// POST /invite/rename-device - 重命名设备（同码用户可操作，仅限当前设备）
+async function handleRenameDevice(request, env) {
+  const body = await request.json();
+  const { code, device_fingerprint, new_name } = body;
+  
+  if (!code || !device_fingerprint || !new_name) {
+    return jsonResponse({ ok: false, error: '缺少参数' }, 400);
+  }
+  
+  // 仅允许操作同邀请码下的本设备
+  const device = await env.INVITE_DB.prepare(
+    'SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?'
+  ).bind(code, device_fingerprint).first();
+  
+  if (!device) {
+    return jsonResponse({ ok: false, error: '无权限' }, 403);
+  }
+  
+  // 限制设备名长度
+  const name = new_name.trim().slice(0, 30);
+  if (!name) {
+    return jsonResponse({ ok: false, error: '设备名不能为空' }, 400);
+  }
+  
+  await env.INVITE_DB.prepare(
+    'UPDATE devices SET device_name = ? WHERE code = ? AND device_fingerprint = ?'
+  ).bind(name, code, device_fingerprint).run();
   
   return jsonResponse({ ok: true });
 }

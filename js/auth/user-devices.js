@@ -54,6 +54,27 @@ const USER_DEVICES_PANEL = {
     }
   },
 
+  async renameDevice(newName) {
+    const auth = window.INVITE_AUTH?.getAuth();
+    if (!auth) return false;
+
+    try {
+      const res = await fetch(this._inviteUrl('/invite/rename-device'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: auth.code,
+          device_fingerprint: auth.device_fingerprint,
+          new_name: newName
+        })
+      });
+      const data = await res.json();
+      return data.ok;
+    } catch {
+      return false;
+    }
+  },
+
   async render(container) {
     container.innerHTML = `
       <div class="dash-card">
@@ -81,7 +102,14 @@ const USER_DEVICES_PANEL = {
       </div>
     `;
 
-    container.querySelector('#userDeviceRefreshBtn').addEventListener('click', () => this._refresh(container));
+    container.querySelector('#userDeviceRefreshBtn').addEventListener('click', async function clickRefresh() {
+      const btn = this;
+      btn.classList.add('refreshing');
+      await USER_DEVICES_PANEL._refresh(container);
+      btn.classList.remove('refreshing');
+      btn.blur();
+      showToast('已刷新', 'success');
+    });
     container.querySelector('#userDeviceLogoutBtn').addEventListener('click', () => {
       if (window.INVITE_AUTH && confirm('确定退出登录吗？')) {
         window.INVITE_AUTH.logout();
@@ -117,11 +145,14 @@ const USER_DEVICES_PANEL = {
 
     listEl.innerHTML = data.devices.map(d => {
       const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
+      const safeName = d.device_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return `
       <div class="invite-card" style="margin-bottom:0.35rem;">
         <div class="invite-card-top" style="gap:0.4rem;">
           <div class="invite-device-name" style="font-size:0.82rem;color:#e2e8f0;display:flex;align-items:center;gap:0.3rem;flex:1;min-width:0;">
-            <span class="truncate">${_deviceIcon(d.browser)} ${d.device_name}</span>
+            ${isCurrent
+              ? `<span class="truncate invite-name-editable" data-fp="${d.device_fingerprint}" title="点击修改设备名">${_deviceIcon(d.browser)} ${safeName} <span class="invite-rename-icon">✎</span></span>`
+              : `<span class="truncate">${_deviceIcon(d.browser)} ${safeName}</span>`}
             ${isCurrent ? '<span class="invite-status-badge invite-status-active" style="font-size:0.6rem;flex-shrink:0;">当前</span>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;">
@@ -172,6 +203,57 @@ const USER_DEVICES_PANEL = {
         } else {
           showToast('删除失败', 'error');
         }
+      });
+    });
+
+    // 绑定当前设备名点击编辑
+    listEl.querySelectorAll('.invite-name-editable').forEach(el => {
+      el.addEventListener('click', function onClickEdit() {
+        const fp = this.dataset.fp;
+        if (!fp) return;
+
+        // 提取纯文本（去掉尾部的 ✎ 图标）
+        let rawText = this.textContent.replace('✎', '').trim();
+        const iconMatch = rawText.match(/^(\p{Emoji})\s*/u);
+        const icon = iconMatch ? iconMatch[1] + ' ' : '';
+        const currentName = iconMatch ? rawText.slice(icon.length) : rawText;
+
+        // 替换为输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'invite-name-input';
+        input.value = currentName;
+        input.maxLength = 30;
+        input.style.cssText = 'background:#1a1a2e;border:1px solid #ec4899;color:#e2e8f0;border-radius:0.25rem;padding:0.1rem 0.3rem;font-size:0.82rem;width:100%;outline:none;';
+
+        this.innerHTML = '';
+        this.appendChild(input);
+        input.focus();
+        input.select();
+
+        const save = async () => {
+          const val = input.value.trim();
+          if (!val || val === currentName) {
+            this.innerHTML = rawText + ' <span class="invite-rename-icon">✎</span>';
+            return;
+          }
+          const ok = await USER_DEVICES_PANEL.renameDevice(val);
+          if (ok) {
+            showToast('设备名已更新', 'success');
+            USER_DEVICES_PANEL._refresh(container);
+          } else {
+            showToast('修改失败', 'error');
+            this.innerHTML = rawText + ' <span class="invite-rename-icon">✎</span>';
+          }
+        };
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); save(); }
+          else if (e.key === 'Escape') {
+            this.innerHTML = rawText + ' <span class="invite-rename-icon">✎</span>';
+          }
+        });
+        input.addEventListener('blur', save);
       });
     });
   }

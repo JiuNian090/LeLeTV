@@ -2971,6 +2971,20 @@ body > header {
 .invite-card:hover {
     border-color: #333;
 }
+.invite-card-idle {
+    opacity: 0.6;
+}
+.invite-recent-dot {
+    display: inline-block;
+    font-size: 0.45rem;
+    vertical-align: middle;
+    margin-right: 0.1rem;
+    line-height: 1;
+}
+.invite-device-recent {
+    background: rgba(34,197,94,0.04);
+    border-radius: 0.25rem;
+}
 .invite-card-top {
     display: flex;
     align-items: center;
@@ -3075,6 +3089,16 @@ body > header {
     color: #ec4899;
     background: rgba(236,72,153,0.1);
 }
+@keyframes header-btn-flash {
+    0% { border-color: #ec4899; color: #ec4899; background: rgba(236,72,153,0.2); }
+    100% { border-color: #333; color: #9ca3af; background: none; }
+}
+.header-btn:focus {
+    outline: none;
+}
+.header-btn.refreshing {
+    animation: header-btn-flash 0.4s ease-out;
+}
 .gen-btn {
     background: rgba(236,72,153,0.15);
     border: 1px solid rgba(236,72,153,0.3);
@@ -3139,6 +3163,33 @@ details[open] .invite-device-toggle::before {
     gap: 0.3rem;
     min-width: 0;
     flex: 1;
+}
+.invite-name-editable {
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.2s;
+}
+.invite-name-editable:hover {
+    border-bottom-color: #ec4899;
+}
+.invite-rename-icon {
+    font-size: 0.65rem;
+    color: #ec4899;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.invite-name-editable:hover .invite-rename-icon {
+    opacity: 1;
+}
+.invite-name-input {
+    background: #1a1a2e;
+    border: 1px solid #ec4899;
+    color: #e2e8f0;
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.82rem;
+    width: 100%;
+    outline: none;
 }
 
 /* Generate modal */
@@ -3215,20 +3266,7 @@ details[open] .invite-device-toggle::before {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-    .invite-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
 @media (max-width: 639px) {
-    .invite-card-top {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.25rem;
-    }
-    .invite-card-top > div:first-child {
-        width: 100%;
-    }
     .invite-card-actions {
         width: 100%;
         justify-content: flex-start;
@@ -3254,11 +3292,6 @@ details[open] .invite-device-toggle::before {
     .gen-btn {
         font-size: 0.65rem;
         padding: 0.2rem 0.4rem;
-    }
-    .invite-device-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.15rem;
     }
 }
 
