@@ -71,7 +71,7 @@ async function verifyAdminPassword(request, env) {
   const adminName = env.ADMINUSER || '';
   const adminCode = env.ADMINKEY || '';
   if (adminName && adminCode) {
-    const raw = adminName + '::' + adminCode;
+    const raw = adminCode + '::' + adminName;
     const encoder = new TextEncoder();
     const data = encoder.encode(raw);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);

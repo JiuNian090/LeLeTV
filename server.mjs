@@ -127,7 +127,7 @@ function validateAdminPassword(req) {
   const adminName = config.adminUser;
   const adminCode = config.adminKey;
   if (adminName && adminCode) {
-    const expectedToken = crypto.createHash('sha256').update(adminName + '::' + adminCode).digest('hex');
+    const expectedToken = crypto.createHash('sha256').update(adminCode + '::' + adminName).digest('hex');
     if (token === expectedToken) return true;
   }
   
