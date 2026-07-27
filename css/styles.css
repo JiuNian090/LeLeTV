@@ -3098,6 +3098,7 @@ body > header {
 }
 .header-btn.refreshing {
     animation: header-btn-flash 0.4s ease-out;
+    pointer-events: none;
 }
 .gen-btn {
     background: rgba(236,72,153,0.15);
@@ -3175,7 +3176,8 @@ details[open] .invite-device-toggle::before {
 .invite-rename-icon {
     font-size: 0.65rem;
     color: #ec4899;
-    opacity: 0;
+    opacity: 0.6;
+    cursor: pointer;
     transition: opacity 0.2s;
 }
 .invite-name-editable:hover .invite-rename-icon {
