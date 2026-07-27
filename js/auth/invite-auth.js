@@ -13,12 +13,9 @@ const INVITE_AUTH = {
   STORAGE_KEY: 'leletv_invite_auth',
   HEARTBEAT_INTERVAL: 5 * 60 * 1000, // 5分钟
   
-  // 本地开发环境强制走本地 API
-  _isLocalhost: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
-  
   _inviteUrl(path) {
     const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
-    if (workerBase && !this._isLocalhost) {
+    if (workerBase) {
       return `${workerBase}${path}`;
     }
     return `/api${path}`;

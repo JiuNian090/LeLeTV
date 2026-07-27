@@ -647,7 +647,7 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.kmf60q.js?v=v3.2.1" defer></script>
+    <script src="dist/leletv-core.4imv9i.js?v=v3.2.1" defer></script>
     <script src="dist/leletv-app.hzirfn.js?v=v3.2.1" defer></script>
 
     <!-- 环境变量注入脚本 -->
@@ -682,6 +682,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
         if (loginModal) loginModal.style.display = 'none';
+    } else if (loginModal) {
+        loginModal.style.display = 'flex';
     }
     
     if (loginBtn) {

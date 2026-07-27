@@ -6,12 +6,9 @@
  */
 
 const INVITE_ADMIN_PANEL = {
-  // 本地开发环境强制走本地 API
-  _isLocalhost: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
-  
   _baseUrl(path) {
     const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
-    if (workerBase && !this._isLocalhost) {
+    if (workerBase) {
       return `${workerBase}${path}`;
     }
     return `/api${path}`;

@@ -3267,11 +3267,14 @@ details[open] .invite-device-toggle::before {
 
 /* Responsive */
 @media (max-width: 639px) {
+    .invite-card-top {
+        flex-wrap: wrap;
+    }
     .invite-card-actions {
         width: 100%;
         justify-content: flex-start;
-        margin-top: 0.1rem;
-        padding-top: 0.3rem;
+        margin-top: 0.3rem;
+        padding-top: 0.35rem;
         border-top: 1px solid #222;
     }
     .invite-stat-value {
@@ -3281,10 +3284,17 @@ details[open] .invite-device-toggle::before {
         font-size: 0.63rem;
         padding: 0.15rem 0.3rem;
     }
+    .invite-card-meta {
+        font-size: 0.65rem;
+        gap: 0.4rem;
+    }
 }
 @media (max-width: 399px) {
     .invite-card {
         padding: 0.5rem;
+    }
+    .invite-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
     .header-actions {
         gap: 0.2rem;

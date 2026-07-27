@@ -5,11 +5,9 @@
  */
 
 const USER_DEVICES_PANEL = {
-  _isLocalhost: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
-
   _inviteUrl(path) {
     const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
-    if (workerBase && !this._isLocalhost) return `${workerBase}${path}`;
+    if (workerBase) return `${workerBase}${path}`;
     return `/api${path}`;
   },
 
