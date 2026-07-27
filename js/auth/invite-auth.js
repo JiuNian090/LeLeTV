@@ -152,7 +152,7 @@ const INVITE_AUTH = {
       const data = await response.json();
       
       if (data.ok) {
-        // 管理员登录 - 不保存普通设备信息，直接存储管理员 session
+        // 管理员登录 - 存储管理员 session，同时保存普通 auth 以便刷新时识别
         if (data.is_admin) {
           const adminToken = await sha256(code.trim().toUpperCase() + '::' + deviceName.trim());
           localStorage.setItem('leletv_admin_session', JSON.stringify({
@@ -160,6 +160,11 @@ const INVITE_AUTH = {
             verified_at: Date.now()
           }));
           localStorage.setItem('leletv_is_admin', 'true');
+          INVITE_AUTH.saveAuth({
+            code: code.trim().toUpperCase(),
+            device_name: deviceName.trim(),
+            device_fingerprint: fingerprint
+          });
           document.dispatchEvent(new CustomEvent('passwordVerified'));
           return { ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' };
         }

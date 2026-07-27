@@ -519,16 +519,21 @@
                 <h2 class="text-2xl font-bold gradient-text">🎬 LeLeTV</h2>
                 <p class="text-gray-400 text-sm mt-2">输入邀请码和设备名进入</p>
             </div>
-            <div class="mb-4">
-                <label class="text-gray-300 text-sm block mb-1">设备名（昵称）</label>
-                <input type="text" id="inviteDeviceName" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200" placeholder="xxx的手机/平板/电脑/昵称" autocomplete="off" maxlength="30">
-                <p class="text-gray-600 text-[10px] mt-1">用于标识当前设备，最多 30 个字符</p>
-            </div>
-            <div class="mb-5">
-                <label class="text-gray-300 text-sm block mb-1">邀请码</label>
-                <input type="text" id="inviteCodeInput" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200 uppercase tracking-widest" placeholder="LELE-XXXX-XXXX" autocomplete="off" maxlength="19">
-            </div>
-            <button id="inviteLoginBtn" class="w-full gradient-btn py-2.5 rounded-lg font-semibold text-sm tracking-wide">进入 LeLeTV</button>
+            <form id="inviteLoginForm" autocomplete="on">
+                <div class="mb-4">
+                    <label class="text-gray-300 text-sm block mb-1" for="inviteDeviceName">📱 设备名（昵称）</label>
+                    <input type="text" id="inviteDeviceName" name="username" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200" placeholder="xxx的手机/平板/电脑/昵称" autocomplete="username" maxlength="30">
+                    <p class="text-gray-600 text-[10px] mt-1">用于标识当前设备，最多 30 个字符</p>
+                </div>
+                <div class="mb-5">
+                    <label class="text-gray-300 text-sm block mb-1" for="inviteCodeInput">🔑 邀请码</label>
+                    <div class="relative">
+                        <input type="password" id="inviteCodeInput" name="password" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200 tracking-widest" placeholder="LELE-XXXX-XXXX" autocomplete="current-password" maxlength="19" style="font-family:'Courier New',monospace;letter-spacing:0.15em;padding-right:2.5rem;">
+                        <button type="button" id="inviteCodeToggle" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors text-sm px-1 py-1" tabindex="-1" title="显示/隐藏邀请码">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" id="inviteLoginBtn" class="w-full gradient-btn py-2.5 rounded-lg font-semibold text-sm tracking-wide">进入 LeLeTV</button>
+            </form>
             <p id="inviteLoginError" class="text-red-400 text-xs text-center mt-3 hidden"></p>
             <div class="h-px bg-[rgba(255,255,255,0.06)] my-4"></div>
             <p class="text-gray-500 text-xs text-center">没有邀请码？☞ <span class="text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300" data-action="open-invite-guide">获取</span></p>
@@ -647,7 +652,7 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.4imv9i.js?v=v3.2.2" defer></script>
+    <script src="dist/leletv-core.6f7nu4.js?v=v3.2.2" defer></script>
     <script src="dist/leletv-app.hzirfn.js?v=v3.2.2" defer></script>
 
     <!-- 环境变量注入脚本 -->
@@ -675,10 +680,12 @@
 // 邀请码登录事件绑定
 document.addEventListener('DOMContentLoaded', function() {
     const loginModal = document.getElementById('inviteLoginModal');
+    const loginForm = document.getElementById('inviteLoginForm');
     const deviceNameInput = document.getElementById('inviteDeviceName');
     const codeInput = document.getElementById('inviteCodeInput');
     const loginBtn = document.getElementById('inviteLoginBtn');
     const loginError = document.getElementById('inviteLoginError');
+    const codeToggle = document.getElementById('inviteCodeToggle');
     
     if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
         if (loginModal) loginModal.style.display = 'none';
@@ -686,15 +693,24 @@ document.addEventListener('DOMContentLoaded', function() {
         loginModal.style.display = 'flex';
     }
     
-    if (loginBtn) {
-        loginBtn.addEventListener('click', handleInviteLogin);
-    }
-    
-    if (codeInput) {
-        codeInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleInviteLogin();
+    // 邀请码显示/隐藏切换
+    if (codeToggle && codeInput) {
+        codeToggle.addEventListener('click', function() {
+            const isPassword = codeInput.type === 'password';
+            codeInput.type = isPassword ? 'text' : 'password';
+            codeToggle.textContent = isPassword ? '🙈' : '👁️';
+            codeToggle.title = isPassword ? '隐藏邀请码' : '显示邀请码';
         });
     }
+    
+    // 表单提交
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleInviteLogin();
+        });
+    }
+    
     if (deviceNameInput) {
         deviceNameInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') codeInput?.focus();
