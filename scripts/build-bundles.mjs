@@ -3,7 +3,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
 import * as esbuild from 'esbuild';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -132,21 +131,6 @@ async function main() {
   ply = ply.replace(/\n{3,}/g, '\n\n');
   fs.writeFileSync(path.join(ROOT, 'player.html'), ply, 'utf8');
   console.log('[player.html] -> dist/' + coreFile + ' + dist/' + playerFile);
-
-  // 自动暂存 dist 产物与 HTML 引用，避免开发者遗忘 git add
-  // .gitignore 已忽略 dist/*.js.map，所以 git add dist/ 只会暂存 .js 文件
-  try {
-    execSync('git add dist/ index.html player.html', { cwd: ROOT, stdio: 'pipe' });
-    const staged = execSync('git diff --cached --name-only -- dist/ index.html player.html', {
-      cwd: ROOT, encoding: 'utf8',
-    }).trim();
-    if (staged) {
-      console.log('\n[build] 已自动暂存构建产物:');
-      staged.split(/\r?\n/).forEach(f => console.log('  ' + f));
-    }
-  } catch {
-    // 非 git 环境或 git 不可用，静默忽略
-  }
 
   console.log('\n[build] all done');
 }
