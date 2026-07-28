@@ -6,7 +6,7 @@
     "display": "standalone",
     "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
     "background_color": "#000000",
-    "theme_color": "#ec4899",
+    "theme_color": "#000000",
     "categories": ["entertainment", "movies", "video"],
     "lang": "zh",
     "orientation": "any",
