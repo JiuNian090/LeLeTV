@@ -471,11 +471,11 @@ async function search() {
         return;
     }
 
-    // 在搜索前加入骨架屏
+    // 清空结果区域，等待首个源返回后直接渲染真实结果
     const resultsDiv = document.getElementById('results');
     const resultsArea = document.getElementById('resultsArea');
     if (resultsDiv) {
-        resultsDiv.innerHTML = generateSkeletonCards();
+        resultsDiv.innerHTML = '';
     }
     if (resultsArea) {
         resultsArea.classList.remove('hidden');
@@ -537,6 +537,7 @@ async function search() {
         const searchStartTime = Date.now();
 
         // 构建搜索任务：排序后的API依次执行，结果立即追加
+        var _gotFirstResult = false;
         const searchTasks = orderedApis.map(async (apiId) => {
             try {
                 // 检查全局截止时间
@@ -557,7 +558,12 @@ async function search() {
 
                 allResults = allResults.concat(filtered);
 
-                resultsDiv.insertAdjacentHTML('beforeend', _buildSearchCardsHtml(filtered));
+                if (!_gotFirstResult) {
+                    _gotFirstResult = true;
+                    resultsDiv.innerHTML = _buildSearchCardsHtml(filtered);
+                } else {
+                    resultsDiv.insertAdjacentHTML('beforeend', _buildSearchCardsHtml(filtered));
+                }
                 _updateAllTabCount(allResults.length);
             } catch (e) {
                 console.warn(`API ${apiId} 搜索失败:`, e);

@@ -1015,7 +1015,7 @@ main.container {
 @media (min-width: 1024px) {
     .player-layout {
         flex-direction: row;
-        gap: 1.5rem;
+        gap: 0.5rem;
     }
 
     /* 左栏：播放器占 3/4，进度条和控制栏在左栏底部，返回按钮绝对定位左上角 */
