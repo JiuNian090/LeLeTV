@@ -58,9 +58,10 @@ function setupEventListeners() {
         }
     });
 
-    // 搜索历史下拉：输入时过滤
+    // 搜索历史下拉：输入时过滤（移动端用覆盖层，不显示桌面下拉）
     searchInput.addEventListener('input', function () {
         if (!_searchReady) return;
+        if (window.innerWidth <= 639) return;
         showSearchHistory(this.value);
     });
 
