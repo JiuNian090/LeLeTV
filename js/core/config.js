@@ -44,8 +44,8 @@ const API_SITES = {
     },
 
     dbzy: {
-        api: 'https://dbzy.tv/api.php/provide/vod',
-        name: '豆瓣资源',
+        api: 'https://dbzy5.tv/api.php/provide/vod',
+        name: '豆瓣资源'
     },
 
     zuid: {

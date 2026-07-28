@@ -167,7 +167,7 @@ function applyNewDataSourceLogic() {
     const dayInMs = 24 * 60 * 60 * 1000;
 
     if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
-        selectedAPIs = ["bfzy", "dbzy", "zuid", "wujin", "mtzy"];
+        selectedAPIs = ["bfzy", "zuid", "bdzy", "hnzy", "moduzy", "zy360"];
         localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
         localStorage.setItem('lastRefreshTime', currentTime.toString());
         localStorage.setItem('hasUserSelectedAPIs', 'false');
@@ -184,7 +184,7 @@ function applyNewDataSourceLogic() {
         if (savedSelectedAPIs) {
             selectedAPIs = JSON.parse(savedSelectedAPIs);
         } else {
-            selectedAPIs = ["bfzy", "dbzy", "zuid", "wujin", "mtzy"];
+            selectedAPIs = ["bfzy", "zuid", "bdzy", "hnzy", "moduzy", "zy360"];
             localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
             localStorage.setItem('lastRefreshTime', currentTime.toString());
             localStorage.setItem('hasUserSelectedAPIs', 'false');
