@@ -164,7 +164,7 @@ function validateProxyAuth(req) {
   
   // 在开发环境下，如果未设置密码，则允许访问
   if (!serverPassword) {
-    console.log('开发环境：未设置 PASSWORD 环境变量，允许代理访问');
+    console.log('开发环境：未设置 HIDDENKEY 环境变量，允许代理访问');
     return true;
   }
   
