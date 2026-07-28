@@ -30,14 +30,14 @@ function renderPlayerDetailInfo() {
     if (dh) { descBody.innerHTML = dh; if (arrow) arrow.style.display = ''; }
     else { descBody.innerHTML = ''; if (arrow) arrow.style.display = 'none'; }
   }
+  var toggleHd = ct.querySelector('.detail-toggle-header');
+  if (toggleHd) toggleHd.style.display = hasActorOrDesc ? '' : 'none';
   if (hasActorOrDesc) ct.classList.add('detail-collapsed');
 }
 
 function toggleDetailInfo() {
   var ct = document.getElementById('playerDetailInfo');
   if (!ct) return;
-  var body = ct.querySelector('.detail-collapse-body');
-  if (!body || !body.innerHTML.trim()) return;
   ct.classList.toggle('detail-collapsed');
 }
 

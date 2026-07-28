@@ -504,7 +504,9 @@ body.native-fs-active .control-buttons-container {
 
 .detail-desc-section .detail-collapse-body {
     overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    max-height: 2000px;
+    opacity: 1;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding-top 0.3s ease, margin 0.3s ease;
     padding-top: 4px;
 }
 
