@@ -61,6 +61,7 @@ function setupEventListeners() {
     // 搜索历史下拉：输入时过滤（移动端用覆盖层，不显示桌面下拉）
     searchInput.addEventListener('input', function () {
         if (!_searchReady) return;
+        if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
         showSearchHistory(this.value);
     });
@@ -353,10 +354,13 @@ function setupEventListeners() {
     });
 }
 
+// 在重置搜索区域时抑制 hookInput 触发的 input→showSearchHistory
+var _resettingSearchArea = false;
+
 function resetSearchArea() {
-    // 关闭移动端覆盖层和搜索历史下拉
+    _resettingSearchArea = true;
+
     closeMobileSearch();
-    hideSearchHistory();
 
     // 清理搜索结果
     document.getElementById('results').innerHTML = '';
@@ -401,6 +405,10 @@ function resetSearchArea() {
     if (filterTabs) filterTabs.innerHTML = '';
     _activeSourceFilter = 'all';
     _lastAllResults = [];
+
+    // 恢复后再统一隐藏搜索历史下拉
+    _resettingSearchArea = false;
+    hideSearchHistory();
 }
 
 function closeSearchResults() {
