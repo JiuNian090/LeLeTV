@@ -167,7 +167,7 @@ function applyNewDataSourceLogic() {
     const dayInMs = 24 * 60 * 60 * 1000;
 
     if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
-        selectedAPIs = ["bfzy", "zuid", "bdzy", "hnzy", "moduzy", "zy360"];
+        selectedAPIs = ["bfzy", "zuid", "wujin"];
         localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
         localStorage.setItem('lastRefreshTime', currentTime.toString());
         localStorage.setItem('hasUserSelectedAPIs', 'false');
@@ -184,7 +184,7 @@ function applyNewDataSourceLogic() {
         if (savedSelectedAPIs) {
             selectedAPIs = JSON.parse(savedSelectedAPIs);
         } else {
-            selectedAPIs = ["bfzy", "zuid", "bdzy", "hnzy", "moduzy", "zy360"];
+            selectedAPIs = ["bfzy", "zuid", "wujin"];
             localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
             localStorage.setItem('lastRefreshTime', currentTime.toString());
             localStorage.setItem('hasUserSelectedAPIs', 'false');
@@ -503,7 +503,7 @@ function cancelAddCustomApi() {
     if (form) {
         form.classList.add('hidden');
         document.getElementById('customApiName').value = '';
-        document.getElementById('customApiUrl').value = '';
+        document.getElementById('customApiUrl').value = 'https://xxx.example.com/api.php/provide/vod/';
         document.getElementById('customApiDetail').value = '';
         const isHiddenInput = document.getElementById('customApiIsHidden');
         if (isHiddenInput) isHiddenInput.checked = false;
@@ -529,6 +529,10 @@ function addCustomApi() {
     }
     if (!/^https?:\/\/.+/.test(url)) {
         showToast('API链接格式不正确，需以http://或https://开头', 'warning');
+        return;
+    }
+    if (url === 'https://xxx.example.com/api.php/provide/vod/') {
+        showToast('请将示例链接替换为实际的API地址', 'warning');
         return;
     }
     if (url.endsWith('/')) {
