@@ -233,6 +233,12 @@
             this.container.insertBefore(this.canvas, this.container.firstChild);
 
             this._resize();
+            // 监听窗口和容器尺寸变化，极光实时适配
+            window.addEventListener('resize', this.boundResize);
+            if (window.ResizeObserver) {
+                resizeObserver = new ResizeObserver(this.boundResize);
+                resizeObserver.observe(this.container);
+            }
             this.startTime = performance.now();
             this.running = true;
             this._tick();
@@ -305,6 +311,11 @@
         if (this.animId) {
             cancelAnimationFrame(this.animId);
             this.animId = null;
+        }
+        window.removeEventListener('resize', this.boundResize);
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+            resizeObserver = null;
         }
         if (this.gl && this.program) {
             this.gl.getExtension('WEBGL_lose_context').loseContext();

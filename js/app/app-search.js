@@ -391,11 +391,11 @@ function resetSearchArea() {
         }
         window.history.pushState(
             {},
-            `LeLeTV - 乐乐影视`,
+            `LeLeTV`,
             `/`
         );
         // 更新页面标题
-        document.title = `LeLeTV - 乐乐影视`;
+        document.title = `LeLeTV`;
     } catch (e) {
         console.error('更新浏览器历史失败:', e);
     }

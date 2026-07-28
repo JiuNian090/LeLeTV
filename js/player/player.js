@@ -711,7 +711,7 @@ function updateMediaSession() {
     navigator.mediaSession.metadata = new MediaMetadata({
         title: currentVideoTitle,
         artist: 'LeLeTV',
-        album: episodeStr || '乐乐影视',
+        album: episodeStr || 'LeLeTV',
         artwork: [
             { src: coverUrl, sizes: '256x256', type: 'image/png' },
             { src: coverUrl, sizes: '512x512', type: 'image/png' },
