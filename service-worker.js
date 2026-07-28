@@ -6,7 +6,7 @@ const CACHE_IMAGES = `leletv-images-${CACHE_VERSION}`;
 
 const CURRENT_CACHE_NAMES = [CACHE_NAME, CACHE_API, CACHE_IMAGES];
 
-// 需要缓存的关键静态资源
+// 需要缓存的关键静态资源（仅预缓存核心入口文件，其余由运行时按需缓存）
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -16,34 +16,7 @@ const STATIC_ASSETS = [
   '/image/logo.png',
   '/css/output.css',
   '/css/styles.css',
-
-  '/css/player.css',
   '/css/variables.css',
-
-  '/js/core/config.js',
-  '/js/api/api-config.js',
-  '/js/auth/proxy-auth.js',
-  '/js/api/loadBalancer.js',
-
-  '/js/ui/ui-core.js',
-  '/js/ui/ui-search-history.js',
-  '/js/ui/ui-viewing-history.js',
-  '/js/ui/ui.js',
-  '/js/api/api.js',
-  '/js/auth/password.js',
-  '/js/api/search.js',
-  '/js/api/tmdb.js',
-  '/js/player/player-core.js',
-  '/js/player/player-episodes.js',
-  '/js/player/player-ui.js',
-  '/js/player/player-bridge.js',
-  '/js/player/player.js',
-
-  '/js/app/app-search.js',
-  '/js/app/app-config.js',
-  '/js/app/app.js',
-  '/js/utils/version-updater.js',
-  '/js/core/cache-manager.js'
 ];
 
 // 最大缓存条目数限制
