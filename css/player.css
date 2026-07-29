@@ -900,23 +900,21 @@ body.native-fs-active .control-buttons-container {
     padding: 0.5rem 0.75rem;
 }
 
-/* 桌面端控制按钮等宽填充 */
-@media (min-width: 1024px) {
-    .control-buttons-container {
-        gap: 0.75rem;
-    }
-    .control-buttons-container > * {
-        flex: 1;
-        min-width: 0;
-    }
-    .autoplay-container {
-        justify-content: center;
-        width: 100%;
-    }
-    .control-buttons-container > button {
-        flex: 1;
-        justify-content: center;
-    }
+/* 控制按钮等宽填充（所有尺寸统一等分） */
+.control-buttons-container {
+    gap: 0.75rem;
+}
+.control-buttons-container > * {
+    flex: 1;
+    min-width: 0;
+}
+.autoplay-container {
+    justify-content: center;
+    width: 100%;
+}
+.control-buttons-container > button {
+    flex: 1;
+    justify-content: center;
 }
 
 /* 左侧按钮组也不换行 */
