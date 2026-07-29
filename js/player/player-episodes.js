@@ -143,7 +143,18 @@ function playEpisode(index) {
             initPlayer(url);
         }, 12000);
 
-        art.url = url;
+        // art.url = url 触发 ArtPlayer 内部源切换
+        // 如果新 URL 加载异常，ArtPlayer 内部可能访问已销毁状态导致报错
+        try {
+            art.url = url;
+        } catch (e) {
+            console.warn('[LeLeTV] 剧集无缝切换失败，回退重建播放器:', e);
+            clearTimeout(episodeSwitchTimeout);
+            episodeSwitchTimeout = null;
+            window.isSwitchingVideo = false;
+            PlayerManager.destroy();
+            initPlayer(url);
+        }
     } else {
         // art 为空，直接初始化播放器
         initPlayer(url);
