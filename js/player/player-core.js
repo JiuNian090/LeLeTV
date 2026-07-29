@@ -9,8 +9,8 @@ function createHlsConfig() {
         lowLatencyMode: true,                   // 低延迟模式加速起播
         startFragPrefetch: true,                // manifest 加载时预取首个分片（v1.4.0+）
         backBufferLength: 30,                   // 后向缓冲30秒，释放内存
-        maxBufferLength: 20,                    // 减小前向缓冲，更快开始播放
-        maxMaxBufferLength: 40,
+        maxBufferLength: 12,                    // 减小前向缓冲，减少内存占用
+        maxMaxBufferLength: 25,
         maxBufferSize: 20 * 1000 * 1000,
         maxBufferHole: 0.3,                     // 减小缓冲空洞容忍度
         fragLoadingMaxRetry: 3,                 // 减少重试次数
@@ -58,9 +58,11 @@ function setupHlsCustomType(video, url, hlsConfig) {
         document.getElementById('error').style.display = 'none';
     });
 
-    video.addEventListener('timeupdate', function () {
+    // 首次播放后隐藏错误提示，然后移除自身
+    video.addEventListener('timeupdate', function onFirstTimeUpdate() {
         if (video.currentTime > 1) {
             document.getElementById('error').style.display = 'none';
+            video.removeEventListener('timeupdate', onFirstTimeUpdate);
         }
     });
 
@@ -438,8 +440,6 @@ function initPlayer(videoUrl) {
     setupNativeFullscreenHandler();
 
     setupLongPressSpeedControl();
-
-    setupThumbnailCapture();
 
     setupControlsBehavior();
 }

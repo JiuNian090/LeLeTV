@@ -366,13 +366,13 @@ function initializePageContent() {
         if (art && art.video) {
             art.video.addEventListener('pause', saveCurrentProgress);
 
-            // 新增：播放进度变化时节流保存
-            let lastSave = 0;
+            // 播放进度变化时节流保存（每5秒最多一次）
+            let lastSaveTime = 0;
             art.video.addEventListener('timeupdate', function() {
-                const now = Date.now();
-                if (now - lastSave > TIMING.PROGRESS_SAVE_THROTTLE) { // 每5秒最多保存一次
+                const now = performance.now();
+                if (now - lastSaveTime > TIMING.PROGRESS_SAVE_THROTTLE) {
                     saveCurrentProgress();
-                    lastSave = now;
+                    lastSaveTime = now;
                 }
             });
 

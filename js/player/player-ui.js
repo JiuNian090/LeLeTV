@@ -87,11 +87,13 @@ function setupProgressBarPreciseClicks() {
     progressBar.dataset.leletvProgress = 'bound';
 
     let isDragging = false;
+    let cachedRect = null; // 拖动期间缓存 progressBar 布局，避免每帧强制回流
 
     // 统一的跳转处理函数
-    function seekByClientX(clientX, target) {
+    function seekByClientX(clientX) {
         if (!art || !art.video) return;
-        const rect = target.getBoundingClientRect();
+        // 拖动期间使用缓存的 rect，初始点击时实时计算
+        const rect = cachedRect || progressBar.getBoundingClientRect();
         const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         const duration = art.video.duration;
         let seekTime = percentage * duration;
@@ -107,18 +109,20 @@ function setupProgressBarPreciseClicks() {
     function handleMouseDown(e) {
         if (!art || !art.video) return;
         isDragging = true;
+        cachedRect = progressBar.getBoundingClientRect(); // 缓存一次
         e.preventDefault();
         e.stopPropagation();
-        seekByClientX(e.clientX, e.currentTarget);
+        seekByClientX(e.clientX);
     }
 
     function handleMouseMove(e) {
         if (!isDragging) return;
-        seekByClientX(e.clientX, progressBar);
+        seekByClientX(e.clientX);
     }
 
     function handleMouseUp() {
         isDragging = false;
+        cachedRect = null;
     }
 
     progressBar.addEventListener('mousedown', handleMouseDown);
@@ -129,18 +133,20 @@ function setupProgressBarPreciseClicks() {
     function handleTouchStart(e) {
         if (!art || !art.video || !e.touches[0]) return;
         isDragging = true;
+        cachedRect = progressBar.getBoundingClientRect(); // 缓存一次
         e.stopPropagation();
-        seekByClientX(e.touches[0].clientX, e.currentTarget);
+        seekByClientX(e.touches[0].clientX);
     }
 
     function handleTouchMove(e) {
         if (!isDragging || !e.touches[0]) return;
         e.preventDefault();
-        seekByClientX(e.touches[0].clientX, progressBar);
+        seekByClientX(e.touches[0].clientX);
     }
 
     function handleTouchEnd() {
         isDragging = false;
+        cachedRect = null;
     }
 
     progressBar.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -283,135 +289,6 @@ function setupLongPressSpeedControl() {
     });
 }
 
-function setupThumbnailCapture() {
-    if (!art || !art.video) return;
-
-    const THUMBNAIL_WIDTH = 160;
-    const TOTAL_THUMBNAILS = 100;
-    const COLUMNS = 10;
-    const FLUSH_EVERY = 3;            // 每抓3帧就刷新，ArtPlayer 帧映射更精确
-    const CAPTURE_INTERVAL = 1;       // 秒，最短捕获间隔
-    const CATCHUP_RATE = 0.25;        // 秒，初始追赶阶段间隔（更快覆盖时间轴）
-
-    let captured = 0;
-    let lastCapture = 0;
-    let canvas = null;
-    let ctx = null;
-    let frameH = 90;
-    let thumbnailUrl = null;
-    let knownDuration = 0;
-    let videoUrlAtSetup = currentVideoUrl || '';
-
-    // -------- 重置 --------
-    function reset() {
-        captured = 0;
-        lastCapture = 0;
-        knownDuration = 0;
-        canvas = null;
-        ctx = null;
-        frameH = 90;
-        if (thumbnailUrl) {
-            URL.revokeObjectURL(thumbnailUrl);
-            thumbnailUrl = null;
-        }
-        if (art) art.thumbnails = null;
-    }
-
-    // -------- Canvas 初始化 --------
-    function ensureCanvas() {
-        if (canvas) return true;
-        const vh = art.video.videoHeight || art.video.height || 90;
-        const vw = art.video.videoWidth || art.video.width || 160;
-        if (!vh || !vw) return false;
-
-        frameH = Math.round(THUMBNAIL_WIDTH * vh / vw);
-        const rows = Math.ceil(TOTAL_THUMBNAILS / COLUMNS);
-        canvas = document.createElement('canvas');
-        canvas.width = THUMBNAIL_WIDTH * COLUMNS;
-        canvas.height = frameH * rows;
-        ctx = canvas.getContext('2d');
-        return true;
-    }
-
-    // -------- 刷新雪碧图到 ArtPlayer --------
-    function flushSprite() {
-        if (!canvas || captured === 0) return;
-        canvas.toBlob(function (blob) {
-            if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
-            thumbnailUrl = URL.createObjectURL(blob);
-            art.thumbnails = {
-                url: thumbnailUrl,
-                number: captured,
-                column: COLUMNS,
-                width: THUMBNAIL_WIDTH,
-                height: frameH,
-            };
-        }, 'image/jpeg');
-    }
-
-    // -------- 抽帧核心 --------
-    function onTimeUpdate() {
-        if (!art || !art.video) return;
-
-        // 检测剧集切换：currentVideoUrl 变化时自动重置
-        if (currentVideoUrl !== videoUrlAtSetup) {
-            videoUrlAtSetup = currentVideoUrl;
-            reset();
-        }
-
-        if (captured >= TOTAL_THUMBNAILS) return;
-
-        const ct = art.video.currentTime;
-        const dur = art.video.duration || Infinity;
-
-        // 追赶策略：前 25 帧用更小间隔快速覆盖时间轴
-        const minInterval = captured < 25 ? CATCHUP_RATE : CAPTURE_INTERVAL;
-        if (ct - lastCapture < minInterval) return;
-
-        // 如果已获知视频时长，计算理想帧间距，避免全部堆在前几分钟
-        if (dur < 600 && dur > 10) {   // 短于 10 分钟的视频
-            knownDuration = dur;
-            const idealSpacing = dur / TOTAL_THUMBNAILS;
-            // 检查是否已经有覆盖到当前位置附近的帧
-            const expectedFrame = Math.floor(ct / idealSpacing);
-            if (expectedFrame < captured - 5 || expectedFrame > captured + 3) {
-                // 跳过了太多帧，直接按当前位置补齐
-                const targetFrame = Math.min(expectedFrame, TOTAL_THUMBNAILS - 1);
-                if (targetFrame > captured) {
-                    // 快速推进到目标位置（不实际绘制，只是追索引）
-                    // 这里不做跳过，仍然按实际时间捕获，但允许更小间隔
-                }
-            }
-        }
-
-        if (!ensureCanvas() || !ctx) return;
-        lastCapture = ct;
-
-        const col = captured % COLUMNS;
-        const row = Math.floor(captured / COLUMNS);
-        try {
-            ctx.drawImage(art.video, col * THUMBNAIL_WIDTH, row * frameH, THUMBNAIL_WIDTH, frameH);
-            captured++;
-            // 更频繁地刷新雪碧图
-            if (captured % FLUSH_EVERY === 0 || captured >= TOTAL_THUMBNAILS) {
-                flushSprite();
-            }
-        } catch (e) {
-            // drawImage 可能在视频未就绪时失败，静默跳过
-        }
-    }
-
-    // -------- 视频元数据重载时重置（剧集切换等场景）-------
-    function onMetaDataLoaded() {
-        videoUrlAtSetup = currentVideoUrl || '';
-        reset();
-        ensureCanvas();
-    }
-
-    art.video.addEventListener('timeupdate', onTimeUpdate);
-    art.on('video:loadedmetadata', onMetaDataLoaded);
-}
-
 function setupControlsBehavior() {
     if (!art) return;
 
@@ -525,12 +402,17 @@ function setupControlsBehavior() {
         e.stopPropagation();
     });
 
+    // RAF 节流：mousemove 高频时不重复触发 DOM 操作
+    let controlsRafPending = false;
     playerEl.addEventListener('mousemove', function () {
-        if (controlsLocked) {
-            return;
-        }
-        if (!controlsVisible) showControls();
-        else resetAutoHide();
+        if (controlsLocked) return;
+        if (controlsRafPending) return;
+        controlsRafPending = true;
+        requestAnimationFrame(function () {
+            controlsRafPending = false;
+            if (!controlsVisible) showControls();
+            else resetAutoHide();
+        });
     });
 
     playerEl.addEventListener('mouseleave', function () {
