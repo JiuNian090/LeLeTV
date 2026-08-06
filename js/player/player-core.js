@@ -4,7 +4,7 @@
 function createHlsConfig() {
     return {
         debug: false,
-        loader: adFilteringEnabled ? CustomHlsJsLoader : Hls.DefaultConfig.loader,
+        loader: Hls.DefaultConfig.loader,
         enableWorker: true,
         lowLatencyMode: true,                   // 低延迟模式加速起播
         startFragPrefetch: true,                // manifest 加载时预取首个分片（v1.4.0+）
@@ -442,46 +442,4 @@ function initPlayer(videoUrl) {
     setupLongPressSpeedControl();
 
     setupControlsBehavior();
-}
-
-class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
-    constructor(config) {
-        super(config);
-        const load = this.load.bind(this);
-        this.load = function (context, config, callbacks) {
-            // 拦截manifest和level请求
-            if (context.type === 'manifest' || context.type === 'level') {
-                const onSuccess = callbacks.onSuccess;
-                callbacks.onSuccess = function (response, stats, context) {
-                    // 如果是m3u8文件，处理内容以移除广告分段
-                    if (response.data && typeof response.data === 'string') {
-                        // 过滤掉广告段 - 实现更精确的广告过滤逻辑
-                        response.data = filterAdsFromM3U8(response.data, true);
-                    }
-                    return onSuccess(response, stats, context);
-                };
-            }
-            // 执行原始load方法
-            load(context, config, callbacks);
-        };
-    }
-}
-
-function filterAdsFromM3U8(m3u8Content, strictMode = false) {
-    if (!m3u8Content) return '';
-
-    // 按行分割M3U8内容
-    const lines = m3u8Content.split('\n');
-    const filteredLines = [];
-
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-
-        // 只过滤#EXT-X-DISCONTINUITY标识
-        if (!line.includes('#EXT-X-DISCONTINUITY')) {
-            filteredLines.push(line);
-        }
-    }
-
-    return filteredLines.join('\n');
 }

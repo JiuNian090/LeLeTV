@@ -433,13 +433,7 @@ search() → searchByAPIAndKeyWord() × N → 渐进式渲染 + 各源计数更�
 
 **文件**: [player.js](file:///e:/Code/JiunianTV/LeLeTV/js/player/player.js)（约 2390 行，最复杂的模块）
 
-**职责**: 基于 ArtPlayer 和 HLS.js 的完整视频播放功能，支持 M3U8 流媒体、广告过滤、键盘快捷键、进度恢复、观看历史等。
-
-**关键类**:
-
-| 类名 | 说明 |
-|------|------|
-| `CustomHlsJsLoader` | 自定义 HLS.js Loader，拦截 manifest/level 请求过滤广告 |
+**职责**: 基于 ArtPlayer 和 HLS.js 的完整视频播放功能，支持 M3U8 流媒体、键盘快捷键、进度恢复、观看历史等。
 
 **关键函数**:
 
@@ -460,11 +454,9 @@ search() → searchByAPIAndKeyWord() × N → 渐进式渲染 + 各源计数更�
 | `saveCurrentProgress()` | 保存当前播放进度（30 秒防抖） |
 | `renderPlayerDetailInfo()` | 渲染播放器详情面板（类型/年份/导演/主演/简介） |
 | `updateMediaSession()` | 更新 Media Session API 元数据 |
-| `filterAdsFromM3U8(m3u8Content, strictMode)` | M3U8 内容广告过滤 |
 | `fetchTmdbPlayerDetail(title)` | 异步获取 TMDB 详情增强信息 |
 
 **HLS.js 配置要点**:
-- 自定义 Loader（`CustomHlsJsLoader`）用于过滤 `#EXT-X-DISCONTINUITY` 广告段
 - 分片重试最大 6 次、manifest 重试 3 次
 - bufferAppendError 自动恢复机制
 - 致命错误分级处理：NETWORK → 重新加载, MEDIA → recoverMediaError
@@ -932,7 +924,6 @@ initializePageContent() (player.js → player/player.js)
   ├── 从 localStorage 恢复状态
   ├── 获取 TMDB 详情增强（异步）
   ├── initPlayer(videoUrl) → ArtPlayer + HLS.js
-  │   ├── CustomHlsJsLoader（广告过滤）
   │   ├── 恢复播放进度（URL position > localStorage progress）
   │   ├── Media Session API 元数据
   │   └── 定期保存进度（30s 间隔）

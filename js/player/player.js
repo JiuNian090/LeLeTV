@@ -73,7 +73,6 @@ let videoHasEnded = false; // 跟踪视频是否已经自然结束
 let userClickedPosition = null; // 记录用户点击的位置
 let shortcutHintTimeout = null; // 用于控制快捷键提示显示时间
 let autoFullscreened = false; // 标记是否由自动全屏进入
-let adFilteringEnabled = true; // 默认开启广告过滤
 let progressSaveInterval = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
 let episodeSwitchTimeout = null; // 集数切换超时定时器（用于兜底重建）
@@ -213,9 +212,6 @@ function initializePageContent() {
     // 设置自动连播开关状态
     autoplayEnabled = localStorage.getItem('autoplayEnabled') !== 'false'; // 默认为true
     document.getElementById('autoplayToggle').checked = autoplayEnabled;
-
-    // 获取广告过滤设置
-    adFilteringEnabled = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false'; // 默认为true
 
     // 监听自动连播开关变化
     document.getElementById('autoplayToggle').addEventListener('change', function (e) {
