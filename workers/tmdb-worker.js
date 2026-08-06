@@ -549,12 +549,16 @@ async function handleStats(request, env) {
   const totalCodes = await env.INVITE_DB.prepare('SELECT COUNT(*) as count FROM invitation_codes').first();
   const activeCodes = await env.INVITE_DB.prepare('SELECT COUNT(*) as count FROM invitation_codes WHERE is_active = 1').first();
   const totalDevices = await env.INVITE_DB.prepare('SELECT COUNT(*) as count FROM devices').first();
+  const recentActiveDevices = await env.INVITE_DB.prepare(
+    'SELECT COUNT(*) as count FROM devices WHERE last_active_at > ?'
+  ).bind(Date.now() - 86400000).first();
   
   return jsonResponse({
     ok: true,
     total_codes: totalCodes.count,
     active_codes: activeCodes.count,
-    total_devices: totalDevices.count
+    total_devices: totalDevices.count,
+    recent_active_devices: recentActiveDevices.count
   });
 }
 

@@ -232,11 +232,12 @@ const INVITE_ADMIN_PANEL = {
     ]);
     
     if (stats) {
+      const recentActive = stats.recent_active_devices ?? 0;
       statsEl.innerHTML = `
         <div class="invite-stat-card"><div class="invite-stat-value" style="color:#f472b6">${stats.total_codes}</div><div class="invite-stat-label">总邀请码</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#22c55e">${stats.active_codes}</div><div class="invite-stat-label">活跃</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#ef4444">${stats.total_codes - stats.active_codes}</div><div class="invite-stat-label">已禁用</div></div>
         <div class="invite-stat-card"><div class="invite-stat-value" style="color:#60a5fa">${stats.total_devices}</div><div class="invite-stat-label">总设备数</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#22c55e">${recentActive}</div><div class="invite-stat-label">最近活跃</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#9ca3af">${stats.total_devices - recentActive}</div><div class="invite-stat-label">不活跃</div></div>
       `;
     }
     
