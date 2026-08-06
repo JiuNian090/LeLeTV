@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
     if (!localStorage.getItem('hasInitializedDefaults')) {
-        selectedAPIs = ["bfzy", "dbzy", "zuid", "wujin", "mtzy"];
+        selectedAPIs = ["dbzy", "zuid", "wujin", "lzzy"];
         localStorage.setItem('selectedAPIs', JSON.stringify(selectedAPIs));
         localStorage.setItem('hiddenFilterEnabled', 'true');
         localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');

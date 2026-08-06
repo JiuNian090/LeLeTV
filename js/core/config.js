@@ -63,12 +63,17 @@ const API_SITES = {
         name: '茅台资源'
     },
 
+    lzzy: {
+        api: 'https://cj.lziapi.com/api.php/provide/vod/from/lzm3u8/at/json/',
+        name: '量子资源'
+    },
+
     ikun: {
         api: 'https://ikunzyapi.com/api.php/provide/vod',
         name: 'iKun资源'
     },
     hnzy: {
-        api: 'https://hongniuzy2.com/api.php/provide/vod',
+        api: 'https://www.hongniuzy2.com/api.php/provide/vod/from/hnm3u8/at/json/',
         name: '红牛资源'
     },
     ckzy: {
