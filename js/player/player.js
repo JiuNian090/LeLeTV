@@ -14,7 +14,8 @@ function goHome(event) {
         return;
     }
 
-    // 优先使用 URL back 参数（来自历史记录等外部跳转带入），否则交由浏览器处理历史栈
+    // 优先返回来源页（back 参数），否则直接返回首页
+    // 不使用 history.back()：播放页内切集/切源会改变历史状态，直接跳转保证返回结果可控
     const urlParams = new URLSearchParams(window.location.search);
     const backUrl = urlParams.get('back');
 
@@ -22,7 +23,7 @@ function goHome(event) {
         localStorage.removeItem('lastSearchPage');
         window.location.href = backUrl;
     } else {
-        window.history.back();
+        window.location.href = '/index.html';
     }
 
     // 兜底：5 秒后如果还在当前页，强制跳转首页

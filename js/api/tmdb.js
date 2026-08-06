@@ -14,6 +14,50 @@ const TMDB_STATE = {
   _genreExpanded: false
 };
 
+// 类别页状态持久化（sessionStorage）：从播放页返回时恢复筛选/页码/滚动位置
+const TMDB_STATE_KEY = 'leletv_tmdb_state';
+const TMDB_SCROLL_KEY = 'leletv_tmdb_scroll';
+
+function saveTmdbState() {
+  try {
+    const { isLoaded, isLoading, _genreExpanded, ...rest } = TMDB_STATE;
+    sessionStorage.setItem(TMDB_STATE_KEY, JSON.stringify(rest));
+  } catch (e) { /* 忽略 sessionStorage 不可用 */ }
+}
+
+function restoreTmdbState() {
+  try {
+    const raw = sessionStorage.getItem(TMDB_STATE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    Object.keys(saved).forEach(k => {
+      if (k in TMDB_STATE) TMDB_STATE[k] = saved[k];
+    });
+  } catch (e) { /* 忽略 */ }
+}
+
+function saveTmdbScroll() {
+  try {
+    const y = window.scrollY;
+    if (y > 0) sessionStorage.setItem(TMDB_SCROLL_KEY, String(y));
+  } catch (e) { /* 忽略 */ }
+}
+
+function restoreTmdbScroll() {
+  try {
+    const raw = sessionStorage.getItem(TMDB_SCROLL_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(TMDB_SCROLL_KEY);
+    const y = parseInt(raw, 10);
+    if (y > 0) {
+      // 等待页面切换的滚动动画结束后再恢复位置
+      setTimeout(() => window.scrollTo({ top: y, behavior: 'auto' }), 120);
+    }
+  } catch (e) { /* 忽略 */ }
+}
+
+window.saveTmdbScroll = saveTmdbScroll;
+
 const TMDB_CONFIG = {
   imageBase: 'https://image.tmdb.org/t/p',
   posterSize: 'w342',
@@ -178,6 +222,21 @@ async function tmdbFetch(endpoint, params = {}) {
 }
 
 function initTmdbCategory() {
+  // 从播放页返回时恢复之前的筛选/页码状态（由 buildPlayerBackUrl 标记）
+  if (sessionStorage.getItem('leletv_restore_category') === '1') {
+    sessionStorage.removeItem('leletv_restore_category');
+    restoreTmdbState();
+    if (TMDB_STATE.isLoaded) {
+      // 本会话已加载过，直接恢复滚动位置
+      restoreTmdbScroll();
+      return;
+    }
+    TMDB_STATE.isLoaded = true;
+    renderTmdbFilters();
+    loadTmdbResults();
+    return;
+  }
+
   if (TMDB_STATE.isLoaded) return;
   TMDB_STATE.isLoaded = true;
   resetTmdbFilters();
@@ -321,6 +380,7 @@ function bindTypeSwitch() {
         resetTmdbFilters();
         renderTmdbFilters();
         loadTmdbResults();
+        saveTmdbState();
       }
     });
   });
@@ -373,6 +433,7 @@ function bindFilterTags() {
     TMDB_STATE.page = 1;
     renderTmdbFilters();
     loadTmdbResults();
+    saveTmdbState();
   });
 }
 
@@ -462,6 +523,8 @@ async function loadTmdbResults() {
     TMDB_STATE.totalPages = Math.min(Math.ceil(totalTmdbPages * 20 / 24), 500);
     renderTmdbCards(results);
     renderTmdbPagination();
+    // 从播放页返回时恢复之前浏览到的影片位置
+    restoreTmdbScroll();
   } catch (err) {
     console.error('TMDB 加载失败:', err);
     container.innerHTML = `
@@ -609,6 +672,7 @@ function renderTmdbPagination() {
       if (page >= 1 && page <= total && page !== current) {
         TMDB_STATE.page = page;
         loadTmdbResults();
+        saveTmdbState();
         const filtersEl = document.getElementById('tmdb-filters');
         if (filtersEl) {
           window.scrollTo({ top: filtersEl.offsetTop - 80, behavior: 'smooth' });

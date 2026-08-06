@@ -804,8 +804,13 @@ async function switchToResource(sourceKey, vodId) {
         // 获取目标集数的URL
         const targetUrl = data.episodes[targetIndex];
         
+        // 保留当前页面的 back 参数，确保切换资源后返回仍能回到来源页（而非上一个源）
+        const currentUrlParams2 = new URLSearchParams(window.location.search);
+        const currentBack = currentUrlParams2.get('back');
+        const backSuffix = currentBack ? `&back=${encodeURIComponent(currentBack)}` : '';
+
         // 构建播放页面URL，包含当前播放进度
-        const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}`;
+        const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}${backSuffix}`;
         
         // 保存当前状态到localStorage
         try {

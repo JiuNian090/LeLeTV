@@ -27,6 +27,26 @@ async function buildApiParamsAndFetch(id, sourceCode) {
     }
 }
 
+// 构建播放页返回地址：优先最近浏览页（类别/历史记录），否则回首页
+// 从类别页进入时标记返回需恢复筛选/页码状态
+function buildPlayerBackUrl() {
+    let backUrl = window.location.origin + '/index.html';
+    try {
+        const lastBrowsed = sessionStorage.getItem('leletv_last_browsed_page');
+        if (lastBrowsed && lastBrowsed.startsWith('#')) {
+            backUrl += lastBrowsed;
+            if (lastBrowsed === '#category') {
+                sessionStorage.setItem('leletv_restore_category', '1');
+            } else {
+                sessionStorage.removeItem('leletv_restore_category');
+            }
+        } else {
+            sessionStorage.removeItem('leletv_restore_category');
+        }
+    } catch (e) { /* 忽略 sessionStorage 不可用 */ }
+    return backUrl;
+}
+
 // 点击搜索结果直接跳转播放器（立即跳转，不等待API响应）
 async function playDirectly(id, vod_name, sourceCode) {
     if (!id) {
@@ -51,11 +71,8 @@ async function playDirectly(id, vod_name, sourceCode) {
     // 立即跳转播放页，不等待API响应
     // player.js 会从URL参数中获取 id + source，异步加载剧集信息
     let playerUrl = `player.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(vod_name || '未知视频')}&source=${encodeURIComponent(sourceCode)}`;
-    const currentPath = window.location.href;
-    // 从首页/搜索页进入时标记 back 为首页，返回时不会带上搜索状态
-    if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?') || currentPath.includes('/s=')) {
-        playerUrl += `&back=${encodeURIComponent(window.location.origin + '/index.html')}`;
-    }
+    const backUrl = buildPlayerBackUrl();
+    if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;
     window.location.href = playerUrl;
 }
 
@@ -175,13 +192,10 @@ async function showDetails(id, vod_name, sourceCode) {
 
 function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
 
-    let currentPath = window.location.href;
-
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
-    if (currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.includes('/?') || currentPath.includes('/s=')) {
-        playerUrl += `&back=${encodeURIComponent(window.location.origin + '/index.html')}`;
-    }
+    const backUrl = buildPlayerBackUrl();
+    if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;
 
     try {
         localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
@@ -189,8 +203,8 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
         localStorage.setItem('currentEpisodeIndex', episodeIndex);
         localStorage.setItem('currentSourceCode', sourceCode || '');
         localStorage.setItem('lastPlayTime', Date.now());
-        localStorage.setItem('lastSearchPage', currentPath);
-        localStorage.setItem('lastPageUrl', currentPath);
+        localStorage.setItem('lastSearchPage', window.location.href);
+        localStorage.setItem('lastPageUrl', window.location.href);
     } catch (e) {
         console.error('保存播放状态失败:', e);
     }

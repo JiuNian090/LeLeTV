@@ -222,12 +222,12 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
             localStorage.removeItem('currentVideoInfo');
         }
 
-        // 保存当前页面URL作为返回地址
+        // 保存当前页面URL作为返回地址（含 hash，保留历史记录/类别页状态）
         let currentPath;
         if (window.location.pathname.startsWith('/player.html')) {
             currentPath = localStorage.getItem('lastPageUrl') || '/';
         } else {
-            currentPath = window.location.origin + window.location.pathname + window.location.search;
+            currentPath = window.location.origin + window.location.pathname + window.location.search + window.location.hash;
         }
         localStorage.setItem('lastPageUrl', currentPath);
 
