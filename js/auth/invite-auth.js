@@ -209,20 +209,21 @@ const INVITE_AUTH = {
    * 启动心跳定时器
    */
   startHeartbeat(fingerprint) {
-    // 防止重复创建定时器和 beforeunload 监听
+    // 防止重复创建定时器和 pagehide 监听
     if (INVITE_AUTH._heartbeatTimer) {
       clearInterval(INVITE_AUTH._heartbeatTimer);
     }
     if (INVITE_AUTH._heartbeatBound) {
-      window.removeEventListener('beforeunload', INVITE_AUTH._heartbeatBound);
+      window.removeEventListener('pagehide', INVITE_AUTH._heartbeatBound);
     }
     
     INVITE_AUTH._heartbeatTimer = setInterval(() => {
       INVITE_AUTH.heartbeat(fingerprint);
     }, INVITE_AUTH.HEARTBEAT_INTERVAL);
     
+    // 用 pagehide 而非 beforeunload：页面被 bfcache 冻结/卸载时均触发心跳，且不禁用 bfcache
     INVITE_AUTH._heartbeatBound = () => INVITE_AUTH.heartbeat(fingerprint);
-    window.addEventListener('beforeunload', INVITE_AUTH._heartbeatBound);
+    window.addEventListener('pagehide', INVITE_AUTH._heartbeatBound);
   },
   
   /**
@@ -248,7 +249,7 @@ const INVITE_AUTH = {
       INVITE_AUTH._heartbeatTimer = null;
     }
     if (INVITE_AUTH._heartbeatBound) {
-      window.removeEventListener('beforeunload', INVITE_AUTH._heartbeatBound);
+      window.removeEventListener('pagehide', INVITE_AUTH._heartbeatBound);
       INVITE_AUTH._heartbeatBound = null;
     }
   }

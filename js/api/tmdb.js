@@ -28,12 +28,19 @@ function saveTmdbState() {
 function restoreTmdbState() {
   try {
     const raw = sessionStorage.getItem(TMDB_STATE_KEY);
-    if (!raw) return;
+    if (!raw) return false;
     const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object') return false;
+    let restored = false;
     Object.keys(saved).forEach(k => {
-      if (k in TMDB_STATE) TMDB_STATE[k] = saved[k];
+      if (k in TMDB_STATE) {
+        TMDB_STATE[k] = saved[k];
+        restored = true;
+      }
     });
+    return restored;
   } catch (e) { /* 忽略 */ }
+  return false;
 }
 
 function saveTmdbScroll() {
@@ -222,24 +229,19 @@ async function tmdbFetch(endpoint, params = {}) {
 }
 
 function initTmdbCategory() {
-  // 从播放页返回时恢复之前的筛选/页码状态（由 buildPlayerBackUrl 标记）
-  if (sessionStorage.getItem('leletv_restore_category') === '1') {
-    sessionStorage.removeItem('leletv_restore_category');
-    restoreTmdbState();
-    if (TMDB_STATE.isLoaded) {
-      // 本会话已加载过，直接恢复滚动位置
-      restoreTmdbScroll();
-      return;
-    }
-    TMDB_STATE.isLoaded = true;
-    renderTmdbFilters();
-    loadTmdbResults();
+  // 恢复本会话保存的筛选/页码状态（若有），返回播放页或刷新后自动保持浏览状态
+  const hadSavedState = restoreTmdbState();
+
+  if (TMDB_STATE.isLoaded) {
+    // 本会话已加载过，直接恢复滚动位置
+    restoreTmdbScroll();
     return;
   }
-
-  if (TMDB_STATE.isLoaded) return;
   TMDB_STATE.isLoaded = true;
-  resetTmdbFilters();
+  if (!hadSavedState) {
+    // 无保存状态（首次访问）才重置为默认，否则保留恢复的筛选条件
+    resetTmdbFilters();
+  }
   renderTmdbFilters();
   loadTmdbResults();
 }

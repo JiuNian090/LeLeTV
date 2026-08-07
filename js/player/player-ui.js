@@ -870,8 +870,8 @@ async function switchToResource(sourceKey, vodId) {
             console.error('更新历史记录源信息时出错:', e);
         }
 
-        // 跳转到播放页面
-        window.location.href = watchUrl;
+        // 跳转到播放页面（用 replace 不新增历史条目，保证返回按钮能直接回到来源页，配合 bfcache 秒回）
+        window.location.replace(watchUrl);
         
     } catch (error) {
         console.error('切换资源失败:', error);

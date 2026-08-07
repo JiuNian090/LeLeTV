@@ -85,6 +85,16 @@
         }
     </style>
 
+    <!-- 首帧直达：根据 URL hash 预置初始页面，避免从播放页返回时先渲染首页再切换造成闪动 -->
+    <script>
+        (function () {
+            var n = (location.hash || '').replace('#', '');
+            if (n && n !== 'home') {
+                document.documentElement.setAttribute('data-init-page', n);
+            }
+        })();
+    </script>
+
     <!-- 桌面端图标声明 -->
     <link rel="icon" href="/image/logo-black.png" sizes="48x48">
     <link rel="icon" href="/image/logo-black.png" sizes="96x96">
@@ -658,8 +668,10 @@
 
 
 
-    <script src="dist/leletv-core.o0lm3m.js?v=v3.3.0" defer></script>
-    <script src="dist/leletv-app.xmsy9g.js?v=v3.3.0" defer></script>
+
+
+    <script src="dist/leletv-core.jqj6en.js?v=v3.3.0" defer></script>
+    <script src="dist/leletv-app.rdcabg.js?v=v3.3.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>

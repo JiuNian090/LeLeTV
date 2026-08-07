@@ -27,21 +27,18 @@ async function buildApiParamsAndFetch(id, sourceCode) {
     }
 }
 
-// 构建播放页返回地址：优先最近浏览页（类别/历史记录），否则回首页
-// 从类别页进入时标记返回需恢复筛选/页码状态
+// 构建播放页返回地址：搜索结果页回搜索 URL，否则优先最近浏览页（类别/历史记录），兜底首页
 function buildPlayerBackUrl() {
+    // 搜索结果页：返回时回到搜索 URL（首页配合缓存秒开恢复结果）
+    const path = window.location.pathname;
+    if (path.startsWith('/s=') || window.location.search.startsWith('?s=')) {
+        return window.location.origin + path + window.location.search;
+    }
     let backUrl = window.location.origin + '/index.html';
     try {
         const lastBrowsed = sessionStorage.getItem('leletv_last_browsed_page');
         if (lastBrowsed && lastBrowsed.startsWith('#')) {
             backUrl += lastBrowsed;
-            if (lastBrowsed === '#category') {
-                sessionStorage.setItem('leletv_restore_category', '1');
-            } else {
-                sessionStorage.removeItem('leletv_restore_category');
-            }
-        } else {
-            sessionStorage.removeItem('leletv_restore_category');
         }
     } catch (e) { /* 忽略 sessionStorage 不可用 */ }
     return backUrl;
@@ -71,6 +68,7 @@ async function playDirectly(id, vod_name, sourceCode) {
     // 立即跳转播放页，不等待API响应
     // player.js 会从URL参数中获取 id + source，异步加载剧集信息
     let playerUrl = `player.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(vod_name || '未知视频')}&source=${encodeURIComponent(sourceCode)}`;
+    if (typeof cacheSearchContext === 'function') cacheSearchContext();
     const backUrl = buildPlayerBackUrl();
     if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;
     window.location.href = playerUrl;
@@ -194,6 +192,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
 
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
+    if (typeof cacheSearchContext === 'function') cacheSearchContext();
     const backUrl = buildPlayerBackUrl();
     if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;
 

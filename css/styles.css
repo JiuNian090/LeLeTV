@@ -1464,6 +1464,21 @@ img.loading-fade.loaded {
     overflow-x: hidden;
 }
 
+/* 首帧直达：播放页返回带 hash 时，首帧直接显示目标页并隐藏默认首页，避免闪动 */
+/* 该属性由 index.html 内联脚本设置，路由初始化完成后移除 */
+html[data-init-page] .page-content.active {
+    display: none;
+}
+html[data-init-page="category"] #page-category,
+html[data-init-page="history"] #page-history,
+html[data-init-page="settings"] #page-settings,
+html[data-init-page="about"] #page-about,
+html[data-init-page="readme"] #page-readme {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
 /* text-wrap 工具类 */
 .text-balance {
     text-wrap: balance;

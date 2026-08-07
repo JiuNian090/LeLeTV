@@ -183,6 +183,8 @@ document.addEventListener('DOMContentLoaded', function() {
   AppInit.register('hash-routing', AppInit.PHASES.POST, function() {
     var initPage = location.hash.slice(1) || 'home';
     showPage(initPage);
+    // 移除首帧直达标记（index.html 内联脚本设置），恢复由 active 类控制页面显示
+    document.documentElement.removeAttribute('data-init-page');
     window.addEventListener('hashchange', handleHashChange);
   });
   AppInit.register('email-handler', AppInit.PHASES.POST, function() {

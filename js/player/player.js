@@ -14,14 +14,24 @@ function goHome(event) {
         return;
     }
 
-    // 优先返回来源页（back 参数），否则直接返回首页
-    // 不使用 history.back()：播放页内切集/切源会改变历史状态，直接跳转保证返回结果可控
+    // 优先返回来源页：走浏览器历史返回（可命中 bfcache 快照恢复，秒回且保留页面状态）
+    // 若历史返回无效（播放页在历史栈中没有前一条目），则由兜底定时器跳转 back 参数
     const urlParams = new URLSearchParams(window.location.search);
     const backUrl = urlParams.get('back');
 
     if (backUrl) {
         localStorage.removeItem('lastSearchPage');
-        window.location.href = backUrl;
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = backUrl;
+        }
+        // 兜底：1.5 秒后仍停留在播放页，说明历史返回未生效，直接跳转 back 参数
+        setTimeout(() => {
+            if (document.getElementById('playerContainer')) {
+                window.location.replace(backUrl);
+            }
+        }, 1500);
     } else {
         window.location.href = '/index.html';
     }
@@ -346,8 +356,8 @@ function initializePageContent() {
     // 添加键盘快捷键事件监听
     document.addEventListener('keydown', handleKeyboardShortcuts);
 
-    // 添加页面离开事件监听，保存播放位置
-    window.addEventListener('beforeunload', saveCurrentProgress);
+    // 添加页面离开事件监听，保存播放位置（用 pagehide 而非 beforeunload，以支持 bfcache 快照恢复）
+    window.addEventListener('pagehide', saveCurrentProgress);
 
     // 新增：页面隐藏（切后台/切标签）时也保存
     document.addEventListener('visibilitychange', function () {

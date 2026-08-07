@@ -1,3 +1,82 @@
+// 搜索结果缓存：跳转播放页前保存，返回首页时秒开（不重新发起搜索）
+const SEARCH_CACHE_KEY = 'leletv_search_cache';
+const SEARCH_CACHE_MAX = 800; // 缓存结果条数上限（控制 sessionStorage 体积）
+
+// 获取当前搜索关键词（从 URL /s= 或 ?s= 提取）
+function getCurrentSearchKeyword() {
+    try {
+        const path = window.location.pathname;
+        if (path.startsWith('/s=')) return decodeURIComponent(path.substring(3));
+        const sp = new URLSearchParams(window.location.search);
+        return sp.get('s') || '';
+    } catch (e) { return ''; }
+}
+
+// 跳转播放页前缓存搜索结果，返回首页时直接渲染
+function cacheSearchContext() {
+    try {
+        if (!_lastAllResults || _lastAllResults.length === 0) return;
+        const keyword = getCurrentSearchKeyword() || document.getElementById('searchInput').value.trim();
+        if (!keyword) return;
+        const payload = {
+            keyword: keyword,
+            results: _lastAllResults.slice(0, SEARCH_CACHE_MAX),
+            activeFilter: _activeSourceFilter || 'all',
+            timestamp: Date.now()
+        };
+        sessionStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(payload));
+    } catch (e) {
+        console.warn('[LeLeTV] 缓存搜索结果失败:', e);
+    }
+}
+
+// 从缓存恢复搜索结果（直接渲染，不发起搜索请求）；返回是否恢复成功
+function restoreSearchFromCache() {
+    let cached = null;
+    try {
+        const raw = sessionStorage.getItem(SEARCH_CACHE_KEY);
+        if (!raw) return false;
+        cached = JSON.parse(raw);
+        sessionStorage.removeItem(SEARCH_CACHE_KEY);
+    } catch (e) {
+        try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (e2) { /* 忽略 */ }
+        return false;
+    }
+    if (!cached || !cached.keyword || !Array.isArray(cached.results) || cached.results.length === 0) return false;
+
+    // 还原内存状态
+    _lastAllResults = cached.results;
+    _activeSourceFilter = cached.activeFilter || 'all';
+
+    // 填充搜索框
+    document.getElementById('searchInput').value = cached.keyword;
+
+    // 还原布局（与搜索完成后的状态一致）
+    document.getElementById('searchArea').classList.remove('flex-1');
+    document.getElementById('searchArea').classList.add('mb-8');
+    document.getElementById('resultsArea').classList.remove('hidden');
+    document.querySelector('.home-layout')?.classList.add('has-results');
+    document.getElementById('closeSearchResults')?.classList.remove('hidden');
+    document.getElementById('closeSearchResults')?.classList.add('flex');
+
+    // 渲染来源过滤标签 + 应用过滤（渲染卡片）
+    _renderSourceFilterTabs(_lastAllResults.length);
+    _applySourceFilter(_activeSourceFilter);
+
+    // 更新标题和 URL（不触发重新搜索）
+    document.title = `搜索: ${cached.keyword} - LeLeTV`;
+    try {
+        window.history.replaceState(
+            { search: cached.keyword },
+            `搜索: ${cached.keyword} - LeLeTV`,
+            `/s=${encodeURIComponent(cached.keyword)}`
+        );
+    } catch (e) { /* 忽略 */ }
+
+    hideSearchHistory();
+    return true;
+}
+
 async function loadFilterConfig() {
     if (_filterConfig) return _filterConfig;
     try {

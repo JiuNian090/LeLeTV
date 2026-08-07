@@ -29,8 +29,8 @@ class CacheManager {
         // 设置定期清理的定时器
         this.setupCleanupTimer();
         
-        // 监听页面卸载事件，保存清理时间
-        window.addEventListener('beforeunload', () => {
+        // 监听页面卸载/冻结，保存清理时间（用 pagehide 而非 beforeunload，以支持 bfcache 快照恢复）
+        window.addEventListener('pagehide', () => {
             this.saveLastCleanupTime();
         });
     }
@@ -122,8 +122,8 @@ class CacheManager {
             this.checkAndCleanupCache();
         }, this.cleanupInterval);
         
-        // 确保定时器在页面关闭时被清除
-        window.addEventListener('beforeunload', () => {
+        // 确保定时器在页面卸载/冻结时被清除（用 pagehide 而非 beforeunload，以支持 bfcache 快照恢复）
+        window.addEventListener('pagehide', () => {
             if (this.cleanupTimer) {
                 clearInterval(this.cleanupTimer);
                 this.cleanupTimer = null;

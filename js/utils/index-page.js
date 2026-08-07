@@ -22,7 +22,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // URL搜索参数处理脚本
     
+    // 从 bfcache 快照恢复时（浏览器返回秒回），页面内存状态完整，清理残留的搜索缓存
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) {
+            try { sessionStorage.removeItem('leletv_search_cache'); } catch (err) { /* 忽略 */ }
+        }
+    });
     
+    // 优先恢复缓存的搜索结果（从播放页返回时秒开，不重新搜索）
+    // 仅当 URL 为搜索结果页（/s= 或 ?s=）时恢复；恢复成功则不再走下方 URL 参数重新搜索逻辑
+    const _searchPath = window.location.pathname;
+    if ((_searchPath.startsWith('/s=') || window.location.search.startsWith('?s=')) 
+        && typeof restoreSearchFromCache === 'function' && restoreSearchFromCache()) {
+        return;
+    }
+
     // 检查页面路径中的搜索参数 (格式: /s=keyword)
     const path = window.location.pathname;
     const searchPrefix = '/s=';

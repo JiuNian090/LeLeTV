@@ -36,8 +36,8 @@ class LoadBalancer {
         this.loadStats();
         this.initializeApiStats();
         
-        // 监听页面卸载，立即保存
-        window.addEventListener('beforeunload', () => {
+        // 监听页面卸载/冻结，立即保存（用 pagehide 而非 beforeunload，以支持 bfcache 快照恢复）
+        window.addEventListener('pagehide', () => {
             this.flushSave();
         });
     }
