@@ -19,6 +19,202 @@ const MEDIA_FILE_EXTENSIONS = [
 const MEDIA_CONTENT_TYPES = ['video/', 'audio/', 'image/'];
 // --- 常量结束 ---
 
+// ===================== 播放列表广告过滤（保守策略） =====================
+// 目的：去掉正片中间插播的广告分片段（真正缩短时长），而不是只删 #EXT-X-DISCONTINUITY 标签。
+// 保守原则：
+//   ① 只在「被 #EXT-X-DISCONTINUITY 明确分隔」的多个块之间判断，整条列表没有 discontinuity 时一律不动；
+//   ② 时长最长的块视为正片，永不删除；
+//   ③ 必须命中高置信度特征：CUE-OUT/SCTE35、URI 广告关键词、与正片不同目录、分片时长明显异常；
+//   ④ 删除总时长不超过全部时长的 40%（安全阀）；
+//   ⑤ 存在独立音频/字幕轨（#EXT-X-MEDIA）时不做任何删除，避免音画不同步。
+
+const AD_URI_PATTERN = /(^|[/_.-])(ad|ads|adv|advert|preroll|midroll)([/_.-]|$)/i;
+
+function _resolveAgainst(baseUrl, uri) {
+    if (/^https?:\/\//i.test(uri)) return uri;
+    try {
+        return new URL(uri, baseUrl).toString();
+    } catch (e) {
+        return uri;
+    }
+}
+
+function _extinfDuration(tags) {
+    for (let i = tags.length - 1; i >= 0; i--) {
+        const m = /#EXTINF:\s*([0-9.]+)/.exec(tags[i]);
+        if (m) return parseFloat(m[1]) || 0;
+    }
+    return 0;
+}
+
+/** 把媒体播放列表解析为有序 item：segment（前导标签 + URI）与 tags（独立标签行） */
+export function parseMediaItems(content) {
+    const items = [];
+    const lines = String(content || '').split('\n');
+    let pending = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        if (line.startsWith('#')) { pending.push(line); continue; }
+        items.push({ kind: 'segment', head: pending, uri: line, duration: _extinfDuration(pending) });
+        pending = [];
+    }
+    if (pending.length) items.push({ kind: 'tags', lines: pending });
+    return items;
+}
+
+/** 按 #EXT-X-DISCONTINUITY 把段切块；该标签归属到它后面的块 */
+export function groupAdBlocks(items) {
+    const blocks = [];
+    let cur = { segments: [], items: [], cueAd: false, discontinuity: false };
+    for (const it of items) {
+        if (it.kind !== 'segment') { cur.items.push(it); continue; }
+        const head = it.head.join('\n');
+        const disc = head.indexOf('#EXT-X-DISCONTINUITY') !== -1;
+        if (disc && cur.segments.length) {
+            blocks.push(cur);
+            cur = { segments: [], items: [], cueAd: false, discontinuity: true };
+        }
+        if (disc) cur.discontinuity = true;
+        if (head.indexOf('#EXT-X-CUE-OUT') !== -1 || head.indexOf('#EXT-X-SCTE35') !== -1) cur.cueAd = true;
+        cur.items.push(it);
+        cur.segments.push(it);
+    }
+    blocks.push(cur);
+    return blocks;
+}
+
+export function blockDuration(block) {
+    return block.segments.reduce((sum, s) => sum + (s.duration || 0), 0);
+}
+
+/** 块的公共目录（host + 目录）；块内跨目录则返回 null（不判定） */
+export function blockDir(block, baseUrl) {
+    let dir = null;
+    for (const seg of block.segments) {
+        let d;
+        try {
+            const u = new URL(_resolveAgainst(baseUrl, seg.uri));
+            const idx = u.pathname.lastIndexOf('/');
+            d = u.host + (idx >= 0 ? u.pathname.slice(0, idx + 1) : '/');
+        } catch (e) { return null; }
+        if (dir === null) dir = d;
+        else if (dir !== d) return null;
+    }
+    return dir;
+}
+
+/** 返回广告判定依据；null 表示"不够确定 → 保留" */
+export function detectAdBlockReason(block, mainDir, mainAvgSeconds, baseUrl) {
+    if (block.cueAd) return 'cue-out/scte35';
+    for (const seg of block.segments) {
+        if (AD_URI_PATTERN.test(seg.uri)) return 'ad-uri-keyword';
+    }
+    const duration = blockDuration(block);
+    const dir = blockDir(block, baseUrl);
+    if (dir && mainDir && dir !== mainDir && duration > 0 && duration <= 300) return 'other-directory';
+    const avg = duration / Math.max(1, block.segments.length);
+    if (mainAvgSeconds > 0 && mainAvgSeconds <= 8 && avg >= mainAvgSeconds * 2.5) return 'duration-outlier';
+    return null;
+}
+
+/**
+ * 过滤媒体播放列表中的广告块
+ * @returns {{content: string, removedBlocks: number, removedSeconds: number, reason: string|null, reasons?: string[]}}
+ */
+export function filterAdsFromMediaPlaylist(content, baseUrl) {
+    const result = { content: content, removedBlocks: 0, removedSeconds: 0, reason: null };
+    if (!content) { result.reason = 'empty'; return result; }
+    if (content.indexOf('#EXT-X-DISCONTINUITY') === -1) { result.reason = 'no-discontinuity'; return result; }
+    if (content.indexOf('#EXT-X-MEDIA:') !== -1) { result.reason = 'has-media-tracks'; return result; }
+    try {
+        const blocks = groupAdBlocks(parseMediaItems(content));
+        if (blocks.length < 2) { result.reason = 'single-block'; return result; }
+
+        // 正片目录由「段数最多的目录」投票决定（不能用时最长的那一块：
+        // 插播广告块常常比正片被切开后的单块还长，那样会把正片当广告删掉）
+        const dirOf = blocks.map(b => blockDir(b, baseUrl));
+        const stats = new Map();
+        blocks.forEach((b, i) => {
+            const dir = dirOf[i];
+            if (!dir) return;
+            const cur = stats.get(dir) || { segments: 0, duration: 0 };
+            cur.segments += b.segments.length;
+            cur.duration += blockDuration(b);
+            stats.set(dir, cur);
+        });
+
+        let mainDir = null;
+        let mainSegments = 0;
+        let mainDuration = 0;
+        for (const [dir, st] of stats) {
+            if (st.segments > mainSegments || (st.segments === mainSegments && st.duration > mainDuration)) {
+                mainDir = dir; mainSegments = st.segments; mainDuration = st.duration;
+            }
+        }
+        if (!mainDir) { result.reason = 'no-main-directory'; return result; }
+
+        const mainAvg = mainDuration / Math.max(1, mainSegments);
+        const total = blocks.reduce((s, b) => s + blockDuration(b), 0);
+        // 上限：总时长的 40%，且不少于 300s（短片源里 40% 太小，会连正常插播广告都不敢删）
+        const maxRemovable = Math.max(300, total * 0.4);
+
+        const drop = new Set();
+        let removedSeconds = 0;
+        blocks.forEach((b, i) => {
+            const reason = detectAdBlockReason(b, mainDir, mainAvg, baseUrl);
+            if (!reason) return;
+            // 落在正片目录里的块，只有高置信度特征才允许删；
+            //「目录不同」「时长异常」这类弱信号不足以覆盖「它就在正片目录里」
+            const inMainDir = !!(dirOf[i] && dirOf[i] === mainDir);
+            if (inMainDir && reason !== 'cue-out/scte35' && reason !== 'ad-uri-keyword') return;
+            const d = blockDuration(b);
+            if (removedSeconds + d > maxRemovable) return;       // 安全阀
+            drop.add(i);
+            removedSeconds += d;
+            result.reasons = (result.reasons || []).concat(`${reason}(${d.toFixed(1)}s)`);
+        });
+
+        if (!drop.size) { result.reason = 'no-high-confidence-block'; return result; }
+
+        const out = [];
+        blocks.forEach((b, i) => {
+            if (drop.has(i)) return;
+            for (const it of b.items) {
+                if (it.kind === 'tags') out.push(...it.lines);
+                else { out.push(...it.head); out.push(it.uri); }
+            }
+        });
+        result.content = out.join('\n') + '\n';
+        result.removedBlocks = drop.size;
+        result.removedSeconds = removedSeconds;
+        return result;
+    } catch (e) {
+        result.content = content;
+        result.reason = 'error:' + (e && e.message);
+        return result;
+    }
+}
+
+/** 把播放列表里所有 URI 绝对化（分片保持直连采集站，只修相对路径的解析基准） */
+export function absolutizePlaylistUris(content, baseUrl) {
+    const out = [];
+    for (const it of parseMediaItems(content)) {
+        if (it.kind === 'tags') { out.push(...it.lines); continue; }
+        for (const h of it.head) out.push(absolutizeTagUri(h, baseUrl));
+        out.push(_resolveAgainst(baseUrl, it.uri));
+    }
+    return out.join('\n') + '\n';
+}
+
+/** #EXT-X-KEY / #EXT-X-MAP 里的 URI 绝对化 */
+export function absolutizeTagUri(line, baseUrl) {
+    if (line.indexOf('#EXT-X-KEY') === 0 || line.indexOf('#EXT-X-MAP') === 0) {
+        return line.replace(/URI="([^"]+)"/, (m, uri) => `URI="${_resolveAgainst(baseUrl, uri)}"`);
+    }
+    return line;
+}
+
 
 /**
  * 主要的 Pages Function 处理函数
@@ -182,6 +378,79 @@ export async function onRequest(context) {
          }
 
         return new Response(body, { status, headers: responseHeaders });
+    }
+
+    // ===================== 仅播放列表模式（mode=m3u8）=====================
+    // 与默认代理的差别：分片地址不做 /proxy/ 重写（保持直连采集站，省流量、不掉速），
+    // 只把播放列表里插播的广告分片段删掉，并把相对 URI 绝对化（列表现在经 /proxy/ 访问，
+    // 相对路径会以代理路径为基准解析，必须绝对化）。
+
+    async function sha256Hex(text) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // 生成指向本代理的 m3u8 链接（子列表用）；重新签名，避免长片播到一半子请求过期
+    async function buildInternalM3u8ProxyUrl(targetUrl, env) {
+        let u = `/proxy/${encodeURIComponent(targetUrl)}?mode=m3u8`;
+        try {
+            if (env && env.HIDDENKEY) {
+                u += `&auth=${await sha256Hex(env.HIDDENKEY)}&t=${Date.now()}`;
+            }
+        } catch (e) {
+            logDebug(`[广告过滤] 生成子列表签名失败: ${e.message}`);
+        }
+        return u;
+    }
+
+    function processMediaPlaylistFiltered(url, content) {
+        const baseUrl = getBaseUrl(url);
+        const filtered = filterAdsFromMediaPlaylist(content, baseUrl);
+        if (filtered.removedBlocks > 0) {
+            logDebug(`[广告过滤] 删除 ${filtered.removedBlocks} 个广告块 / ${filtered.removedSeconds.toFixed(1)}s：${(filtered.reasons || []).join(', ')}`);
+        } else {
+            logDebug(`[广告过滤] 未删除任何分段（${filtered.reason}）`);
+        }
+        return absolutizePlaylistUris(filtered.content, baseUrl);
+    }
+
+    // 主列表：保留全部清晰度，每个变体都指向本代理（各自再过滤一次）
+    async function processMasterPlaylistFiltered(url, content, env) {
+        const baseUrl = getBaseUrl(url);
+        const lines = content.split('\n');
+        const out = [];
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            if (line.startsWith('#EXT-X-MEDIA:')) {
+                // 音频/字幕轨：只绝对化、仍直连；媒体列表侧也会因 #EXT-X-MEDIA 放弃删段
+                out.push(line.replace(/URI="([^"]+)"/, (m, uri) => `URI="${resolveUrl(baseUrl, uri)}"`));
+                continue;
+            }
+            if (line.startsWith('#EXT-X-STREAM-INF')) {
+                out.push(line);
+                for (let j = i + 1; j < lines.length; j++) {
+                    const v = lines[j].trim();
+                    if (!v) continue;
+                    if (v.startsWith('#')) break;
+                    out.push(await buildInternalM3u8ProxyUrl(resolveUrl(baseUrl, v), env));
+                    i = j;
+                    break;
+                }
+                continue;
+            }
+            if (line.startsWith('#')) { out.push(line); continue; }
+            out.push(resolveUrl(baseUrl, line));
+        }
+        return out.join('\n') + '\n';
+    }
+
+    async function processPlaylistOnly(targetUrl, content, env) {
+        if (content.includes('#EXT-X-STREAM-INF') || content.includes('#EXT-X-MEDIA:')) {
+            logDebug(`[广告过滤] 主播放列表（保留多清晰度）: ${targetUrl}`);
+            return await processMasterPlaylistFiltered(targetUrl, content, env);
+        }
+        return processMediaPlaylistFiltered(targetUrl, content);
     }
 
     // 创建 M3U8 类型的响应
@@ -499,6 +768,10 @@ export async function onRequest(context) {
 
         logDebug(`收到代理请求: ${targetUrl}`);
 
+        // mode=m3u8：仅改写播放列表（过滤插播广告分片），分片保持直连采集站
+        const playlistOnly = (url.searchParams.get('mode') || '').split(',').includes('m3u8');
+        if (playlistOnly) logDebug('[广告过滤] 仅播放列表模式');
+
         // --- 缓存检查 (KV) ---
         const cacheKey = `proxy_raw:${targetUrl}`; // 使用原始内容的缓存键
         let kvNamespace = null;
@@ -523,7 +796,9 @@ export async function onRequest(context) {
 
                     if (isM3u8Content(content, contentType)) {
                         logDebug(`缓存内容是 M3U8，重新处理: ${targetUrl}`);
-                        const processedM3u8 = await processM3u8Content(targetUrl, content, 0, env);
+                        const processedM3u8 = playlistOnly
+                            ? await processPlaylistOnly(targetUrl, content, env)
+                            : await processM3u8Content(targetUrl, content, 0, env);
                         return createM3u8Response(processedM3u8);
                     } else {
                         logDebug(`从缓存返回非 M3U8 内容: ${targetUrl}`);
@@ -559,7 +834,9 @@ export async function onRequest(context) {
         // --- 处理响应 ---
         if (isM3u8Content(content, contentType)) {
             logDebug(`内容是 M3U8，开始处理: ${targetUrl}`);
-            const processedM3u8 = await processM3u8Content(targetUrl, content, 0, env);
+            const processedM3u8 = playlistOnly
+                ? await processPlaylistOnly(targetUrl, content, env)
+                : await processM3u8Content(targetUrl, content, 0, env);
             return createM3u8Response(processedM3u8);
         } else {
             logDebug(`内容不是 M3U8 (类型: ${contentType})，直接返回: ${targetUrl}`);
