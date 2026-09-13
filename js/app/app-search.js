@@ -796,18 +796,8 @@ async function search() {
         }
 
         if (allResults.length > 0) {
-            allResults.sort((a, b) => {
-                const nameA = a.vod_name || '';
-                const nameB = b.vod_name || '';
-                const { base: baseA, season: seasonA } = _extractSeasonInfo(nameA);
-                const { base: baseB, season: seasonB } = _extractSeasonInfo(nameB);
-                const baseCompare = baseA.localeCompare(baseB, 'zh-CN');
-                if (baseCompare !== 0) return baseCompare;
-                if (seasonA !== null && seasonB !== null) return seasonA - seasonB;
-                if (seasonA !== null) return -1;
-                if (seasonB !== null) return 1;
-                return (a.source_name || '').localeCompare(b.source_name || '', 'zh-CN');
-            });
+            // 结果排序：本次搜索延迟快的源在前（与结果页共用同一套规则）
+            allResults = _sortResultsByLatencyThenName(allResults);
             _lastAllResults = allResults;
             if (routeToMovies && typeof showMoviesResults === 'function') {
                 // 统一进入结果页（左侧源列表 + 右侧结果）

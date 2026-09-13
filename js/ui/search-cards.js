@@ -87,6 +87,60 @@ function _extractSeasonInfo(title) {
   return { base: title, season: null };
 }
 
+// ===================== 延迟优先排序（搜索页与结果页共用唯一实现） =====================
+// 依据：本次搜索的实时耗时 source_latency（与卡片上「快/中/慢」标签同一数据源）
+
+/** 每个源本次搜索的最快耗时。同源结果通常共享同一次请求的耗时，取最小以兼容逐条计时的源 */
+function _sourceFastestLatency(results) {
+  var fastest = {};
+  (results || []).forEach(function(item) {
+    var code = item.source_code;
+    var lat = item.source_latency;
+    if (!code || typeof lat !== 'number' || lat <= 0) return;
+    if (fastest[code] === undefined || lat < fastest[code]) fastest[code] = lat;
+  });
+  return fastest;
+}
+
+/** 源顺序：本次延迟升序；无本次延迟数据的源交给 fallbackSort 兜底（缺省保持原序） */
+function _orderSourcesByLatency(codes, fastest, fallbackSort) {
+  var known = [], unknown = [];
+  (codes || []).forEach(function(c) {
+    if (fastest && typeof fastest[c] === 'number') known.push(c); else unknown.push(c);
+  });
+  known.sort(function(a, b) { return fastest[a] - fastest[b]; });
+  return known.concat(fallbackSort ? fallbackSort(unknown) : unknown);
+}
+
+/**
+ * 统一结果排序：源本次延迟升序 → 片名(去季/部/集) → 季序 → 源名。
+ * 无 source_latency 的结果（类别兜底、传统搜索）没有可比延迟，沉到末尾后按片名排序。
+ * 注意不用 Infinity 参与减法（Infinity - Infinity 为 NaN 会破坏比较器）。
+ */
+function _sortResultsByLatencyThenName(list) {
+  var arr = (list || []).slice();
+  var fastest = _sourceFastestLatency(arr);
+  return arr.sort(function(a, b) {
+    var la = fastest[a.source_code];
+    var lb = fastest[b.source_code];
+    var hasA = typeof la === 'number';
+    var hasB = typeof lb === 'number';
+    if (hasA && hasB) {
+      if (la !== lb) return la - lb;
+    } else if (hasA !== hasB) {
+      return hasA ? -1 : 1;
+    }
+    var seA = _extractSeasonInfo(a.vod_name || '');
+    var seB = _extractSeasonInfo(b.vod_name || '');
+    var baseCompare = seA.base.localeCompare(seB.base, 'zh-CN');
+    if (baseCompare !== 0) return baseCompare;
+    if (seA.season !== null && seB.season !== null) return seA.season - seB.season;
+    if (seA.season !== null) return -1;
+    if (seB.season !== null) return 1;
+    return (a.source_name || '').localeCompare(b.source_name || '', 'zh-CN');
+  });
+}
+
 function _getSourceLabel(apiId, results) {
   if (results) { var m = results.find(function(r) { return r.source_code === apiId; }); if (m && m.source_name) return m.source_name; }
   if (apiId.indexOf("custom_") === 0) { var i = parseInt(apiId.replace("custom_", "")); var a = customAPIs[i]; return a ? a.name : "自定义源" + (i+1); }
@@ -119,6 +173,8 @@ function _renderSourceFilterTabs(totalCount) {
   var ac = totalCount || _lastAllResults.length;
   var seen = new Set(), uniq = [];
   _lastAllResults.forEach(function(item) { var c = item.source_code; if (c && !seen.has(c)) { seen.add(c); uniq.push(c); } });
+  // 标签顺序：本次搜索延迟快的源在前（与结果排序同一口径）
+  uniq = _orderSourcesByLatency(uniq, _sourceFastestLatency(_lastAllResults));
   var h = '<button class="source-filter-tab active" data-source="all">\u5168\u90e8 (' + ac + ')</button>';
   uniq.forEach(function(code) {
     var label = _getSourceLabel(code, _lastAllResults);

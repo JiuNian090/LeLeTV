@@ -66,21 +66,8 @@ function _orderSourcesByLoad(ids) {
   });
 }
 
-// 与搜索页一致的结果排序：片名(去季/部/集) → 季序 → 源名
-function _sortMoviesResults(list) {
-  return list.slice().sort(function (a, b) {
-    var nameA = a.vod_name || '';
-    var nameB = b.vod_name || '';
-    var seA = _extractSeasonInfo(nameA);
-    var seB = _extractSeasonInfo(nameB);
-    var baseCompare = seA.base.localeCompare(seB.base, 'zh-CN');
-    if (baseCompare !== 0) return baseCompare;
-    if (seA.season !== null && seB.season !== null) return seA.season - seB.season;
-    if (seA.season !== null) return -1;
-    if (seB.season !== null) return 1;
-    return (a.source_name || '').localeCompare(b.source_name || '', 'zh-CN');
-  });
-}
+// 结果排序统一到 search-cards.js 的 _sortResultsByLatencyThenName：
+// 源本次搜索延迟升序 → 片名(去季/部/集) → 季序 → 源名
 
 function _getSourceCounts(results) {
   var counts = {};
@@ -129,14 +116,16 @@ function _moviesSourceItem(code, label, count) {
 function renderMoviesSidebar() {
   var list = document.getElementById('moviesSourcesList');
   if (!list) return;
-  var counts = _getSourceCounts(_moviesState.results || []);
+  var results = _moviesState.results || [];
+  var counts = _getSourceCounts(results);
   // 「全部」始终显示
-  var h = _moviesSourceItem('all', '全部', _moviesState.results.length);
-  var ids = _orderSourcesByLoad((selectedAPIs || []).filter(_isValidSource));
+  var h = _moviesSourceItem('all', '全部', results.length);
+  // 源列表顺序：本次搜索最快在前；无本次延迟数据的源退回负载均衡历史平均
+  var ids = _orderSourcesByLatency((selectedAPIs || []).filter(_isValidSource), _sourceFastestLatency(results), _orderSourcesByLoad);
   ids.forEach(function (id) {
     var c = counts[id] || 0;
     if (c === 0) return; // 只显示有结果的源
-    h += _moviesSourceItem(id, _getSourceLabel(id, _moviesState.results), c);
+    h += _moviesSourceItem(id, _getSourceLabel(id, results), c);
   });
   list.innerHTML = h;
 }
@@ -296,7 +285,7 @@ async function loadMoviesResults() {
     return;
   }
 
-  _moviesState.results = _sortMoviesResults(allResults);
+  _moviesState.results = _sortResultsByLatencyThenName(allResults);
   _moviesState.mode = 'search';
   _moviesState.loading = false;
   _lastAllResults = _moviesState.results; // 供播放缓存兜底
@@ -346,7 +335,7 @@ async function _runCategoryFallback(ordered) {
   if (epoch !== _moviesEpoch) return;
 
   if (allResults.length > 0) {
-    _moviesState.results = _sortMoviesResults(allResults);
+    _moviesState.results = _sortResultsByLatencyThenName(allResults);
     _moviesState.mode = 'search';
     _moviesState.loading = false;
     _lastAllResults = _moviesState.results;
