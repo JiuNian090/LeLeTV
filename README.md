@@ -460,7 +460,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v3.5.5`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v3.5.6`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -472,6 +472,9 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v3.5.6 (2026-09-13)
+- ✨ 优化 搜索结果与资源列表统一按响应速度排序，更快的结果优先展示
+
 ### v3.5.5 (2026-09-13)
 - 🎉 新增 播放器自动过滤广告片段，观看更连贯
 - ✨ 优化 私密模式下全面隐藏分类页入口，避免误入
@@ -482,10 +485,6 @@ npm run dev
 - 🎉 新增 邀请码管理支持逐个邀请码分享
 - ✨ 优化 完善关于页的项目介绍、隐私政策与版权声明文案
 - 🎨 样式 版本更新弹窗配色改为跟随站点主题色
-
-### v3.5.3 (2026-09-13)
-- 🔧 修复 版本更新弹窗迟迟才出现的问题，现在会紧跟首页弹出
-- ✨ 优化 更新弹窗按钮文案统一为「立即更新」
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
