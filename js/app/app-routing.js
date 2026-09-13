@@ -1029,10 +1029,14 @@ window.openDisclaimerModal = openDisclaimerModal;
 window.closeDisclaimerModal = closeDisclaimerModal;
 window.shareInviteInfo = shareInviteInfo;
 
-// 关于页「分享」按钮：移动端调起系统级分享，桌面端复制文案到剪贴板
-function shareInviteInfo() {
-  var auth = (window.INVITE_AUTH && typeof window.INVITE_AUTH.getAuth === 'function') ? window.INVITE_AUTH.getAuth() : null;
-  var code = (auth && auth.code) ? auth.code : '';
+// 「分享」入口：移动端调起系统级分享，桌面端复制文案到剪贴板。
+// targetCode 可选 —— 管理端分享指定邀请码时传入；不传则取当前登录用户的邀请码（关于页「分享」、设置-设备管理）
+function shareInviteInfo(targetCode) {
+  var code = targetCode || '';
+  if (!code) {
+    var auth = (window.INVITE_AUTH && typeof window.INVITE_AUTH.getAuth === 'function') ? window.INVITE_AUTH.getAuth() : null;
+    code = (auth && auth.code) ? auth.code : '';
+  }
   if (!code) { showToast('未获取到邀请码，请先验证邀请码登录', 'error'); return; }
 
   var text = 'LeLeTV：https://leletv.415599.xyz\n邀请码：' + code;

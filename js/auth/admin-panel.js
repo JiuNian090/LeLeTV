@@ -259,6 +259,7 @@ const INVITE_ADMIN_PANEL = {
           </div>
           <div class="invite-card-actions" style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;flex-wrap:wrap;">
             <span class="invite-status-badge ${invite.is_active ? 'invite-status-active' : 'invite-status-disabled'}">● ${invite.is_active ? '启用' : '禁用'}</span>
+            <button class="invite-action-btn share-code-btn" data-code="${invite.code}" title="分享该邀请码">分享</button>
             <button class="invite-action-btn toggle-btn" data-code="${invite.code}" data-active="${invite.is_active}">${invite.is_active ? '禁用' : '启用'}</button>
             <button class="invite-action-btn remark-btn" data-code="${invite.code}" title="编辑备注">✎</button>
             <button class="invite-action-btn invite-action-btn-danger delete-code-btn" data-code="${invite.code}" title="删除">🗑️</button>
@@ -283,6 +284,13 @@ const INVITE_ADMIN_PANEL = {
       </div>`;
     }).join('');
     
+    // 分享该邀请码（与关于页「分享」同一入口，此处把本卡片的邀请码传进去）
+    listEl.querySelectorAll('.share-code-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof window.shareInviteInfo === 'function') window.shareInviteInfo(btn.dataset.code);
+      });
+    });
+
     // 启用/禁用
     listEl.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
