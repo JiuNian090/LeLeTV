@@ -1,6 +1,35 @@
 // LeLeTV — 播放器核心模块
 // HLS + ArtPlayer + 全屏 + 事件处理
 
+/**
+ * iOS/iPadOS 判定。
+ * iOS 上 Safari / Chrome / Firefox 全部是 WebKit 内核，表现一致；
+ * iPadOS 13+ 的 UA 会伪装成 Macintosh，用触点数兜底区分。
+ */
+function isIOSDevice() {
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) return true;
+    return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
+/**
+ * 是否该把 m3u8 交给系统原生 HLS 播放（不创建 hls.js 实例）。
+ *
+ * - iOS 全系：一律原生。iOS ≤16 没有 MSE（Hls.isSupported() 为 false，hls.js
+ *   根本无法 attachMedia）；iOS 17.1+ 虽然有 ManagedMediaSource，但限制多
+ *   （与 AirPlay 互斥、依赖 disableRemotePlayback 等），原生 HLS 更稳、省电、
+ *   支持 AirPlay/画中画。代价是失去 hls.js 的清晰度切换按钮。
+ * - 其他平台：有 MSE 仍走 hls.js；没有 MSE 但能原生播 m3u8（如桌面 Safari）
+ *   则回退原生，避免和老 iOS 一样卡在加载中。
+ */
+function shouldUseNativeHls() {
+    if (isIOSDevice()) return true;
+    if (typeof Hls === 'undefined' || !Hls.isSupported()) {
+        return !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
+    }
+    return false;
+}
+
 function createHlsConfig() {
     return {
         debug: false,
@@ -74,7 +103,11 @@ function setupHlsCustomType(video, url, hlsConfig) {
     // 注意：不要往 <video> 注入 <source>。
     // hls.js 已通过 attachMedia 设置 video.src = blob:（MSE），
     // 而 Chrome 不支持原生 HLS，多余的 <source> 只会引发一次注定失败的 m3u8 请求。
-    video.disableRemotePlayback = false;
+    //
+    // 注意：不要写 video.disableRemotePlayback = false。
+    // hls.js 在使用 ManagedMediaSource（iOS 17.1+ / 桌面 Safari）时会在 attachMedia
+    // 内部把它置为 true（该模式与 AirPlay 远程播放互斥），而这行写在 attachMedia
+    // 之后，会把 hls.js 的设置覆盖掉，导致 MSE 起播失败。
 
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
         video.play().catch(function (e) {
@@ -136,6 +169,7 @@ function setupHlsCustomType(video, url, hlsConfig) {
 
 function createArtPlayerInstance(videoUrl, hlsConfig) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const useNativeHls = shouldUseNativeHls();
 
     return new Artplayer({
         container: '#player',
@@ -167,10 +201,14 @@ function createArtPlayerInstance(videoUrl, hlsConfig) {
         hotkey: false,
         theme: (typeof themeColor === 'function') ? themeColor() : '#ec4899',
         lang: navigator.language.toLowerCase(),
-        moreVideoAttr: {
+        // 原生 HLS 路径不能带 crossOrigin：原生 <video> 会按 CORS 模式请求 m3u8，
+        // 视频源未返回 Access-Control-Allow-Origin 时会被浏览器直接拦掉。
+        moreVideoAttr: useNativeHls ? {} : {
             crossOrigin: 'anonymous',
         },
-        customType: {
+        // 不注册 customType.m3u8 时，ArtPlayer 会把 url 直接赋给 <video src>，
+        // 交给系统原生 HLS 播放（见 shouldUseNativeHls）。
+        customType: useNativeHls ? {} : {
             m3u8: function (video, url) {
                 setupHlsCustomType(video, url, hlsConfig);
             }
