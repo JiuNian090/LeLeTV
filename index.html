@@ -25,19 +25,19 @@
          这段"HTML 已到、样式未到"的空白。改成 preload 后，HTML 一到达就能先画出启动占位，
          等样式真正就绪（见 body 末尾的退场脚本）再淡出让位，避免无样式内容闪一下。
          禁用 JS 时 preload 不会转成样式表，故保留 noscript 回退。 -->
-    <link rel="preload" href="css/variables.css?v=v3.5.1" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/output.css?v=v3.5.1" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/styles.css?v=v3.5.1" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/variables.css?v=v3.5.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/output.css?v=v3.5.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/styles.css?v=v3.5.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
-        <link rel="stylesheet" href="css/variables.css?v=v3.5.1">
-        <link rel="stylesheet" href="css/output.css?v=v3.5.1">
-        <link rel="stylesheet" href="css/styles.css?v=v3.5.1">
+        <link rel="stylesheet" href="css/variables.css?v=v3.5.2">
+        <link rel="stylesheet" href="css/output.css?v=v3.5.2">
+        <link rel="stylesheet" href="css/styles.css?v=v3.5.2">
     </noscript>
 
     <!-- 二级页面样式（分类/设置/邀请码管理/README/影片页）：非阻塞加载，不占用首屏关键渲染路径。
          preload 让它在首屏渲染的同时并行下载，load 后转成正式样式表；禁用 JS 时走 noscript 回退。 -->
-    <link rel="preload" href="css/pages.css?v=v3.5.1" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.5.1"></noscript>
+    <link rel="preload" href="css/pages.css?v=v3.5.2" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.5.2"></noscript>
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <link rel="preload" href="/fonts/MapleMono-Italic.ttf" as="font" type="font/ttf" crossorigin>
@@ -190,7 +190,7 @@
 
     <!-- marked.js: Markdown 渲染（仅 README 弹窗使用）。本地自托管：defer 脚本会阻塞 DOMContentLoaded，
          放在第三方 CDN 上时，跨境抖动会连带拖住 app.js 的全部初始化 -->
-    <script src="libs/marked.min.js?v=v3.5.1" defer></script>
+    <script src="libs/marked.min.js?v=v3.5.2" defer></script>
 
     <!-- 首屏启动占位：从主屏/桌面图标冷启动时，HTML 一到达即显示，替代此前长时间纯黑等待。
          动画与首页首访入场同源（粒子螺旋凝聚 → LeLeTV 实体化 → 爆开），但由加载进度驱动，
@@ -1281,20 +1281,20 @@
     </script>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v3.5.1"></script>
+    <script src="libs/sha256.min.js?v=v3.5.2"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.ftd3c7.js?v=v3.5.1" defer></script>
-    <script src="dist/leletv-app.9lprq.js?v=v3.5.1" defer></script>
+    <script src="dist/leletv-core.ftd3c7.js?v=v3.5.2" defer></script>
+    <script src="dist/leletv-app.9lprq.js?v=v3.5.2" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v3.5.1";
+        window.__LELETV_VERSION__ = "v3.5.2";
     </script>
 
     <!-- 版本更新检测模块 -->
@@ -1307,10 +1307,10 @@
 
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
 
-    <script defer src="js/auth/user-devices.js?v=v3.5.1"></script>
-    <script defer src="js/auth/admin-panel.js?v=v3.5.1"></script>
+    <script defer src="js/auth/user-devices.js?v=v3.5.2"></script>
+    <script defer src="js/auth/admin-panel.js?v=v3.5.2"></script>
     <!-- 主题色系统：主色盘卡片 + Popover ColorPicker + 原地粒子换色 -->
-    <script defer src="js/ui/theme-system.js?v=v3.5.1"></script>
+    <script defer src="js/ui/theme-system.js?v=v3.5.2"></script>
 
 <script>
 // 邀请码登录事件绑定
