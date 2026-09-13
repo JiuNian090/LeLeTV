@@ -100,6 +100,13 @@
     --card-img-height: 168px;
 }
 
+/* ===== 私密模式：隐藏分类入口 =====
+   分类页在私密模式下整体不可达（路由拦截见 js/app/app-routing.js），
+   这里负责首帧就不显示入口按钮，避免闪动；updateNavButtons() 会再兜一道底。*/
+html[data-hidden-mode] .nav-btn[data-page="category"] {
+    display: none;
+}
+
 /* ===== 私密模式主题：铜色 #B87333 =====
    由 index.html / player.html 的 head 内联脚本按 localStorage 的 hiddenContentMode 打上此属性，
    在首帧之前生效，因此不会出现"先粉后黄"的闪烁。

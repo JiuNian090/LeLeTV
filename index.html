@@ -173,6 +173,13 @@
     <script>
         (function () {
             var n = (location.hash || '').replace('#', '');
+            // 私密模式下分类页整体隐藏：hash 直达分类页时首帧就不预置，直接落首页，避免闪动
+            try {
+                if (n === 'category' && localStorage.getItem('hiddenContentMode') === 'true') {
+                    n = 'home';
+                    history.replaceState(null, '', (location.pathname || '/') + (location.search || ''));
+                }
+            } catch (e) { /* localStorage 不可用：按正常模式预置 */ }
             if (n && n !== 'home') {
                 document.documentElement.setAttribute('data-init-page', n);
             }
@@ -1292,8 +1299,8 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.bpbvga.js?v=v3.5.4" defer></script>
-    <script src="dist/leletv-app.2kw2nh.js?v=v3.5.4" defer></script>
+    <script src="dist/leletv-core.cjt696.js?v=v3.5.4" defer></script>
+    <script src="dist/leletv-app.fwahmx.js?v=v3.5.4" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>

@@ -12,6 +12,9 @@ function loadViewingHistory() {
     const historyList = document.getElementById('historyList');
     if (!historyList) return;
 
+    // 私密模式下分类页整体隐藏：这个入口一并隐藏，避免点过去变成"跳首页"
+    const categoryEntryHidden = typeof isHiddenContentMode === 'function' && isHiddenContentMode();
+
     const history = getViewingHistory();
 
     if (history.length === 0) {
@@ -23,10 +26,10 @@ function loadViewingHistory() {
                     </svg>
                 </div>
                 <p class="text-gray-400 text-lg mb-2">暂无观看记录</p>
-                <p class="text-gray-600 text-sm mb-6">去分类发现更多精彩内容</p>
+                ${categoryEntryHidden ? '' : `<p class="text-gray-600 text-sm mb-6">去分类发现更多精彩内容</p>
                 <button data-action="switch-to-category" class="px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
                     去分类浏览
-                </button>
+                </button>`}
             </div>
         `;
         return;

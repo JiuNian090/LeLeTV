@@ -759,7 +759,14 @@ function playDomainTransition() {
   }, burstStart + DOMAIN_BURST_MS + 900);
 }
 
+// 私密模式下分类页整体隐藏（入口按钮 + 页面本身，见 css/variables.css）
+function isCategoryPageBlocked(n) {
+  return n === 'category' && typeof isHiddenContentMode === 'function' && isHiddenContentMode();
+}
+
 function switchPage(a) {
+  // 任何入口（导航按钮、switch-to-category 动作、影片页返回）都回落到首页
+  if (isCategoryPageBlocked(a)) a = 'home';
   var h = a === 'home' ? '' : '#' + a;
   if (location.hash !== h) location.hash = h; else showPage(a);
 }
@@ -798,6 +805,13 @@ function seedCategoryFiltersFromPrefs() {
 function handleHashChange() { showPage(location.hash.slice(1) || 'home'); }
 
 function showPage(n) {
+  // 私密模式下分类页不可达：hash 直达或重载落点落在分类页时回落首页（不加载 TMDB 分类数据）
+  if (isCategoryPageBlocked(n)) {
+    n = 'home';
+    try {
+      if (location.hash) history.replaceState(null, '', (location.pathname || '/') + (location.search || ''));
+    } catch (e) { /* 忽略：URL 修正失败不影响页面回落 */ }
+  }
   // 离开类别页前保存滚动位置与标签选择（标签供下次进入时沿用）
   if (currentPage === 'category' && n !== 'category') {
     if (typeof saveTmdbScroll === 'function') saveTmdbScroll();
@@ -832,7 +846,15 @@ function showPage(n) {
 
 function updateNavButtons(a) {
   document.querySelectorAll('.nav-btn[data-page]').forEach(function(b) {
-    b.classList.toggle('active', b.getAttribute('data-page') === a);
+    var page = b.getAttribute('data-page');
+    // 私密模式下分类入口不显示：样式表负责首帧，这里兜底，避免样式表被缓存时漏出来
+    if (isCategoryPageBlocked(page)) {
+      b.hidden = true;
+      b.classList.remove('active');
+      return;
+    }
+    b.hidden = false;
+    b.classList.toggle('active', page === a);
   });
 }
 
@@ -1090,6 +1112,10 @@ function shareInviteInfo(targetCode) {
   var MAX_TIME = 300;          // ms - 超过此时间不触发
 
   var pages = ['home', 'category', 'history', 'settings', 'about'];
+  // 私密模式下分类页不可达：左右滑动翻页也跳过它，否则会"滑不动"
+  if (typeof isHiddenContentMode === 'function' && isHiddenContentMode()) {
+    pages = pages.filter(function (p) { return p !== 'category'; });
+  }
 
   document.addEventListener('touchstart', function(e) {
     // 不在播放器页面或搜索输入框内触发
