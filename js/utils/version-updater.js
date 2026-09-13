@@ -258,7 +258,7 @@ function renderUpdateLog(entries) {
   return html;
 }
 
-/** 绑定「更新版本」按钮（只绑一次）；有更新时必须点更新进入网站，遮罩不提供关闭 */
+/** 绑定「立即更新」按钮（只绑一次）；有更新时必须点更新进入网站，遮罩不提供关闭 */
 function bindUpdateModal() {
   if (_updateModalBound) return;
   var modal = document.getElementById('updateModal');
@@ -275,23 +275,42 @@ function bindUpdateModal() {
   }
 }
 
-/** 等启动占位（#bootSplash，z-index 9999）退场后再显示弹窗，避免卡片入场动画被盖在下面空放 */
-function whenBootSplashGone(cb) {
-  var splash = document.getElementById('bootSplash');
-  if (!splash || splash.classList.contains('boot-splash--done')) { cb(); return; }
+/** 与 #bootSplash 的 0.32s 淡出对齐（略微留余量） */
+var BOOT_SPLASH_FADE_MS = 340;
 
+/**
+ * 等启动占位（#bootSplash，z-index 9999）退场后再显示弹窗，避免卡片入场动画被盖在下面空放。
+ * 这里刻意不监听 transitionend：占位淡出结束的同一刻元素就被移除（index.html 的 release，
+ * FADE_MS 与 CSS 过渡同为 320ms），事件在移除竞态中经常丢失，只能退到 6s 兜底才弹窗。
+ * 改为观察 DOM 状态判断退场，滞后可控（淡出开始 → 等淡出结束）。
+ */
+function whenBootSplashGone(cb) {
   var fired = false;
   var fire = function () {
     if (fired) return;
     fired = true;
-    splash.removeEventListener('transitionend', onEnd);
     cb();
   };
-  var onEnd = function (e) {
-    if (e.propertyName === 'opacity') fire();
+
+  // 返回 true 表示已安排回调（已退场 / 正在淡出），false 表示占位还在，需要继续等
+  var check = function () {
+    var splash = document.getElementById('bootSplash');
+    if (!splash) { fire(); return true; }                  // 已退场并移除 = 首页已就绪
+    if (splash.classList.contains('boot-splash--done')) {  // 正在淡出：等淡出结束再显示
+      setTimeout(fire, BOOT_SPLASH_FADE_MS);
+      return true;
+    }
+    return false;
   };
-  splash.addEventListener('transitionend', onEnd);
-  setTimeout(fire, 6000); // 兜底：启动引擎异常时也不至于永不弹窗
+
+  if (check()) return;
+
+  var startedAt = Date.now();
+  (function poll() {
+    if (fired || check()) return;
+    if (Date.now() - startedAt >= 6000) { fire(); return; } // 兜底：启动引擎异常也不至于永不弹窗
+    setTimeout(poll, 50);
+  })();
 }
 
 /** 邀请码验证通过之前一直挂起；已登录（localStorage 有 auth）则立即回调 */
