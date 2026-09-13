@@ -50,7 +50,7 @@ allow = ["bash=npx codegraph callers \"buildApiParamsAndFetch\" 2>&1", "bash=npx
 bash    = "enforce"
 network = true
 
-allow_write = ["E:\\Code\\JiunianTV\\LeLeTV\\css", "E:\\Code\\JiunianTV\\LeLeTV\\js\\app", "E:\\Code\\JiunianTV\\LeLeTV\\js\\ui"]
+allow_write = ["E:\\Code\\JiunianTV\\LeLeTV\\css", "E:\\Code\\JiunianTV\\LeLeTV\\js\\app", "E:\\Code\\JiunianTV\\LeLeTV\\js\\ui", "E:\\Code\\JiunianTV\\LeLeTV"]
 [statusline]
 # A custom status line: a command whose first stdout line replaces the built-in
 # data row. It receives {"model","contextUsed","contextWindow","cwd"} as JSON on stdin.

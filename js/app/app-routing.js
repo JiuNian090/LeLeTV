@@ -27,6 +27,9 @@ function rememberPageForReload(page) {
 var PARTICLE_SWEEP_KEY = 'leletv_particle_sweep';
 var PARTICLE_CARD_SELECTOR = '#page-settings .dash-card';
 var PARTICLE_SWEEP_MS = 950;       // 消散时长（放慢：粒子悠长上飘，不再一闪而过）
+// 消散遮罩渐变的目标深色：与 index.html 的 #bootSplash 背景、--color-bg、.page-bg 保持同一个值，
+// 重载前后才能无缝接续。此处硬编码而非读 CSS 变量：启动占位在样式表之前就会用到它
+var PARTICLE_SWEEP_BG = '#000000';
 var PARTICLE_SWEEP_STEP = 6;       // 采样步长基准（px）：越小粒子越细密
 var PARTICLE_MAX = 6000;           // 粒子总数上限：采样步长会按卡片面积自适应放宽
 var PARTICLE_RISE = 58;            // 向上飘散高度基准（px）
@@ -90,7 +93,7 @@ var _entranceStarted = false;
 var _particleIncoming = false;
 try { _particleIncoming = sessionStorage.getItem(PARTICLE_SWEEP_KEY) === '1'; } catch (e) { /* 忽略 */ }
 // 启动占位（index.html 的 #bootSplash）已接管这次切换的遮罩：它自己就能挡住首帧，
-// 所以不必再藏设置页内容——反过来要放行，让新页面在模糊背景里若隐若现
+// 所以不必再藏设置页内容——反过来要放行，让新页面在深色遮罩下就绪
 var _bootSplashOwnsTransition = !!window.__LELETV_BOOT_INTRO__;
 if (_particleIncoming && !_bootSplashOwnsTransition) {
   document.documentElement.setAttribute('data-particle-in', '1');
@@ -298,6 +301,14 @@ function playParticleDissolve(onDone) {
     panel.style.transition = 'opacity ' + Math.round(PARTICLE_SWEEP_MS * 0.6) + 'ms ease';
     panel.style.opacity = '0';
   }
+
+  // 画布背景同步由透明渐变为深色底：粒子还在飘散时，画面已经渐变到与重载后启动占位（#bootSplash）
+  // 相同的深色，于是"消散 → 深色背景 → 粒子重新凝聚"之间没有跳色：
+  // 重载前后两帧是同一个颜色，接缝看不出来
+  var sweepCanvas = view.canvas;
+  sweepCanvas.style.transition = 'background-color ' + PARTICLE_SWEEP_MS + 'ms linear';
+  void sweepCanvas.offsetWidth;                 // 强制采纳初值（CSS 未设底色 = 透明），过渡才会真的发生
+  sweepCanvas.style.backgroundColor = PARTICLE_SWEEP_BG;
 
   var ctx = view.ctx;
   var start = _particleNow();
@@ -645,8 +656,8 @@ function playDomainTransition() {
   } catch (e) { /* 忽略 */ }
 
   // 启动占位（index.html 的 #bootSplash）在本次重载后已经播过同一套"粒子凝聚 → 爆开"，
-  // 且背景已换成模糊的下层页面。这里不再重复播粒子，只做面板交接：
-  // 摘掉首帧隐藏，让设置页内容就绪，等占位爆开淡出后自然露出来
+  // 且遮罩是纯深色底。这里不再重复播粒子，只做面板交接：
+  // 摘掉首帧隐藏，让设置页内容就绪，等占位在爆开时同步淡出后自然露出来
   if (window.__LELETV_BOOT_INTRO__) {
     _resetPanel();
     return;

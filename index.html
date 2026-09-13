@@ -219,15 +219,10 @@
             width: 100%;
             height: 100%;
         }
-        /* 数据域切换（私密 ↔ 正常）重载后的这一帧：上一次页面已把标记写进 sessionStorage，
-           背景就从纯黑换成"模糊的下层页面" —— 粒子凝聚时背后是新模式的内容在虚化中浮现。
-           冷启动没有该标记，保持纯黑（背后本来也没内容可模糊），同时省掉模糊的合成开销 */
-        #bootSplash.boot-splash--blur {
-            background: rgba(0, 0, 0, 0.5);
-            /* 12px 与 20px 在观感上几乎没有差别，但全屏模糊的合成开销明显更低 */
-            -webkit-backdrop-filter: blur(12px) saturate(120%);
-            backdrop-filter: blur(12px) saturate(120%);
-        }
+        /* 数据域切换（私密 ↔ 正常）重载后的这一帧：背景保持深色底（#000000，与
+           --color-bg / .page-bg 一致），不再虚化下层内容 —— 切换前旧页面已把画面渐变到
+           同一个深色，所以这里是接续而不是跳变；全屏虚化的合成开销也一并省掉。
+           遮罩是不透明深色且铺满首帧，足以盖住尚未就绪的内容，不会出现内容蹦出来 */
         /* 减弱动效偏好：不跑粒子，改为静态字样——既有反馈，又不违背用户的动效设置 */
         #bootSplash .boot-splash-static {
             display: none;
@@ -287,9 +282,9 @@
         var fromDomainSwitch = false;
         try { fromDomainSwitch = sessionStorage.getItem('leletv_particle_sweep') === '1'; } catch (e) { /* 忽略 */ }
         if (fromDomainSwitch) {
-            splash.classList.add('boot-splash--blur');
-            // 放行首帧隐藏：切换后的新页面内容要在模糊背景里若隐若现。
-            // 遮罩是"半透明底 + 虚化"且铺满首帧，足以盖住未就绪的内容，不会出现内容蹦出来
+            // 放行首帧隐藏：切换后的新页面内容要在深色遮罩下就绪。
+            // 遮罩是不透明的深色底，铺满首帧足以盖住未就绪的内容，不会出现内容蹦出来；
+            // 旧页面此前已把画面渐变到同一个深色，所以重载这一帧是无缝的（不做虚化，省掉全屏合成）
             document.documentElement.setAttribute('data-domain-shown', '1');
         }
 
@@ -565,7 +560,11 @@
             })();
         }
 
+        // 退场只能发生一次：爆开期间会提前调用，尾部的兜底路径也可能再调一次
+        var released = false;
         function release() {
+            if (released) return;
+            released = true;
             splash.classList.add('boot-splash--done');
             setTimeout(function () {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);
@@ -638,16 +637,17 @@
                 return;
             }
 
-            // 爆开 → 淡出
+            // 爆开 → 遮罩与爆开同步渐隐，露出新页面（不再等爆开演完才退场）
             var be = t - stateAt;
             var bt = clamp01(be / BURST_MS);
             updateBurst(particles, be, c);
             paint(particles);
             drawRing(c, brandRadius + 220 * bt, 0.5 * (1 - bt));
             drawBrand(c, size, 1 + 0.35 * bt, 1 - bt);
+            // 爆开刚起势就开始淡出：粒子还在向外扩散时页面已经渐显，两边重叠才是"爆开的同时恢复页面"
+            if (bt >= 0.18) release();
             if (bt >= 1) {
                 state = 'out';
-                release();
                 return;
             }
             requestAnimationFrame(frame);
@@ -1258,7 +1258,7 @@
     </script>
 
     <script src="dist/leletv-core.ftd3c7.js?v=v3.5.0" defer></script>
-    <script src="dist/leletv-app.8ftr4b.js?v=v3.5.0" defer></script>
+    <script src="dist/leletv-app.l8xi6h.js?v=v3.5.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
