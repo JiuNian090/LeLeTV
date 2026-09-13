@@ -25,6 +25,28 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
 // ====== 邀请码 API 辅助函数 ======
 
+// 设备记录找回门槛：设备实例 ID 丢失时（多为 Safari ITP 清理长期未访问站点的数据），
+// 只有旧记录已闲置这么久，才认为它属于本机——否则同型号设备（软指纹相同）
+// 首次登录会把对方正在使用的记录抢过来
+const RESTORE_MIN_IDLE_MS = 24 * 60 * 60 * 1000;
+
+// devices.device_signature 列是否存在（003 迁移是否已执行）。
+// 探测为真后永久缓存；为假则每次重探，便于迁移执行后无需重启即自动生效。
+let _signatureColumnChecked = false;
+let _hasSignatureColumn = false;
+async function hasSignatureColumn(env) {
+  if (_signatureColumnChecked && _hasSignatureColumn) return true;
+  try {
+    await env.INVITE_DB.prepare('SELECT device_signature FROM devices LIMIT 1').first();
+    _hasSignatureColumn = true;
+  } catch {
+    _hasSignatureColumn = false;
+    console.warn('[invite] devices.device_signature 不存在，请执行 migrations/003_add_device_signature.sql');
+  }
+  _signatureColumnChecked = true;
+  return _hasSignatureColumn;
+}
+
 function jsonResponse(data, status) {
   const body = JSON.stringify(data);
   return new Response(body, {
@@ -382,9 +404,15 @@ async function handleInviteRequest(request, env) {
 
 async function handleVerify(request, env) {
   const body = await request.json();
-  const { code, device_name, device_fingerprint } = body;
-  
-  if (!code || !device_name || !device_fingerprint) {
+  const { code, device_name, device_fingerprint, device_signature, device_id_lost } = body;
+  // device_fingerprint 现为「设备实例 ID」（浏览器本地生成并持久化的随机 ID）；
+  // device_signature 为软指纹，仅用于设备 ID 丢失（清缓存/无痕模式）时找回原有记录
+  const deviceId = String(device_fingerprint || '').trim();
+  const signature = String(device_signature || '').trim();
+  // 仅当客户端声明「本机 ID 是新生成的（本地存储被清）」时才考虑用软指纹找回
+  const idLost = device_id_lost === true;
+
+  if (!code || !device_name || !deviceId) {
     return jsonResponse({ ok: false, error: '缺少必填参数: code, device_name, device_fingerprint' }, 400);
   }
   
@@ -409,18 +437,52 @@ async function handleVerify(request, env) {
     return jsonResponse({ ok: false, error: '邀请码已被禁用' }, 403);
   }
   
+  const withSignature = await hasSignatureColumn(env);
+
   const existingDevice = await env.INVITE_DB.prepare(
     'SELECT * FROM devices WHERE device_fingerprint = ?'
-  ).bind(device_fingerprint).first();
+  ).bind(deviceId).first();
   
   if (existingDevice) {
+    const renewArgs = [Date.now(), getClientIP(request), getBrowserSummary(request), device_name];
+    if (withSignature) renewArgs.push(signature);
+    renewArgs.push(existingDevice.id);
     await env.INVITE_DB.prepare(
-      'UPDATE devices SET last_active_at = ?, ip_address = ?, browser = ?, device_name = ? WHERE id = ?'
-    ).bind(Date.now(), getClientIP(request), getBrowserSummary(request), device_name, existingDevice.id).run();
+      'UPDATE devices SET last_active_at = ?, ip_address = ?, browser = ?, device_name = ?'
+      + (withSignature ? ', device_signature = ?' : '')
+      + ' WHERE id = ?'
+    ).bind(...renewArgs).run();
     
     return jsonResponse({ ok: true, action: 'renewed', message: '欢迎回来' });
   }
   
+  // 设备实例 ID 未命中时，只有下面几道锁全部满足才接管旧记录（视为「同一台设备换了 ID」）：
+  // ① 客户端声明本机 ID 是新生成的（清缓存/无痕）② 同一邀请码下软指纹唯一命中
+  // ③ 来源 IP 与该记录一致，且该记录已闲置 RESTORE_MIN_IDLE_MS 以上
+  // 少任何一条都按新设备登记——同型号设备软指纹相同，否则会把对方正在用的记录抢走
+  if (withSignature && signature && idLost) {
+    const clientIP = getClientIP(request);
+    const signatureCount = await env.INVITE_DB.prepare(
+      'SELECT COUNT(*) as count FROM devices WHERE code = ? AND device_signature = ?'
+    ).bind(code, signature).first();
+
+    if (signatureCount && signatureCount.count === 1) {
+      const previousDevice = await env.INVITE_DB.prepare(
+        'SELECT id, ip_address, last_active_at FROM devices WHERE code = ? AND device_signature = ?'
+      ).bind(code, signature).first();
+
+      if (previousDevice
+          && previousDevice.ip_address && previousDevice.ip_address === clientIP
+          && Date.now() - previousDevice.last_active_at >= RESTORE_MIN_IDLE_MS) {
+        await env.INVITE_DB.prepare(
+          'UPDATE devices SET device_fingerprint = ?, device_name = ?, last_active_at = ?, ip_address = ?, browser = ? WHERE id = ?'
+        ).bind(deviceId, device_name, Date.now(), getClientIP(request), getBrowserSummary(request), previousDevice.id).run();
+
+        return jsonResponse({ ok: true, action: 'restored', message: '欢迎回来' });
+      }
+    }
+  }
+
   const deviceCount = await env.INVITE_DB.prepare(
     'SELECT COUNT(*) as count FROM devices WHERE code = ?'
   ).bind(code).first();
@@ -436,9 +498,13 @@ async function handleVerify(request, env) {
   }
   
   const now = Date.now();
+  const insertArgs = [code, device_name, deviceId, getBrowserSummary(request), getClientIP(request), now, now];
+  if (withSignature) insertArgs.push(signature);
   await env.INVITE_DB.prepare(
-    'INSERT INTO devices (code, device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).bind(code, device_name, device_fingerprint, getBrowserSummary(request), getClientIP(request), now, now).run();
+    'INSERT INTO devices (code, device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at'
+    + (withSignature ? ', device_signature' : '')
+    + ') VALUES (?, ?, ?, ?, ?, ?, ?' + (withSignature ? ', ?' : '') + ')'
+  ).bind(...insertArgs).run();
   
   const action = deviceCount.count >= invite.max_devices ? 'evicted' : 'registered';
   return jsonResponse({ ok: true, action, message: '验证成功' });
