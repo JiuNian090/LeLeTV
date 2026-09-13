@@ -506,6 +506,7 @@ function setupEventListeners() {
             }
             case 'import-config-from-url': importConfigFromUrl(); break;
             case 'switch-to-category': switchPage('category'); break;
+            case 'share-invite': shareInviteInfo(); break;
         }
     });
 

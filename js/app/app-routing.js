@@ -965,6 +965,12 @@ function openDisclaimerModal() {
 function closeDisclaimerModal() {
   localStorage.setItem('lastAcceptedDisclaimer', Date.now().toString());
   document.getElementById('disclaimerModal').style.display = 'none';
+
+  // 幂等广播：通知挂起的更新弹窗「隐私政策已确认」（只派发一次）
+  if (window.LELETV_DISCLAIMER && !window.LELETV_DISCLAIMER.handled) {
+    window.LELETV_DISCLAIMER.handled = true;
+    document.dispatchEvent(new CustomEvent('disclaimerAccepted'));
+  }
 }
 
 function openInviteGuideModal() {
@@ -1021,6 +1027,56 @@ window.toggleSettings = toggleSettings;
 window.focusSearch = focusSearch;
 window.openDisclaimerModal = openDisclaimerModal;
 window.closeDisclaimerModal = closeDisclaimerModal;
+window.shareInviteInfo = shareInviteInfo;
+
+// 关于页「分享」按钮：移动端调起系统级分享，桌面端复制文案到剪贴板
+function shareInviteInfo() {
+  var auth = (window.INVITE_AUTH && typeof window.INVITE_AUTH.getAuth === 'function') ? window.INVITE_AUTH.getAuth() : null;
+  var code = (auth && auth.code) ? auth.code : '';
+  if (!code) { showToast('未获取到邀请码，请先验证邀请码登录', 'error'); return; }
+
+  var text = 'LeLeTV：https://leletv.415599.xyz\n邀请码：' + code;
+  var onOk = function() { showToast('邀请信息已复制，可粘贴分享', 'success'); };
+  var onFail = function() { showToast('复制失败，请手动复制', 'error'); };
+
+  var fallbackCopy = function() {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? onOk() : onFail();
+    } catch (e) {
+      onFail();
+    }
+  };
+
+  var copyText = function() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onOk).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  };
+
+  // 移动端优先调起系统分享面板；宿主未实现 navigator.share 时回退复制
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile && typeof navigator.share === 'function') {
+    navigator.share({ title: 'LeLeTV', text: text }).catch(function(err) {
+      // 用户主动取消（AbortError）或拒绝授权不提示，其余异常回退到复制
+      if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) return;
+      copyText();
+    });
+    return;
+  }
+
+  copyText();
+}
 
 // ===================== 移动端滑动手势 =====================
 (function() {

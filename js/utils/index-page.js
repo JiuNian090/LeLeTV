@@ -1,23 +1,41 @@
 // 页面加载后显示弹窗脚本
+
+// 隐私政策（使用说明）本次是否需要确认：脚本加载时即判定，
+// 供更新弹窗编排使用（更新弹窗排在隐私政策之后，见 version-updater.js 的 whenHomeReady）
+window.LELETV_DISCLAIMER = {
+    pending: false,   // 本次进站需要用户确认
+    handled: false    // 用户已点「我已知晓」
+};
+
+(function () {
+    var lastAccepted = localStorage.getItem('lastAcceptedDisclaimer');
+    var now = Date.now();
+    var THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    window.LELETV_DISCLAIMER.pending = !lastAccepted || (now - parseInt(lastAccepted, 10)) > THIRTY_DAYS;
+})();
 document.addEventListener('DOMContentLoaded', function() {
-    // 检查用户是否已经看过声明以及上次查看时间
-    const lastAcceptedDisclaimer = localStorage.getItem('lastAcceptedDisclaimer');
-    const now = new Date().getTime();
-    const oneDayInMs = 30 * 24 * 60 * 60 * 1000; // 30天的毫秒数
-    
-    // 如果上次接受时间超过30天或从未接受过，则显示弹窗
-    if (!lastAcceptedDisclaimer || (now - parseInt(lastAcceptedDisclaimer)) > oneDayInMs) {
-        // 显示弹窗
-        const disclaimerModal = document.getElementById('disclaimerModal');
-        disclaimerModal.style.display = 'flex';
-        
-        // 添加接受按钮事件
-        document.getElementById('acceptDisclaimerBtn').addEventListener('click', function() {
-            // 保存用户接受声明的时间戳
-            localStorage.setItem('lastAcceptedDisclaimer', now.toString());
-            // 隐藏弹窗
-            disclaimerModal.style.display = 'none';
-        });
+    // 需要确认时：等启动占位（#bootSplash，z-index 9999）退场后再弹，避免被盖住
+    if (window.LELETV_DISCLAIMER.pending) {
+        var disclaimerModal = document.getElementById('disclaimerModal');
+        var acceptBtn = document.getElementById('acceptDisclaimerBtn');
+        if (disclaimerModal && acceptBtn) {
+            // 邀请码登录优先于任何弹窗：登录通过且启动占位退场后再显示隐私政策
+            whenEnteringSite(function () { disclaimerModal.style.display = 'flex'; });
+
+            // 关闭动作统一走 closeDisclaimerModal（写时间戳 + 标记已确认 + 派发 disclaimerAccepted）
+            acceptBtn.addEventListener('click', function () {
+                if (typeof closeDisclaimerModal === 'function') {
+                    closeDisclaimerModal();
+                } else {
+                    localStorage.setItem('lastAcceptedDisclaimer', Date.now().toString());
+                    disclaimerModal.style.display = 'none';
+                }
+            });
+        } else {
+            // DOM 缺失时立刻放行，避免更新弹窗一直等下去
+            window.LELETV_DISCLAIMER.pending = false;
+            window.LELETV_DISCLAIMER.handled = true;
+        }
     }
 
     // URL搜索参数处理脚本

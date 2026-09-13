@@ -3,47 +3,95 @@
 <div align="center">
   <img src="image/logo.png" alt="LeLeTV Logo" width="180">
   <br>
-  <p><strong>私有学习项目，禁止公开使用</strong></p>
+  <p><strong>自用学习项目，请勿公开分享</strong></p>
 </div>
 
 <p align="center">
-  <a href="https://leletv.776645.xyz" target="_blank">在线访问</a> · 
-  <a href="#-邀请码验证系统">邀请码验证</a> · 
-  <a href="#-功能特性">功能特性</a> · 
-  <a href="#-技术栈">技术栈</a> · 
+  <a href="https://leletv.776645.xyz" target="_blank">在线访问</a> ·
+  <a href="#-项目简介">项目简介</a> ·
+  <a href="#-功能特性">功能特性</a> ·
+  <a href="#-邀请码验证系统">邀请码验证</a> ·
+  <a href="#-架构说明">架构说明</a> ·
   <a href="#-部署指南">部署指南</a> ·
-  <a href="#-目录结构">目录结构</a>
+  <a href="#-更新日志">更新日志</a>
 </p>
 
 ---
 
-## 项目简介
+## 📖 项目简介
 
-LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学习和技术研究。项目以**纯前端单页应用（SPA）**为核心，聚合 21 个第三方视频采集站 API 实现搜索和播放，通过 **TMDB（The Movie Database）** 提供分类浏览、影片详情和智能筛选功能。
+LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学习与技术研究。核心是一个**纯前端单页应用（SPA）**：聚合 21 个第三方视频采集站 API 完成搜索与播放，通过 **TMDB（The Movie Database）** 提供分类浏览、影片详情与智能筛选。
 
-部署采用 **Cloudflare Pages + Cloudflare Workers** 的纯静态+无服务器架构，无需后端服务器即可运行。
+部署采用 **Cloudflare Pages + Pages Functions + Workers + D1** 的纯静态 + 无服务器架构，无需自建后端。
 
 ### 项目规模
 
 | 指标 | 数据 |
 |------|------|
-| JS 模块 | 35 个核心模块（js/ + js/auth/），按功能分 9 个子目录 |
-| CSS 样式 | 5 个手写样式文件（variables + styles + player + tailwind + output）+ Tailwind 编译 |
-| 搜索源 | 21 个内置采集站 API（含 7 个隐藏标记） |
-| 数据库 | Cloudflare D1（invitation_codes + devices 表）|
-| 页面数 | 2 个 HTML 文件（index.html SPA + player.html 独立播放页）|
-| 部署配置 | Cloudflare Pages + Workers + Functions + D1 |
+| JS 模块 | 42 个手写模块（`js/` 下 8 个子目录） |
+| 第三方库 | 4 个（`libs/`：ArtPlayer / HLS.js / marked / sha256） |
+| 样式 | 5 个手写 CSS + Tailwind 编译输出（`css/output.css`） |
+| 构建产物 | 3 个 esbuild bundle（core / app / player，带内容哈希） |
+| 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源 |
+| 页面 | `index.html`（SPA，1415 行）+ `player.html`（独立播放页，319 行） |
+| 数据库 | Cloudflare D1（`invitation_codes` + `devices`） |
+| 代码图谱 | CodeGraph 1,232 节点 / 5,840 边 · GitNexus 2,346 符号 / 207 执行流 |
 
-## 重要声明
+## ⚠️ 重要声明
 
 - 本项目**仅供个人学习使用**，禁止用于任何商业用途
-- 本项目**必须部署邀请码系统**（Cloudflare D1 + Worker），否则无法访问
+- 本项目**必须部署邀请码系统**（Cloudflare D1 + Worker），否则页面无法进入
+- 本项目不存储、上传或分发任何视频内容，所有结果均来自第三方接口
 - 如因违反上述规定导致的任何法律问题，使用者需自行承担责任
-- 本项目开发者不对用户的使用行为承担任何法律责任
 
-## 邀请码验证系统
+## ✨ 功能特性
 
-项目内置了基于 **Cloudflare D1 数据库**的邀请码验证系统，是**唯一**的访问控制方式。邀请码系统通过设备指纹 + 心跳机制实现对访问权限的精细化管理。
+### 视频搜索
+- 聚合 21 个第三方采集站 API，多源并发搜索
+- 搜索结果内存缓存（5 分钟 TTL），减少重复请求
+- **搜索历史下拉菜单**：点击搜索框展开，输入实时过滤，支持逐条删除与清空
+- **结果源过滤标签**：按来源切换结果，标签带实时计数
+- **智能排序**：解析片名中的季/部/集序号做数值排序（含「第十二季」等中文数字）
+- **智能负载均衡**：动态评分算法自动选源与故障转移（详见下文）
+- **私密内容过滤**：可选开关，密码保护
+
+### TMDB 分类浏览
+- 支持 **电影 / 电视剧 / 动漫 / 综艺** 四大类型
+- **多维筛选**：类型流派、年份（可折叠）、评分、语言、地区、剧集状态
+- 8 种排序方式；智能分页（省略号逻辑）+ 响应式网格
+- 分类页会记住上次选择的标签，`hidden` 数据域下另存一套
+
+### 视频播放
+- 基于 **ArtPlayer + HLS.js**，支持 M3U8 流媒体
+- **多资源切换**：实时测试各源延迟并显示，便于挑最流畅的线路
+- **上下集切换 / 自动连播**：剧集导航 + 快捷键（Alt + ←/→）
+- **广告过滤**：自定义 HLS.js Loader 拦截 M3U8 分片广告
+- **手机横屏自动全屏**、**长按二倍速**（鼠标与触摸均支持）
+- **进度恢复**：自动保存播放进度，返回时续播
+- **Media Session API**：接入系统媒体控制中心
+- **Window Controls Overlay**：PWA 模式下的原生窗口控制栏
+
+### 主题与外观
+- **主题色系统**：内置预设主题 + 自定义配色，正常/私密模式各保存一套
+- Tailwind 的 `pink` 色板映射到 CSS 变量，主题切换时全站工具类自动跟随
+- **HarmonyOS 深色调色板**：纯黑背景 + 霓虹粉（`#ec4899`）主色
+- 极光背景、粒子聚散、粒子切主题等动效；播放中或页面后台时自动暂停以省电
+- 响应式设计（xs/sm/md/lg 四档断点）、按压反馈、骨架屏、Toast 队列
+
+### 历史与设备
+- **观看历史**：自动记录集数与进度（30 秒防抖），今天/昨天/本周/更早分组，最多 50 条
+- **设备管理**：查看本邀请码下的设备列表，支持重命名本设备、剔除其他设备
+- **分享**：移动端调起系统分享面板，桌面端复制「站点地址 + 邀请码」文案
+
+### 数据源与缓存
+- 设置页可勾选/重置/导入/导出数据源配置，最多添加 5 个自定义采集站
+- 智能缓存管理：24 小时清理临时数据，保护用户设置与历史
+- PWA 可安装（`standalone` + `window-controls-overlay`）
+- 版本更新自动检测，提示后重载生效
+
+## 🔐 邀请码验证系统
+
+项目内置基于 **Cloudflare D1** 的邀请码验证系统，是**唯一**的访问控制方式：设备指纹 + 心跳机制管理访问权限。
 
 ### 工作原理
 
@@ -57,18 +105,18 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
             ├── 普通用户：输入设备名 + 邀请码
             │       │
             │       └── POST /invite/verify
-            │               ├── 邀请码无效 ─── 拒绝访问
+            │               ├── 邀请码无效 ──── 拒绝访问
             │               ├── 邀请码已禁用 ── 拒绝访问
             │               └── 验证成功
             │                       ├── 已有指纹记录 ── 更新活跃时间
             │                       └── 新设备
-            │                               ├── 未超设备上限 ── 注册新设备
-            │                               └── 超上限 ── 移除最久未活跃设备
+            │                               ├── 未超上限 ── 注册新设备
+            │                               └── 超上限 ──── 移除最久未活跃设备
             │
-            ├── 管理员：输入 ADMINUSER + ADMINKEY（环境变量配置）
+            ├── 管理员：输入 ADMINUSER + ADMINKEY
             │       │
             │       └── POST /invite/verify
-            │               └── 匹配管理员凭证 ── 跳过数据库验证，进入管理员模式
+            │               └── 匹配管理员凭证 ── 跳过数据库校验，进入管理员模式
             │
             └── 启动心跳（每 5 分钟）── 更新设备最后活跃时间
 ```
@@ -77,162 +125,40 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 机制 | 说明 |
 |------|------|
-| **设备指纹** | 基于浏览器特征（navigator.userAgent、screen 属性等）生成唯一 SHA-256 哈希，绑定设备身份 |
-| **心跳** | 每 5 分钟向服务端发送心跳请求，维持设备活跃状态 |
-| **设备上限** | 每个邀请码默认最多绑定 5 台设备，超限时自动剔除最久未活跃设备 |
-| **持久登录** | 验证成功后，设备信息保存至 localStorage，关闭页面无需重新登录 |
-| **邀请码格式** | `LELE-XXXX-XXXX`（随机字母数字，排除易混淆字符 O/0/I/1） |
-| **管理员登录** | 在登录弹窗输入环境变量 `ADMINUSER` 和 `ADMINKEY` 配置的凭证即可进入管理员模式，无需额外密码弹窗 |
-
-### 功能特性
-
-- **邀请码登录**：首次打开页面弹出登录弹窗，输入设备名和邀请码即可进入
-- **设备管理（普通用户）**：设置页面可查看自己的邀请码和名下的设备列表，支持删除设备和重命名本设备名
-- **设备名编辑**：当前设备名可点击直接重命名（仅限本设备）
-- **管理员面板**：管理员登录后可生成/禁用/删除邀请码、查看邀请码使用统计、设置备注、管理设备
-- **邀请码排序**：按最近设备活跃时间排序，高频使用的邀请码排在最前面
-- **活跃度指示器**：绿点（1h内）/淡绿（24h内）/黄点（7天内）直观显示设备活跃状态
-- **邀请码备注**：管理员可为邀请码添加备注，方便管理用途
-- **退出登录**：一键清除所有登录状态，恢复邀请码登录界面
+| **设备指纹** | 浏览器特征（UA、screen、时区、语言等）经 SHA-256 生成，绑定设备身份 |
+| **心跳** | 每 5 分钟上报一次，页面 `pagehide` 时补发，维持设备活跃状态 |
+| **设备上限** | 每个邀请码默认最多 5 台设备，超限自动剔除最久未活跃设备 |
+| **持久登录** | 验证信息存入 localStorage，关闭页面无需重新登录 |
+| **邀请码格式** | `LELE-XXXX-XXXX`（排除易混淆字符 O/0/I/1） |
+| **管理员登录** | 用环境变量 `ADMINUSER` + `ADMINKEY` 登录，无需额外密码弹窗 |
 
 ### 相关文件
 
 | 文件 | 说明 |
 |------|------|
-| `js/auth/invite-auth.js` | 邀请码验证核心模块（生成指纹、验证、心跳、登录状态管理、管理员 token 计算） |
-| `js/auth/admin-panel.js` | 管理员面板（生成/列表/启用禁用/统计/备注/设备管理/活跃度指示器） |
-| `js/auth/user-devices.js` | 普通用户设备管理面板（删除设备、重命名本设备） |
-| `workers/tmdb-worker.js` | Worker 端 API 路由（verify/heartbeat/generate/list/toggle/stats/remove-device/set-remark/rename-device） |
-| `migrations/001_create_tables.sql` | D1 数据库表结构（invitation_codes + devices） |
-| `server.mjs` | 本地开发服务器邀请码 API（Better-SQLite3 实现） |
+| `js/auth/invite-auth.js` | 指纹生成、验证、心跳、登录状态、管理员 token 计算 |
+| `js/auth/admin-panel.js` | 管理员面板：生成/启停/删除邀请码、统计、备注、设备管理 |
+| `js/auth/user-devices.js` | 普通用户设备面板：查看邀请码与设备、重命名、剔除设备 |
+| `workers/tmdb-worker.js` | Worker 端 `/invite/*` API（verify / heartbeat / generate / list / toggle / stats / my-devices / remove-device / set-remark / rename-device / delete-code） |
+| `migrations/001_create_tables.sql` | D1 表结构（`invitation_codes` + `devices`） |
+| `migrations/002_add_remark.sql` | 邀请码备注字段 |
 
-### 环境变量配置
+> 本地开发无需自建邀请码服务：`server.mjs` 只提供静态资源、视频代理与 TMDB 代理，邀请码相关请求统一由 `.env` 中的 `TMDB_WORKER_URL` 指向的线上 Worker 处理。
 
-| 变量名 | 设置位置 | 必填 | 说明 |
-|--------|----------|------|------|
-| `TMDB_API_KEY` | **Worker**（加密） | **是** | TMDB API 密钥，用于获取影片数据 |
-| `ADMINUSER` | **Worker**（加密） | **是** | 管理员登录设备名，例如 `admin` |
-| `ADMINKEY` | **Worker**（加密） | **是** | 管理员登录邀请码，例如 `123456` |
-| `HIDDENKEY` | **Worker**（加密） | 否 | 隐藏内容过滤密码（可选功能） |
-| `TMDB_WORKER_URL` | **Pages**（明文） | 推荐 | Worker 地址，例如 `https://leletv-tmdb-proxy.xxx.workers.dev` |
-
-> **注意**：`ADMINUSER`、`ADMINKEY`、`HIDDENKEY` 只需在 **Worker** 中设置。Pages 仅托管静态文件，不参与校验逻辑，所以不需要这些变量。Pages 只需要 `TMDB_WORKER_URL` 来让前端知道请求发到哪个 Worker。
-
-#### 本地开发
-
-本地开发时，在项目根目录创建 `.env` 文件：
-
-```env
-TMDB_API_KEY=your_tmdb_api_key
-TMDB_WORKER_URL=https://leletv-tmdb-proxy.xxx.workers.dev
-PORT=8080
-```
-
-> 注意：`ADMINUSER`、`ADMINKEY`、`HIDDENKEY` 只需在 **Worker** 中设置，本地开发不需要。
-
-#### Worker 部署
-
-```bash
-# 加密变量（通过 CLI 设置）
-npx wrangler secret put TMDB_API_KEY
-npx wrangler secret put ADMINUSER
-npx wrangler secret put ADMINKEY
-npx wrangler secret put HIDDENKEY   # 可选
-```
-
-或在 Cloudflare Dashboard → Worker → **设置** → **变量** → 添加加密变量。
-
-#### Pages 部署
-
-Pages 项目 → **设置** → **环境变量** → **生产环境**：
-
-| 变量名 | 类型 | 值 |
-|--------|------|-----|
-| `TMDB_WORKER_URL` | 明文 | `https://leletv-tmdb-proxy.xxx.workers.dev` |
-
-添加后重试部署使变量生效。
-
-## 功能特性
-
-### 视频搜索
-- 聚合 21 个第三方视频采集站 API，支持多源并发搜索
-- 搜索结果内存缓存（5 分钟 TTL），减少重复请求
-- **搜索历史下拉菜单**：点击搜索框展开，输入时实时过滤，支持逐条删除和清空全部，Edge 风格无缝贴合搜索框
-- **搜索结果源过滤标签**：按视频源展示搜索结果，每个标签显示实时计数，切换标签重置滚动到顶部
-- **智能排序**：提取片名中的季/部/集序号进行数值排序（支持「第十二季」中文数字），同剧集按数字序排列
-- **智能负载均衡**：动态评分算法（响应时间 x 成功率 ÷ 负载），自动故障转移
-- **隐藏内容过滤**：可选开启，管理员密码保护开关
-
-### TMDB 分类浏览
-- 通过 TMDB API 获取影片数据，支持 **电影 / 电视剧 / 动漫 / 综艺** 四大类型
-- **多维筛选**：按类型流派（Genre，19+16 种）、年份（含折叠展开）、评分、语言（11 种）、国家（12 个）、剧集状态进行过滤
-- 多种排序方式：热门程度、评分高低、上映日期、名称排序等 8 种
-- 智能分页（省略号逻辑），响应式网格布局
-
-### 视频播放
-- 基于 **ArtPlayer**（集成 HLS.js）的播放器，支持 M3U8 流媒体
-- **多资源切换**：播放时可在不同视频源之间切换，实时测试并显示各源延迟
-- **上下集切换**：支持剧集导航 + 键盘快捷键（Alt+左/右）
-- **自动连播**：当前集播放结束后自动播放下一集
-- **广告过滤**：自定义 HLS.js Loader 拦截 M3U8 分片广告
-- **手机横屏自动全屏**：检测设备方向自动进入全屏
-- **长按二倍速**：桌面鼠标 + 移动端触摸支持
-- **进度恢复**：自动保存播放进度，支持精确进度条拖拽
-- **Media Session API**：系统媒体控制中心集成
-- **Window Controls Overlay**：PWA 模式下实现原生窗口控制栏
-
-### 智能负载均衡
-- **动态评分算法**：基础 100 分 × 响应时间评分 × 成功率 − 负载惩罚 + 优先级加成
-- **定期健康检查**：每 5 分钟自动检查所有 API 源健康状态
-- **黑名单机制**：连续失败 ≥ 5 次自动冷却 10 分钟，到期重新评估
-- **可视化状态面板**：实时显示各 API 源的健康状态、成功率、响应时间和负载情况
-
-### 智能缓存管理
-- 自动清理过期的临时数据（24 小时间隔），释放存储空间
-- 保护用户设置和历史记录（选中的 API 源、观看历史等）
-- 支持手动触发缓存清理
-
-### 观看历史
-- 自动记录观看进度（集数和播放位置），30 秒防抖保存
-- 分组式卡片布局（今天 / 昨天 / 本周 / 更早），左侧封面右侧内容
-- 进度条显示观看完成度
-- 支持单条删除和清空全部，最多保留 50 条
-
-### 用户界面
-- **HarmonyOS 深色调色板**：纯黑背景 + 霓虹粉（#ec4899）主色调
-- 完整的响应式设计系统（xs/sm/md/lg 四档断点）
-- 所有交互元素带按压反馈动画（scale 0.97）
-- 骨架屏加载态、Toast 通知队列
-- 赛博朋克/霓虹美学风格，克制使用单色
-
-### PWA 支持
-- 支持安装为桌面/移动应用（`display: standalone` + `window-controls-overlay`）
-- Service Worker 三缓存策略（静态资源 / API 响应 / 图片）
-- 版本检测自动提示更新（Cache Storage 版本化）
-
-### 自定义 API
-- 支持用户手动添加自定义视频采集站 API（最多 5 个，URL 格式校验）
-- 可删除和管理已添加的自定义源（2 个月缓存）
-
-### 版本管理
-- 语义化版本号格式 `v{年偏移}.{月}.{日}.{当日提交序号}`
-- 自动版本检测与更新提示（清除 SW 缓存 + 重载页面）
-- 关于页面内嵌完整更新日志（从 CHANGELOG.md 动态加载）
-
-## 技术栈
+## 🧰 技术栈
 
 | 层 | 技术 | 说明 |
 |------|------|------|
-| **前端** | HTML5 + CSS3 + JavaScript (ES6+) | 无框架，纯原生 JS |
-| **样式** | Tailwind CSS 3.4 + PostCSS | HarmonyOS 深色调色板 |
-| **播放器** | ArtPlayer + HLS.js v1.x | M3U8 流媒体 + 广告过滤 |
-| **后端（本地开发）** | Node.js + Express 5.x | 静态服务 + 视频代理 + TMDB 代理 |
-| **部署平台** | Cloudflare Pages | 纯静态资源托管 |
-| **无服务器函数** | Cloudflare Workers + D1 | TMDB API 代理 + 邀请码 API + 数据库 |
-| **Pages Functions** | Cloudflare Pages Functions | 密码注入 + 视频代理 |
-| **PWA** | Service Worker + Web App Manifest | 离线缓存 + 可安装 |
-| **构建工具** | Node.js 脚本 + npm scripts | 版本生成、Tailwind 构建 |
-| **AI 辅助开发** | GitNexus MCP | 代码知识图谱索引（1638 符号，140 流） |
+| 前端 | HTML5 + CSS3 + JavaScript (ES6+) | 无框架，纯原生 |
+| 样式 | Tailwind CSS 3.4 + PostCSS | CSS 变量驱动主题 |
+| 播放器 | ArtPlayer + HLS.js | M3U8 播放 + 广告过滤 |
+| 构建 | esbuild + Node 脚本 | 3 个 bundle + 版本注入 |
+| 本地服务 | Node.js + Express 5 | 静态服务 + 视频代理 + TMDB 代理 |
+| 托管 | Cloudflare Pages | 静态资源 |
+| 边缘函数 | Pages Functions | HTML 注入 + 视频/图片代理 |
+| 无服务器 | Cloudflare Workers | TMDB 代理 + 邀请码 API |
+| 数据库 | Cloudflare D1 | 邀请码与设备数据 |
+| PWA | Web App Manifest | 可安装为独立应用 |
 
 ### 运行时依赖
 
@@ -241,40 +167,40 @@ Pages 项目 → **设置** → **环境变量** → **生产环境**：
 | axios | ^1.9.0 | HTTP 请求（服务端代理） |
 | cors | ^2.8.5 | CORS 中间件 |
 | dotenv | ^16.5.0 | 环境变量加载 |
-| express | ^5.1.0 | Web 服务器 |
+| express | ^5.1.0 | 本地 Web 服务器 |
 | node-fetch | ^3.3.2 | 服务端 fetch |
+
+开发依赖：`esbuild`（打包）、`tailwindcss` + `postcss` + `autoprefixer`（样式）、`nodemon`（热重载）、`better-sqlite3`（本地脚本）。
 
 ### 第三方前端库
 
 | 文件 | 说明 |
 |------|------|
 | `libs/artplayer.min.js` | ArtPlayer 播放器核心 |
-| `libs/hls.min.js` | HLS.js 流媒体引擎（由 ArtPlayer 按需加载） |
-| `libs/sha256.min.js` | js-sha256 备用（优先使用 Web Crypto API） |
+| `libs/hls.min.js` | HLS.js 流媒体引擎 |
+| `libs/marked.min.js` | Markdown 渲染（项目说明页） |
+| `libs/sha256.min.js` | js-sha256（HTTP 环境下的 Web Crypto 备用） |
 
-## 架构说明
+## 🏗️ 架构说明
 
 ### 生产部署架构（Cloudflare）
 
 ```
 用户浏览器
     │
-    ├── Cloudflare Pages ─────────── 静态资源（HTML/CSS/JS）
-    │       ├── Pages Functions ──── 视频代理（/proxy/*）
-    │       └── Cloudflare D1 ───── 邀请码系统数据库
-    │               ├── invitation_codes 表 ── 邀请码、状态、备注、设备上限
-    │               └── devices 表 ────────── 设备指纹、名称、浏览器、IP、活跃时间
+    ├── Cloudflare Pages ─────────── 静态资源（HTML / CSS / JS / 图片）
+    │       ├── Pages Functions ──── HTML 注入（HIDDENKEY 哈希、Worker 地址、版本号）
+    │       ├── Pages Functions ──── 视频/图片代理（/proxy/*，鉴权 + 内容类型白名单 + 缓存）
+    │       └── Cloudflare D1 ───── 邀请码数据库（经 Worker 访问）
+    │               ├── invitation_codes ── 邀请码、状态、备注、设备上限
+    │               └── devices ─────────── 指纹、设备名、浏览器、IP、活跃时间
     │
-    ├── Cloudflare Worker ────────── TMDB API 代理 + 邀请码 API
-    │       ├── workers/tmdb-worker.js ──── TMDB API v3
-    │       ├── /health 健康检查端点
-    │       ├── /invite/* 邀请码 API 路由（verify/heartbeat/generate/list/toggle/stats/my-devices/remove-device/set-remark/rename-device/delete-code）
+    ├── Cloudflare Worker ────────── TMDB 代理 + 邀请码 API
+    │       ├── TMDB API v3（首页/分类/详情边缘缓存 24h，搜索缓存 1h）
+    │       ├── GET / ────────────── 部署状态控制台（自检密钥与绑定）
+    │       └── /invite/* ────────── 邀请码 API 路由
     │
-    ├── 第三方采集站 API (17 个) ──── 视频搜索和播放源
-    │       └── 通过 Cloudflare Pages Functions 代理
-    │
-    └── TMDB API ────────────────── 影片元数据
-            └── api.themoviedb.org
+    └── 第三方采集站 API ─────────── 视频搜索与播放源（经 Functions 代理）
 ```
 
 ### 本地开发架构
@@ -282,316 +208,91 @@ Pages 项目 → **设置** → **环境变量** → **生产环境**：
 ```
 用户浏览器
     │
-    ├── Node.js + Express（server.mjs: 669 行）
-    │       ├── 静态资源服务（express.static）
-    │       ├── / → HTML 模板注入（ADMINUSER/ADMINKEY/HIDDENKEY 哈希、TMDB_URL、版本号）
-    │       ├── /proxy/:encodedUrl → 视频源代理（鉴权 + URL 安全验证）
-    │       ├── /api/tmdb → TMDB API 代理
-    │       ├── /api/invite/* → 邀请码 API（本地 Better-SQLite3）
-    │       └── /api/version → 版本号 API
+    ├── Node.js + Express（server.mjs，401 行）
+    │       ├── express.static ───── 静态资源
+    │       ├── GET / ────────────── HTML 注入（版本号、Worker 地址等）
+    │       ├── GET /s=:keyword ──── 搜索直达路由
+    │       ├── GET /proxy/:url ──── 视频源代理
+    │       ├── GET /api/tmdb ────── TMDB 代理（无 Worker 时的回退）
+    │       └── GET /api/version ─── 版本号 API
     │
-    └── 第三方采集站 API ──── 视频搜索和播放源
+    └── 邀请码 API ───────────────── 由 .env 的 TMDB_WORKER_URL 指向线上 Worker
 ```
+
+### 构建流程
+
+```bash
+npm run build
+# ├─ node scripts/generate-version.mjs   # 读取 VERSION.txt，注入 {{LELETV_VERSION}} 与 ?v= 缓存参数
+# ├─ node scripts/build-bundles.mjs      # 按 CORE / APP / PLAYER 三类拼接并用 esbuild 压缩 → dist/
+# └─ npx tailwindcss@3.4.19 …            # 编译 css/tailwind.css → css/output.css（--minify）
+```
+
+打包分组：
+
+| Bundle | 内容 | 引用方 |
+|--------|------|--------|
+| `leletv-core.*.js` | `js/core`、`js/auth`、`js/ui/ui-core.js` | `index.html` + `player.html` |
+| `leletv-app.*.js` | `js/api`、`js/ui`、`js/app`、`js/effects`、`js/utils` | `index.html` |
+| `leletv-player.*.js` | `js/player` + 播放页所需的 api/ui 模块 | `player.html` |
+
+> `dist/` 内的文件名带内容哈希，由构建生成（`.gitignore` 已忽略）。未列入 bundle 的模块（如 `js/auth/user-devices.js`、`js/auth/admin-panel.js`、`js/ui/theme-system.js`）由 HTML 以 `<script defer>` 单独加载。
 
 ### SPA 页面路由
 
-| 页面 | 路由 | DOM 容器 | 说明 |
-|------|------|----------|------|
-| 首页（搜索） | `/` | `#page-home` | 视频搜索 + 最近搜索历史 |
-| 分类浏览 | JS 切换 | `#page-category` | TMDB 分类 + 多维筛选 |
-| 观看历史 | JS 切换 | `#page-history` | 分组展示 + 进度条 |
-| 设置 | JS 切换 | `#page-settings` | 数据源、自定义 API、功能开关 |
-| 关于 | JS 切换 | `#page-about` | 隐私政策 + 更新日志 |
-| 播放器 | `/player.html` | 独立页面 | ArtPlayer 全屏播放（2390 行 JS） |
+| 页面 | 路由 | DOM 容器 |
+|------|------|----------|
+| 首页（搜索） | `/`、`/s=关键词` | `#page-home` |
+| 分类浏览 | JS 切换 | `#page-category` |
+| 观看历史 | JS 切换 | `#page-history` |
+| 设置 | JS 切换 | `#page-settings` |
+| 关于 | JS 切换 | `#page-about` |
+| 项目说明 / README | JS 切换 | 独立视图 |
+| 播放器 | `/player.html` | 独立页面 |
 
-### JS 加载顺序（index.html）
-
-```
-libs/sha256.min.js              ← SHA-256 工具库
-js/config.js                    ← 全局配置（最先加载，定义常量与 API 列表）
-js/api-config.js                ← API 管理（复选框、自定义 API、隐藏过滤）
-js/proxy-auth.js                ← 代理鉴权（密码哈希 + 时间戳）
-js/loadBalancer.js              ← 负载均衡核心（自动实例化）
-js/loadBalancerUI.js            ← 负载均衡状态面板 UI
-js/ui.js                        ← UI 工具（Toast / Loading / 历史管理）
-js/api.js                       ← API 请求工具
-js/auth/password.js             ← SHA-256 工具函数（管理员 token 计算）
-js/search.js                    ← 搜索模块
-js/tmdb.js                      ← TMDB 分类浏览
-js/player-bridge.js             ← 播放器桥接（播放跳转、详情弹窗）
-js/app.js                       ← 主入口（初始化、事件监听、配置管理）
-js/version-utils.js             ← 版本工具函数
-js/version-updater.js           ← 版本更新自动检测
-js/index-page.js                ← 首页弹窗 + URL 搜索参数
-js/auth/user-devices.js         ← 用户设备管理面板
-js/auth/invite-auth.js          ← 邀请码验证（指纹/心跳/登录状态管理）
-js/auth/admin-panel.js          ← 管理员面板（生成/列表/统计）
-```
-
-## 部署指南
-
-### 第一步：获取 TMDB API 密钥
-
-TMDB（The Movie Database）提供免费的影片数据 API，获取密钥的步骤如下：
-
-1. 访问 [TMDB 官网](https://www.themoviedb.org/)，点击右上角 **加入 TMDB**，注册账号并验证邮箱
-2. 登录后，点击右上角头像 → **账户设置**
-3. 在左侧菜单找到 **API**，点击 **请求 API 密钥** 下方的 "click here"
-4. 选择 **Developer** 类型（免费），填写申请表单：
-   - **用途/名称**：例如 "LeLeTV Personal Use"
-   - **应用 URL**：选填，可填你的 Pages 域名
-   - **简介**：可填 "Meet personalized needs, enrich website interfaces and functions"
-5. 提交后即可看到你的 **API 密钥 (v3 auth)**，复制保存备用
-
-> TMDB API 密钥是免费的，个人使用足够。申请后立即生效，无需等待审核。
-
-### 第二步：部署 Cloudflare Worker（TMDB 代理）
-
-TMDB API 在前端直接调用会遇到跨域限制，需要通过 Cloudflare Worker 中转：
-
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 **Workers & Pages**
-2. 点击 **创建应用程序** → **创建 Worker**
-3. 给 Worker 命名（例如 `leletv-tmdb-proxy`），点击 **部署**
-4. 部署后点击 **编辑代码**，将项目 `workers/tmdb-worker.js` 的全部内容粘贴覆盖默认代码，点击 **保存并部署**
-5. 回到 Worker 页面，进入 **设置** → **变量**：
-   - 在 **环境变量** 栏，添加以下加密变量：
-
-     | 变量名 | 必填 | 值 |
-     |--------|------|-----|
-     | `TMDB_API_KEY` | **是** | 第一步获取的 TMDB API 密钥 |
-     | `ADMINUSER` | **是** | 管理员登录设备名，例如 `admin` |
-     | `ADMINKEY` | **是** | 管理员登录邀请码，例如 `123456` |
-     | `HIDDENKEY` | 否 | 隐藏内容过滤密码（可选） |
-
-   - 添加时勾选 **加密**，点击 **保存并部署**
-6. （可选，但推荐）绑定自定义域名：
-   - 在 Worker **设置** → **触发器** → **自定义域名**，添加一个你拥有的域名（如 `tmdb-proxy.yourdomain.com`）
-   - 没有自定义域名也可以使用 Cloudflare 提供的 `*.workers.dev` 域名
-7. 记录 Worker 的访问地址，例如：
-   - 自定义域名：`https://tmdb-proxy.yourdomain.com`
-   - workers.dev 域名：`https://leletv-tmdb-proxy.xxx.workers.dev`
-
-> **验证 Worker 是否正常工作**：在浏览器中访问 `https://你的worker域名/health`，返回 `{"status":"ok"}` 即表示部署成功。
-
-### 第二步（可选）：创建 D1 数据库（邀请码系统）
-
-如需使用邀请码验证系统，需要创建 Cloudflare D1 数据库并绑定到 Worker：
-
-1. 在 **Cloudflare Dashboard** → **Workers & Pages** → **D1** → **创建数据库**
-2. 命名数据库（例如 `leletv-invite-db`），点击 **创建**
-3. 创建完成后，进入数据库页面，点击 **迁移** → **创建迁移**
-4. 在 `migrations/001_create_tables.sql` 和 `migrations/002_add_remark.sql` 中找到 SQL 语句，在 D1 控制台执行
-5. 回到 **Workers & Pages**，进入你的 TMDB Worker，选择 **设置** → **绑定** → **添加绑定**
-   - **绑定名称**：`INVITE_DB`
-   - **数据名称**：选择刚才创建的数据库
-6. 在 `wrangler.toml` 中添加对应的 `[[d1_databases]]` 配置后重新部署 Worker
-
-### 第三步：部署 Cloudflare Pages（前端）
-
-1. Fork 或克隆本仓库到你的 GitHub 账户
-2. 进入 **Cloudflare Dashboard** → **Workers & Pages** → **创建应用程序** → **Pages** → **连接到 Git**
-3. 授权并选择你的仓库
-4. 构建设置：
-   - **构建命令**：`npm run build`
-   - **输出目录**：`dist`
-   - **根目录**：`/`（使用默认即可）
-5. 点击 **保存并部署**，首次部署会自动运行
-6. 部署完成后，进入 Pages 项目的 **设置** → **环境变量** → **生产环境**，添加以下变量：
-
-   | 变量名 | 必填 | 值 |
-   |--------|------|-----|
-   | `TMDB_WORKER_URL` | **是** | Worker 地址，例如 `https://leletv-tmdb-proxy.xxx.workers.dev` |
-
-7. 添加完成后，进入 Pages **部署** 页面，点击最后一个部署的 **...** → **重试部署**，让新环境变量生效
-
-> **注意**：
-> - `TMDB_WORKER_URL` **不要加末尾斜杠**
-> - `ADMINUSER`、`ADMINKEY`、`HIDDENKEY` 是 **Worker** 的环境变量，**不要**填到 Pages 的环境变量中
-> - `TMDB_API_KEY` 也是 Worker 的环境变量，同样不要填到 Pages
-
-> **提示**：每次构建时会自动运行 `generate-version.mjs` 脚本，生成基于时间戳的版本号，更新 HTML 中的资源缓存参数和 Service Worker 缓存版本。
-
-### 验证整个流程
-
-部署完成后，按以下顺序验证：
-1. 访问你的 Pages 域名（如 `https://你的项目.pages.dev`），应该弹出邀请码登录界面
-2. 使用有效邀请码登录（或使用 `ADMINUSER`/`ADMINKEY` 管理员凭证登录），进入首页
-3. 点击导航栏的 **分类** 按钮，应该能看到 TMDB 的电影/电视剧列表
-4. 如果分类页面无法加载内容，检查：
-   - Worker 的 `/health` 端点是否返回 `{"status":"ok"}`
-   - Pages 的 `TMDB_WORKER_URL` 是否填写正确（不要末尾斜杠）
-   - Worker 的 `TMDB_API_KEY` 是否已正确设置
-
-### 本地开发部署
-
-```bash
-# 克隆项目
-git clone https://github.com/JiuNian090/leletv.git
-cd leletv
-
-# 安装依赖
-npm install
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env，填写 TMDB_WORKER_URL（Worker 地址）和 TMDB_API_KEY
-
-# 构建
-npm run build
-
-# 启动开发服务器（带热重载）
-npm run dev
-
-# 访问应用
-# http://localhost:8080
-```
-
-本地开发时，所有邀请码验证和设备管理请求都通过 Worker 处理。请确保：
-1. Worker 已部署并设置了 `ADMINUSER`、`ADMINKEY` 环境变量
-2. `.env` 中 `TMDB_WORKER_URL` 指向正确的 Worker 地址
-3. 首次启动会弹出邀请码登录弹窗，输入管理员凭证即可进入
-
-## 环境变量配置
-
-### Worker（生产环境）
-
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `TMDB_API_KEY` | **是** | TMDB API 密钥（加密变量） |
-| `ADMINUSER` | **是** | 管理员登录设备名（加密变量） |
-| `ADMINKEY` | **是** | 管理员登录邀请码（加密变量） |
-| `HIDDENKEY` | 否 | 隐藏内容过滤密码（加密变量，可选） |
-
-### Pages（生产环境）
-
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `TMDB_WORKER_URL` | **是** | Worker 地址，例如 `https://leletv-tmdb-proxy.xxx.workers.dev` |
-
-### 本地开发（`.env` 文件）
-
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `TMDB_WORKER_URL` | **是** | Worker 地址，所有请求通过 Worker |
-| `TMDB_API_KEY` | **是** | TMDB API 密钥 |
-| `PORT` | 否 | 本地服务器端口（默认 8080） |
-| `CORS_ORIGIN` | 否 | CORS 允许的源（默认 *） |
-| `REQUEST_TIMEOUT` | 否 | 请求超时毫秒（默认 5000） |
-| `MAX_RETRIES` | 否 | 最大重试次数（默认 2） |
-| `CACHE_MAX_AGE` | 否 | 静态资源缓存时间（默认 1d） |
-| `USER_AGENT` | 否 | 代理请求 UA |
-| `DEBUG` | 否 | 调试模式（默认 false） |
-
-> 本地开发**不需要**设置 `ADMINUSER`、`ADMINKEY`、`HIDDENKEY`，这些都在 Worker 端配置。
-
-## 目录结构
+### 目录结构
 
 ```
 LeLeTV/
-├── api/                          # Cloudflare Pages Functions
-│   └── proxy/[...path].mjs       #   视频代理（通配路由）
-├── css/                          # 样式文件（3794 行手写）
-│   ├── styles.css                #   全局样式（2335 行，含首页、搜索、设置、关于等）
-│   ├── player.css                #   播放器页面（1248 行）
-│   ├── watch.css                 #   中转页面（229 行）
-│   ├── tailwind.css              #   Tailwind 入口（3 行）
-│   └── output.css                #   Tailwind 编译输出（压缩版）
-├── docs/
-│   └── VERSION_RULES.md          #   版本号规则说明
-├── functions/                    # Vercel/Netlify 兼容中间件
-│   ├── _middleware.js            #   密码注入
-│   └── proxy/[[path]].js         #   代理函数
-├── image/                        # 图片资源
-│   ├── logo.png                  #   网站 Logo
-│   ├── logo-black.png            #   PWA 图标
-│   └── nomedia.png               #   无封面占位图
-├── js/                           # 23 个核心模块
-│   ├── auth/                     #   邀请码验证系统（3 个模块）
-│   │   ├── invite-auth.js        #     邀请码验证核心（指纹/心跳/登录）
-│   │   ├── admin-panel.js        #     管理员面板
-│   │   └── user-devices.js       #     用户设备管理面板
-│   ├── config.js                 #   全局常量与配置（284 行）
-│   ├── api-config.js             #   API 管理（复选框、自定义 API、隐藏过滤）
-│   ├── app.js                    #   主入口（~765 行）
-│   ├── player-bridge.js          #   播放器桥接（播放跳转、详情弹窗）
-│   ├── player.js                 #   播放器（2390 行，最大模块）
-│   ├── search.js                 #   视频搜索
-│   ├── tmdb.js                   #   TMDB 分类浏览
-│   ├── ui.js                     #   UI 工具（Toast/Loading/历史）
-│   ├── loadBalancer.js           #   负载均衡核心（类实现）
-│   ├── loadBalancerUI.js         #   负载均衡状态面板 UI
-│   ├── cache-manager.js          #   智能缓存管理（类实现）
-│   ├── password.js               #   SHA-256 工具函数（管理员 token 计算）
-│   ├── proxy-auth.js             #   代理请求鉴权
-│   ├── api.js                    #   API 请求工具函数
-│   ├── index-page.js             #   首页弹窗 + URL 搜索参数
-│   ├── version-updater.js        #   版本更新自动检测
-│   ├── version-utils.js          #   版本号格式转换
-│   └── sha256.js                 #   SHA-256 备用实现
-├── libs/                         # 第三方库
-│   ├── artplayer.min.js          #   ArtPlayer 播放器
-│   ├── hls.min.js                #   HLS.js
-│   └── sha256.min.js             #   js-sha256
-├── migrations/                   # D1 数据库迁移文件
-│   ├── 001_create_tables.sql     #   初始表结构（invitation_codes + devices）
-│   └── 002_add_remark.sql        #   添加邀请码备注列
-├── scripts/                      # 自动化脚本
-│   ├── generate-version.mjs      #   版本号生成
-│   ├── create-tag.js             #   Git 标签创建
-│   ├── changelog-updater.js      #   CHANGELOG 维护
-│   ├── version-tracker.js        #   版本跟踪
-│   └── ...（共 9 个脚本）
+├── index.html                  # SPA 主入口
+├── player.html                 # 独立播放页
+├── server.mjs                  # 本地开发服务器（Express）
+├── service-worker.js           # 已退役的 SW（仅用于注销旧缓存，勿添加逻辑）
+├── manifest.json               # PWA Manifest
+├── _headers                    # Pages 响应头（缓存策略 + CSP）
+├── _routes.json                # Pages Functions 路由排除规则
+├── wrangler.toml               # Cloudflare Workers 配置
+├── css/                        # 样式
+│   ├── variables.css           #   CSS 变量与主题色盘
+│   ├── styles.css              #   全局样式
+│   ├── pages.css               #   二级页面样式
+│   ├── player.css              #   播放器样式
+│   ├── tailwind.css            #   Tailwind 入口
+│   └── output.css              #   Tailwind 编译输出
+├── js/                         # 42 个手写模块
+│   ├── core/                   #   全局配置、存储、监听器追踪、时序工具
+│   ├── api/                    #   采集站 API、负载均衡、搜索、TMDB
+│   ├── auth/                   #   邀请码验证、管理员面板、设备管理
+│   ├── player/                 #   播放器核心与 UI、剧集、清晰度、详情、快捷键
+│   ├── ui/                     #   搜索结果卡片、分类页、历史、Toast、主题系统
+│   ├── app/                    #   入口、路由、搜索流程、配置管理
+│   ├── effects/                #   极光背景、标题动效
+│   └── utils/                  #   版本检测、首页脚本
+├── dist/                       # esbuild 构建产物（构建生成，不提交）
+├── libs/                       # 第三方库
+├── functions/                  # Cloudflare Pages Functions
+│   ├── _middleware.js          #   HTML 注入
+│   └── proxy/[[path]].js       #   视频/图片代理
 ├── workers/
-│   └── tmdb-worker.js            #   Cloudflare Worker 脚本（含 TMDB API 代理 + 邀请码 API）
-├── .claude/                      # GitNexus 技能文件
-│   └── skills/gitnexus/          #   6 个技能（exploring/impact/debug 等）
-├── .env                          # 本地环境变量（不提交）
-├── .env.example                  # 环境变量模板
-├── .gitignore
-├── .trae/                        # Trae IDE 配置
-│   ├── .ignore
-│   └── skills/leletv-ai-developer/SKILL.md
-├── _headers                      # CF Pages 缓存头策略
-├── index.html                    # SPA 主入口
-├── player.html                   # 播放器独立页面
-├── manifest.json                 # PWA Manifest
-├── middleware.js                  # Vercel 中间件
-├── package.json                  # 项目配置
-├── postcss.config.js             # PostCSS 配置
-├── server.mjs                    # Node.js 本地服务器（412 行）
-├── service-worker.js             # Service Worker
-├── tailwind.config.js            # Tailwind CSS 配置
-├── wrangler.toml                 # Cloudflare Workers 配置
-├── AGENTS.md                     # AI 代理指南
-├── CLAUDE.md                     # Claude 集成配置
-├── CODE_WIKI.md                  # 代码 Wiki
-├── LICENSE                       # Apache-2.0
-├── CHANGELOG.md                  # 更新日志
-├── CONTRIBUTING.md               # 贡献说明
-└── README.md                     # 本文件
+│   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API
+├── migrations/                 # D1 迁移脚本
+├── scripts/                    # 版本生成、打包、钩子安装脚本
+├── image/                      # Logo 与占位图
+├── docs/                       # 版本规则等文档
+└── .github/                    # Issue 模板与工作流
 ```
 
-## 版本管理
-
-项目采用语义化版本号格式：`v{年偏移}.{月}.{日}.{当天提交序号}`
-
-- **年偏移**：2025 年为 1，之后每年递增（2026 = 2）
-- **当天提交序号**：基于当日时间计算（每 5 分钟一个槽位）
-
-版本号自动生成流程（`scripts/generate-version.mjs`）：
-1. 生成基于时间戳的原始版本号 `YYYYMMDDHHmm`
-2. 写入 `VERSION.txt`
-3. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
-4. 更新 `service-worker.js` 中的 `CACHE_VERSION`
-5. 为 CSS/JS 引用添加版本缓存参数 `?v=`
-
-手动创建 Git 标签：
-
-```bash
-npm run tag
-```
-
-## 开发指南
+## 🚀 快速开始（本地开发）
 
 ```bash
 # 克隆项目
@@ -603,17 +304,17 @@ npm install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，设置 ADMINUSER、ADMINKEY 等变量
+# 编辑 .env：至少填写 TMDB_WORKER_URL（线上 Worker 地址）
 
-# 构建样式
+# 构建（版本注入 + 打包 + 样式）
 npm run build
 
-# 启动开发服务器（带热重载）
+# 启动开发服务器（热重载）
 npm run dev
-
-# 访问应用
-# http://localhost:8080
+# 访问 http://localhost:8080
 ```
+
+> 本地开发时邀请码校验、设备管理、TMDB 数据全部由线上 Worker 处理，请确认 `TMDB_WORKER_URL` 指向已部署且配置好环境变量的 Worker。
 
 ### npm 脚本
 
@@ -621,46 +322,212 @@ npm run dev
 |------|------|
 | `npm run dev` | nodemon 热重载开发服务器 |
 | `npm start` | 生产模式启动 |
-| `npm run build` | 生成版本 + Tailwind 构建 |
-| `npm run tag` | 手动创建 Git 版本标签 |
+| `npm run build` | 版本注入 + esbuild 打包 + Tailwind 编译 |
+| `npm run setup:hooks` | 安装 Git 钩子 |
 
-## 缓存策略
+## 📦 部署指南
 
-项目针对 Cloudflare Pages 部署实施了精细化的缓存策略（详见 `_headers`）：
+### 第一步：获取 TMDB API 密钥
 
-| 文件类型 | 缓存策略 | 说明 |
-|---------|---------|------|
-| `.html` | `no-cache` | 每次请求回源校验 |
-| `CHANGELOG.md` | `no-cache` | 实时获取最新版本历史 |
-| `.css`, `.js`, 图片 | `public, max-age=604800, immutable` | 缓存 7 天，配合 `?v=` 参数做缓存失效 |
+1. 访问 [TMDB](https://www.themoviedb.org/) 注册账号并验证邮箱
+2. 右上角头像 → **账户设置** → 左侧 **API** → **请求 API 密钥**
+3. 选择 **Developer**（免费），填写用途与应用 URL 后提交
+4. 复制得到的 **API 密钥 (v3 auth)** 备用
 
-### 应用层缓存体系
+### 第二步：部署 Cloudflare Worker（TMDB 代理 + 邀请码 API）
 
-| 缓存 | 存储位置 | TTL | 说明 |
-|------|---------|-----|------|
-| 搜索结果缓存 | 内存 Map | 5 分钟 | `_searchCache` 对象 |
-| 搜索历史 | localStorage | 2 个月 | `videoSearchHistory` |
-| 观看历史 | localStorage | 永久（最多 50 条） | `viewingHistory` |
-| API 负载均衡统计 | localStorage | 永久 | `loadBalancerStats` |
-| 临时数据 | localStorage | 24 小时自动清理 | `videoProgress_*` 等 |
-| SW 缓存 | Cache Storage | 版本更新时清理 | 静态资源 |
+1. 进入 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → **创建 Worker**
+2. 命名（例如 `leletv-tmdb-proxy`）并部署
+3. **编辑代码**，用 `workers/tmdb-worker.js` 的内容覆盖默认代码，保存并部署
+4. 进入 Worker **设置** → **变量**，添加加密变量：
 
-## AI 开发集成
+   | 变量名 | 必填 | 说明 |
+   |--------|------|------|
+   | `TMDB_API_KEY` | 是 | 第一步获取的 TMDB 密钥 |
+   | `ADMINUSER` | 是 | 管理员登录设备名（例如 `admin`） |
+   | `ADMINKEY` | 是 | 管理员登录邀请码 |
+   | `HIDDENKEY` | 否 | 私密内容过滤密码 |
 
-本项目通过 **GitNexus MCP** 与 AI 编辑器深度集成，提供代码知识图谱索引和分析能力：
+   也可用 CLI：`npx wrangler secret put TMDB_API_KEY` 等。
 
-- **索引规模**：1638 个符号、2741 条关系、140 条执行流
-- **分析工具**：影响范围分析、上下文查询、执行流追踪、重构辅助
-- **技能文件**：`AGENTS.md`、`CLAUDE.md`、`.claude/skills/gitnexus/` 包含 6 个专项技能
+5. 绑定 D1 数据库（见下），并将数据库绑定名设为 `INVITE_DB`
+6. 记录 Worker 地址（自定义域名或 `*.workers.dev`）
 
-在支持 MCP 的编辑器中（如 Trae、Cursor、Claude Code），AI 助手可直接获取整个代码库的架构视图，实现精准的代码理解和变更分析。
+> 验证：浏览器访问 Worker 根路径 `https://你的worker域名/`，会打开「LeLeTV TMDB Proxy」状态控制台，页面会自检 TMDB 密钥与 D1 绑定；也可请求 `https://你的worker域名/?endpoint=configuration`，能返回 TMDB 配置 JSON 即代理正常。
 
-## 免责声明
+### 第二步（可选）：创建 D1 数据库
 
-本项目仅作为学习工具，不存储、上传或分发任何视频内容。所有视频均来自第三方 API 接口提供的搜索结果。如有侵权内容，请联系相应的内容提供方。
+1. Cloudflare Dashboard → **Workers & Pages** → **D1** → **创建数据库**（例如 `leletv-invite-db`）
+2. 在 D1 控制台依次执行 `migrations/001_create_tables.sql`、`migrations/002_add_remark.sql`
+3. 回到 Worker → **设置** → **绑定** → 添加 D1 绑定，**变量名填 `INVITE_DB`**
+4. 在 `wrangler.toml` 中补上对应的 `[[d1_databases]]` 配置后重新部署
 
-本项目开发者不对使用本项目产生的任何后果负责。使用本项目时，您必须遵守当地的法律法规。
+### 第三步：部署 Cloudflare Pages（前端）
 
-## 联系方式
+1. Fork 或克隆本仓库到你的 GitHub 账号
+2. Cloudflare Dashboard → **Workers & Pages** → **创建应用程序** → **Pages** → **连接到 Git**，选择仓库
+3. 构建设置：
 
-如有好的功能建议或问题，欢迎[联系作者](mailto:jiunian929@gmail.com)
+   | 项 | 值 |
+   |------|------|
+   | 构建命令 | `npm run build` |
+   | 输出目录 | `/`（项目根目录，`dist/` 是其子目录） |
+   | 根目录 | `/`（默认） |
+
+4. 部署完成后，进入 Pages **设置** → **环境变量** → **生产环境**，添加：
+
+   | 变量名 | 必填 | 说明 |
+   |--------|------|------|
+   | `TMDB_WORKER_URL` | 是 | Worker 地址，**不要带末尾斜杠** |
+   | `HIDDENKEY` | 否 | 与 Worker 保持一致，用于 HTML 注入哈希 |
+   | `CACHE_TTL` / `MAX_RECURSION` / `USER_AGENTS_JSON` / `DEBUG` | 否 | 视频代理行为调优 |
+
+5. 回到 **部署** 列表，对最新部署执行 **重试部署** 让变量生效
+
+> **注意**：`ADMINUSER`、`ADMINKEY`、`TMDB_API_KEY` 属于 **Worker** 的环境变量，不要填到 Pages。
+
+### 验证整个流程
+
+1. 访问 Pages 域名，应弹出邀请码登录界面
+2. 用有效邀请码（或 `ADMINUSER` / `ADMINKEY`）登录进入首页
+3. 打开 **分类** 页，应能看到 TMDB 数据
+4. 若分类页空白，依次检查：Worker 根路径状态控制台是否显示密钥已就绪 → Pages 的 `TMDB_WORKER_URL` 是否填写正确 → Worker 的 `TMDB_API_KEY` 是否生效
+
+## ⚙️ 环境变量
+
+### Worker（生产）
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `TMDB_API_KEY` | 是 | TMDB 密钥（加密） |
+| `ADMINUSER` | 是 | 管理员登录设备名（加密） |
+| `ADMINKEY` | 是 | 管理员登录邀请码（加密） |
+| `HIDDENKEY` | 否 | 私密内容过滤密码（加密） |
+| `INVITE_DB` | 是 | D1 数据库绑定名 |
+
+### Pages Functions（生产）
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `TMDB_WORKER_URL` | 是 | Worker 地址 |
+| `HIDDENKEY` | 否 | 与 Worker 一致，用于 HTML 注入哈希 |
+| `CACHE_TTL` | 否 | 代理缓存秒数（例如 `86400`） |
+| `MAX_RECURSION` | 否 | 代理重定向跟随上限 |
+| `USER_AGENTS_JSON` | 否 | 代理轮换 UA 列表（JSON 数组字符串） |
+| `DEBUG` | 否 | 代理调试日志 |
+| `LELETV_PROXY_KV` | 否 | 代理用 KV 绑定（如启用） |
+
+### 本地开发（`.env`）
+
+| 变量名 | 必填 | 说明 |
+|--------|------|------|
+| `TMDB_WORKER_URL` | 是 | Worker 地址，所有邀请码与 TMDB 请求都走它 |
+| `TMDB_API_KEY` | 否 | 仅在使用本地 `/api/tmdb` 回退时需要 |
+| `PORT` | 否 | 本地端口（默认 8080） |
+| `CORS_ORIGIN` | 否 | CORS 允许源（默认 `*`） |
+| `REQUEST_TIMEOUT` | 否 | 请求超时毫秒（默认 5000） |
+| `MAX_RETRIES` | 否 | 最大重试次数（默认 2） |
+| `CACHE_MAX_AGE` | 否 | 静态资源缓存时间（默认 1d） |
+| `USER_AGENT` | 否 | 代理请求 UA |
+| `DEBUG` | 否 | 调试模式 |
+
+> 本地**不需要**设置 `ADMINUSER`、`ADMINKEY`、`HIDDENKEY`，这些都在 Worker 端。
+
+## 🗂️ 缓存与版本管理
+
+### 响应头缓存策略（`_headers`）
+
+| 路径 | 策略 | 说明 |
+|------|------|------|
+| `/*.html`、`/` | `no-cache` | 每次回源校验 |
+| `/service-worker.js`、`/CHANGELOG.md`、`/VERSION.txt` | `no-cache` | 必须实时更新 |
+| `/css/*`、`/js/*`、`/image/*`、`/libs/*` | `public, max-age=604800, immutable` | 缓存 7 天，配合 `?v=` 失效 |
+| `/dist/*` | `public, max-age=31536000, immutable` | 文件名带内容哈希，缓存 1 年 |
+| `/*` | CSP | 见 `_headers` 中的 `Content-Security-Policy` |
+
+> `/proxy/*` 与 `/api/*` 不匹配上述规则，走 Cloudflare 默认行为。
+
+### 应用层缓存
+
+| 缓存 | 存储位置 | 有效期 |
+|------|----------|--------|
+| 搜索结果缓存 | 内存 Map | 5 分钟 |
+| 搜索历史 | localStorage | 2 个月 |
+| 观看历史 | localStorage | 永久（最多 50 条） |
+| 负载均衡统计 | localStorage | 永久 |
+| 临时播放进度 | localStorage | 24 小时自动清理 |
+| TMDB 边缘缓存 | Cloudflare 边缘 | 首页/分类/详情 24h，搜索 1h |
+
+### 版本管理
+
+版本号保存在 `VERSION.txt`（当前 `v3.5.1`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+
+1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
+2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
+3. 更新 `window.__LELETV_VERSION__`
+
+关于页面的更新日志从 `/CHANGELOG.md` 实时拉取渲染。
+
+## 📝 更新日志
+
+> 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
+
+### v3.5.1 (2026-09-13)
+- 🔧 修复 修复 iOS 设备上视频播放异常的问题
+- 🎨 样式 优化粒子消散与启动页的过渡衔接，重载不再跳色
+
+### v3.5.0 (2026-09-13)
+- 🎉 新增 主题色系统，支持自定义配色与预设主题，正常/私密模式各存一套
+- 🎉 新增 搜索结果展示各资源加载延迟
+- ✨ 优化 搜索支持提前退出，缩短多源等待时间
+- ✨ 优化 首屏体验升级：启动占位动画替代黑屏，字体本地加载更稳定
+- ✨ 优化 相关表述统一为「私密内容/私密模式」，数据源默认选择与重置逻辑优化
+- 🎨 样式 主题切换过渡动效与粒子配色随主题动态变化
+- 🎨 样式 优化启动与页面切换过渡遮罩，减少闪屏
+- ⚡ 调整 优化渲染性能，降低 GPU 占用与耗电，播放或后台时自动暂停特效
+- 🔧 修复 修复设置开关误点击与私密验证弹窗异常挂起的问题
+- 🔧 修复 修复部分资源在播放页无法加载的问题
+
+### v3.4.0 (2026-09-10)
+- 🎉 新增 首次进入首页的粒子凝聚入场动效，视觉更灵动
+- 🎉 新增 分类页记住上次浏览选择的分类标签
+- 🎨 样式 切换隐藏模式新增粒子过渡动画，重载不再闪屏
+- 🎨 样式 删除历史记录、重置数据源等操作新增粒子消散动效
+- 🔧 修复 搜索框残留关键词导致重复搜索的问题
+- 🔧 修复 切换隐藏模式后停留在设置页，不再跳回首页
+
+## 🤖 代码图谱与 AI 集成
+
+项目已建立代码知识图谱，便于人（和 AI）快速理解与安全改动：
+
+| 工具 | 能力 | 规模 |
+|------|------|------|
+| **CodeGraph** | 符号查询、调用链、影响范围 | 63 文件 / 1,232 节点 / 5,840 边 |
+| **GitNexus** | 执行流、上下文、安全重命名、变更检测 | 2,346 符号 / 4,206 关系 / 207 执行流 |
+
+常用命令：
+
+```bash
+codegraph query search          # 搜索符号
+codegraph callers searchByAPIAndKeyWord
+codegraph impact shareInviteInfo
+
+npx gitnexus query "搜索流程"
+npx gitnexus detect_changes
+```
+
+相关说明文件：`AGENTS.md`、`CLAUDE.md`、`CODE_WIKI.md`，以及 `.claude/skills/gitnexus/`、`.agents/skills/`、`.agents/rules/` 下的技能与规则。
+
+## 📄 免责声明
+
+本项目仅作为学习工具，不存储、上传或分发任何视频内容，所有视频均来自第三方 API 接口提供的搜索结果，如有侵权请联系相应内容提供方。
+
+本项目开发者不对使用本项目产生的任何后果负责，使用时请遵守当地法律法规。
+
+## 📮 联系方式
+
+如有功能建议或问题，欢迎[联系作者](mailto:jiunian929@gmail.com)。
+
+## 📜 许可证
+
+[Apache-2.0](LICENSE)

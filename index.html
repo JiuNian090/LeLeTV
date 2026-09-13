@@ -978,7 +978,7 @@
                                     <p class="text-gray-300 text-sm sm:text-base mb-5 leading-relaxed">
                                         LeLeTV 是自用的在线视频搜索平台，提供视频搜索和播放服务，请勿擅自分享本网站，如需分享或者任何问题和建议可以☞<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
                                     </p>
-                                    <div class="flex flex-row justify-center gap-3">
+                                    <div class="flex flex-row flex-wrap justify-center gap-3">
                                         <button data-action="switch-page" data-page="readme" class="flex-1 px-4 py-2.5 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-all duration-300 flex items-center justify-center font-semibold text-sm cursor-pointer">
                                             <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -991,6 +991,12 @@
                                             </svg>
                                             GitHub 仓库
                                         </a>
+                                        <button data-action="share-invite" class="flex-1 px-4 py-2.5 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center justify-center text-sm cursor-pointer">
+                                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/>
+                                            </svg>
+                                            分享
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1118,7 +1124,7 @@
     </div>
 
     <!-- 邀请码登录弹窗 -->
-    <div id="inviteLoginModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[65] transition-opacity duration-300">
+    <div id="inviteLoginModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[80] transition-opacity duration-300">
         <div class="bg-[#111] p-7 rounded-xl w-11/12 max-w-md border border-[#222] shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(var(--color-primary-rgb),0.1)]">
             <div class="text-center mb-6">
                 <h2 class="text-2xl font-bold gradient-text">🎬 LeLeTV</h2>
@@ -1203,6 +1209,29 @@
         </div>
     </div>
 
+    <!-- 版本更新弹窗（主题卡片） -->
+    <div id="updateModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[70] px-4">
+        <div class="update-card">
+            <div class="update-card-header">
+                <span class="update-card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </span>
+                <div class="update-card-heading">
+                    <h3 class="update-card-title">发现新版本</h3>
+                    <p class="update-card-version" id="updateModalVersion"></p>
+                </div>
+            </div>
+            <div class="update-card-body">
+                <div class="update-card-log" id="updateModalLog"></div>
+            </div>
+            <div class="update-card-footer">
+                <button type="button" id="updateModalBtn" class="update-card-btn">更新版本</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 错误提示框 -->
     <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 shadow-lg transform transition-all duration-300 opacity-0 scale-50 z-50 pointer-events-none">
         <p id="toastMessage"></p>
@@ -1258,7 +1287,7 @@
     </script>
 
     <script src="dist/leletv-core.ftd3c7.js?v=v3.5.1" defer></script>
-    <script src="dist/leletv-app.l8xi6h.js?v=v3.5.1" defer></script>
+    <script src="dist/leletv-app.9lprq.js?v=v3.5.1" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
