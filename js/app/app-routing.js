@@ -884,12 +884,19 @@ function loadReadmePage() {
   content.classList.add('hidden');
   error.classList.add('hidden');
 
-  fetch('https://raw.githubusercontent.com/JiuNian090/LeLeTV/main/README.md')
+  // marked.js 已从首屏关键路径移出（head 里的 defer 会一起拖住 DOMContentLoaded，
+  // 而启动占位的退场要等首页就绪）。改为第一次进 README 页时才加载，且与 README 内容并行拉取。
+  // 无论 marked 是否到位都不阻断：拿不到就用纯文本渲染
+  var markedReady = ensureMarked();
+  var mdFetch = fetch('https://raw.githubusercontent.com/JiuNian090/LeLeTV/main/README.md')
     .then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.text();
-    })
-    .then(function(md) {
+    });
+
+  Promise.all([markedReady, mdFetch])
+    .then(function(results) {
+      var md = results[1];
       if (typeof marked !== 'undefined') {
         content.innerHTML = marked.parse(md);
       } else {
@@ -902,6 +909,28 @@ function loadReadmePage() {
       loading.classList.add('hidden');
       error.classList.remove('hidden');
     });
+}
+
+// 按需加载 marked.js（仅 README 弹窗用）。失败也 resolve —— README 内容本身照常显示，只是不渲染 Markdown
+var _markedLoading = null;
+function ensureMarked() {
+  if (typeof marked !== 'undefined') return Promise.resolve();
+  if (_markedLoading) return _markedLoading;
+
+  _markedLoading = new Promise(function(resolve) {
+    var s = document.createElement('script');
+    // 版本号与 index.html 的静态引用同一套缓存键（generate-version.mjs 注入）
+    var v = window.__LELETV_VERSION__ || '';
+    s.src = 'libs/marked.min.js' + (v ? '?v=' + encodeURIComponent(v) : '');
+    s.onload = function() { resolve(); };
+    s.onerror = function() {
+      console.warn('marked.js 加载失败，README 将按纯文本渲染');
+      _markedLoading = null;   // 允许下次进入 README 时重试
+      resolve();
+    };
+    document.head.appendChild(s);
+  });
+  return _markedLoading;
 }
 
 document.addEventListener('click', function(e) {

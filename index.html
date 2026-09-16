@@ -34,13 +34,16 @@
         <link rel="stylesheet" href="css/styles.css?v=v3.5.6">
     </noscript>
 
-    <!-- 二级页面样式（分类/设置/邀请码管理/README/影片页）：非阻塞加载，不占用首屏关键渲染路径。
-         preload 让它在首屏渲染的同时并行下载，load 后转成正式样式表；禁用 JS 时走 noscript 回退。 -->
-    <link rel="preload" href="css/pages.css?v=v3.5.6" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- 二级页面样式（分类/设置/邀请码管理/README/影片页）：不在首屏关键路径上，但提前取回可避免
+         切页时的样式跳变。preload 默认是 High 优先级，会和 dist bundle 抢带宽，故降为 low：
+         该到的时候通常早已到位，抢不到也不影响首页。 -->
+    <link rel="preload" href="css/pages.css?v=v3.5.6" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="css/pages.css?v=v3.5.6"></noscript>
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
-    <link rel="preload" href="/fonts/MapleMono-Italic.ttf" as="font" type="font/ttf" crossorigin>
+    <!-- MapleMono：启动占位与首页标题的显示字体，~99KB，不是首屏可用的必要条件
+         （占位里有 monospace 回退，字体到位后逐帧换用），因此同样降为 low 优先级 -->
+    <link rel="preload" href="/fonts/MapleMono-Italic.ttf" as="font" type="font/ttf" crossorigin fetchpriority="low">
     <style>
         @font-face {
             font-family: 'Geist';
@@ -195,9 +198,9 @@
     <link rel="icon" href="/image/logo-black.png" sizes="256x256">
     <link rel="icon" href="/image/logo-black.png" sizes="384x384">
 
-    <!-- marked.js: Markdown 渲染（仅 README 弹窗使用）。本地自托管：defer 脚本会阻塞 DOMContentLoaded，
-         放在第三方 CDN 上时，跨境抖动会连带拖住 app.js 的全部初始化 -->
-    <script src="libs/marked.min.js?v=v3.5.6" defer></script>
+    <!-- marked.js 已移出首屏关键路径：它是 README 弹窗专用的 35KB，且作为 head 里的 defer 脚本
+         会排在 dist bundle 之前执行，把 DOMContentLoaded 一起拖晚（启动占位的退场要等它之后的首页就绪）。
+         现在由 js/app/app-routing.js 的 ensureMarked() 在第一次进入 README 页时按需加载 -->
 
     <!-- 首屏启动占位：从主屏/桌面图标冷启动时，HTML 一到达即显示，替代此前长时间纯黑等待。
          动画与首页首访入场同源（粒子螺旋凝聚 → LeLeTV 实体化 → 爆开），但由加载进度驱动，
@@ -247,6 +250,41 @@
             #bootSplash canvas { display: none; }
             #bootSplash .boot-splash-static { display: block; }
         }
+        /* 慢速提示：加载超出预期仍未就绪时出现。
+           作用是让"慢"和"卡死"看起来不一样，并给用户一个主动放行的出口——
+           遮罩宁可多盖一会儿，也不要提前撤掉露出一个点不动的页面 */
+        #bootSplash .boot-splash-hint {
+            display: none;
+            position: absolute;
+            left: 50%;
+            bottom: 12vh;
+            transform: translateX(-50%);
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            text-align: center;
+        }
+        #bootSplash .boot-splash-hint.is-visible { display: flex; }
+        #bootSplash .boot-splash-hint-text {
+            font-size: 13px;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.62);
+        }
+        #bootSplash .boot-splash-hint-btn {
+            padding: 8px 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(var(--color-primary-rgb, 236, 72, 153), 0.55);
+            border-radius: 999px;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+        #bootSplash .boot-splash-hint-btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.85);
+        }
     </style>
 </head>
 <body class="page-bg text-white">
@@ -257,6 +295,10 @@
     <div id="bootSplash" aria-hidden="true">
         <canvas id="bootSplashCanvas"></canvas>
         <span class="boot-splash-static">LeLeTV</span>
+        <div class="boot-splash-hint" id="bootSplashHint">
+            <span class="boot-splash-hint-text">网络较慢，仍在加载…</span>
+            <button type="button" class="boot-splash-hint-btn" id="bootSplashSkipBtn">仍然进入</button>
+        </div>
     </div>
     <script>
     (function () {
@@ -314,7 +356,8 @@
         var TAU = 120;             // 聚拢跟随时间常数：把进度的跳变变成平滑收拢
         var STALL_AFTER_MS = 2500; // 进度停滞多久后开始兜底缓推
         var STALL_RATE = 0.09;     // 兜底缓推速度（每秒进度增量）
-        var MAX_WAIT_MS = 8000;    // 无论加载如何，8s 后必须开始让出页面
+        var SLOW_HINT_MS = 6000;   // 超过此时长仍未就绪 → 显示"网络较慢"提示与主动进入按钮
+        var HARD_MAX_MS = 20000;   // 最终放行上限：再慢也不让遮罩无限挡住页面
         var PARTICLE_MAX = 800;    // 800 与 1200 观感几乎无差，逐帧填充更省
         var ALPHA_STEPS = 32;
         var PALETTE = [
@@ -524,16 +567,40 @@
             if (document.readyState === 'interactive') mark(0.65);
         });
 
-        // defer 脚本（含首页初始化）执行完：90% —— 这就是"首页加载完毕"
+        // DOM 解析完成、defer 脚本执行完：进度到 90%。
+        // 注意：这里不直接收尾。"defer 都跑完"不等于"首页可交互"——真正决定点不点得动的是
+        // 首页事件绑定（js/app/app.js 的 setupEventListeners）与邀请码门禁的显示/绑定，
+        // 它们都在 DOMContentLoaded 的监听器里执行，而监听器的执行顺序并不保证在本脚本之后。
+        // 旧实现挂在 DOMContentLoaded 上收尾，慢网下会撤掉遮罩露出"页面在、点不动"的画面。
+        // 现在改为等业务侧广播就绪信号（window.__LELETV_BOOT_READY__）。
         document.addEventListener('DOMContentLoaded', function () {
             mark(0.9);
-            beginFinish();
+            // 兜底：业务侧没广播（脚本异常 / 当前页没有 searchInput）时，等两帧自行放行。
+            // 两帧足以让 DOMContentLoaded 的全部监听器跑完，不会早于邀请码弹窗的就绪
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { setTimeout(markReady, 0); });
+            });
         });
 
-        window.addEventListener('load', function () {
+        window.addEventListener('load', function () { mark(1); });
+
+        // ---------- 退场闸门 ----------
+        // 首页就绪 = 关键样式就绪 + defer 脚本执行完 + 首页事件已绑定 + 邀请码门禁就绪。
+        // 由 js/app/app.js 在 setupEventListeners() 之后调用；
+        // 上面的两帧兜底与下面的 HARD_MAX_MS 上限也会调到它
+        var ready = false;
+        function markReady() {
+            if (ready || state === 'out') return;
+            ready = true;
             mark(1);
-            beginFinish();
-        });
+            if (animate) {
+                beginFinish();
+            } else {
+                // 降级路径（减弱动效 / 无 canvas）没有 frame 推进阶段，等一帧后直接淡出
+                requestAnimationFrame(function () { release(); });
+            }
+        }
+        window.__LELETV_BOOT_READY__ = markReady;
 
         // ---------- 阶段状态机 ----------
         var state = 'gather';   // gather → settle → hold → burst → out
@@ -551,13 +618,14 @@
 
             var waited = 0;
             (function waitBrandFont() {
-                var ready = true;
+                // 局部名刻意不叫 ready：与上方退场闸门的 ready 同名会造成遮蔽与误读
+                var fontReady = true;
                 try {
                     if (document.fonts && document.fonts.check) {
-                        ready = document.fonts.check('900 16px "MapleMono"');
+                        fontReady = document.fonts.check('900 16px "MapleMono"');
                     }
-                } catch (e) { ready = true; }
-                if (ready || waited >= 6) {
+                } catch (e) { fontReady = true; }
+                if (fontReady || waited >= 6) {
                     state = 'settle';
                     stateAt = now();
                     return;
@@ -567,11 +635,27 @@
             })();
         }
 
+        // 退场前确认门禁就绪：未通过邀请码校验时，登录弹窗必须先可见可交互。
+        // 否则遮罩一撤，用户看到的就是"首页能看见却点不动、像是跳过了邀请码"的画面
+        function ensureGate() {
+            try {
+                var auth = window.INVITE_AUTH;
+                // 鉴权模块尚未加载（bundle 慢或异常）时无从判断，交给 HARD_MAX_MS 兜底
+                if (!auth || typeof auth.isVerified !== 'function') return;
+                if (auth.isVerified()) return;
+                var modal = document.getElementById('inviteLoginModal');
+                if (modal && getComputedStyle(modal).display === 'none') {
+                    modal.style.display = 'flex';
+                }
+            } catch (e) { /* 忽略：宁可正常退场，也不要卡死 */ }
+        }
+
         // 退场只能发生一次：爆开期间会提前调用，尾部的兜底路径也可能再调一次
         var released = false;
         function release() {
             if (released) return;
             released = true;
+            ensureGate();
             splash.classList.add('boot-splash--done');
             setTimeout(function () {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);
@@ -585,18 +669,31 @@
             particles = makeParticles(brandFontSize() * 1.5);
             window.addEventListener('resize', sizeCanvas);
             requestAnimationFrame(frame);
-        } else {
-            // 降级（减弱动效 / 无 canvas）：不跑粒子，只保留进度线，等首页初始化完成即淡出。
-            // 注意这里不能走 beginFinish —— 那条路径由 frame 推进阶段，而 frame 在降级下不会启动
-            document.addEventListener('DOMContentLoaded', release);
+        }
+        // 降级（减弱动效 / 无 canvas）不跑粒子，由 markReady 直接放行（见上）；
+        // 同样不再挂在 DOMContentLoaded 上——那样会赶在首页事件绑定之前撤掉遮罩
+
+        // ---------- 兜底：慢网下宁可不退场，也不露出未就绪的页面 ----------
+        // 旧实现是"8 秒无条件撤遮罩"，结果是页面在、事件没绑：能看见却点不动，
+        // 邀请码弹窗也还没弹出来。现在分两级：先给提示（用户知道没卡死，也可主动进入），
+        // 再由 HARD_MAX_MS 最终放行
+        var hintEl = document.getElementById('bootSplashHint');
+        var hintBtn = document.getElementById('bootSplashSkipBtn');
+        var hintShown = false;
+
+        function showHint() {
+            if (hintShown || released) return;
+            hintShown = true;
+            if (hintEl) hintEl.classList.add('is-visible');
         }
 
-        // 兜底：无论加载多慢都要开始收尾；再兜一层保证 DOM 最终一定被移除
-        setTimeout(beginFinish, MAX_WAIT_MS);
-        setTimeout(function () {
-            state = 'out';
-            release();
-        }, MAX_WAIT_MS + SETTLE_MS + HOLD_MS + BURST_MS + 1200);
+        // 用户主动放行：同样会经过 ensureGate，遮罩之下至少是能点的
+        if (hintBtn) {
+            hintBtn.addEventListener('click', markReady);
+        }
+
+        setTimeout(showHint, SLOW_HINT_MS);
+        setTimeout(markReady, HARD_MAX_MS);
 
         function frame(t) {
             if (state === 'out') return;
@@ -1300,7 +1397,7 @@
     </script>
 
     <script src="dist/leletv-core.cjt696.js?v=v3.5.6" defer></script>
-    <script src="dist/leletv-app.4s4scl.js?v=v3.5.6" defer></script>
+    <script src="dist/leletv-app.x8w3cd.js?v=v3.5.6" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -1320,10 +1417,57 @@
 
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
 
-    <script defer src="js/auth/user-devices.js?v=v3.5.6"></script>
-    <script defer src="js/auth/admin-panel.js?v=v3.5.6"></script>
-    <!-- 主题色系统：主色盘卡片 + Popover ColorPicker + 原地粒子换色 -->
-    <script defer src="js/ui/theme-system.js?v=v3.5.6"></script>
+    <!-- 非首屏模块：设备管理 / 邀请码管理 / 主题色系统。
+         它们原先作为 defer 排在 dist bundle 之后，会把 DOMContentLoaded 一起拖晚 ——
+         而首页"就绪"（启动占位退场、事件绑定完成）正是在这个时机之后。
+         改为浏览器空闲时再加载：既不占用首屏，也不与 bundle 抢带宽。
+         主题色的应用本身在 <head> 的内联脚本里已完成，这里延迟的只是设置页的调色盘 UI。 -->
+    <script>
+        (function () {
+            function loadModule(src) {
+                return new Promise(function (resolve) {
+                    var s = document.createElement('script');
+                    s.src = src;
+                    s.onload = resolve;
+                    // 单个模块失败不阻断其余模块，也不影响页面可用性
+                    s.onerror = function () { console.warn('模块加载失败:', src); resolve(); };
+                    document.head.appendChild(s);
+                });
+            }
+
+            function loadDeferredModules() {
+                var v = window.__LELETV_VERSION__ || '';
+                var q = v ? '?v=' + encodeURIComponent(v) : '';
+                Promise.all([
+                    loadModule('js/auth/user-devices.js' + q),
+                    loadModule('js/auth/admin-panel.js' + q),
+                    loadModule('js/ui/theme-system.js' + q)
+                ]).then(function () {
+                    // 首次 DOMContentLoaded 时这些模块还不存在，设置面板必然没渲染，这里补一次。
+                    // 两个面板的 render() 都是整体重建 container.innerHTML，重复调用安全
+                    if (typeof window.__LELETV_INIT_SETTINGS_PANELS__ === 'function') {
+                        try { window.__LELETV_INIT_SETTINGS_PANELS__(); }
+                        catch (e) { console.warn('设置面板初始化失败:', e); }
+                    }
+                });
+            }
+
+            function kick() {
+                // 空闲时加载；timeout 兜底，保证再忙也会在 3s 内开始
+                if (window.requestIdleCallback) {
+                    window.requestIdleCallback(loadDeferredModules, { timeout: 3000 });
+                } else {
+                    setTimeout(loadDeferredModules, 300);
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', kick);
+            } else {
+                kick();
+            }
+        })();
+    </script>
 
 <script>
 // 邀请码登录事件绑定
@@ -1435,11 +1579,13 @@ document.addEventListener('DOMContentLoaded', function() {
      此处不再重复接管；旧版"关键样式就绪即淡出"的独立退场逻辑已随之移除。 -->
 <script>
     (function () {
-        // 兜底：万一粒子引擎没跑起来（脚本被拦截/异常），至少保证占位不会永久挡住页面
+        // 兜底：万一粒子引擎没跑起来（脚本被拦截/异常），至少保证占位不会永久挡住页面。
+        // 注意这里的判据是"引擎脚本是否执行过"（__LELETV_BOOT_READY__ 由引擎在最外层同步赋值），
+        // 不能用 __LELETV_BOOT_INTRO__——它只在跑粒子的分支里设置，减弱动效的用户会误触发本兜底
         setTimeout(function () {
             var splash = document.getElementById('bootSplash');
             if (!splash || splash.classList.contains('boot-splash--done')) return;
-            if (window.__LELETV_BOOT_INTRO__) return; // 引擎已接管，交给它按动画节奏退场
+            if (typeof window.__LELETV_BOOT_READY__ === 'function') return; // 引擎已接管，交给它按动画节奏退场
             splash.classList.add('boot-splash--done');
             setTimeout(function () {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);

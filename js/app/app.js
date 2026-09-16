@@ -63,6 +63,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // 设置事件监听器
     setupEventListeners();
 
+    // 交互已就绪 → 通知启动占位可以收尾（index.html 的粒子引擎等的就是这个信号）。
+    // 位置刻意放在 setupEventListeners() 之后：页面"点得动"的必要条件此时已满足；
+    // 后面几步（历史下拉复位、延迟标记）即使出错，也不该把用户永远挡在启动占位后面
+    if (typeof window.__LELETV_BOOT_READY__ === 'function') {
+        window.__LELETV_BOOT_READY__();
+    }
+
     // 确保搜索历史下拉默认隐藏，并强制移除焦点
     hideSearchHistory();
     document.getElementById('searchInput').blur();
@@ -250,8 +257,11 @@ document.addEventListener('inviteVerified', function() {
     }
 });
 
-// 页面加载完成后（所有 defer 脚本就绪）根据身份显示对应面板
-document.addEventListener('DOMContentLoaded', function initSettingsPanels() {
+// 页面加载完成后根据身份显示对应面板（管理员 → 邀请码管理，普通用户 → 设备管理）。
+// 抽成具名函数并挂到 window：user-devices.js / admin-panel.js 已从首屏关键路径移出，
+// 首次执行时它们还不存在，需要在延后加载完成后再跑一次。
+// 两个模块的 render() 都是整体重建 container.innerHTML，重复调用是安全的
+function initSettingsPanels() {
     const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
     const hasInviteAuth = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
 
@@ -273,4 +283,7 @@ document.addEventListener('DOMContentLoaded', function initSettingsPanels() {
     if (hasInviteAuth && window.INVITE_AUTH) {
         window.INVITE_AUTH.ensureHeartbeat();
     }
-});
+}
+
+window.__LELETV_INIT_SETTINGS_PANELS__ = initSettingsPanels;
+document.addEventListener('DOMContentLoaded', initSettingsPanels);
