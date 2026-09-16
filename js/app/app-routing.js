@@ -884,30 +884,89 @@ function loadReadmePage() {
   content.classList.add('hidden');
   error.classList.add('hidden');
 
-  // marked.js 已从首屏关键路径移出（head 里的 defer 会一起拖住 DOMContentLoaded，
-  // 而启动占位的退场要等首页就绪）。改为第一次进 README 页时才加载，且与 README 内容并行拉取。
-  // 无论 marked 是否到位都不阻断：拿不到就用纯文本渲染
-  var markedReady = ensureMarked();
-  var mdFetch = fetch('https://raw.githubusercontent.com/JiuNian090/LeLeTV/main/README.md')
-    .then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.text();
-    });
+  var cached = readReadmeCache();
+  var freshEnough = cached && (Date.now() - cached.at) < README_CACHE_TTL;
 
-  Promise.all([markedReady, mdFetch])
+  // 命中未过期缓存：直接渲染，不再发起任何请求（README 是文档，24h 内不追求实时）
+  if (freshEnough) {
+    renderReadme(content, cached.md);
+    loading.classList.add('hidden');
+    content.classList.remove('hidden');
+    return;
+  }
+
+  // 缓存已过期：先把旧内容顶上去（stale-while-revalidate），
+  // 免得用户为了几个字的新内容再白等一次跨境往返
+  if (cached) {
+    renderReadme(content, cached.md);
+    loading.classList.add('hidden');
+    content.classList.remove('hidden');
+  }
+
+  // marked 与正文并行取：无论 marked 是否到位都不阻断，拿不到就用纯文本渲染
+  Promise.all([ensureMarked(), fetchReadmeMd()])
     .then(function(results) {
       var md = results[1];
-      if (typeof marked !== 'undefined') {
-        content.innerHTML = marked.parse(md);
-      } else {
-        content.textContent = md;
-      }
+      writeReadmeCache(md);
+      renderReadme(content, md);
       loading.classList.add('hidden');
       content.classList.remove('hidden');
     })
     .catch(function() {
+      // 拉取失败但已有旧内容：保持旧内容，不弹错误（总比空白好）
+      if (cached) return;
       loading.classList.add('hidden');
       error.classList.remove('hidden');
+    });
+}
+
+// ---------- README 正文的获取与缓存 ----------
+var README_CACHE_KEY = 'leletv_readme_cache';
+var README_CACHE_TTL = 24 * 60 * 60 * 1000;   // 24h
+
+function renderReadme(content, md) {
+  if (typeof marked !== 'undefined') {
+    content.innerHTML = marked.parse(md);
+  } else {
+    content.textContent = md;
+  }
+}
+
+// 缓存只信结构完整的记录；损坏、被清、隐私模式下读不到都当作没有缓存
+function readReadmeCache() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(README_CACHE_KEY) || 'null');
+    if (!rec || typeof rec.md !== 'string' || !rec.md || typeof rec.at !== 'number') return null;
+    return rec;
+  } catch (e) { return null; }
+}
+
+function writeReadmeCache(md) {
+  try {
+    localStorage.setItem(README_CACHE_KEY, JSON.stringify({ md: md, at: Date.now() }));
+  } catch (e) { /* 配额满 / 不可写：静默降级，下次照常走网络 */ }
+}
+
+// README 正文：同域 /README.md 优先 —— 部署产物里根目录就有 README.md，
+// 与 CHANGELOG.md 一样走 CDN，没有跨境等待，且内容与当前版本一致；
+// 同域拿不到再回退 GitHub raw（main 分支最新）
+function fetchReadmeMd() {
+  return fetch('/README.md', { cache: 'no-store' })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(function(md) {
+      // 万一该路径被当成 SPA 入口返回了 HTML，说明拿到的不是 README，转走远程兜底
+      if (!md || /^\s*<(!doctype|html)/i.test(md)) throw new Error('not markdown');
+      return md;
+    })
+    .catch(function() {
+      return fetch('https://raw.githubusercontent.com/JiuNian090/LeLeTV/main/README.md')
+        .then(function(res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        });
     });
 }
 
