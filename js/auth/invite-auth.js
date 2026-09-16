@@ -220,6 +220,24 @@ const INVITE_AUTH = {
   clearAuth() {
     localStorage.removeItem(INVITE_AUTH.STORAGE_KEY);
   },
+
+  /**
+   * 清除本地登录状态并收起管理面板（登出 / 被管理员移除共用）。
+   * 保留 leletv_device_id：重新验证时仍用同一设备实例 ID，但不会自动重登
+   */
+  _clearSession() {
+    try {
+      localStorage.removeItem(INVITE_AUTH.STORAGE_KEY);
+      localStorage.removeItem('leletv_admin_session');
+      localStorage.removeItem('leletv_is_admin');
+      localStorage.removeItem('passwordVerified');
+    } catch (e) {
+      console.warn('[invite-auth] 清除本地登录状态失败:', e);
+    }
+
+    document.getElementById('inviteAdminContainer')?.classList.add('hidden');
+    document.getElementById('userDeviceContainer')?.classList.add('hidden');
+  },
   
   /**
    * 清除所有登录状态（登出），保留其他数据
@@ -230,15 +248,8 @@ const INVITE_AUTH = {
       // 停止心跳
       this.stopHeartbeat();
       
-      // 清除所有认证相关的 localStorage
-      localStorage.removeItem(INVITE_AUTH.STORAGE_KEY);
-      localStorage.removeItem('leletv_admin_session');
-      localStorage.removeItem('leletv_is_admin');
-      localStorage.removeItem('passwordVerified');
-      
-      // 隐藏管理面板
-      document.getElementById('inviteAdminContainer')?.classList.add('hidden');
-      document.getElementById('userDeviceContainer')?.classList.add('hidden');
+      // 清除所有认证相关的 localStorage 并收起管理面板
+      INVITE_AUTH._clearSession();
       
       // 重置并显示邀请码登录弹窗
       const loginModal = document.getElementById('inviteLoginModal');
@@ -261,6 +272,44 @@ const INVITE_AUTH = {
     }
   },
   
+  /** 当前浏览器是否处于管理员会话（管理员设备不在 devices 表中，心跳必然未命中） */
+  _isAdminSession() {
+    try {
+      return localStorage.getItem('leletv_is_admin') === 'true';
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * 本机设备记录已被服务端移除（管理员删除该设备，或同邀请码用户删除）。
+   * 被移除的设备本地仍保存着邀请码，若只删服务端记录，设备会继续正常使用网站，
+   * 旧格式指纹还会在下次访问时自动重新注册——所以这里统一踢出并要求重新验证。
+   */
+  handleDeviceRemoved() {
+    try {
+      INVITE_AUTH.stopHeartbeat();
+      INVITE_AUTH._clearSession();
+
+      const loginModal = document.getElementById('inviteLoginModal');
+      if (!loginModal) return;
+
+      document.getElementById('inviteLoginBtn') && (document.getElementById('inviteLoginBtn').disabled = false);
+      document.getElementById('inviteCodeInput') && (document.getElementById('inviteCodeInput').value = '');
+
+      const loginError = document.getElementById('inviteLoginError');
+      if (loginError) {
+        loginError.textContent = '本设备已被移除，请重新验证邀请码';
+        loginError.classList.remove('hidden');
+      }
+
+      loginModal.style.display = 'flex';
+      setTimeout(() => document.getElementById('inviteCodeInput')?.focus(), 150);
+    } catch (e) {
+      console.error('处理设备移除出错:', e);
+    }
+  },
+
   /**
    * 检查是否已验证
    */
@@ -333,18 +382,25 @@ const INVITE_AUTH = {
   
   /**
    * 发送心跳
+   * 返回 { updated } —— 服务端是否仍有本机设备记录；
+   * 网络异常或响应异常返回 null（无从判断，调用方不可据此踢出用户）
    */
   async heartbeat(fingerprint) {
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/heartbeat');
       
-      await fetch(url, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_fingerprint: fingerprint })
       });
+      if (!response.ok) return null;
+      const data = await response.json().catch(() => null);
+      if (!data || data.ok !== true) return null;
+      return { updated: data.updated === true };
     } catch {
       // 静默失败，不影响用户体验
+      return null;
     }
   },
   
@@ -360,8 +416,12 @@ const INVITE_AUTH = {
       window.removeEventListener('pagehide', INVITE_AUTH._heartbeatBound);
     }
     
-    INVITE_AUTH._heartbeatTimer = setInterval(() => {
-      INVITE_AUTH.heartbeat(fingerprint);
+    INVITE_AUTH._heartbeatTimer = setInterval(async () => {
+      const beat = await INVITE_AUTH.heartbeat(fingerprint);
+      // 使用期间被管理员移除时同样立即踢出，不必等到下次刷新
+      if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false) {
+        INVITE_AUTH.handleDeviceRemoved();
+      }
     }, INVITE_AUTH.HEARTBEAT_INTERVAL);
     
     // 用 pagehide 而非 beforeunload：页面被 bfcache 冻结/卸载时均触发心跳，且不禁用 bfcache
@@ -371,10 +431,19 @@ const INVITE_AUTH = {
   
   /**
    * 确保心跳运行（从 localStorage 读取指纹，页面加载时调用）
+   * 顺序很关键：先确认本机设备记录仍在册，再考虑旧指纹迁移。
+   * 反过来的话，被管理员删除的设备会因为"旧指纹迁移"静默重新注册，等于没删
    */
   async ensureHeartbeat() {
     const auth = INVITE_AUTH.getAuth();
     if (!auth || !auth.device_fingerprint) return;
+
+    // 立即发送一次心跳：既记录本次访问，也顺带确认本机是否仍在册
+    const beat = await INVITE_AUTH.heartbeat(auth.device_fingerprint);
+    if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false) {
+      INVITE_AUTH.handleDeviceRemoved();
+      return;
+    }
 
     // 旧版本遗留的软指纹（不是设备实例 ID）：重新登记为设备 ID，
     // 否则同型号设备会继续共用同一条设备记录
@@ -385,9 +454,6 @@ const INVITE_AUTH = {
       if (result.ok) return; // verify 内部已写入新设备 ID，普通用户会自动启动心跳
       INVITE_AUTH._legacyMigrationTried = false; // 失败（离线等）→ 按旧标识继续心跳，下次访问再试
     }
-    
-    // 立即发送一次心跳，记录本次访问
-    INVITE_AUTH.heartbeat(auth.device_fingerprint);
     
     // 启动定时心跳
     INVITE_AUTH.startHeartbeat(auth.device_fingerprint);
