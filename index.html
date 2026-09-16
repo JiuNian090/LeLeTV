@@ -206,6 +206,9 @@
          动画与首页首访入场同源（粒子螺旋凝聚 → LeLeTV 实体化 → 爆开），但由加载进度驱动，
          见 body 首部的内联脚本。样式内联在此，不依赖外部 CSS 到达 -->
     <style>
+        /* 底色兜底：样式表（variables.css 的 --color-bg）还在路上时，html/body 的默认背景是白色，
+           解析过程中的任何一次重绘都会露出白。把底色直接写在这里，让第一次绘制就是占位的黑 */
+        html, body { background: #000000; }
         /* 占位期间页面尚未样式化，先按住滚动，避免出现临时滚动条；元素移除后规则自动失效 */
         html:has(#bootSplash) { overflow: hidden; }
         #bootSplash {
@@ -233,9 +236,20 @@
            --color-bg / .page-bg 一致），不再虚化下层内容 —— 切换前旧页面已把画面渐变到
            同一个深色，所以这里是接续而不是跳变；全屏虚化的合成开销也一并省掉。
            遮罩是不透明深色且铺满首帧，足以盖住尚未就绪的内容，不会出现内容蹦出来 */
-        /* 减弱动效偏好：不跑粒子，改为静态字样——既有反馈，又不违背用户的动效设置 */
-        #bootSplash .boot-splash-static {
-            display: none;
+        /* 占位的主视觉：LeLeTV 大标题 + 加载环。两者都由 CSS 直接绘制，不依赖 JS / 外部样式表 /
+           字体到达 —— HTML 一解析到这里，屏幕中央就已有内容，不留"HTML 已到、画面还是空的"空档。
+           标题的字号、字体、位置与粒子引擎 drawBrand() 画出的字样完全一致，粒子向中心收拢时标题层
+           淡出交接，因此不会同时出现两个"LeLeTV"（交接阈值见 body 首部脚本的 BRAND_HANDOFF）；
+           加载环不随标题退场——它一直转到放行，让整个等待期（含粒子成型后的停滞）都有加载指示。
+           主题色取不到时（样式表与行内变量都还没落到 --color-primary-rgb）回落到正常模式默认色 */
+        #bootSplash .boot-splash-brand {
+            position: absolute;
+            inset: 0;
+            pointer-events: none; /* 不遮挡下面的"仍然进入"按钮与粒子画布 */
+            transition: opacity 0.28s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+        }
+        #bootSplash .boot-splash-brand--out { opacity: 0; }
+        #bootSplash .boot-splash-brand-text {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -243,12 +257,35 @@
             font-family: 'MapleMono', monospace;
             font-size: clamp(26px, 15vw, 82px);
             font-weight: 900;
-            color: rgba(var(--color-primary-rgb), 0.92);
-            text-shadow: 0 0 28px rgba(var(--color-primary-rgb), 0.55);
+            line-height: 1;
+            white-space: nowrap;
+            color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.92);
+            text-shadow: 0 0 28px rgba(var(--color-primary-rgb, 236, 72, 153), 0.55);
         }
+        /* 加载指示：标题下方一圈缺口环。三边暗、一边亮 + 旋转即表达"在加载"，
+           比进度条更省，也不会与粒子自身的环带抢视觉；尺寸与亮度都刻意压低，不抢标题。
+           居中用负 margin 而非 transform：rotate 动画会覆盖 transform 上的位移 */
+        #bootSplash .boot-splash-ring {
+            position: absolute;
+            top: calc(50% + clamp(26px, 11vw, 62px));
+            left: 50%;
+            width: 22px;
+            height: 22px;
+            margin: -11px 0 0 -11px;
+            border: 2px solid rgba(var(--color-primary-rgb, 236, 72, 153), 0.22);
+            border-top-color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.95);
+            border-radius: 50%;
+            animation: boot-splash-ring-spin 0.9s linear infinite;
+        }
+        @keyframes boot-splash-ring-spin { to { transform: rotate(360deg); } }
+        /* 减弱动效偏好：不跑粒子，环也不再旋转 —— 标题层一直显示到放行，
+           既有"正在加载"的反馈，又不违背用户的动效设置 */
         @media (prefers-reduced-motion: reduce) {
             #bootSplash canvas { display: none; }
-            #bootSplash .boot-splash-static { display: block; }
+            #bootSplash .boot-splash-ring {
+                animation: none;
+                border-top-color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.6);
+            }
         }
         /* 慢速提示：加载超出预期仍未就绪时出现。
            作用是让"慢"和"卡死"看起来不一样，并给用户一个主动放行的出口——
@@ -291,10 +328,17 @@
     <!-- 首屏启动占位：冷启动时第一时间出现，粒子随加载进度螺旋凝聚成 LeLeTV，
          加载完成（首页初始化就绪）时实体化为完整字样并爆开，随后淡出露出首页。
          算法与 js/app/app-routing.js 的 playHomeIntro 同源；此处必须内联，因为它要赶在
-         dist bundle（defer，弱网下最后才到）之前就动起来 -->
+         dist bundle（defer，弱网下最后才到）之前就动起来。
+         中央的 LeLeTV 大标题 + 加载环（.boot-splash-brand）先于粒子出现：它由 CSS 直接画出，
+         不依赖 JS 与字体，HTML 一到就有内容可看，粒子开始收拢时再淡出交接 -->
     <div id="bootSplash" aria-hidden="true">
         <canvas id="bootSplashCanvas"></canvas>
-        <span class="boot-splash-static">LeLeTV</span>
+        <!-- 主视觉：立即可见的 LeLeTV 大标题 + 加载环（纯 CSS，见 head 的同名样式）。
+             粒子引擎接管时标题淡出，让位给粒子凝聚出的同一字样；加载环一直转到放行 -->
+        <div class="boot-splash-brand" id="bootSplashBrand">
+            <span class="boot-splash-brand-text">LeLeTV</span>
+        </div>
+        <span class="boot-splash-ring"></span>
         <div class="boot-splash-hint" id="bootSplashHint">
             <span class="boot-splash-hint-text">网络较慢，仍在加载…</span>
             <button type="button" class="boot-splash-hint-btn" id="bootSplashSkipBtn">仍然进入</button>
@@ -358,6 +402,7 @@
         var STALL_RATE = 0.09;     // 兜底缓推速度（每秒进度增量）
         var SLOW_HINT_MS = 6000;   // 超过此时长仍未就绪 → 显示"网络较慢"提示与主动进入按钮
         var HARD_MAX_MS = 20000;   // 最终放行上限：再慢也不让遮罩无限挡住页面
+        var BRAND_HANDOFF = 0.18;  // 粒子汇聚到此值（1.2 = 完全到位）时，CSS 标题层淡出交接
         var PARTICLE_MAX = 800;    // 800 与 1200 观感几乎无差，逐帧填充更省
         var ALPHA_STEPS = 32;
         var PALETTE = [
@@ -412,6 +457,12 @@
         }
 
         var particles = [];
+
+        // 占位的主视觉（LeLeTV 大标题）在 HTML 解析到这里时已由 CSS 画出，脚本只负责它的退场时机。
+        // 加载环不归这里管：它从出现一直转到放行，随整个遮罩一起淡出
+        // 交接见 frame() 里的 BRAND_HANDOFF
+        var brandEl = document.getElementById('bootSplashBrand');
+        var brandHidden = false;
 
         function makeParticles(brandRadius) {
             var c = center();
@@ -720,6 +771,14 @@
                 var gather = clamp01(gNow / G_FULL);
                 updateGather(particles, gNow * GATHER_MS, c);
                 paint(particles);
+
+                // 粒子开始向中心收拢 → CSS 标题层淡出：两者画的是同一个字样，
+                // 趁粒子还在外围时交接，避免同屏出现两个"LeLeTV"。
+                // 减弱动效 / 无 canvas 时 frame() 根本不跑，标题层因此一直显示到 release()
+                if (!brandHidden && gather >= BRAND_HANDOFF) {
+                    brandHidden = true;
+                    if (brandEl) brandEl.classList.add('boot-splash-brand--out');
+                }
 
                 var reveal = clamp01((gather - 0.4) / 0.6);
                 var revealEase = 1 - Math.pow(1 - reveal, 3);
