@@ -24,7 +24,13 @@ enabled = []   # empty = all built-in tools
 [codegraph]
 enabled      = true   # built-in MCP server; off by default for first-run sessions
 auto_install = true   # fetch the runtime when CodeGraph is enabled but missing
-# path       = ""   # empty = cache, then PATH, then a bundle beside reasonix
+path         = "D:/nodejs/node_global/codegraph.cmd"   # 显式指向 Windows 批处理入口
+# 原注释：empty = cache, then PATH, then a bundle beside reasonix。
+# 因为缓存里没有原生 bundle，回落到 PATH 时会优先命中同目录下无扩展名的 POSIX shim
+# （#!/bin/sh，439B，CreateProcess 无法执行），
+# 报 "MCP startup launch failed after 21ms: context canceled"。
+# 该包在 Windows 上没有独立 exe（bundle 内只有 node.exe 运行时 + .cmd + lib/），故指向 .cmd。
+# 若仍报同样的错，说明启动器未对 .cmd 做 shell 包装 —— 属 Studio 侧问题，本配置无法解决。
 # tier       = "lazy"   # lazy|background|eager
 
 [skills]
