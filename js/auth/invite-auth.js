@@ -282,6 +282,15 @@ const INVITE_AUTH = {
   },
 
   /**
+   * 心跳未命中后的二次确认：服务端偶发异常（部署抖动、D1 读取异常、新旧版本混跑）时
+   * 不应把用户踢下线，连续两次都报告「本机不在册」才认定为已被移除
+   */
+  async _confirmDeviceRemoved(fingerprint) {
+    const retry = await INVITE_AUTH.heartbeat(fingerprint);
+    return !!(retry && retry.updated === false);
+  },
+
+  /**
    * 本机设备记录已被服务端移除（管理员删除该设备，或同邀请码用户删除）。
    * 被移除的设备本地仍保存着邀请码，若只删服务端记录，设备会继续正常使用网站，
    * 旧格式指纹还会在下次访问时自动重新注册——所以这里统一踢出并要求重新验证。
@@ -419,7 +428,8 @@ const INVITE_AUTH = {
     INVITE_AUTH._heartbeatTimer = setInterval(async () => {
       const beat = await INVITE_AUTH.heartbeat(fingerprint);
       // 使用期间被管理员移除时同样立即踢出，不必等到下次刷新
-      if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false) {
+      if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false
+          && await INVITE_AUTH._confirmDeviceRemoved(fingerprint)) {
         INVITE_AUTH.handleDeviceRemoved();
       }
     }, INVITE_AUTH.HEARTBEAT_INTERVAL);
@@ -440,7 +450,8 @@ const INVITE_AUTH = {
 
     // 立即发送一次心跳：既记录本次访问，也顺带确认本机是否仍在册
     const beat = await INVITE_AUTH.heartbeat(auth.device_fingerprint);
-    if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false) {
+    if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false
+        && await INVITE_AUTH._confirmDeviceRemoved(auth.device_fingerprint)) {
       INVITE_AUTH.handleDeviceRemoved();
       return;
     }

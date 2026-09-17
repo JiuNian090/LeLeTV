@@ -47,6 +47,13 @@ async function hasSignatureColumn(env) {
   return _hasSignatureColumn;
 }
 
+// D1 的 run() 结果里受影响行数位于 meta.changes，顶层没有 changes 字段；
+// 直接读 result.changes 恒为 undefined，会让 removed/deleted/updated 永远报 false
+function affectedRows(result) {
+  const changes = result?.meta?.changes ?? result?.changes;
+  return typeof changes === 'number' ? changes : 0;
+}
+
 function jsonResponse(data, status) {
   const body = JSON.stringify(data);
   return new Response(body, {
@@ -518,11 +525,23 @@ async function handleHeartbeat(request, env) {
     return jsonResponse({ ok: false, error: '缺少 device_fingerprint' }, 400);
   }
   
-  const result = await env.INVITE_DB.prepare(
+  // 以「记录是否存在」判定本机是否在册，而不是读 UPDATE 的影响行数：
+  // D1 的 run() 把 changes 放在 meta 里（顶层没有该字段），
+  // 直读 result.changes 恒为 undefined，会让 updated 永远为 false，
+  // 从而被前端当成「本机已被移除」，把所有设备踢下线
+  const device = await env.INVITE_DB.prepare(
+    'SELECT id FROM devices WHERE device_fingerprint = ?'
+  ).bind(device_fingerprint).first();
+  
+  if (!device) {
+    return jsonResponse({ ok: true, updated: false });
+  }
+  
+  await env.INVITE_DB.prepare(
     'UPDATE devices SET last_active_at = ? WHERE device_fingerprint = ?'
   ).bind(Date.now(), device_fingerprint).run();
   
-  return jsonResponse({ ok: true, updated: result.changes > 0 });
+  return jsonResponse({ ok: true, updated: true });
 }
 
 async function handleGenerate(request, env) {
@@ -603,7 +622,7 @@ async function handleToggle(request, env) {
     'UPDATE invitation_codes SET is_active = ? WHERE code = ?'
   ).bind(is_active ? 1 : 0, code).run();
   
-  return jsonResponse({ ok: true, updated: result.changes > 0 });
+  return jsonResponse({ ok: true, updated: affectedRows(result) > 0 });
 }
 
 async function handleStats(request, env) {
@@ -690,7 +709,7 @@ async function handleRemoveDevice(request, env) {
     'DELETE FROM devices WHERE code = ? AND device_fingerprint = ?'
   ).bind(code, target_fingerprint).run();
   
-  return jsonResponse({ ok: true, removed: result.changes > 0 });
+  return jsonResponse({ ok: true, removed: affectedRows(result) > 0 });
 }
 
 // POST /invite/set-remark - 设置邀请码备注（管理员）
@@ -777,7 +796,7 @@ async function handleDeleteCode(request, env) {
     // 先删除关联设备，再删除邀请码
     await env.INVITE_DB.prepare('DELETE FROM devices WHERE code = ?').bind(code).run();
     const result = await env.INVITE_DB.prepare('DELETE FROM invitation_codes WHERE code = ?').bind(code).run();
-    return jsonResponse({ ok: true, deleted: result.changes > 0 });
+    return jsonResponse({ ok: true, deleted: affectedRows(result) > 0 });
   } catch (error) {
     console.error('删除邀请码失败:', error);
     return jsonResponse({ ok: false, error: '服务器错误' }, 500);
