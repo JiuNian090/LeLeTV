@@ -892,7 +892,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                     </svg>
                                 </button>
-                                <input type="text" id="searchInput" class="flex-1 bg-transparent text-white px-4 py-0 focus:outline-none transition-colors" placeholder="搜索你喜欢的视频..." autocomplete="off" aria-label="视频搜索框">
+                                <input type="search" id="searchInput" class="flex-1 bg-transparent text-white px-4 py-0 focus:outline-none transition-colors" placeholder="搜索你喜欢的视频..." autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-label="视频搜索框" aria-autocomplete="list" aria-expanded="false" aria-controls="searchHistoryDropdown">
+                                <button id="clearSearchInput" type="button" class="search-input-clear" aria-label="清空搜索内容">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
                                 <button data-action="close-results" id="closeSearchResults" class="h-full w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-white transition-colors hidden" aria-label="关闭搜索结果">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -1423,8 +1428,22 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
-                <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索你喜欢的视频..." autocomplete="off" aria-label="视频搜索框">
-                <button id="mobileSearchCancel" class="mobile-search-cancel">取消</button>
+                <input type="search" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索你喜欢的视频..." autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="视频搜索框">
+                <button id="clearMobileSearchInput" type="button" class="search-input-clear" aria-label="清空搜索内容">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <button id="mobileSearchClose" type="button" class="mobile-search-icon-btn mobile-search-close" aria-label="关闭搜索">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <button id="mobileSearchSubmit" type="button" class="mobile-search-icon-btn mobile-search-submit" aria-label="搜索">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
             </div>
         </div>
         <div id="mobileSearchHistoryList" class="mobile-search-history-list"></div>
@@ -1455,8 +1474,11 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.y91stf.js?v=v3.6.0" defer></script>
-    <script src="dist/leletv-app.fx1mn8.js?v=v3.6.0" defer></script>
+
+
+
+    <script src="dist/leletv-core.q6axkb.js?v=v3.6.0" defer></script>
+    <script src="dist/leletv-app.ya2kdl.js?v=v3.6.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>

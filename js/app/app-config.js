@@ -196,6 +196,8 @@ function openMobileSearch() {
     overlay.style.height = '';
     overlay.style.top = '';
     renderMobileSearchHistory(input.value);
+    // 打开时同步一次清空按钮的显隐（可能带着桌面搜索框里的文字进来的）
+    document.getElementById('clearMobileSearchInput')?.classList.toggle('is-visible', !!input.value);
     // 聚焦移动端输入框（聚焦前确保覆盖层已激活）
     input.focus();
 }

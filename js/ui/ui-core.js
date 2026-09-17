@@ -17,7 +17,8 @@ function showToast(message, type = 'error', duration = 3000) {
         toast = document.createElement('div');
         toast.id = 'toast';
         toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 shadow-lg transform transition-all duration-300 opacity-0 scale-50 z-50 pointer-events-none';
-        toast.style = 'z-index: 2147483647';
+        // 与 css/styles.css 的层级约定保持一致（toast 高于 loading 10001，低于极限值）
+        toast.style = 'z-index: 10050';
         toastMessage = document.createElement('p');
         toastMessage.id = 'toastMessage';
         toast.appendChild(toastMessage);

@@ -203,10 +203,13 @@ button, .card-hover {
     }
 }
 
+/* ==================== 层级约定 ====================
+   搜索历史下拉 9990 / 移动端全屏搜索层 9980 / toast 10050 / loading 10001
+   旧实现有 3 处直接写 2147483647（极限值），再要插新层级时没有余量 */
 /* 搜索历史下拉菜单 */
 .search-history-dropdown {
     position: fixed;
-    z-index: 2147483647;
+    z-index: 9990;
     background: #111;
     border: 1px solid var(--color-border-default);
     border-top: none;
@@ -236,6 +239,43 @@ button, .card-hover {
 
 .search-history-item:hover {
     background: #1c1c1c;
+}
+
+/* 键盘 ↑/↓ 选中的项（焦点停在输入框，用 aria-activedescendant 联动） */
+.search-history-item.is-active {
+    background: #1c1c1c;
+    box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+/* 输入框里的清空按钮（桌面/移动共用，移动端宽度在媒体查询里覆盖） */
+.search-input-clear {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 100%;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.search-input-clear.is-visible {
+    display: flex;
+}
+
+.search-input-clear:hover {
+    color: #fff;
+}
+
+/* type="search" 在 WebKit 会自带一个清除叉，和我们自绘的按钮重复，藏掉 */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .search-history-item .history-text {
@@ -1338,7 +1378,7 @@ body {
 
 /* Toast 提示样式 */
 #toast {
-    z-index: 2147483647;
+    z-index: 10050;
     font-family: inherit;
     font-weight: 500;
 }
@@ -2086,7 +2126,7 @@ body > header {
         position: fixed;
         inset: 0;
         height: 100dvh;
-        z-index: 2147483647;
+        z-index: 9980;
         background: #000;
         animation: mobileSearchFadeIn 0.18s ease-out;
     }
@@ -2115,8 +2155,10 @@ body > header {
         transition: border-color 0.2s;
     }
 
+    /* 聚焦态用中性灰，与桌面 .home-search-bar 的 focus 保持一致；
+       竖屏展开后的搜索框是常规输入场景，不套主题霓虹色 */
     .mobile-search-input-wrapper:focus-within {
-        border-color: var(--color-primary);
+        border-color: #555;
     }
 
     .mobile-search-back-icon {
@@ -2129,8 +2171,16 @@ body > header {
         color: #888;
     }
 
+    /* 清空按钮在移动搜索框里按 44px 触控高度收窄 */
+    .mobile-search-input-wrapper .search-input-clear {
+        width: 36px;
+        height: 44px;
+    }
+
     .mobile-search-input {
         flex: 1;
+        /* 右侧有清空/关闭/搜索三个按钮，必须允许收缩，否则整条搜索栏会溢出 */
+        min-width: 0;
         height: 44px;
         background: transparent;
         border: none;
@@ -2144,21 +2194,36 @@ body > header {
         color: #555;
     }
 
-    .mobile-search-cancel {
+    /* 关闭（×）与确认搜索是两个图标按钮：
+       手机输入法不一定有确认键，给一个显式的搜索按钮更稳妥。
+       颜色跟桌面搜索框的图标按钮（text-gray-400）一样用中性色 */
+    .mobile-search-icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
-        color: var(--color-primary);
-        font-size: 15px;
-        font-weight: 500;
+        height: 44px;
         background: none;
         border: none;
-        padding: 0 14px;
-        height: 44px;
+        padding: 0;
+        color: #d1d5db;
         cursor: pointer;
-        white-space: nowrap;
-        transition: opacity 0.15s;
+        transition: color 0.15s, opacity 0.15s;
     }
 
-    .mobile-search-cancel:active {
+    .mobile-search-close {
+        width: 40px;
+    }
+
+    .mobile-search-submit {
+        width: 44px;
+    }
+
+    .mobile-search-icon-btn:hover {
+        color: #fff;
+    }
+
+    .mobile-search-icon-btn:active {
         opacity: 0.6;
     }
 

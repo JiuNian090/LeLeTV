@@ -148,11 +148,51 @@ function addCardRipple(el, e) {
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
 
-    // 回车搜索
-    searchInput.addEventListener('keypress', function (e) {
+    // 输入框清空按钮：有内容时才显示（桌面 / 移动各一个）
+    // 用 is-visible 而不是 Tailwind 的 hidden，避免与按钮自身的 display 工具类互相打架
+    function syncSearchClearButtons() {
+        const desktopInput = document.getElementById('searchInput');
+        const mobileInput = document.getElementById('mobileSearchInput');
+        const desktopBtn = document.getElementById('clearSearchInput');
+        const mobileBtn = document.getElementById('clearMobileSearchInput');
+        if (desktopBtn) desktopBtn.classList.toggle('is-visible', !!(desktopInput && desktopInput.value));
+        if (mobileBtn) mobileBtn.classList.toggle('is-visible', !!(mobileInput && mobileInput.value));
+    }
+
+    // 输入法组合状态：组合期间不刷新下拉。拼音逐个字母都会触发 input，
+    // 老实现每次都整块重建列表，中文输入时下拉会跟着闪。
+    let desktopComposing = false;
+    searchInput.addEventListener('compositionstart', function () { desktopComposing = true; });
+    searchInput.addEventListener('compositionend', function () {
+        desktopComposing = false;
+        if (window.innerWidth > 639) showSearchHistory(this.value);
+    });
+
+    // 回车搜索 / ↑↓ 选择历史 / Escape 关闭
+    // 原来用 keypress：输入法组合确认时的那次回车也会被当成搜索，改用 keydown + isComposing 判断
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.isComposing || e.keyCode === 229) return;
+
         if (e.key === 'Enter') {
+            e.preventDefault();
+            // 有高亮的历史项就采用它，否则用输入框内容
+            const activeQuery = getActiveHistoryQuery();
+            if (activeQuery) this.value = activeQuery;
             hideSearchHistory();
             search();
+            return;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!navigateSearchHistory(1)) showSearchHistory(this.value);
+            return;
+        }
+        if (e.key === 'ArrowUp') {
+            if (navigateSearchHistory(-1)) e.preventDefault();
+            return;
+        }
+        if (e.key === 'Escape') {
+            hideSearchHistory();
         }
     });
 
@@ -177,19 +217,27 @@ function setupEventListeners() {
     });
 
     // 搜索历史下拉：输入时过滤（移动端用覆盖层，不显示桌面下拉）
-    searchInput.addEventListener('input', function () {
+    searchInput.addEventListener('input', function (e) {
+        syncSearchClearButtons();
         if (!_searchReady) return;
         if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
+        if (desktopComposing || e.isComposing) return;
+        // 手动输入后清掉键盘高亮，但下拉保持打开
+        clearHistoryNavHighlight();
         showSearchHistory(this.value);
     });
 
-    // 搜索历史下拉：Escape 关闭
-    searchInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            hideSearchHistory();
-        }
-    });
+    // 清空输入按钮
+    const clearSearchInputBtn = document.getElementById('clearSearchInput');
+    if (clearSearchInputBtn) {
+        clearSearchInputBtn.addEventListener('click', function () {
+            searchInput.value = '';
+            searchInput.focus();
+            syncSearchClearButtons();
+            showSearchHistory('');
+        });
+    }
 
     // 搜索历史下拉：事件委托（点击条目、删除、清除全部）
     const historyDropdown = document.getElementById('searchHistoryDropdown');
@@ -256,31 +304,68 @@ function setupEventListeners() {
     
     // 移动端全屏搜索覆盖层
     const mobileSearchInput = document.getElementById('mobileSearchInput');
-    const mobileSearchCancel = document.getElementById('mobileSearchCancel');
+    const mobileSearchClose = document.getElementById('mobileSearchClose');
+    const mobileSearchSubmit = document.getElementById('mobileSearchSubmit');
     const mobileHistoryList = document.getElementById('mobileSearchHistoryList');
 
+    // 确认搜索：软键盘的 Enter 键与右侧搜索按钮共用同一套逻辑
+    function submitMobileSearch() {
+        if (!mobileSearchInput) return;
+        const val = mobileSearchInput.value.trim();
+        if (!val) {
+            // 空输入时把焦点还给输入框，别让人以为按钮没反应
+            mobileSearchInput.focus();
+            return;
+        }
+        document.getElementById('searchInput').value = val;
+        closeMobileSearch();
+        search();
+    }
+
     if (mobileSearchInput) {
-        mobileSearchInput.addEventListener('input', function () {
+        // 移动键盘同样要挡掉输入法组合期，避免拼音阶段列表反复重建
+        let mobileComposing = false;
+        mobileSearchInput.addEventListener('compositionstart', function () { mobileComposing = true; });
+        mobileSearchInput.addEventListener('compositionend', function () {
+            mobileComposing = false;
+            renderMobileSearchHistory(this.value);
+        });
+
+        mobileSearchInput.addEventListener('input', function (e) {
+            syncSearchClearButtons();
+            if (mobileComposing || e.isComposing) return;
             renderMobileSearchHistory(this.value);
         });
 
         mobileSearchInput.addEventListener('keydown', function (e) {
+            // 输入法组合中的回车是「上屏候选词」，不能拿去搜索
+            if (e.isComposing || e.keyCode === 229) return;
             if (e.key === 'Enter') {
-                const val = this.value.trim();
-                if (val) {
-                    document.getElementById('searchInput').value = val;
-                    closeMobileSearch();
-                    search();
-                }
+                submitMobileSearch();
             }
             if (e.key === 'Escape') {
                 closeMobileSearch();
             }
         });
+
+        // 移动端清空按钮
+        const clearMobileBtn = document.getElementById('clearMobileSearchInput');
+        if (clearMobileBtn) {
+            clearMobileBtn.addEventListener('click', function () {
+                mobileSearchInput.value = '';
+                mobileSearchInput.focus();
+                syncSearchClearButtons();
+                renderMobileSearchHistory('');
+            });
+        }
     }
 
-    if (mobileSearchCancel) {
-        mobileSearchCancel.addEventListener('click', closeMobileSearch);
+    if (mobileSearchClose) {
+        mobileSearchClose.addEventListener('click', closeMobileSearch);
+    }
+
+    if (mobileSearchSubmit) {
+        mobileSearchSubmit.addEventListener('click', submitMobileSearch);
     }
 
     if (mobileHistoryList) {
