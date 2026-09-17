@@ -166,9 +166,22 @@
                     </div>
                 </div>
 
-                <!-- 源信息 -->
-                <div class="player-container player-right-item flex justify-between py-2 px-4 bg-[rgba(34,34,34,0.5)] border border-[var(--color-border-default)] rounded-lg" id="resourceInfoBarContainer">
-                    <!-- 资源信息卡片、切换按钮、视频数将由JS动态渲染 -->
+                <!-- 线路切换（折叠面板，展开后扫描当前数据域的全部来源） -->
+                <div class="player-container player-right-item resource-collapse collapsed" id="resourceSection">
+                    <div class="detail-toggle-header resource-collapse-header" data-action="toggle-resource-list">
+                        <div class="resource-collapse-title-group">
+                            <h3 class="resource-collapse-title">线路切换</h3>
+                            <span class="resource-collapse-count" id="resourceSourceCount">· 当前集共 - 个来源</span>
+                        </div>
+                        <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <div class="resource-collapse-body">
+                        <div class="resource-source-grid" id="resourceSourceGrid">
+                            <div class="resource-source-hint">展开后开始扫描全部线路…</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 控制按钮 -->
@@ -205,20 +218,6 @@
         <span id="shortcutText"></span>
     </div>
 
-    <!-- 换源模态框 -->
-    <div id="modal" class="fixed inset-0 bg-black/60 items-center justify-center transition-opacity duration-300 z-[10000] hidden">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-4xl border border-[var(--color-border-default)] max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-6 flex-none">
-                <h2 id="modalTitle" class="text-2xl font-bold gradient-text break-words pr-4 max-w-[80%]"></h2>
-                <button data-action="close-modal" class="text-gray-400 hover:text-white text-2xl transition-colors flex-shrink-0">&times;</button>
-            </div>
-            <div id="modalContent" class="overflow-auto flex-1 min-h-0">
-                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- 统一的提示框 -->
     <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 shadow-lg transform transition-all duration-300 opacity-0 scale-50 z-50 pointer-events-none">
         <p id="toastMessage"></p>
@@ -253,7 +252,7 @@
     <script src="libs/hls.min.js?v=v3.6.0" defer crossorigin="anonymous"></script>
     <script src="libs/artplayer.min.js?v=v3.6.0" defer crossorigin="anonymous"></script>
     <script src="dist/leletv-core.y91stf.js?v=v3.6.0" defer></script>
-    <script src="dist/leletv-player.u6kh8k.js?v=v3.6.0" defer></script>
+    <script src="dist/leletv-player.8o8x66.js?v=v3.6.0" defer></script>
 
     <script>
         // 创建全局环境变量对象

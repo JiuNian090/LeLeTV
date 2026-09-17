@@ -51,20 +51,16 @@ function updateEpisodeCollapseState() {
   if (sec) sec.classList.remove('episode-collapsed');
 }
 
+// 线路切换面板（折叠）：折叠态只显示「线路切换 · 当前集共 N 个来源」，
+// 展开后由 player-ui.js 扫描全部来源并逐条补上延迟
 function renderResourceInfoBar() {
-  var ct = document.getElementById('resourceInfoBarContainer');
-  if (!ct) { console.error('\u627e\u4e0d\u5230\u8d44\u6e90\u4fe1\u606f\u5361\u7247\u5bb9\u5668'); return; }
-  var urlParams = new URLSearchParams(window.location.search);
-  var currentSource = urlParams.get('source') || '';
-  ct.innerHTML = '<div class="resource-info-bar-left flex"><span>\u52a0\u8f7d\u4e2d...</span><span class="resource-info-bar-videos">-</span></div><button class="resource-switch-btn flex" id="switchResourceBtn" data-action="show-switch-resource"><span class="resource-switch-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="#a67c2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>\u5207\u6362\u8d44\u6e90</button>';
-  var rn = currentSource;
-  if (currentSource && API_SITES[currentSource]) rn = API_SITES[currentSource].name;
-  if (rn === currentSource) {
-    var caps = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
-    var ci = parseInt(currentSource.replace('custom_', ''), 10);
-    if (caps[ci]) rn = caps[ci].name || '\u81ea\u5b9a\u4e49\u8d44\u6e90';
+  var countEl = document.getElementById('resourceSourceCount');
+  if (!countEl) return;
+  if (typeof updateResourceSourceCount === 'function') {
+    updateResourceSourceCount();
+    return;
   }
-  ct.innerHTML = '<div class="resource-info-bar-left flex"><span>' + rn + '</span><span class="resource-info-bar-videos">' + currentEpisodes.length + ' \u4e2a\u89c6\u9891</span></div><button class="resource-switch-btn flex" id="switchResourceBtn" data-action="show-switch-resource"><span class="resource-switch-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="#a67c2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>\u5207\u6362\u8d44\u6e90</button>';
+  countEl.textContent = '· 当前集共 - 个来源';
 }
 
 function getVideoCover() {
@@ -73,15 +69,6 @@ function getVideoCover() {
     if (info && info.cover && info.cover.indexOf('http') === 0) return info.cover;
   } catch(e) { console.warn('[LeLeTV] \u83b7\u53d6\u89c6\u9891\u5c01\u9762\u5931\u8d25:', e); }
   return '/image/logo-black.png';
-}
-
-function formatSpeedDisplay(speedResult) {
-  if (speedResult.speed === -1) return '<span class="speed-indicator error">\u274c ' + (speedResult.error || '\u5931\u8d25') + '</span>';
-  var s = speedResult.speed;
-  var cls = 'speed-indicator good', ico = '\ud83d\udfe2';
-  if (s >= SOURCE_LATENCY_SLOW_MS) { cls = 'speed-indicator poor'; ico = '\ud83d\udd34'; }
-  else if (s >= SOURCE_LATENCY_FAST_MS) { cls = 'speed-indicator medium'; ico = '\ud83d\udfe1'; }
-  return '<span class="' + cls + '">' + ico + ' ' + s + 'ms</span>';
 }
 
 function escHtml(str) {

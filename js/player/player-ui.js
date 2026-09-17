@@ -770,124 +770,214 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
     }
 }
 
-async function showSwitchResourceModal() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentSourceCode = urlParams.get('source');
-    const currentVideoId = urlParams.get('id');
+// ==================== 线路切换（折叠面板） ====================
+// 折叠时不发任何请求；首次展开才对「当前数据域的全部来源」并行搜索 + 测速，
+// 每个来源显示「资源名 + 备注」和延迟徽章，当前正在播放的线路高亮
+const RESOURCE_SCAN_CONCURRENCY = 6;
 
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalContent = document.getElementById('modalContent');
+// 单源扫描状态：untested 未测 / testing 测速中 / done 已测 / failed 测速失败 / empty 无结果
+const resourceScan = {
+    started: false,
+    finished: false,
+    sources: [],
+    results: {},
+    latency: {},
+    status: {},
+    hitCount: 0
+};
 
-    modalTitle.innerHTML = `<span class="break-words">${currentVideoTitle}</span>`;
-    modalContent.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;grid-column:1/-1;">正在加载资源列表...</div>';
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+let resourceGridFrame = null;
 
-    // 搜索
-    const localSelectedAPIs = JSON.parse(localStorage.getItem(scopedKey('selectedAPIs')) || '[]');
-    const localCustomAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
-    const resourceOptions = localSelectedAPIs.map((curr) => {
-        if (API_SITES[curr]) {
-            return { key: curr, name: API_SITES[curr].name };
-        }
-        const customIndex = parseInt(curr.replace('custom_', ''), 10);
-        if (localCustomAPIs[customIndex]) {
-            return { key: curr, name: localCustomAPIs[customIndex].name || '自定义资源' };
-        }
-        return { key: curr, name: '未知资源' };
+// 当前数据域下可扫描的来源：本模式的全部内置源（含未勾选的）+ 本模式的自定义源
+function getResourceScanSources() {
+    const customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
+    const hidden = isHiddenContentMode();
+    const list = Object.keys(API_SITES)
+        .filter(key => hidden ? !!API_SITES[key].hidden : !API_SITES[key].hidden)
+        .map(key => ({ key: key, name: (API_SITES[key] && API_SITES[key].name) || key }));
+    customAPIs.forEach((api, index) => {
+        if (api && api.url) list.push({ key: 'custom_' + index, name: api.name || '自定义资源' });
     });
-    let allResults = {};
-    let speedResults = {};
+    return list;
+}
 
-    // 对所有源：搜索 + 测速并行执行，渐进式渲染
-    // 与搜索结果页同一套提前退出策略：到点后若已有足够多的源命中，就不再等剩余源
-    let doneCount = 0;
-    await Promise.all(resourceOptions.map(async (opt) => {
-        const queryResult = await new Promise(resolve => {
-            let settled = false;
-            let cutoffTimer = null;
-            const finish = (value) => {
-                if (settled) return;
-                settled = true;
-                if (cutoffTimer) clearTimeout(cutoffTimer);
-                resolve(value);
-            };
-            cutoffTimer = setTimeout(() => {
-                if (doneCount >= SEARCH_EARLY_EXIT_MIN_SOURCES) finish(null);
-            }, SEARCH_EARLY_EXIT_CUTOFF_MS);
-
-            searchByAPIAndKeyWord(opt.key, currentVideoTitle)
-                .then(results => {
-                    if (Array.isArray(results) && results.length > 0) doneCount++;
-                    finish(results);
-                })
-                .catch(() => finish(null));
-        });
-
-        if (!queryResult || queryResult.length === 0) return;
-        let result = queryResult[0];
-        queryResult.forEach((res) => { if (res.vod_name === currentVideoTitle) result = res; });
-        allResults[opt.key] = result;
-
-        // 找到结果后立即并行测速
-        testVideoSourceSpeed(opt.key, result.vod_id).then(speed => {
-            speedResults[opt.key] = speed;
-            renderResourceGrid();
-        });
-
-        // 每次找到新源就立即重新渲染（渐进式）
-        renderResourceGrid();
-    }));
-
-    renderResourceGrid();
-
-    function renderResourceGrid() {
-        if (!allResults || Object.keys(allResults).length === 0) return;
-        const sorted = Object.entries(allResults).sort(([keyA, resultA], [keyB, resultB]) => {
-            const isCurrentA = String(keyA) === String(currentSourceCode) && String(resultA.vod_id) === String(currentVideoId);
-            const isCurrentB = String(keyB) === String(currentSourceCode) && String(resultB.vod_id) === String(currentVideoId);
-            if (isCurrentA && !isCurrentB) return -1;
-            if (!isCurrentA && isCurrentB) return 1;
-            const speedA = speedResults[keyA]?.speed || 99999;
-            const speedB = speedResults[keyB]?.speed || 99999;
-            if (speedA === -1 && speedB !== -1) return 1;
-            if (speedA !== -1 && speedB === -1) return -1;
-            return speedA - speedB;
-        });
-        let html = '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">';
-        for (const [sourceKey, result] of sorted) {
-            if (!result) continue;
-            const isCurrentSource = String(sourceKey) === String(currentSourceCode) && String(result.vod_id) === String(currentVideoId);
-            const sourceName = resourceOptions.find(opt => opt.key === sourceKey)?.name || '未知资源';
-            const spd = speedResults[sourceKey] || {};
-            const speedBadge = spd.speed === undefined
-                ? '<span class="text-yellow-400">测速中...</span>'
-                : formatSpeedDisplay(spd);
-            html += `<div class="relative group ${isCurrentSource ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}" 
-                     ${!isCurrentSource ? `data-action="switch-to-resource" data-key="${sourceKey}" data-vod-id="${result.vod_id}"` : ''}>
-                    <div class="aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 relative">
-                        <img src="${result.vod_pic}" alt="${result.vod_name}" class="w-full h-full object-cover"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNjY2IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgcnk9IjIiPjwvcmVjdD48cGF0aCBkPSJNMjEgMTV2NGEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMnYtNCI+PC9wYXRoPjxwb2x5bGluZSBwb2ludHM9IjE3IDggMTIgMyA3IDgiPjwvcG9seWxpbmU+PHBhdGggZD0iTTEyIDN2MTIiPjwvcGF0aD48L3N2Zz4='">
-                        <div class="absolute top-1 right-1 speed-badge bg-black/75 text-xs px-1.5 py-0.5 rounded">${speedBadge}</div>
-                    </div>
-                    <div class="mt-2">
-                        <div class="text-xs font-medium text-gray-200 truncate">${result.vod_name}</div>
-                        <div class="text-[10px] text-gray-400 truncate">${sourceName}</div>
-                    </div>
-                    ${isCurrentSource ? '<div class="absolute inset-0 flex items-center justify-center"><div class="bg-blue-600/75 rounded-lg px-2 py-0.5 text-xs text-white font-medium">当前播放</div></div>' : ''}
-                </div>`;
-        }
-        html += '</div>';
-        modalContent.innerHTML = html;
+function updateResourceSourceCount() {
+    const el = document.getElementById('resourceSourceCount');
+    if (!el) return;
+    if (!resourceScan.started) {
+        el.textContent = '· 当前集共 ' + getResourceScanSources().length + ' 个来源';
+        return;
     }
-    
+    if (!resourceScan.finished) {
+        el.textContent = '· 已找到 ' + resourceScan.hitCount + ' 个来源，扫描中…';
+        return;
+    }
+    el.textContent = '· 当前集共 ' + resourceScan.hitCount + ' 个来源';
+}
+
+function toggleResourceList() {
+    const section = document.getElementById('resourceSection');
+    if (!section) return;
+    const collapsed = section.classList.toggle('collapsed');
+    if (collapsed) return;
+    startResourceScan();
+}
+
+function startResourceScan() {
+    if (resourceScan.started) return;
+    resourceScan.started = true;
+
+    if (!currentVideoTitle) {
+        const grid = document.getElementById('resourceSourceGrid');
+        if (grid) grid.innerHTML = '<div class="resource-source-hint">未获取到片名，无法扫描线路</div>';
+        resourceScan.finished = true;
+        return;
+    }
+
+    resourceScan.sources = getResourceScanSources();
+    // 扫描过程中保持配置顺序（当前线路置顶），不中途重排，避免条目跳动；
+    // 全部测速结束后再统一按延迟从快到慢排序
+    const currentSourceCode = new URLSearchParams(window.location.search).get('source') || '';
+    const currentIdx = resourceScan.sources.findIndex(src => String(src.key) === String(currentSourceCode));
+    if (currentIdx > 0) resourceScan.sources.unshift(resourceScan.sources.splice(currentIdx, 1)[0]);
+    resourceScan.sources.forEach(src => { resourceScan.status[src.key] = 'untested'; });
+    renderResourceSourceGrid();
+    updateResourceSourceCount();
+
+    // 并发池：固定数量的 worker 从队列里取源，避免一次打满几十个请求
+    const queue = resourceScan.sources.slice();
+    const workers = [];
+    const workerCount = Math.min(RESOURCE_SCAN_CONCURRENCY, queue.length);
+    for (let i = 0; i < workerCount; i++) {
+        workers.push((async () => {
+            let src;
+            while ((src = queue.shift())) {
+                await scanOneResourceSource(src);
+            }
+        })());
+    }
+    Promise.all(workers).then(() => {
+        resourceScan.finished = true;
+        sortResourceSourcesByLatency();
+        renderResourceSourceGrid();
+        updateResourceSourceCount();
+    });
+}
+
+// 全部测速结束后按延迟重排：当前播放的线路固定第一（它不一定是延迟最低的），
+// 其余有结果的按毫秒升序（最快在前），测速失败、无结果的沉到最后
+function sortResourceSourcesByLatency() {
+    const currentSourceCode = new URLSearchParams(window.location.search).get('source') || '';
+    const rank = (src) => {
+        if (String(src.key) === String(currentSourceCode)) return -1;
+        const status = resourceScan.status[src.key];
+        if (status === 'done') return 0;
+        if (status === 'failed') return 1;
+        return 2; // untested / testing / empty
+    };
+    // sort 是稳定排序：同一延迟档内保持原来的配置顺序
+    resourceScan.sources.sort((a, b) => {
+        const rankA = rank(a);
+        const rankB = rank(b);
+        if (rankA !== rankB) return rankA - rankB;
+        const speedA = (resourceScan.latency[a.key] || {}).speed;
+        const speedB = (resourceScan.latency[b.key] || {}).speed;
+        const valueA = typeof speedA === 'number' && speedA >= 0 ? speedA : Number.MAX_SAFE_INTEGER;
+        const valueB = typeof speedB === 'number' && speedB >= 0 ? speedB : Number.MAX_SAFE_INTEGER;
+        return valueA - valueB;
+    });
+}
+
+async function scanOneResourceSource(src) {
+    try {
+        const results = await searchByAPIAndKeyWord(src.key, currentVideoTitle);
+        if (Array.isArray(results) && results.length > 0) {
+            // 优先取片名完全一致的结果，否则退回第一条
+            let hit = results[0];
+            results.forEach(res => { if (res.vod_name === currentVideoTitle) hit = res; });
+
+            resourceScan.results[src.key] = hit;
+            resourceScan.hitCount++;
+            resourceScan.status[src.key] = 'testing';
+            scheduleResourceGridRender();
+            updateResourceSourceCount();
+
+            const speed = await testVideoSourceSpeed(src.key, hit.vod_id);
+            resourceScan.latency[src.key] = speed;
+            resourceScan.status[src.key] = (speed && speed.speed === -1) ? 'failed' : 'done';
+        } else {
+            resourceScan.status[src.key] = 'empty';
+        }
+    } catch (e) {
+        // 单个源失败不影响其它源
+        console.warn('[LeLeTV] 线路扫描失败:', src.key, e);
+        resourceScan.status[src.key] = 'empty';
+    }
+    scheduleResourceGridRender();
+}
+
+// 扫描是渐进式的，用 rAF 合并重绘，避免几十个源完成时反复重建整个列表
+function scheduleResourceGridRender() {
+    if (resourceGridFrame) return;
+    resourceGridFrame = requestAnimationFrame(() => {
+        resourceGridFrame = null;
+        renderResourceSourceGrid();
+    });
+}
+
+function renderResourceLatency(sourceKey) {
+    const status = resourceScan.status[sourceKey];
+    if (status === 'empty') return '<span class="resource-source-latency">无结果</span>';
+    if (status === 'testing') return '<span class="resource-source-latency">测速中</span>';
+    if (status === 'done' || status === 'failed') {
+        const spd = resourceScan.latency[sourceKey] || {};
+        if (spd.speed === -1) {
+            return '<span class="resource-source-latency poor">' + escHtml(spd.error || '失败') + '</span>';
+        }
+        const speed = spd.speed;
+        let level = 'good';
+        if (speed >= SOURCE_LATENCY_SLOW_MS) level = 'poor';
+        else if (speed >= SOURCE_LATENCY_FAST_MS) level = 'medium';
+        return '<span class="resource-source-latency ' + level + '">' + speed + 'ms</span>';
+    }
+    return '<span class="resource-source-latency">未测</span>';
+}
+
+function renderResourceSourceGrid() {
+    const grid = document.getElementById('resourceSourceGrid');
+    if (!grid || !resourceScan.started) return;
+    const currentSourceCode = new URLSearchParams(window.location.search).get('source') || '';
+
+    let html = '';
+    resourceScan.sources.forEach(src => {
+        const result = resourceScan.results[src.key];
+        const isCurrent = String(src.key) === String(currentSourceCode);
+        const classes = ['resource-source-item'];
+        if (!result) classes.push('is-empty');
+        if (isCurrent) classes.push('is-current');
+
+        // 没有结果的和当前正在播的线路都不可点
+        let attrs = '';
+        if (result && !isCurrent) {
+            attrs = ' data-action="switch-to-resource" data-key="' + escHtml(src.key)
+                + '" data-vod-id="' + escHtml(result.vod_id) + '" title="切换到该线路"';
+        } else {
+            attrs = isCurrent ? ' title="当前播放线路"' : '';
+        }
+
+        const remark = (result && result.vod_remarks)
+            ? '<span class="resource-source-remark">' + escHtml(result.vod_remarks) + '</span>'
+            : '';
+
+        html += '<div class="' + classes.join(' ') + '"' + attrs + '>'
+            + '<div class="resource-source-name"><span class="resource-source-title">' + escHtml(src.name) + '</span>' + remark + '</div>'
+            + renderResourceLatency(src.key)
+            + '</div>';
+    });
+    grid.innerHTML = html;
 }
 
 async function switchToResource(sourceKey, vodId) {
-    // 关闭模态框
-    document.getElementById('modal').classList.add('hidden');
-    
     showLoading();
     try {
         // 保存当前播放进度

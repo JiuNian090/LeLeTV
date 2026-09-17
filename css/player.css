@@ -374,7 +374,7 @@ body.fullscreen-active main.container {
 /* 进入原生全屏时：关闭 backdrop-filter，防止 GPU 重绘卡顿 */
 body.native-fs-active .player-detail-info,
 body.native-fs-active .episode-section,
-body.native-fs-active #resourceInfoBarContainer,
+body.native-fs-active #resourceSection,
 body.native-fs-active .control-buttons-container {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -665,66 +665,205 @@ body.native-fs-active .control-buttons-container {
     transform: rotate(-90deg);
 }
 
-/* 资源信息卡片区 */
-/* 资源信息卡片区 - 玻璃效果 */
-#resourceInfoBarContainer {
-    align-items: center;
+/* ==================== 线路切换（折叠面板） ==================== */
+/* 折叠状态的标题：线路切换 · 当前集共 N 个来源；展开后才扫描并列出全部来源。
+   注意：右栏 .player-layout-right 是 flex 列容器，本面板 overflow:hidden 会让
+   min-height 解析为 0，空间不足时会被压成一条（实测 900x800 只剩 2px），
+   因此这里显式 flex-shrink: 0，并把高度上限交给 max-height 控制 */
+.resource-collapse {
+    padding: 0;
+    overflow: hidden;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* 高度自适应视口：矮屏不至于只剩几行，大屏也不会撑出屏幕 */
+    max-height: clamp(240px, 72vh, 640px);
     border-radius: 0.5rem;
-    background: rgba(26,26,26,0.5);
+    background: rgba(26, 26, 26, 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid #2a2a2a;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.resource-info-bar-left {
+/* 折叠时高度只由标题决定 */
+.resource-collapse.collapsed {
+    max-height: none;
+}
+
+.resource-collapse-header {
+    display: flex;
     align-items: center;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #fff;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    min-width: 0;
+}
+
+.resource-collapse-title-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
     flex: 1;
 }
 
-.resource-info-bar-videos {
+.resource-collapse-title {
     font-size: 1rem;
-    font-weight: normal;
-    margin-left: 10px;
-    color: #ccc;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.resource-switch-btn {
+.resource-collapse-count {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.resource-collapse.collapsed .detail-toggle-arrow {
+    transform: rotate(-90deg);
+}
+
+/* 展开时头部与来源列表之间加一条分隔线 */
+.resource-collapse:not(.collapsed) .resource-collapse-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resource-collapse.collapsed .resource-collapse-body {
+    display: none;
+}
+
+.resource-collapse-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.resource-source-grid {
+    display: grid;
+    /* 列宽自适应：右栏最窄（双栏布局下 320px）时也能排下两列，避免单列把列表拉得看不见底 */
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+}
+
+.resource-source-hint {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    padding: 14px 0;
+}
+
+.resource-source-item {
+    display: flex;
     align-items: center;
-    background: none;
-    border: none;
-    color: var(--color-primary-400);
-    font-weight: bold;
-    font-size: 1rem;
-    cursor: pointer;
+    justify-content: space-between;
     gap: 6px;
-    padding: 6px 12px;
-    border-radius: 0.5rem;
-    -webkit-transition: background 0.2s;
-    -moz-transition: background 0.2s;
-    transition: background 0.2s;
+    /* 不换行：延迟徽章固定右侧，资源名过长就省略号，保证每项都是单行 */
+    min-width: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    /* 卡片太窄时按自己宽度做适配（列数随右栏宽度变化，不能只看视口宽度） */
+    container-type: inline-size;
 }
 
-.resource-switch-btn:hover {
-    background: #f5e9d7;
+/* 窄卡片优先保住资源名：先牺牲备注（正片 / HD中字 这类） */
+@container (max-width: 170px) {
+    .resource-source-remark {
+        display: none;
+    }
 }
 
-.resource-switch-btn:active {
-    background: #f5e9d7;
+.resource-source-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-.resource-switch-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 0;
-    color: var(--color-primary-400);
-    vertical-align: middle;
-    -webkit-transition: -webkit-transform 0.3s;
-    -moz-transition: -moz-transform 0.3s;
-    transition: transform 0.3s;
+/* 该源没搜到这个片源：置灰不可点 */
+.resource-source-item.is-empty,
+.resource-source-item.is-empty:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* 当前正在播放的线路：主题色描边 + 淡色底（放在 is-empty 之后，保证当前线路即便没扫到结果也仍然高亮） */
+.resource-source-item.is-current,
+.resource-source-item.is-current:hover {
+    background: var(--color-primary-dim);
+    border: 2px solid var(--color-primary);
+    opacity: 1;
+    cursor: default;
+}
+
+.resource-source-name {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+    font-size: 0.82rem;
+    color: #e5e7eb;
+}
+
+.resource-source-item.is-current .resource-source-name {
+    color: var(--color-primary-300);
+}
+
+.resource-source-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-source-remark {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.resource-source-latency {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    line-height: 1.6;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* 与搜索结果页的源延迟标注保持同一套配色（快/中/慢） */
+.resource-source-latency.good {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+}
+
+.resource-source-latency.medium {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.resource-source-latency.poor {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.12);
 }
 
 /* 响应式样式优化 */
@@ -1137,57 +1276,6 @@ main.container {
         max-height: 45vh;
         overflow-y: auto;
     }
-}
-
-/* ==================== 资源速率测试相关样式 ==================== */
-.speed-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 10px;
-    font-weight: 500;
-    line-height: 1;
-}
-
-/* 与搜索结果页的源延迟标注保持同一套配色（快/中/慢） */
-.speed-indicator.good {
-    color: #4ade80;
-}
-
-.speed-indicator.medium {
-    color: #fbbf24;
-}
-
-.speed-indicator.poor {
-    color: #f87171;
-}
-
-.speed-indicator.error {
-    color: #f87171;
-}
-
-.speed-badge {
-    backdrop-filter: blur(4px);
-    font-size: 9px;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-    border-radius: 4px;
-    padding: 2px 4px;
-}
-
-/* 资源卡片悬停效果增强 */
-.resource-card {
-    transition: all 0.2s ease;
-}
-
-.resource-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.resource-card.current {
-    border: 1px solid var(--color-primary);
-    box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb), 0.3);
 }
 
 /* 控制栏收起状态：隐藏 ArtPlayer 底部控件 + 进度条 + 返回按钮 */

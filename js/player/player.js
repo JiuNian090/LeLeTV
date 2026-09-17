@@ -421,7 +421,6 @@ function initializePageContent() {
             case 'toggle-episodes': toggleEpisodeSection(); break;
             case 'toggle-episode-order': e.stopPropagation(); toggleEpisodeOrder(); break;
             case 'copy-links': copyLinks(); break;
-            case 'close-modal': closeModal(); break;
             // ---- onclick→data-action 迁移新增 ----
             case 'play-episode': playEpisode(parseInt(el.dataset.index)); break;
             case 'play-video': {
@@ -433,7 +432,7 @@ function initializePageContent() {
                 if (url && name) playVideo(url, name, source, index, vodId);
                 break;
             }
-            case 'show-switch-resource': showSwitchResourceModal(); break;
+            case 'toggle-resource-list': toggleResourceList(); break;
             case 'switch-to-resource': switchToResource(el.dataset.key, el.dataset.vodId); break;
         }
     });
