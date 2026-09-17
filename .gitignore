@@ -39,7 +39,10 @@ apikey/
 # AI tools generated files
 .claude/
 .codegraph/
+.gitnexus/
 .reasonix/
+.zcode/
+reasonix.toml
 AGENTS.md
 CLAUDE.md
 
@@ -49,7 +52,6 @@ CLAUDE.md
 .env.development.local
 .env.test.local
 .env.production.local
-.env.example
 .env.production
 *.local
 
@@ -108,14 +110,12 @@ pnpm-lock.yaml
 .storybook-out
 storybook-static
 
-# Generated build artifacts
-VERSION.txt
-
 # Deployment platforms
 .netlify
 .vercel
 
-# skills
+# skills（docs/ 下仅 VERSION_RULES.md 纳入版本控制）
 .agents/
 skills-lock.json
-docs/
+docs/*
+!docs/VERSION_RULES.md

@@ -519,7 +519,7 @@ npx gitnexus query "搜索流程"
 npx gitnexus detect_changes
 ```
 
-相关说明文件：`AGENTS.md`、`CLAUDE.md`、`CODE_WIKI.md`，以及 `.claude/skills/gitnexus/`、`.agents/skills/`、`.agents/rules/` 下的技能与规则。
+相关说明文件：`AGENTS.md`、`CLAUDE.md`，以及 `.claude/skills/gitnexus/`、`.agents/skills/`、`.agents/rules/` 下的技能与规则。
 
 ## 📄 免责声明
 
