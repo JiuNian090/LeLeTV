@@ -1293,6 +1293,14 @@ button.mini{padding:4px 10px;font-size:11px;margin-left:auto}
 .dot.unknown{background:#6b7280;box-shadow:0 0 8px rgba(107,114,128,.3)}
 input[type=password]{width:100%;background:#1a1a1f;border:1px solid #2a2a30;border-radius:8px;color:#e0e0e0;padding:10px 12px;font-size:13px;font-family:inherit;transition:border-color .2s}
 input[type=password]:focus{outline:none;border-color:#ec4899}
+.count{margin-left:auto;font-size:11px;color:#555;font-weight:400;letter-spacing:0;text-transform:none}
+.icon-btn{width:26px;height:26px;padding:0;border-radius:50%;font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;background:#ec4899;border:1px solid #ec4899;color:#fff}
+.icon-btn:hover{background:#db2777;border-color:#db2777;color:#fff}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal.hidden{display:none}
+.modal-mask{position:absolute;inset:0;background:rgba(0,0,0,.66)}
+.modal-card{position:relative;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;background:#16161a;border:1px solid #2a2a30;border-radius:12px;padding:26px 24px;box-shadow:0 18px 48px rgba(0,0,0,.55)}
+.modal-card h2{margin-bottom:18px}
 .footer{margin-top:22px;text-align:center;font-size:11px;color:#444}
 </style>
 </head>
@@ -1327,8 +1335,22 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
 <div class="stat-grid" id="statGrid"></div>
 </div>
 
+<!-- 数据源统一板块：统计 / 列表 / 状态消息都在这里，新增与编辑走弹窗 -->
 <div class="block">
-<h2 id="formTitle">新增数据源</h2>
+<h2>数据源管理<span class="count" id="siteCount"></span><button class="icon-btn" id="addSiteBtn" title="新增数据源" aria-label="新增数据源">+</button></h2>
+<div id="list"><div class="empty">加载中…</div></div>
+<div class="msg" id="msg"></div>
+</div>
+</div>
+
+<div class="footer">Powered by Cloudflare Workers · D1</div>
+</div>
+
+<!-- 新增 / 编辑数据源弹窗 -->
+<div class="modal hidden" id="siteModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modal-mask" data-close="1"></div>
+<div class="modal-card">
+<h2 id="modalTitle">新增数据源</h2>
 <div class="grid">
 <div class="field">
 <label>显示名称</label>
@@ -1349,19 +1371,11 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
 </div>
 <label class="check"><input type="checkbox" id="fHidden"> 私密源（18+，仅隐藏内容模式可见，不通过公开接口下发）</label>
 <div class="actions">
-<button id="fReset">清空表单</button>
-<button class="primary" id="fSubmit">保存</button>
+<button id="modalCancel">取消</button>
+<button class="primary" id="modalSave">保存</button>
 </div>
-<div class="msg" id="msg"></div>
+<div class="msg" id="modalMsg"></div>
 </div>
-
-<div class="block">
-<h2>已配置的数据源</h2>
-<div id="list"><div class="empty">加载中…</div></div>
-</div>
-</div>
-
-<div class="footer">Powered by Cloudflare Workers · D1</div>
 </div>
 <script>
 (function () {
@@ -1378,17 +1392,23 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
   var statGrid = document.getElementById('statGrid');
   var listEl = document.getElementById('list');
   var msgEl = document.getElementById('msg');
-  var fId = '';
   var fName = document.getElementById('fName');
   var fKey = document.getElementById('fKey');
   var fApi = document.getElementById('fApi');
   var fDetail = document.getElementById('fDetail');
   var fHidden = document.getElementById('fHidden');
-  var formTitle = document.getElementById('formTitle');
-  var submitBtn = document.getElementById('fSubmit');
-  var resetBtn = document.getElementById('fReset');
+  var siteCount = document.getElementById('siteCount');
+  var addSiteBtn = document.getElementById('addSiteBtn');
+  var modalEl = document.getElementById('siteModal');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalMsg = document.getElementById('modalMsg');
+  var modalSave = document.getElementById('modalSave');
+  var modalCancel = document.getElementById('modalCancel');
   var allSites = [];
   var token = '';
+  var editingId = 0;
+  var saving = false;
+  var lastFocus = null;
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1434,7 +1454,75 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
     });
   }
 
+  // ===== 新增 / 编辑弹窗 =====
+
+  function isModalOpen() {
+    return modalEl.className.indexOf('hidden') === -1;
+  }
+
+  function openModal(site) {
+    editingId = site ? site.id : 0;
+    fName.value = site ? site.name : '';
+    fKey.value = site ? site.key : '';
+    fKey.disabled = !!site;
+    fApi.value = site ? site.api : '';
+    fDetail.value = (site && site.detail) ? site.detail : '';
+    fHidden.checked = !!(site && site.hidden);
+    modalTitle.textContent = site ? '编辑数据源' : '新增数据源';
+    saving = false;
+    modalSave.disabled = false;
+    say(modalMsg, site ? 'key 创建后不可修改；要换 key 请新增一条并删除旧条' : '');
+    lastFocus = document.activeElement;
+    modalEl.className = 'modal';
+    if (!site) setTimeout(function () { fName.focus(); }, 60);
+  }
+
+  function closeModal() {
+    if (!isModalOpen()) return;
+    modalEl.className = 'modal hidden';
+    say(modalMsg, '');
+    // 关闭后把焦点还给触发按钮，键盘操作不至于丢失位置
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+    lastFocus = null;
+  }
+
+  function saveSite() {
+    if (saving) return;
+    var payload = {
+      id: editingId || 0,
+      name: fName.value.trim(),
+      api: fApi.value.trim(),
+      detail: fDetail.value.trim(),
+      hidden: fHidden.checked,
+      key: fKey.value.trim().toLowerCase()
+    };
+    if (!payload.name || !payload.api) {
+      say(modalMsg, '名称和 API 地址不能为空', 'err');
+      return;
+    }
+    saving = true;
+    modalSave.disabled = true;
+    say(modalMsg, '保存中…');
+    call('/admin/api-sites/save', payload).then(function (res) {
+      saving = false;
+      modalSave.disabled = false;
+      if (!res.ok) {
+        say(modalMsg, res.error || '保存失败', 'err');
+        return;
+      }
+      closeModal();
+      say(msgEl, '已保存：' + payload.name, 'ok');
+      loadSites();
+      loadStatus();
+    }).catch(function () {
+      saving = false;
+      modalSave.disabled = false;
+      say(modalMsg, '网络错误', 'err');
+    });
+  }
+
   function showLogin(message, isError) {
+    closeModal();
     mainView.className = 'hidden';
     loginView.className = '';
     loginBtn.disabled = false;
@@ -1471,21 +1559,12 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
     });
   }
 
-  function resetForm() {
-    fId = '';
-    fName.value = '';
-    fKey.value = '';
-    fApi.value = '';
-    fDetail.value = '';
-    fHidden.checked = false;
-    fKey.disabled = false;
-    formTitle.textContent = '新增数据源';
-  }
-
   function render(sites) {
     allSites = sites;
+    var enabledCount = sites.filter(function (s) { return s.enabled; }).length;
+    siteCount.textContent = sites.length ? ('共 ' + sites.length + ' 个 · ' + enabledCount + ' 启用') : '';
     if (!sites.length) {
-      listEl.innerHTML = '<div class="empty">还没有配置任何数据源</div>';
+      listEl.innerHTML = '<div class="empty">还没有配置数据源，点右上角「+」添加</div>';
       return;
     }
     listEl.innerHTML = sites.map(function (s) {
@@ -1559,40 +1638,31 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
     allSites = [];
     listEl.innerHTML = '';
     statGrid.innerHTML = '';
+    siteCount.textContent = '';
     showLogin('已退出登录', false);
   });
 
-  resetBtn.addEventListener('click', function () {
-    resetForm();
-    say(msgEl, '');
+  // 「+」打开新增弹窗；列表里的「编辑」复用同一个弹窗
+  addSiteBtn.addEventListener('click', function () {
+    openModal(null);
+  });
+  modalCancel.addEventListener('click', closeModal);
+  modalSave.addEventListener('click', saveSite);
+
+  // 点遮罩关闭（遮罩带 data-close，卡片内部点击不会冒泡到这里关闭）
+  modalEl.addEventListener('click', function (e) {
+    if (e.target && e.target.getAttribute('data-close') === '1') closeModal();
   });
 
-  submitBtn.addEventListener('click', function () {
-    var payload = {
-      id: fId ? parseInt(fId, 10) : 0,
-      name: fName.value.trim(),
-      api: fApi.value.trim(),
-      detail: fDetail.value.trim(),
-      hidden: fHidden.checked,
-      key: fKey.value.trim().toLowerCase()
-    };
-    if (!payload.name || !payload.api) {
-      say(msgEl, '名称和 API 地址不能为空', 'err');
-      return;
-    }
-    say(msgEl, '保存中…');
-    call('/admin/api-sites/save', payload).then(function (res) {
-      if (!res.ok) {
-        say(msgEl, res.error || '保存失败', 'err');
-        return;
-      }
-      say(msgEl, '已保存：' + payload.name, 'ok');
-      resetForm();
-      loadSites();
-      loadStatus();
-    }).catch(function () {
-      say(msgEl, '网络错误', 'err');
-    });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  fName.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') fApi.focus();
+  });
+  fApi.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') saveSite();
   });
 
   listEl.addEventListener('click', function (e) {
@@ -1604,16 +1674,7 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
     if (act === 'edit') {
       var found = allSites.filter(function (s) { return s.id === id; })[0];
       if (!found) return;
-      fId = String(found.id);
-      fName.value = found.name;
-      fKey.value = found.key;
-      fKey.disabled = true;
-      fApi.value = found.api;
-      fDetail.value = found.detail || '';
-      fHidden.checked = !!found.hidden;
-      formTitle.textContent = '编辑数据源：' + found.name;
-      say(msgEl, 'key 创建后不可修改；要换 key 请新增一条并删除旧条');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      openModal(found);
       return;
     }
 
