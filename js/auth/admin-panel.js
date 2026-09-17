@@ -132,6 +132,10 @@ const INVITE_ADMIN_PANEL = {
   },
 
   async render(container) {
+    // 上一次渲染时弹窗被挂到了 body 下（见 _mountGenModal），重建前先移除，避免残留多个 #inviteGenModal
+    const staleGenModal = document.getElementById('inviteGenModal');
+    if (staleGenModal) staleGenModal.remove();
+
     container.innerHTML = `
       <div class="dash-card">
         <div class="dash-card-header">
@@ -190,8 +194,23 @@ const INVITE_ADMIN_PANEL = {
     modalInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this._confirmGenerate(container);
     });
-    
+
+    // 事件绑定完成后再把弹窗挪到 body 下（见 _mountGenModal 注释）
+    this._mountGenModal(container);
+
     this._refresh(container);
+  },
+
+  /**
+   * 生成弹窗必须挂在 document.body 下：
+   * 设置页容器 .page-content.active 带 transform: translateY(0)，会让内部
+   * position: fixed 的包含块变成整个页面内容（而不是视口），弹窗就会跑到长页面正中，
+   * 需要往上翻才能看到。挂到 body 后与 ui-core 的 showModal 行为一致。
+   * 注意：必须在事件绑定之后调用，否则 container.querySelector 找不到弹窗内元素。
+   */
+  _mountGenModal(container) {
+    const modal = container.querySelector('#inviteGenModal');
+    if (modal) document.body.appendChild(modal);
   },
   
   _openGenModal() {
