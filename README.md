@@ -28,13 +28,13 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 指标 | 数据 |
 |------|------|
-| JS 模块 | 42 个手写模块（`js/` 下 8 个子目录） |
+| JS 模块 | 43 个手写模块（`js/` 下 8 个子目录） |
 | 第三方库 | 4 个（`libs/`：ArtPlayer / HLS.js / marked / sha256） |
 | 样式 | 5 个手写 CSS + Tailwind 编译输出（`css/output.css`） |
 | 构建产物 | 3 个 esbuild bundle（core / app / player，带内容哈希） |
-| 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源 |
-| 页面 | `index.html`（SPA，1415 行）+ `player.html`（独立播放页，319 行） |
-| 数据库 | Cloudflare D1（`invitation_codes` + `devices`） |
+| 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
+| 页面 | `index.html`（SPA，1548 行）+ `player.html`（独立播放页，301 行） |
+| 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
 | 代码图谱 | CodeGraph 1,232 节点 / 5,840 边 · GitNexus 2,346 符号 / 207 执行流 |
 
 ## ⚠️ 重要声明
@@ -85,6 +85,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 ### 数据源与缓存
 - 设置页可勾选/重置/导入/导出数据源配置，最多添加 5 个自定义采集站
+- 云端数据源：采集源存放在 D1，可在 `/admin` 面板在线增删改，前端启动时自动同步并缓存；内置源始终兜底
 - 智能缓存管理：24 小时清理临时数据，保护用户设置与历史
 - PWA 可安装（`standalone` + `window-controls-overlay`）
 - 版本更新自动检测，提示后重载生效
@@ -139,9 +140,11 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | `js/auth/invite-auth.js` | 指纹生成、验证、心跳、登录状态、管理员 token 计算 |
 | `js/auth/admin-panel.js` | 管理员面板：生成/启停/删除邀请码、统计、备注、设备管理 |
 | `js/auth/user-devices.js` | 普通用户设备面板：查看邀请码与设备、重命名、剔除设备 |
-| `workers/tmdb-worker.js` | Worker 端 `/invite/*` API（verify / heartbeat / generate / list / toggle / stats / my-devices / remove-device / set-remark / rename-device / delete-code） |
+| `workers/tmdb-worker.js` | Worker 端 `/invite/*` API（verify / heartbeat / generate / list / toggle / stats / my-devices / remove-device / set-remark / rename-device / delete-code）、`/api-sites` 数据源下发、`/admin` 管理面板 |
 | `migrations/001_create_tables.sql` | D1 表结构（`invitation_codes` + `devices`） |
 | `migrations/002_add_remark.sql` | 邀请码备注字段 |
+| `migrations/003_add_device_signature.sql` | 设备签名字段（同型号设备区分） |
+| `migrations/004_add_api_sites.sql` | 云端数据源表 `api_sites`（源名称、接口、私密、启停、排序） |
 
 > 本地开发无需自建邀请码服务：`server.mjs` 只提供静态资源、视频代理与 TMDB 代理，邀请码相关请求统一由 `.env` 中的 `TMDB_WORKER_URL` 指向的线上 Worker 处理。
 
@@ -191,14 +194,17 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     ├── Cloudflare Pages ─────────── 静态资源（HTML / CSS / JS / 图片）
     │       ├── Pages Functions ──── HTML 注入（HIDDENKEY 哈希、Worker 地址、版本号）
     │       ├── Pages Functions ──── 视频/图片代理（/proxy/*，鉴权 + 内容类型白名单 + 缓存）
-    │       └── Cloudflare D1 ───── 邀请码数据库（经 Worker 访问）
+    │       └── Cloudflare D1 ───── 邀请码 + 数据源配置（经 Worker 访问）
     │               ├── invitation_codes ── 邀请码、状态、备注、设备上限
-    │               └── devices ─────────── 指纹、设备名、浏览器、IP、活跃时间
+    │               ├── devices ─────────── 指纹、设备名、浏览器、IP、活跃时间
+    │               └── api_sites ───────── 云端采集源配置（名称、接口、私密、启停、排序）
     │
-    ├── Cloudflare Worker ────────── TMDB 代理 + 邀请码 API
+    ├── Cloudflare Worker ────────── TMDB 代理 + 邀请码 API + 数据源下发
     │       ├── TMDB API v3（首页/分类/详情边缘缓存 24h，搜索缓存 1h）
     │       ├── GET / ────────────── 部署状态控制台（自检密钥与绑定）
-    │       └── /invite/* ────────── 邀请码 API 路由
+    │       ├── /invite/* ────────── 邀请码 API 路由
+    │       ├── /api-sites ───────── 云端数据源下发（私密源走 /api-sites/hidden）
+    │       └── /admin ───────────── 数据源管理面板（登录后在线增删改查）
     │
     └── 第三方采集站 API ─────────── 视频搜索与播放源（经 Functions 代理）
 ```
@@ -208,7 +214,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 ```
 用户浏览器
     │
-    ├── Node.js + Express（server.mjs，401 行）
+    ├── Node.js + Express（server.mjs，360 行）
     │       ├── express.static ───── 静态资源
     │       ├── GET / ────────────── HTML 注入（版本号、Worker 地址等）
     │       ├── GET /s=:keyword ──── 搜索直达路由
@@ -232,7 +238,7 @@ npm run build
 
 | Bundle | 内容 | 引用方 |
 |--------|------|--------|
-| `leletv-core.*.js` | `js/core`、`js/auth`、`js/ui/ui-core.js` | `index.html` + `player.html` |
+| `leletv-core.*.js` | `js/core`、`js/api/remote-sources.js`、`js/auth`、`js/ui/ui-core.js` | `index.html` + `player.html` |
 | `leletv-app.*.js` | `js/api`、`js/ui`、`js/app`、`js/effects`、`js/utils` | `index.html` |
 | `leletv-player.*.js` | `js/player` + 播放页所需的 api/ui 模块 | `player.html` |
 
@@ -269,9 +275,9 @@ LeLeTV/
 │   ├── player.css              #   播放器样式
 │   ├── tailwind.css            #   Tailwind 入口
 │   └── output.css              #   Tailwind 编译输出
-├── js/                         # 42 个手写模块
+├── js/                         # 43 个手写模块
 │   ├── core/                   #   全局配置、存储、监听器追踪、时序工具
-│   ├── api/                    #   采集站 API、负载均衡、搜索、TMDB
+│   ├── api/                    #   采集站 API、负载均衡、搜索、TMDB、远端数据源同步
 │   ├── auth/                   #   邀请码验证、管理员面板、设备管理
 │   ├── player/                 #   播放器核心与 UI、剧集、清晰度、详情、快捷键
 │   ├── ui/                     #   搜索结果卡片、分类页、历史、Toast、主题系统
@@ -284,8 +290,8 @@ LeLeTV/
 │   ├── _middleware.js          #   HTML 注入
 │   └── proxy/[[path]].js       #   视频/图片代理
 ├── workers/
-│   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API
-├── migrations/                 # D1 迁移脚本
+│   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API + 数据源下发 + /admin 面板
+├── migrations/                 # D1 迁移脚本（001 表结构 → 004 数据源表）
 ├── scripts/                    # 版本生成、打包、钩子安装脚本
 ├── image/                      # Logo 与占位图
 ├── docs/                       # 版本规则等文档
@@ -358,7 +364,7 @@ npm run dev
 ### 第二步（可选）：创建 D1 数据库
 
 1. Cloudflare Dashboard → **Workers & Pages** → **D1** → **创建数据库**（例如 `leletv-invite-db`）
-2. 在 D1 控制台依次执行 `migrations/001_create_tables.sql`、`migrations/002_add_remark.sql`
+2. 在 D1 控制台按顺序执行 `migrations/` 下的脚本：`001_create_tables.sql`、`002_add_remark.sql`、`003_add_device_signature.sql`、`004_add_api_sites.sql`（`004` 为云端数据源表，未执行时前端自动回退内置源）
 3. 回到 Worker → **设置** → **绑定** → 添加 D1 绑定，**变量名填 `INVITE_DB`**
 4. 在 `wrangler.toml` 中补上对应的 `[[d1_databases]]` 配置后重新部署
 
@@ -404,6 +410,8 @@ npm run dev
 | `ADMINKEY` | 是 | 管理员登录邀请码（加密） |
 | `HIDDENKEY` | 否 | 私密内容过滤密码（加密） |
 | `INVITE_DB` | 是 | D1 数据库绑定名 |
+
+> `ADMINUSER` / `ADMINKEY` 同时用于 Worker `/admin` 数据源管理面板的登录鉴权。
 
 ### Pages Functions（生产）
 
@@ -455,12 +463,13 @@ npm run dev
 | 搜索历史 | localStorage | 2 个月 |
 | 观看历史 | localStorage | 永久（最多 50 条） |
 | 负载均衡统计 | localStorage | 永久 |
+| 云端数据源配置 | localStorage | 保留上次成功拉取的结果（首屏先用缓存，随后后台同步最新） |
 | 临时播放进度 | localStorage | 24 小时自动清理 |
 | TMDB 边缘缓存 | Cloudflare 边缘 | 首页/分类/详情 24h，搜索 1h |
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v3.5.9`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v3.6.0`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -472,6 +481,11 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v3.6.0 (2026-09-17)
+- 🎉 新增 数据源支持云端统一管理，采集源可远程下发，调整时无需重新部署
+- 🎉 新增 管理面板支持在线增删改数据源，新增与编辑改为弹窗操作
+- ✨ 优化 页面优先读取本地缓存的数据源配置，打开速度更快
+
 ### v3.5.9 (2026-09-17)
 - 🔧 修复 设备登录后可能被误判为已移除、导致无法进入网站的问题
 - 🔧 修复 管理端移除设备、停用或删除邀请码时偶发提示失败的问题
@@ -480,11 +494,6 @@ npm run dev
 - 🎉 新增 关于页新增「提交反馈」入口，可直接提交问题与建议
 - 🎨 样式 启动加载页改用纯样式绘制，等待时不再白屏闪烁
 - ✨ 优化 设备被移除后自动退出登录，不再残留无效的登录状态
-
-### v3.5.7 (2026-09-16)
-- 🎉 新增 首屏加载缓慢时可主动跳过等待，直接进入网站
-- ✨ 优化 首屏打开速度大幅提升，非必要内容延后加载
-- ✨ 优化 项目说明页内容本地缓存，二次打开加载更快
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
