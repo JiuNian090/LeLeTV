@@ -872,10 +872,13 @@ function generateApiSiteKey() {
   return 'remote_' + Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** 数据库行 → 前端 API_SITES 的条目结构（detail/hidden 为空时不输出，与内置源写法一致） */
+/**
+ * 数据库行 → 前端 API_SITES 的条目结构。
+ * detail 始终输出（空串代表「明确清空」）：前端按字段级合并，只有远端明确给出的字段才覆盖内置源。
+ * hidden 只在不为空时输出，避免远端普通源把内置私密源的 hidden 冲掉。
+ */
 function apiSiteRowToEntry(row) {
-  const entry = { api: row.api, name: row.name };
-  if (row.detail) entry.detail = row.detail;
+  const entry = { api: row.api, name: row.name, detail: row.detail || '' };
   if (row.hidden) entry.hidden = true;
   return entry;
 }
@@ -896,6 +899,23 @@ function buildApiSitesVersion(rows) {
     if (t > max) max = t;
   }
   return `${max}-${(rows || []).length}`;
+}
+
+/**
+ * 写接口鉴权：只认「登录换来的 token」（ADMINKEY::ADMINUSER 的 SHA-256）。
+ *
+ * 页面上公开的 window.__ENV__.HIDDENKEY（= sha256(HIDDENKEY)）虽然也能通过 verifyAdminPassword，
+ * 但它被 functions/_middleware.js 注入到每个访客的 HTML 里，等同于公开值 —— 所以绝不允许用它改配置。
+ * 读接口仍走 verifyAdminRequest（公开 hash 也要能拉取私密源）。
+ */
+async function verifyAdminWrite(request, env, url) {
+  const expected = await adminToken(env);
+  if (!expected) return false;
+
+  const authHeader = request.headers.get('Authorization') || '';
+  let token = authHeader.replace('Bearer ', '').trim();
+  if (!token) token = url.searchParams.get('key') || '';
+  return token === expected;
 }
 
 /** 管理员鉴权：Authorization 头优先，其次 ?key=（面板页面用），两者都是同一个 token */
@@ -1717,7 +1737,12 @@ async function handleApiSitesRequest(request, env, ctx, url) {
       if (request.method !== allowedMethod) {
         return jsonResponse({ ok: false, error: '不支持的请求方法' }, 405);
       }
-      if (!await verifyAdminRequest(request, env, url)) {
+      // 读接口接受两种 token（页面上公开的 HIDDENKEY hash 也要能拉取私密源）；
+      // 写接口只认登录换来的 token，否则任何访客都能用页面里的公开 hash 改数据源配置
+      const authed = allowedMethod === 'POST'
+        ? await verifyAdminWrite(request, env, url)
+        : await verifyAdminRequest(request, env, url);
+      if (!authed) {
         return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
       }
       if (path === '/admin/status') return await handleAdminStatus(env);

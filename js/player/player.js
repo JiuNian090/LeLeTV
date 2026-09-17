@@ -180,6 +180,11 @@ async function fetchTmdbPlayerDetail(title) {
 
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
+    // 远端数据源：播放页只用本地缓存同步合并，不发起网络请求。
+    // 首页已经负责拉取并写缓存；播放页为首屏速度让路（尤其从收藏直接打开播放页时）。
+    if (typeof window.applyRemoteApiSitesFromCache === 'function') {
+        window.applyRemoteApiSitesFromCache();
+    }
     initializePageContent();
 });
 

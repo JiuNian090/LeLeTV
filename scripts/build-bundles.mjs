@@ -17,7 +17,10 @@ console.log('[build] version:', version);
 const CORE = {
   name: 'leletv-core',
   files: [
-    'js/core/config.js', 'js/core/leletv-global.js', 'js/core/storage-service.js',
+    // remote-sources 必须排在 config.js 之后（依赖 API_SITES / extendAPISites / isHiddenContentMode），
+    // 且要在 app.js 与 player.js 之前（两个页面启动时都会调用它）
+    'js/core/config.js', 'js/api/remote-sources.js',
+    'js/core/leletv-global.js', 'js/core/storage-service.js',
     'js/core/listener-tracker.js', 'js/core/timing.js',
     'js/auth/proxy-auth.js', 'js/auth/password.js', 'js/auth/invite-auth.js',
     'js/ui/ui-core.js',

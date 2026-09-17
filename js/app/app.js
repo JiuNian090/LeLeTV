@@ -27,6 +27,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // 检测是否在主页面（搜索输入框是否存在），播放页忽略此初始化
     if (!document.getElementById('searchInput')) return;
 
+    // 远端数据源：先同步套用上次拉取的缓存（不发请求、不阻塞首屏）。
+    // 必须排在 getRandomDataSources / initAPICheckboxes 之前，否则域内随机选源看不到远端源
+    if (typeof window.applyRemoteApiSitesFromCache === 'function') {
+        window.applyRemoteApiSitesFromCache();
+    }
+
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
     if (!localStorage.getItem('hasInitializedDefaults')) {
         // 首次初始化：从当前数据域随机选 5 个源
@@ -79,7 +85,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 初始检查隐藏API选中状态
     setTimeout(checkHiddenAPIsSelected, TIMING.FOCUS_DELAY);
+
+    // 后台拉取最新远端数据源。此时已过 __LELETV_BOOT_READY__（首屏就绪点），
+    // 网络再慢也不拖慢启动；只有列表真的变化时才重建设置页的复选框
+    if (typeof window.syncRemoteApiSites === 'function') {
+        window.syncRemoteApiSites().then(function (changed) {
+            if (changed && changed.length && typeof window.__LELETV_REFRESH_API_CHECKBOXES__ === 'function') {
+                window.__LELETV_REFRESH_API_CHECKBOXES__();
+            }
+        });
+    }
 });
+
+// 远端数据源有变化时刷新设置页的源列表。
+// initAPICheckboxes 是整体重建（内部含域内随机选源逻辑，重复调用安全），
+// 抽成具名函数是为了让「后台拉取完成」这一时机能主动刷新一次。
+window.__LELETV_REFRESH_API_CHECKBOXES__ = function () {
+    if (!document.getElementById('apiCheckboxes')) return;
+    try {
+        initAPICheckboxes();
+        updateSelectedApiCount();
+        checkHiddenAPIsSelected();
+    } catch (e) {
+        console.warn('刷新数据源列表失败:', e);
+    }
+};
 
 // bfcache 恢复（从播放页返回）：按 hash 恢复来源页并重新加载其数据
 window.addEventListener('pageshow', function (e) {
