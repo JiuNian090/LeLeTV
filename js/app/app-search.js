@@ -219,6 +219,9 @@ function setupEventListeners() {
     // 搜索历史下拉：输入时过滤（移动端用覆盖层，不显示桌面下拉）
     searchInput.addEventListener('input', function (e) {
         syncSearchClearButtons();
+        // 输入框被清空：顺手清掉 URL 里的搜索残留，
+        // 否则刷新时首页初始化会把上次的关键词当直链再搜一遍
+        if (!this.value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
         if (!_searchReady) return;
         if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
@@ -235,6 +238,7 @@ function setupEventListeners() {
             searchInput.value = '';
             searchInput.focus();
             syncSearchClearButtons();
+            if (typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
             showSearchHistory('');
         });
     }
@@ -333,6 +337,8 @@ function setupEventListeners() {
 
         mobileSearchInput.addEventListener('input', function (e) {
             syncSearchClearButtons();
+            // 清空后同样清掉 URL 搜索残留（与桌面一致，避免刷新重放上次搜索）
+            if (!this.value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
             if (mobileComposing || e.isComposing) return;
             renderMobileSearchHistory(this.value);
         });
@@ -355,6 +361,7 @@ function setupEventListeners() {
                 mobileSearchInput.value = '';
                 mobileSearchInput.focus();
                 syncSearchClearButtons();
+                if (typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
                 renderMobileSearchHistory('');
             });
         }

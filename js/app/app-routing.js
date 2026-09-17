@@ -767,6 +767,8 @@ function isCategoryPageBlocked(n) {
 function switchPage(a) {
   // 任何入口（导航按钮、switch-to-category 动作、影片页返回）都回落到首页
   if (isCategoryPageBlocked(a)) a = 'home';
+  // 离开搜索状态时清掉 URL 里的搜索残留，避免刷新后重放上次搜索
+  if (typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl(a);
   var h = a === 'home' ? '' : '#' + a;
   if (location.hash !== h) location.hash = h; else showPage(a);
 }
@@ -802,7 +804,29 @@ function seedCategoryFiltersFromPrefs() {
   } catch (e) { /* 忽略 */ }
 }
 
-function handleHashChange() { showPage(location.hash.slice(1) || 'home'); }
+// 清掉 URL 里的搜索残留（/s=关键词 路径 或 ?s=关键词 查询串），只保留当前页 hash。
+// 搜索状态只由结果页（#movies）持有：用户切到别的页面后刷新，不该再把上次搜索词当直链重搜一遍。
+// 初始化路径不调用本函数，因此 /s=关键词 直链（分享链接）仍能自动搜索。
+function clearSearchResidueFromUrl(targetPage) {
+  try {
+    var page = typeof targetPage === 'string' ? targetPage : (location.hash.slice(1) || 'home');
+    if (page === 'movies') return;
+    var path = location.pathname || '/';
+    var params = new URLSearchParams(location.search || '');
+    var hasSRoute = path.indexOf('/s=') === 0;
+    var hasSQuery = params.has('s');
+    if (!hasSRoute && !hasSQuery) return;
+    if (hasSQuery) params.delete('s');
+    var qs = params.toString();
+    history.replaceState(null, '', '/' + (qs ? '?' + qs : '') + (location.hash || ''));
+  } catch (e) { /* 隐私模式等场景忽略：只影响 URL 是否残留搜索词 */ }
+}
+
+function handleHashChange() {
+  var page = location.hash.slice(1) || 'home';
+  clearSearchResidueFromUrl(page);
+  showPage(page);
+}
 
 function showPage(n) {
   // 私密模式下分类页不可达：hash 直达或重载落点落在分类页时回落首页（不加载 TMDB 分类数据）
