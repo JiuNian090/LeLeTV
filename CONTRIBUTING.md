@@ -13,22 +13,31 @@
 
 ## 🔒 安全提示
 
-所有部署都必须设置 `PASSWORD` 环境变量，确保项目的私有性和安全性。
+访问控制由**邀请码验证系统**承担，密钥一律在 Cloudflare Worker 端通过环境变量配置，禁止写进源码。
 
-您还可以设置 `ADMINPASSWORD` 环境变量来启用隐藏内容过滤功能的管理权限。
+- `ADMINUSER` + `ADMINKEY`：管理员账号，用于生成与管理邀请码
+- `HIDDENKEY`：隐藏内容模式的管理密钥
+
+详见 [README 的邀请码验证系统章节](README.md#-邀请码验证系统)。
 
 ## ⚙️ 环境变量配置
 
+本地开发（`.env`，模板见 `.env.example`）：
+
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
-| `PASSWORD` | 是 | 用户访问密码，必须设置 |
-| `ADMINPASSWORD` | 否 | 管理员密码，用于管理隐藏内容过滤功能 |
-| `PORT` | 否 | 服务器端口，默认为 8080 |
+| `TMDB_WORKER_URL` | 是 | Cloudflare Worker 地址，TMDB 请求与邀请码验证都走它 |
+| `TMDB_API_KEY` | 否 | TMDB API 密钥，仅在本地直连 TMDB 时需要 |
+| `PORT` | 否 | 本地服务器端口，默认为 8080 |
+| `HIDDENKEY` | 否 | 隐藏内容模式的管理密钥（本地调试用） |
 | `CORS_ORIGIN` | 否 | CORS 允许的源，默认为 * |
-| `REQUEST_TIMEOUT` | 否 | 请求超时时间（毫秒），默认为 5000 |
+| `REQUEST_TIMEOUT` | 否 | 上游请求超时时间（毫秒），默认为 5000 |
 | `MAX_RETRIES` | 否 | 请求最大重试次数，默认为 2 |
 | `CACHE_MAX_AGE` | 否 | 静态资源缓存时间，默认为 1d |
-| `USER_AGENT` | 否 | 请求 User-Agent，默认为 Chrome |
+| `USER_AGENT` | 否 | 上游请求 User-Agent，默认为 Chrome |
+| `BLOCKED_HOSTS` | 否 | 代理禁止访问的主机名，默认为 `localhost,127.0.0.1,0.0.0.0,::1` |
+| `BLOCKED_IP_PREFIXES` | 否 | 代理禁止访问的网段前缀，默认为 `192.168.,10.,172.` |
+| `DEBUG` | 否 | 设为 `false` 关闭调试日志 |
 
 ## 🛠️ 本地开发指南
 
@@ -48,7 +57,7 @@
 3. 配置环境变量
    ```bash
    cp .env.example .env
-   # 根据需要修改 .env 文件中的配置，特别是设置 PASSWORD 变量
+   # 按需修改 .env，至少填写 TMDB_WORKER_URL
    ```
 
 4. 启动开发服务器
@@ -65,9 +74,8 @@
 
 ```
 LeLeTV/
-├── api/              # API代理服务
 ├── css/              # 样式文件
-├── functions/        # Cloudflare Functions
+├── functions/        # Cloudflare Pages Functions（代理与环境变量注入）
 ├── image/            # 图片资源
 ├── js/               # JavaScript文件
 ├── libs/             # 第三方库
@@ -85,15 +93,16 @@ LeLeTV/
 
 ## 🔄 版本管理
 
-项目采用语义化版本控制，版本号格式为 `v{年}.{月}.{日}.{当天提交序号}`。
+项目采用语义化版本控制，版本号格式为 `v{主}.{次}.{修订}`（如 `v3.6.1`），保存在 `VERSION.txt`，更新日志记录在 `CHANGELOG.md`。
 
-每次提交代码时，系统会自动从 CHANGELOG.md 中提取最新版本号创建 Git 标签。如果提交信息中包含 `@CHANGELOG.md`，则跳过自动标签创建过程。
-
-可以通过以下方式手动创建标签：
+`npm run build` 时由 `scripts/generate-version.mjs` 把版本号注入 HTML 与 `?v=` 缓存参数。仓库不含自动打标签的脚本，需要时手动创建：
 
 ```bash
-npm run tag
+git tag v3.6.1
+git push origin v3.6.1
 ```
+
+`npm run setup:hooks` 安装的 pre-commit 钩子负责两件事：`VERSION.txt` 变更时同步版本号到 HTML / Service Worker，以及 `js/` 变更但 `dist/` 未暂存时自动构建 bundle。
 
 ---
 

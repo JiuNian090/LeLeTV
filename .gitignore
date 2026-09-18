@@ -37,14 +37,14 @@ apikey/
 .spec-workflow/
 
 # AI tools generated files
+# 例外：.agents/ 与根目录 AGENTS.md / CLAUDE.md 是跨 Agent 共用的通用层，纳入版本控制
+# （各工具的接线方式见 .agents/README.md）
 .claude/
 .codegraph/
 .gitnexus/
 .reasonix/
 .zcode/
 reasonix.toml
-AGENTS.md
-CLAUDE.md
 
 # Environment variables
 .env
@@ -114,8 +114,9 @@ storybook-static
 .netlify
 .vercel
 
-# skills（docs/ 下仅 VERSION_RULES.md 纳入版本控制）
-.agents/
+# 技能锁文件与文档（不纳入版本控制）
 skills-lock.json
-docs/*
-!docs/VERSION_RULES.md
+docs/
+
+# .agents/ 内的本机状态（含本机绝对路径），不纳入版本控制
+.agents/tools.json
