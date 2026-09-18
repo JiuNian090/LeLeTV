@@ -60,15 +60,19 @@
 
 <!-- AGENT-INDEX:START -->
 
-> 由 `node scripts/sync-agent-index.mjs` 自动生成（12 个技能、8 个规则文件），请勿手改。
+> 由 `node scripts/sync-agent-index.mjs` 自动生成（19 个技能、8 个规则文件），请勿手改。
 > 新增技能或规则后重跑该脚本：`node scripts/sync-agent-index.mjs`
 
 ### 技能
 
 | 技能 | 用途 |
 |------|------|
+| `brainstorming` | You MUST use this before any creative work - creating features, building components,… |
+| `codegraph-cli` | CLI wrapper for CodeGraph semantic code intelligence |
 | `design-taste-frontend` | Anti-slop frontend skill for landing pages, portfolios, and redesigns |
 | `full-output-enforcement` | Overrides default LLM truncation behavior |
+| `gh-cli` | GitHub CLI (gh) comprehensive reference for repositories, issues, pull requests,… |
+| `git-commit` | Execute git commit with conventional commit message analysis, intelligent staging, and… |
 | `high-end-visual-design` | Teaches the AI to design like a high-end agency |
 | `impeccable` | Use when the user wants to design, redesign, shape, critique, audit, polish, clarify,… |
 | `installing-project-skills` | Use when installing skills for a new project, or when the user asks to update, upgrade,… |
@@ -78,7 +82,10 @@
 | `scheduling-project-skills` | Use when orchestrating multiple skills for a task — determining execution order,… |
 | `superpowers-systematic-debugging` | Use when encountering any bug, test failure, or unexpected behavior, before proposing… |
 | `syncing-agent-index` | 当新增、重命名或删除了 .agents/rules/ 下的规则文件或 .agents/skills/ 下的技能后，同步 AGENTS.md 与… |
+| `test-driven-development` | Use when implementing any feature or bugfix, before writing implementation code |
 | `version-release` | 版本更新：更新 CHANGELOG.md、升级 VERSION.txt、同步 README。当用户说'更新更新日志'、'更新版本'、'发版'、'打 tag'… |
+| `writing-plans` | Use when you have a spec or requirements for a multi-step task, before touching code |
+| `writing-skills` | Use when creating new skills, editing existing skills, or verifying skills work before… |
 
 ### 规则文件
 

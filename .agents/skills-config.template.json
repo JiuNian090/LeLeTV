@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JiunianTV/Le-Skills/main/.agents/skills-registry.schema.json",
+  "version": "1.0.0",
+  "description": "项目自定义技能配置 — 覆盖/扩展 skills-registry.json 的全局设置",
+  "customSources": [
+    {
+      "name": "my-team-skills",
+      "url": "https://github.com/myorg/team-skills",
+      "ref": "main",
+      "description": "团队私有技能集",
+      "filter": "always",
+      "skills": [
+        "my-standards",
+        "my-deployment"
+      ],
+      "tags": ["team", "private"]
+    }
+  ],
+  "ignore": [],
+  "alwaysInstall": []
+}

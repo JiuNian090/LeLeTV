@@ -12,16 +12,17 @@
 
 ## 已安装技能清单
 
-共 12 个，按用途分组：
+共 19 个，按用途分组：
 
 | 分组 | 技能 |
 |------|------|
 | 技能管理 | `managing-project-skills`、`installing-project-skills`、`scheduling-project-skills` |
 | 版本发布 | `version-release` |
 | 索引维护 | `syncing-agent-index` |
-| 工程规范 | `karpathy-guidelines` |
+| 工程规范 | `karpathy-guidelines`、`test-driven-development`、`writing-plans`、`writing-skills`、`brainstorming` |
 | 调度调试 | `superpowers-systematic-debugging` |
-| 代码图谱 | `codegraph-cli`（全局技能，不在 `.agents/skills/` 内） |
+| 代码图谱 | `codegraph-cli` |
+| 提交与协作 | `git-commit`、`gh-cli` |
 | 设计风格 | `design-taste-frontend`、`redesign-existing-projects`、`high-end-visual-design`、`impeccable`、`full-output-enforcement` |
 
 ## 安装流程

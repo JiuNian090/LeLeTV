@@ -15,7 +15,7 @@
 
 ## 场景 → 技能分派表
 
-> 只列**实际安装**的技能（共 12 个，索引见 `AGENTS.md`）。
+> 只列**实际安装**的技能（共 19 个，索引见 `AGENTS.md`）。
 
 | # | 场景 | 用户触发词 | 调用链 |
 |---|------|-----------|--------|
@@ -31,6 +31,15 @@
 | 10 | 技能管理 | "安装/更新/卸载技能" | `managing-project-skills` + `.agents/rules/skill-lifecycle-rules.md` |
 | 11 | 长输出被截断 | 生成大文件时被省略 | `full-output-enforcement` |
 | 12 | 索引过期 | 新增技能/规则后 | `syncing-agent-index` |
+| 13 | 需求澄清 | "怎么办""有哪些方案""不确定" | `brainstorming` |
+| 14 | 多步任务规划 | 复杂需求要动代码，先出计划 | `writing-plans` |
+| 15 | 写测试 / TDD | "写测试""先写测试""TDD" | `test-driven-development` |
+| 16 | 技能维护 | "建技能""改技能" | `writing-skills` |
+| 17 | 提交代码 | "提交""commit" | `git-commit` |
+| 18 | GitHub 操作 | PR / issue / release | `gh-cli` |
+
+> **不强制前置**：`brainstorming` 与 `writing-plans` 只在需求确实模糊、或改动跨多文件/多层时使用。
+> 简单任务（≤10 行、文案、单文件样式微调）直接执行，不走这两步 —— 有些任务不需要深度思考。
 
 ---
 

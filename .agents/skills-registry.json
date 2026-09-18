@@ -1,0 +1,133 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JiunianTV/Le-Skills/main/.agents/skills-registry.schema.json",
+  "version": "1.0.0",
+  "description": "PSM 技能注册中心 — 定义可安装的技能来源和过滤规则",
+  "sources": [
+    {
+      "name": "superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "ref": "main",
+      "description": "通用工程技能集：TDD、系统调试、验证循环等",
+      "filter": "always",
+      "skills": [
+        "test-driven-development",
+        "systematic-debugging",
+        "verification-loop",
+        "flatten-with-flags",
+        "condition-based-waiting"
+      ],
+      "tags": ["engineering", "general", "debugging", "testing"]
+    },
+    {
+      "name": "karpathy",
+      "url": "https://github.com/multica-ai/andrej-karpathy-skills",
+      "ref": "main",
+      "description": "Karpathy 工程方法论：工程规范、调试、架构",
+      "filter": "always",
+      "skills": [
+        "karpathy-engineering",
+        "karpathy-debugging",
+        "karpathy-architecture"
+      ],
+      "tags": ["engineering", "discipline", "architecture"]
+    },
+    {
+      "name": "ecc",
+      "url": "https://github.com/affaan-m/ECC",
+      "ref": "main",
+      "description": "框架级前端/后端技能：React、Vue、Jest、Cypress 等",
+      "filter": "tech-stack",
+      "match": {
+        "files": ["package.json"],
+        "dependencies": ["react", "vue", "next", "nuxt"]
+      },
+      "skills": [
+        "frontend-react",
+        "frontend-vue",
+        "testing-cypress",
+        "testing-jest",
+        "api-client",
+        "state-management"
+      ],
+      "tags": ["frontend", "react", "vue", "testing"]
+    },
+    {
+      "name": "impeccable",
+      "url": "https://github.com/pbakaus/impeccable",
+      "ref": "main",
+      "description": "高质量代码审查与 UI 设计技能",
+      "filter": "tech-stack",
+      "match": {
+        "files": ["package.json"],
+        "dependencies": ["react", "vue", "angular", "svelte"]
+      },
+      "skills": [
+        "impeccable-code-review",
+        "impeccable-ui"
+      ],
+      "tags": ["code-review", "ui", "frontend"]
+    },
+    {
+      "name": "taste-skill",
+      "url": "https://github.com/Leonxlnx/taste-skill",
+      "ref": "main",
+      "description": "设计品味与前端美学技能",
+      "filter": "tech-stack",
+      "match": {
+        "files": ["package.json"],
+        "dependencies": ["react", "vue", "angular", "svelte"]
+      },
+      "skills": [
+        "taste-frontend",
+        "taste-design"
+      ],
+      "tags": ["design", "ui", "frontend", "ux"]
+    },
+    {
+      "name": "codegraph",
+      "url": "https://github.com/colbymchenry/codegraph",
+      "ref": "main",
+      "description": "符号搜索、调用图、影响分析",
+      "filter": "always",
+      "selfManaged": true,
+      "skills": [],
+      "tags": ["code-analysis", "graph", "dependency"]
+    }
+  ],
+  "customSources": {
+    "description": "用户可在此添加自定义技能源。安装时此文件不会被覆盖。",
+    "hint": "在项目根目录创建 .agents/skills-config.json 覆盖此列表"
+  },
+  "tools": {
+    "description": "技能依赖的工具定义 — CLI 和 MCP 两种安装方式",
+    "items": [
+      {
+        "name": "codegraph",
+        "description": "代码图谱：符号搜索、调用图、影响分析",
+        "homepage": "https://github.com/colbymchenry/codegraph",
+        "checkCommand": "codegraph --version 2>/dev/null || echo 'not-found'",
+        "commands": [
+          { "cmd": "codegraph query", "description": "查询代码符号和关系" },
+          { "cmd": "codegraph explore", "description": "交互式浏览代码图谱" },
+          { "cmd": "codegraph index", "description": "索引当前项目的代码图谱" },
+          { "cmd": "codegraph sync", "description": "同步代码变更到图谱" },
+          { "cmd": "codegraph install", "description": "安装/配置 MCP 服务器" }
+        ],
+        "cli": {
+          "description": "安装脚本（推荐，无需 Node.js）或 npm 全局安装",
+          "commands": [
+            "curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh",
+            "npm i -g @colbymchenry/codegraph"
+          ],
+          "postInstall": "codegraph install"
+        },
+        "mcp": {
+          "description": "运行 codegraph install 自动配置当前 IDE 的 MCP",
+          "autoSetup": true,
+          "note": "支持 Claude Code / Cursor / Windsurf / Codex CLI 等"
+        },
+        "tags": ["code-analysis", "graph", "search"]
+      }
+    ]
+  }
+}
