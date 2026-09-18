@@ -33,7 +33,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | 样式 | 5 个手写 CSS + Tailwind 编译输出（`css/output.css`） |
 | 构建产物 | 3 个 esbuild bundle（core / app / player，带内容哈希） |
 | 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
-| 页面 | `index.html`（SPA，1567 行）+ `player.html`（独立播放页，301 行） |
+| 页面 | `index.html`（SPA，1392 行）+ `player.html`（独立播放页，319 行） |
 | 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
 | 代码图谱 | CodeGraph 1,232 节点 / 5,840 边 · GitNexus 2,346 符号 / 207 执行流 |
 
@@ -89,6 +89,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 - 云端数据源：采集源存放在 D1，可在 `/admin` 面板在线增删改，前端启动时自动同步并缓存；内置源始终兜底
 - 智能缓存管理：24 小时清理临时数据，保护用户设置与历史
 - PWA 可安装（`standalone` + `window-controls-overlay`）
+- 启动体验：冷启动全程黑底无白屏，启动屏显示真实加载进度环；添加到主屏后（含 iPhone）启动画面同样为黑底 Logo
 - 版本更新自动检测，提示后重载生效
 
 ## 🔐 邀请码验证系统
@@ -293,9 +294,9 @@ LeLeTV/
 ├── workers/
 │   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API + 数据源下发 + /admin 面板
 ├── migrations/                 # D1 迁移脚本（001 表结构 → 004 数据源表）
-├── scripts/                    # 版本生成、打包、钩子安装脚本
-├── image/                      # Logo 与占位图
-├── docs/                       # 版本规则等文档
+├── scripts/                    # 版本生成、打包、钩子安装、技能索引同步脚本
+├── image/                      # Logo、占位图与启动图（PWA / iOS 主屏）
+├── .agents/                    # AI 技能与规则（技能正文、规则文档、注册表，跨 Agent 共用）
 └── .github/                    # Issue 模板与工作流
 ```
 
@@ -450,6 +451,7 @@ npm run dev
 |------|------|------|
 | `/*.html`、`/` | `no-cache` | 每次回源校验 |
 | `/service-worker.js`、`/CHANGELOG.md`、`/VERSION.txt` | `no-cache` | 必须实时更新 |
+| `/manifest.json` | `no-cache` | PWA 启动屏配色更新后需及时生效 |
 | `/css/*`、`/js/*`、`/image/*`、`/libs/*` | `public, max-age=604800, immutable` | 缓存 7 天，配合 `?v=` 失效 |
 | `/dist/*` | `public, max-age=31536000, immutable` | 文件名带内容哈希，缓存 1 年 |
 | `/*` | CSP | 见 `_headers` 中的 `Content-Security-Policy` |
@@ -470,7 +472,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v3.6.1`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v3.6.2`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -482,6 +484,11 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v3.6.2 (2026-09-18)
+- 🎉 新增 启动界面显示真实加载进度环，加载完成时 Logo 放大淡出过渡到首页
+- ✨ 优化 启动界面改为黑底 + 居中 Logo，冷启动不再白屏闪烁
+- 🔧 修复 iPhone 添加到主屏后启动时白屏的问题，补全各机型启动图
+
 ### v3.6.1 (2026-09-18)
 - 🎉 新增 播放页线路切换由弹窗改为可折叠面板，并显示各线路响应速度，切换不再打断播放
 - 🎉 新增 搜索框新增一键清空按钮，兼顾输入法联想与键盘操作
@@ -492,10 +499,6 @@ npm run dev
 - 🎉 新增 数据源支持云端统一管理，采集源可远程下发，调整时无需重新部署
 - 🎉 新增 管理面板支持在线增删改数据源，新增与编辑改为弹窗操作
 - ✨ 优化 页面优先读取本地缓存的数据源配置，打开速度更快
-
-### v3.5.9 (2026-09-17)
-- 🔧 修复 设备登录后可能被误判为已移除、导致无法进入网站的问题
-- 🔧 修复 管理端移除设备、停用或删除邀请码时偶发提示失败的问题
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
