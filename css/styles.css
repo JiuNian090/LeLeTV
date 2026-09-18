@@ -412,9 +412,6 @@ body {
     min-height: 100dvh;
     overflow-x: hidden;
     width: 100%;
-    /* 全面屏底部：让页面末尾内容不钻到手势导航栏/Home 指示条下面。
-       取动态与静态安全区的较大值：Chrome 135+ 用静态值（下巴收放时页面高度不变，避免滚动抖动），iOS 回退动态值 */
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), env(safe-area-max-inset-bottom, 0px));
 }
 
 .main-container {
@@ -1640,8 +1637,7 @@ img.loading-fade.loaded {
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(20px) saturate(1.5);
     -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    /* 全面屏顶部：viewport-fit=cover 后内容从屏幕物理顶端开始，这里让出状态栏/刘海高度（普通屏为 0） */
-    padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0 0.75rem;
+    padding: 0.75rem 0;
     z-index: 50;
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
