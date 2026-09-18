@@ -51,11 +51,12 @@ function updateEpisodeCollapseState() {
   if (sec) sec.classList.remove('episode-collapsed');
 }
 
-// 线路切换面板（折叠）：折叠态只显示「线路切换 · 当前集共 N 个来源」，
+// 线路切换面板（折叠）：折叠态只显示「线路切换 · 当前源名 · 当前集共 N 个来源」，
 // 展开后由 player-ui.js 扫描全部来源并逐条补上延迟
 function renderResourceInfoBar() {
   var countEl = document.getElementById('resourceSourceCount');
   if (!countEl) return;
+  if (typeof renderResourceCurrentSource === 'function') renderResourceCurrentSource();
   if (typeof updateResourceSourceCount === 'function') {
     updateResourceSourceCount();
     return;

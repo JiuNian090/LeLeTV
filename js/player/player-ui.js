@@ -685,9 +685,13 @@ function toggleControlsLock(art) {
     }
 }
 
+// 测速超时：详情走自家 Worker，视频地址是第三方 CDN，两者给不同余量
+const SOURCE_DETAIL_TIMEOUT_MS = 8000;
+const SOURCE_VIDEO_TIMEOUT_MS = 5000;
+
 async function testVideoSourceSpeed(sourceKey, vodId) {
     try {
-        const startTime = performance.now();
+        const apiStart = performance.now();
         
         // 构建API参数
         let apiParams = '';
@@ -710,10 +714,11 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
         const timestamp = new Date().getTime();
         const cacheBuster = `&_t=${timestamp}`;
         
-        // 获取视频详情
+        // 获取视频详情（补超时：源挂起时原本会一直停在「测速中」）
         const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}${cacheBuster}`, {
             method: 'GET',
-            cache: 'no-cache'
+            cache: 'no-cache',
+            signal: AbortSignal.timeout(SOURCE_DETAIL_TIMEOUT_MS)
         });
         
         if (!response.ok) {
@@ -732,40 +737,45 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
             return { speed: -1, error: '链接无效' };
         }
         
-        // 测试视频链接响应时间
+        // 测试视频链接响应时间。只计这一段：原来减的是请求详情前的时刻，
+        // 一个数字里混了「详情接口 + 视频请求」两段时间，源之间没法横向比较
         const videoTestStart = performance.now();
         try {
-            const videoResponse = await fetch(firstEpisodeUrl, {
-                method: 'HEAD',
+            await fetch(firstEpisodeUrl, {
+                // 用 Range 取首字节代替 HEAD：部分 CDN 会直接拒绝 HEAD，
+                // Range GET 更接近播放器真实取流的方式
+                method: 'GET',
+                headers: { Range: 'bytes=0-0' },
                 mode: 'no-cors',
                 cache: 'no-cache',
-                signal: AbortSignal.timeout(5000) // 5秒超时
+                signal: AbortSignal.timeout(SOURCE_VIDEO_TIMEOUT_MS)
             });
             
-            const videoTestEnd = performance.now();
-            const totalTime = videoTestEnd - startTime;
+            const videoTime = performance.now() - videoTestStart;
             
-            // 返回总响应时间（毫秒）
-            return { 
-                speed: Math.round(totalTime),
+            return {
+                speed: Math.round(videoTime),
                 episodes: data.episodes.length,
-                error: null 
+                error: null,
+                videoMeasured: true
             };
         } catch (videoError) {
-            // 如果视频链接测试失败，只返回API响应时间
-            const apiTime = performance.now() - startTime;
-            return { 
+            // 视频段没测成：只能拿接口往返耗时顶上，带上 videoMeasured: false，
+            // 由界面明确标出来，不能和实测延迟混成同一个数字
+            const apiTime = videoTestStart - apiStart;
+            return {
                 speed: Math.round(apiTime),
                 episodes: data.episodes.length,
                 error: null,
-                note: 'API响应' 
+                videoMeasured: false
             };
         }
         
     } catch (error) {
         return { 
             speed: -1, 
-            error: error.name === 'AbortError' ? '超时' : '测试失败' 
+            // AbortSignal.timeout() 抛的是 TimeoutError，两种都要认
+            error: (error.name === 'TimeoutError' || error.name === 'AbortError') ? '超时' : '测试失败' 
         };
     }
 }
@@ -799,6 +809,32 @@ function getResourceScanSources() {
         if (api && api.url) list.push({ key: 'custom_' + index, name: api.name || '自定义资源' });
     });
     return list;
+}
+
+// 当前播放源名称（如「猫眼资源」）：URL 的 source 参数可能是内置源 key，
+// 也可能是自定义源的 custom_N —— 后者的名称存在 localStorage 的 customAPIs 里
+function getCurrentSourceDisplayName() {
+    const code = new URLSearchParams(window.location.search).get('source') || '';
+    if (!code) return '';
+
+    if (code.startsWith('custom_')) {
+        const customApi = typeof window.getCustomApiInfo === 'function'
+            ? window.getCustomApiInfo(code.replace('custom_', ''))
+            : null;
+        return (customApi && customApi.name) ? customApi.name : '自定义资源';
+    }
+
+    const site = window.API_SITES && window.API_SITES[code];
+    return (site && site.name) ? site.name : code;
+}
+
+// 渲染标题行的源名称。取不到 source 时留空，由 CSS 的 :empty 隐藏，
+// 避免空节点在 flex 布局里多占一个 gap
+function renderResourceCurrentSource() {
+    const el = document.getElementById('resourceCurrentSource');
+    if (!el) return;
+    const name = getCurrentSourceDisplayName();
+    el.textContent = name ? '· ' + name : '';
 }
 
 function updateResourceSourceCount() {
@@ -865,15 +901,20 @@ function startResourceScan() {
 }
 
 // 全部测速结束后按延迟重排：当前播放的线路固定第一（它不一定是延迟最低的），
-// 其余有结果的按毫秒升序（最快在前），测速失败、无结果的沉到最后
+// 其次是实测到视频耗时的按毫秒升序（最快在前），只测到接口耗时的另排一档，
+// 测速失败、无结果的沉到最后
 function sortResourceSourcesByLatency() {
     const currentSourceCode = new URLSearchParams(window.location.search).get('source') || '';
     const rank = (src) => {
         if (String(src.key) === String(currentSourceCode)) return -1;
         const status = resourceScan.status[src.key];
-        if (status === 'done') return 0;
-        if (status === 'failed') return 1;
-        return 2; // untested / testing / empty
+        if (status === 'done') {
+            const spd = resourceScan.latency[src.key];
+            // 只有接口耗时的项不可与实测值比较，单独排一档，免得凭偏小的数字挤到前面
+            return (spd && spd.videoMeasured === false) ? 1 : 0;
+        }
+        if (status === 'failed') return 2;
+        return 3; // untested / testing / empty
     };
     // sort 是稳定排序：同一延迟档内保持原来的配置顺序
     resourceScan.sources.sort((a, b) => {
@@ -935,6 +976,10 @@ function renderResourceLatency(sourceKey) {
             return '<span class="resource-source-latency poor">' + escHtml(spd.error || '失败') + '</span>';
         }
         const speed = spd.speed;
+        // 视频段没测成时这个数字只是接口往返耗时，和实测值不可比，单独标出来
+        if (spd.videoMeasured === false) {
+            return '<span class="resource-source-latency api-only" title="视频地址未探测成功，这里是接口往返耗时">~' + speed + 'ms</span>';
+        }
         let level = 'good';
         if (speed >= SOURCE_LATENCY_SLOW_MS) level = 'poor';
         else if (speed >= SOURCE_LATENCY_FAST_MS) level = 'medium';
@@ -974,6 +1019,16 @@ function renderResourceSourceGrid() {
             + renderResourceLatency(src.key)
             + '</div>';
     });
+
+    // 有降级项时补一行说明，否则 ~ 标记没人看得懂
+    const hasApiOnly = resourceScan.sources.some(src => {
+        const spd = resourceScan.latency[src.key];
+        return spd && spd.videoMeasured === false;
+    });
+    if (hasApiOnly) {
+        html += '<div class="resource-source-note">~ 表示视频地址未探测成功，显示的是接口往返耗时，不与实测值比较</div>';
+    }
+
     grid.innerHTML = html;
 }
 

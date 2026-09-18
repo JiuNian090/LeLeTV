@@ -666,7 +666,7 @@ body.native-fs-active .control-buttons-container {
 }
 
 /* ==================== 线路切换（折叠面板） ==================== */
-/* 折叠状态的标题：线路切换 · 当前集共 N 个来源；展开后才扫描并列出全部来源。
+/* 折叠状态的标题：线路切换 · 当前源名 · 当前集共 N 个来源；展开后才扫描并列出全部来源。
    注意：右栏 .player-layout-right 是 flex 列容器，本面板 overflow:hidden 会让
    min-height 解析为 0，空间不足时会被压成一条（实测 900x800 只剩 2px），
    因此这里显式 flex-shrink: 0，并把高度上限交给 max-height 控制 */
@@ -722,6 +722,21 @@ body.native-fs-active .control-buttons-container {
     flex-shrink: 0;
 }
 
+/* 当前播放源名称（如「猫眼资源」）：沿用线路列表里「当前线路」的主题色，一眼看出在放哪个源 */
+.resource-collapse-source {
+    font-size: 0.8rem;
+    color: var(--color-primary-300);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* 链接里没有 source 参数时留空：直接隐藏，避免在 flex 布局里多占一个 gap */
+.resource-collapse-source:empty {
+    display: none;
+}
+
 .resource-collapse-count {
     font-size: 0.8rem;
     color: #9ca3af;
@@ -764,6 +779,14 @@ body.native-fs-active .control-buttons-container {
     color: #9ca3af;
     font-size: 0.85rem;
     padding: 14px 0;
+}
+
+/* ~ 标记的说明行：仅有降级项时出现 */
+.resource-source-note {
+    grid-column: 1 / -1;
+    color: #9ca3af;
+    font-size: 0.72rem;
+    line-height: 1.5;
 }
 
 .resource-source-item {
@@ -859,6 +882,13 @@ body.native-fs-active .control-buttons-container {
 .resource-source-latency.medium {
     color: #fbbf24;
     background: rgba(251, 191, 36, 0.12);
+}
+
+/* 只测到接口耗时的降级项：中性灰 + 虚线边，和快/中/慢三色区分开 */
+.resource-source-latency.api-only {
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.18);
 }
 
 .resource-source-latency.poor {
