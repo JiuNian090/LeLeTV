@@ -6,14 +6,17 @@
          PWA 从桌面/主屏图标冷启动时，浏览器在拉到样式表之前有一个"默认白底"窗口，
          这段内联样式让第一次绘制就是黑底，杜绝白屏闪烁。 -->
     <meta name="theme-color" content="#000000">
-    <!-- 安卓底部导航栏（小白条区域）配色：必须单独设置，theme-color 不管它。
-         系统浅色模式下默认底部变白，与深色主题冲突；这里强制黑色，与站内背景一致。
-         支持 Chrome 120+ / Android 13+，旧版本自动忽略。 -->
-    <meta name="navigation-bar-color" content="#000000">
+    <!-- 声明本站只支持深色（等效于 :root{color-scheme:dark}，但走 HTML 不受 CSS 缓存影响）。
+         浏览器据此把系统 UI 一并按深色渲染：安卓底部导航栏（小白条区域）、滚动条、表单控件。
+         系统处于浅色模式时若无此声明，底部导航栏会跟随系统变白，与全黑页面割裂。 -->
+    <meta name="color-scheme" content="dark">
     <style>
         html, body { background: #000000 !important; margin: 0; padding: 0; }
     </style>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 全面屏（edge-to-edge）：viewport-fit=cover 让视口延伸到屏幕边缘。
+         安卓 Chrome 135+ 据此永久收起它自绘的底部"下巴"（chin），底部导航栏那条改由页面自己绘制（全黑）；
+         代价是内容会顶进顶部状态栏/底部手势条区域，故配合 env(safe-area-inset-*) 避让（见 css）。 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="format-detection" content="telephone=no">
     <title>LeLeTV</title>
     <meta name="description" content="LeLeTV是一个乐乐自用的在线视频搜索平台。">
@@ -63,20 +66,20 @@
          这段"HTML 已到、样式未到"的空白。改成 preload 后，HTML 一到达就能先画出启动占位，
          等样式真正就绪（见 body 末尾的退场脚本）再淡出让位，避免无样式内容闪一下。
          禁用 JS 时 preload 不会转成样式表，故保留 noscript 回退。 -->
-    <link rel="preload" href="css/variables.css?v=v3.6.3" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/output.css?v=v3.6.3" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/styles.css?v=v3.6.3" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/variables.css?v=v3.6.4" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/output.css?v=v3.6.4" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/styles.css?v=v3.6.4" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
-        <link rel="stylesheet" href="css/variables.css?v=v3.6.3">
-        <link rel="stylesheet" href="css/output.css?v=v3.6.3">
-        <link rel="stylesheet" href="css/styles.css?v=v3.6.3">
+        <link rel="stylesheet" href="css/variables.css?v=v3.6.4">
+        <link rel="stylesheet" href="css/output.css?v=v3.6.4">
+        <link rel="stylesheet" href="css/styles.css?v=v3.6.4">
     </noscript>
 
     <!-- 二级页面样式（分类/设置/邀请码管理/README/影片页）：不在首屏关键路径上，但提前取回可避免
          切页时的样式跳变。preload 默认是 High 优先级，会和 dist bundle 抢带宽，故降为 low：
          该到的时候通常早已到位，抢不到也不影响首页。 -->
-    <link rel="preload" href="css/pages.css?v=v3.6.3" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.6.3"></noscript>
+    <link rel="preload" href="css/pages.css?v=v3.6.4" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.6.4"></noscript>
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <!-- MapleMono：启动占位与首页标题的显示字体，~99KB，不是首屏可用的必要条件
@@ -1182,7 +1185,7 @@
     </script>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v3.6.3"></script>
+    <script src="libs/sha256.min.js?v=v3.6.4"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
@@ -1196,15 +1199,16 @@
 
 
 
-    <script src="dist/leletv-core.dlmsiv.js?v=v3.6.3" defer></script>
-    <script src="dist/leletv-app.8nekg4.js?v=v3.6.3" defer></script>
+
+    <script src="dist/leletv-core.dlmsiv.js?v=v3.6.4" defer></script>
+    <script src="dist/leletv-app.8nekg4.js?v=v3.6.4" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v3.6.3";
+        window.__LELETV_VERSION__ = "v3.6.4";
     </script>
 
     <!-- 版本更新检测模块 -->
