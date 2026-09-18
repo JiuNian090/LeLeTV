@@ -47,6 +47,26 @@
 
 ---
 
+## 工具与技能调用约定
+
+### 有 CLI 就用 CLI，不接 MCP
+
+同一工具同时提供 CLI 与 MCP 时（如 CodeGraph），**一律走 CLI**，不要接入它的 MCP server。
+
+- **省资源**：MCP server 会常驻并占用工具位与上下文（`CLAUDE.md` 约定的「MCP 保持 ≤10 个启用，总工具数 ≤80」），CLI 只在需要时调用一次，不占常驻名额
+- **好排查**：命令在终端里可复现，输出直接可见，出问题不用翻 MCP 日志
+- **少写入**：多数工具的 MCP 安装器会往 `AGENTS.md` / `CLAUDE.md` 注入标记区块，CLI 安装（如 `npm i -g`）只动 node_modules，不碰项目文件
+
+判断顺序：
+
+1. 该工具是否提供 CLI？→ 有就只用 CLI
+2. 只有 MCP、没有 CLI？→ 才接入 MCP
+3. 已在用的 MCP 若后来提供了 CLI → 迁移到 CLI，并移除 MCP 配置
+
+工具的 CLI 用法与维护方式记到 `.agents/rules/` 下对应规则文件（如代码图谱记在 `code-graph-rules.md`），不要引入新的 MCP 依赖。
+
+---
+
 ## 知识沉淀规则
 
 - 个人调试笔记、偏好 → 用 `remember` 工具存入 memory

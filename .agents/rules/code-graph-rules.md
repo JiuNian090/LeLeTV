@@ -43,6 +43,7 @@ codegraph <命令> <参数>
 ## 维护
 
 - 索引库位于 `.codegraph/`（已 gitignore，不提交）
-- 代码变更后跑 `codegraph sync` 增量刷新；仅当索引结构异常时才用 `codegraph index --force` 全量重建
-- 全量重建需要索引库未被占用：若报 `EPERM ... database file is in use`，先停掉正在运行的 CodeGraph 服务再重试
+- **换机器 / 重新 clone 后**先跑 `codegraph init` 建立索引（一条命令完成初始化 + 首次全量索引）
+- 代码变更后跑 `codegraph sync` 增量刷新；仅当索引结构异常时才用 `codegraph index` 全量重建
+- 全量重建需要索引库未被占用：若报 `EPERM ... database file is in use`，先停掉正在运行的 CodeGraph 服务（`codegraph daemon` 可交互停进程）再重试
 - 命令细则见全局技能 `codegraph-cli`（`~/.trae-cn/skills/codegraph-cli/`）

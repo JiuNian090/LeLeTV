@@ -18,7 +18,7 @@
 
 ## 工具调用
 
-- 代码图谱只用 CLI，不依赖 MCP —— 命令清单见 `.agents/rules/code-graph-rules.md`
+- **有 CLI 就用 CLI，不接 MCP**（通用约定见 `.agents/rules/project-rules.md`）；代码图谱命令清单见 `.agents/rules/code-graph-rules.md`
 - 技能实体唯一存在于 `.agents/skills/`；`.claude/skills` 是指向它的 junction（同一份内容，两条路径等价）
 - 全部规则文件在 `.agents/rules/`，索引见 `AGENTS.md` 的「规则索引」表
 

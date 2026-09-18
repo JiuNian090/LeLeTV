@@ -104,5 +104,6 @@
 3. **未获明确要求不动部署配置**（`wrangler.toml` / `_headers` / `_routes.json` / CI 文件）
 4. **改核心函数/类之前先跑影响分析** —— `.agents/rules/code-graph-rules.md`
 5. **新增技能或规则后重跑索引** —— `node scripts/sync-agent-index.mjs`
+6. **有 CLI 就用 CLI，不接 MCP** —— 避免常驻工具位与上下文，详见 `.agents/rules/project-rules.md`
 
 
