@@ -26,7 +26,22 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+
+    <!-- iOS 主屏启动屏（launch screen）：网页视图加载前由系统绘制，白/黑闪屏就是这一帧。
+         未配置时 iOS 默认白底；这里按各机型像素提供黑底+居中 logo 的启动图，
+         与站内 #bootSplash 首帧一致，实现"图标 → 启动屏 → 启动占位"全程黑底无闪。
+         媒体查询按 CSS 分辨率 + 像素比匹配，物理尺寸见 image/splash/ -->
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-se.png"
+          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-390x844.png"
+          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-393x852.png"
+          media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-428x926.png"
+          media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-430x932.png"
+          media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+
     <!-- 首屏关键样式：非阻塞加载，配合 body 首部的启动占位使用。
          阻塞式 CSS 会让浏览器在样式到达前拒绝绘制任何像素——冷启动时的"黑屏"有相当一部分就是
          这段"HTML 已到、样式未到"的空白。改成 preload 后，HTML 一到达就能先画出启动占位，
