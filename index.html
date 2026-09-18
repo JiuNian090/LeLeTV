@@ -2,6 +2,13 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <!-- 首帧即黑：必须紧跟 charset，早于一切外部资源与脚本。
+         PWA 从桌面/主屏图标冷启动时，浏览器在拉到样式表之前有一个"默认白底"窗口，
+         这段内联样式让第一次绘制就是黑底，杜绝白屏闪烁。 -->
+    <meta name="theme-color" content="#000000">
+    <style>
+        html, body { background: #000000 !important; margin: 0; padding: 0; }
+    </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
     <title>LeLeTV</title>
@@ -218,6 +225,9 @@
             background: #000000; /* 与 manifest.background_color 一致，避免启动屏与首屏之间跳色 */
             opacity: 1;
             visibility: visible;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: opacity 0.32s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)), visibility 0.32s;
         }
         #bootSplash.boot-splash--done {
@@ -225,67 +235,53 @@
             visibility: hidden;
             pointer-events: none;
         }
-        #bootSplash canvas {
-            position: absolute;
-            inset: 0;
+        /* 居中舞台：logo 在上、白色进度环在下。HTML 一解析到这里即绘制，
+           不依赖 JS / 字体 / 外部 CSS —— 不留"HTML 已到、画面还是空的"空档 */
+        #bootSplash .boot-splash-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            transition: transform 0.42s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+                        opacity 0.42s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+        }
+        /* 加载完成：logo 放大并淡化（爆开），进度环同时消失 */
+        #bootSplash .boot-splash-stage--burst {
+            transform: scale(1.45);
+            opacity: 0;
+        }
+        #bootSplash .boot-splash-logo {
             display: block;
-            width: 100%;
-            height: 100%;
+            width: clamp(80px, 22vw, 120px);
+            height: auto;
+            border-radius: 22%;
+            filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.18));
         }
-        /* 数据域切换（私密 ↔ 正常）重载后的这一帧：背景保持深色底（#000000，与
-           --color-bg / .page-bg 一致），不再虚化下层内容 —— 切换前旧页面已把画面渐变到
-           同一个深色，所以这里是接续而不是跳变；全屏虚化的合成开销也一并省掉。
-           遮罩是不透明深色且铺满首帧，足以盖住尚未就绪的内容，不会出现内容蹦出来 */
-        /* 占位的主视觉：LeLeTV 大标题 + 加载环。两者都由 CSS 直接绘制，不依赖 JS / 外部样式表 /
-           字体到达 —— HTML 一解析到这里，屏幕中央就已有内容，不留"HTML 已到、画面还是空的"空档。
-           标题的字号、字体、位置与粒子引擎 drawBrand() 画出的字样完全一致，粒子向中心收拢时标题层
-           淡出交接，因此不会同时出现两个"LeLeTV"（交接阈值见 body 首部脚本的 BRAND_HANDOFF）；
-           加载环不随标题退场——它一直转到放行，让整个等待期（含粒子成型后的停滞）都有加载指示。
-           主题色取不到时（样式表与行内变量都还没落到 --color-primary-rgb）回落到正常模式默认色 */
-        #bootSplash .boot-splash-brand {
-            position: absolute;
-            inset: 0;
-            pointer-events: none; /* 不遮挡下面的"仍然进入"按钮与粒子画布 */
-            transition: opacity 0.28s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+        /* 白色进度圆环：SVG 画，r=19（viewBox 44），周长 ≈ 119.4。
+           用 stroke-dashoffset 实时反映加载进度；默认从 12 点方向起、顺时针走 */
+        #bootSplash .boot-progress-ring {
+            width: 34px;
+            height: 34px;
+            transform: rotate(-90deg);
+            transition: opacity 0.2s ease;
         }
-        #bootSplash .boot-splash-brand--out { opacity: 0; }
-        #bootSplash .boot-splash-brand-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: 'MapleMono', monospace;
-            font-size: clamp(26px, 15vw, 82px);
-            font-weight: 900;
-            line-height: 1;
-            white-space: nowrap;
-            color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.92);
-            text-shadow: 0 0 28px rgba(var(--color-primary-rgb, 236, 72, 153), 0.55);
+        #bootSplash .boot-progress-ring--done { opacity: 0; }
+        #bootSplash .boot-progress-ring circle {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
         }
-        /* 加载指示：标题下方一圈缺口环。三边暗、一边亮 + 旋转即表达"在加载"，
-           比进度条更省，也不会与粒子自身的环带抢视觉；尺寸与亮度都刻意压低，不抢标题。
-           居中用负 margin 而非 transform：rotate 动画会覆盖 transform 上的位移 */
-        #bootSplash .boot-splash-ring {
-            position: absolute;
-            top: calc(50% + clamp(26px, 11vw, 62px));
-            left: 50%;
-            width: 22px;
-            height: 22px;
-            margin: -11px 0 0 -11px;
-            border: 2px solid rgba(var(--color-primary-rgb, 236, 72, 153), 0.22);
-            border-top-color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.95);
-            border-radius: 50%;
-            animation: boot-splash-ring-spin 0.9s linear infinite;
+        #bootSplash .boot-progress-track { stroke: rgba(255, 255, 255, 0.15); }
+        #bootSplash .boot-progress-value {
+            stroke: #ffffff;
+            stroke-dasharray: 119.4;
+            stroke-dashoffset: 119.4; /* 0 = 满圈，119.4 = 空 */
+            transition: stroke-dashoffset 0.15s linear;
         }
-        @keyframes boot-splash-ring-spin { to { transform: rotate(360deg); } }
-        /* 减弱动效偏好：不跑粒子，环也不再旋转 —— 标题层一直显示到放行，
-           既有"正在加载"的反馈，又不违背用户的动效设置 */
+        /* 减弱动效偏好：不放大爆开，直接随遮罩淡出 */
         @media (prefers-reduced-motion: reduce) {
-            #bootSplash canvas { display: none; }
-            #bootSplash .boot-splash-ring {
-                animation: none;
-                border-top-color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.6);
-            }
+            #bootSplash .boot-splash-stage { transition-duration: 0.2s; }
+            #bootSplash .boot-splash-stage--burst { transform: none; }
         }
         /* 慢速提示：加载超出预期仍未就绪时出现。
            作用是让"慢"和"卡死"看起来不一样，并给用户一个主动放行的出口——
@@ -314,31 +310,29 @@
             color: rgba(255, 255, 255, 0.9);
             cursor: pointer;
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(var(--color-primary-rgb, 236, 72, 153), 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.35);
             border-radius: 999px;
             transition: background 0.2s ease, border-color 0.2s ease;
         }
         #bootSplash .boot-splash-hint-btn:hover {
             background: rgba(255, 255, 255, 0.14);
-            border-color: rgba(var(--color-primary-rgb, 236, 72, 153), 0.85);
+            border-color: rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
 <body class="page-bg text-white">
-    <!-- 首屏启动占位：冷启动时第一时间出现，粒子随加载进度螺旋凝聚成 LeLeTV，
-         加载完成（首页初始化就绪）时实体化为完整字样并爆开，随后淡出露出首页。
-         算法与 js/app/app-routing.js 的 playHomeIntro 同源；此处必须内联，因为它要赶在
-         dist bundle（defer，弱网下最后才到）之前就动起来。
-         中央的 LeLeTV 大标题 + 加载环（.boot-splash-brand）先于粒子出现：它由 CSS 直接画出，
-         不依赖 JS 与字体，HTML 一到就有内容可看，粒子开始收拢时再淡出交接 -->
+    <!-- 首屏启动占位：冷启动时第一时间出现。
+         黑底 + logo 居中 + 下方白色进度圆环（按真实加载进度填充）。
+         加载完成时进度环消失、logo 放大淡化（爆开），随后露出首页。
+         样式内联在 head，不依赖外部 CSS / JS / 字体到达 -->
     <div id="bootSplash" aria-hidden="true">
-        <canvas id="bootSplashCanvas"></canvas>
-        <!-- 主视觉：立即可见的 LeLeTV 大标题 + 加载环（纯 CSS，见 head 的同名样式）。
-             粒子引擎接管时标题淡出，让位给粒子凝聚出的同一字样；加载环一直转到放行 -->
-        <div class="boot-splash-brand" id="bootSplashBrand">
-            <span class="boot-splash-brand-text">LeLeTV</span>
+        <div class="boot-splash-stage" id="bootSplashStage">
+            <img class="boot-splash-logo" src="/image/logo.png" alt="" width="120" height="120" decoding="async" fetchpriority="high">
+            <svg class="boot-progress-ring" id="bootProgressRing" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="boot-progress-track" cx="22" cy="22" r="19"></circle>
+                <circle class="boot-progress-value" id="bootProgressValue" cx="22" cy="22" r="19"></circle>
+            </svg>
         </div>
-        <span class="boot-splash-ring"></span>
         <div class="boot-splash-hint" id="bootSplashHint">
             <span class="boot-splash-hint-text">网络较慢，仍在加载…</span>
             <button type="button" class="boot-splash-hint-btn" id="bootSplashSkipBtn">仍然进入</button>
@@ -349,35 +343,17 @@
         'use strict';
 
         var splash = document.getElementById('bootSplash');
-        var canvas = document.getElementById('bootSplashCanvas');
         if (!splash) return;
+        var stage = document.getElementById('bootSplashStage');
+        var ring = document.getElementById('bootProgressRing');
+        var ringValue = document.getElementById('bootProgressValue');
+        var hintEl = document.getElementById('bootSplashHint');
+        var hintBtn = document.getElementById('bootSplashSkipBtn');
 
-        // 本次加载是否来自数据域切换（设置页卡片先消散、再把标记写进 sessionStorage 后重载）。
-        // 键名与 js/app/app-routing.js 的 PARTICLE_SWEEP_KEY 一致，改动需同步；
-        // 此处必须在 bundle 执行前读，bundle 里的 playDomainTransition 会把它清掉
-        // 主题色：优先取 head 内联脚本刚写下的行内值——它已按「当前模式 + 用户所选主题色」算好，
-        // 冷启动与模式切换的粒子因此都会跟着颜色与模式走；取不到（没设置过主题、样式表也还没到）
-        // 时按模式回落到 css 默认色。占位脚本早于 dist bundle 执行，故这里不依赖任何全局函数
-        var THEME_RGB = (function () {
-            try {
-                var v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary-rgb').trim();
-                var p = v.split(',').map(function (n) { return parseInt(n, 10); });
-                if (p.length === 3 && p[0] >= 0 && p[1] >= 0 && p[2] >= 0) return p;
-            } catch (e) { /* 忽略，走下面的模式回退 */ }
-            try {
-                return document.documentElement.hasAttribute('data-hidden-mode') ? [184, 115, 51] : [236, 72, 153];
-            } catch (e) { return [236, 72, 153]; }
-        })();
-        function themeRgba(alpha) {
-            return 'rgba(' + THEME_RGB[0] + ',' + THEME_RGB[1] + ',' + THEME_RGB[2] + ',' + alpha + ')';
-        }
-
+        // 数据域切换（私密 ↔ 正常）重载：与 js/app/app-routing.js 的 PARTICLE_SWEEP_KEY 同键
         var fromDomainSwitch = false;
         try { fromDomainSwitch = sessionStorage.getItem('leletv_particle_sweep') === '1'; } catch (e) { /* 忽略 */ }
         if (fromDomainSwitch) {
-            // 放行首帧隐藏：切换后的新页面内容要在深色遮罩下就绪。
-            // 遮罩是不透明的深色底，铺满首帧足以盖住未就绪的内容，不会出现内容蹦出来；
-            // 旧页面此前已把画面渐变到同一个深色，所以重载这一帧是无缝的（不做虚化，省掉全屏合成）
             document.documentElement.setAttribute('data-domain-shown', '1');
         }
 
@@ -387,204 +363,18 @@
             try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
         }
 
-        // ---------- 与 playHomeIntro 同源的参数（改这里请同步 js/app/app-routing.js） ----------
+        // ---------- 加载进度（与旧版同口径，外部契约不变） ----------
+        // 关键样式就绪 45% → DOM interactive 65% → DOMContentLoaded 90% → 业务就绪 100%
         var CRITICAL_STYLES = ['variables.css', 'output.css', 'styles.css'];
-        var TEXT = 'LeLeTV';
-        var GATHER_START = 0.9;    // 真实进度到达此处 = 首页初始化完成（DOMContentLoaded）
-        var G_FULL = 1.2;          // 汇聚参数上限：1.2 即"所有粒子都已到位"
-        var GATHER_MS = 680;       // 原动效的凝聚基准时长
-        var BURST_MS = 380;        // 爆开时长
-        var SETTLE_MS = 200;       // 加载完成时把残余"半散"粒子补完为实体
-        var HOLD_MS = 120;         // 实体停留（让字样被看清）
-        var FADE_MS = 320;         // 占位淡出（与 CSS transition 对齐）
-        var TAU = 120;             // 聚拢跟随时间常数：把进度的跳变变成平滑收拢
-        var STALL_AFTER_MS = 2500; // 进度停滞多久后开始兜底缓推
-        var STALL_RATE = 0.09;     // 兜底缓推速度（每秒进度增量）
-        var SLOW_HINT_MS = 6000;   // 超过此时长仍未就绪 → 显示"网络较慢"提示与主动进入按钮
-        var HARD_MAX_MS = 20000;   // 最终放行上限：再慢也不让遮罩无限挡住页面
-        var BRAND_HANDOFF = 0.18;  // 粒子汇聚到此值（1.2 = 完全到位）时，CSS 标题层淡出交接
-        var PARTICLE_MAX = 800;    // 800 与 1200 观感几乎无差，逐帧填充更省
-        var ALPHA_STEPS = 32;
-        var PALETTE = [
-            // 只用主题色，不掺白色/浅灰：色调完全跟随所选主题色与当前模式
-            { rgb: THEME_RGB, weight: 1 }
-        ];
-
-        // ---------- 绘制基础设施 ----------
-        var ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        var viewW = 0, viewH = 0;
-        var animate = !reducedMotion() && !!ctx;
-
-        function sizeCanvas() {
-            viewW = window.innerWidth;
-            viewH = window.innerHeight;
-            canvas.width = Math.max(1, Math.floor(viewW * dpr));
-            canvas.height = Math.max(1, Math.floor(viewH * dpr));
-            canvas.style.width = viewW + 'px';
-            canvas.style.height = viewH + 'px';
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-
-        function center() {
-            var hw = window.innerWidth / 2;
-            var hh = window.innerHeight / 2;
-            return { x: hw, y: hh, maxR: Math.sqrt(hw * hw + hh * hh) };
-        }
-
-        function brandFontSize() { return Math.max(26, Math.min(window.innerWidth * 0.15, 82)); }
-
-        var colorTable = null;
-        function buildColorTable() {
-            if (colorTable) return colorTable;
-            colorTable = PALETTE.map(function (p) {
-                var row = [];
-                for (var i = 0; i <= ALPHA_STEPS; i++) {
-                    row.push('rgba(' + p.rgb[0] + ',' + p.rgb[1] + ',' + p.rgb[2] + ',' + (i / ALPHA_STEPS).toFixed(2) + ')');
-                }
-                return row;
-            });
-            return colorTable;
-        }
-
-        function pickColor() {
-            var r = Math.random(), acc = 0;
-            for (var i = 0; i < PALETTE.length; i++) {
-                acc += PALETTE[i].weight;
-                if (r <= acc) return i;
-            }
-            return 0;
-        }
-
-        var particles = [];
-
-        // 占位的主视觉（LeLeTV 大标题）在 HTML 解析到这里时已由 CSS 画出，脚本只负责它的退场时机。
-        // 加载环不归这里管：它从出现一直转到放行，随整个遮罩一起淡出
-        // 交接见 frame() 里的 BRAND_HANDOFF
-        var brandEl = document.getElementById('bootSplashBrand');
-        var brandHidden = false;
-
-        function makeParticles(brandRadius) {
-            var c = center();
-            var list = [];
-            for (var i = 0; i < PARTICLE_MAX; i++) {
-                list.push({
-                    a0: Math.random() * Math.PI * 2,
-                    r0: c.maxR * (0.35 + Math.random() * 0.6),
-                    r1: brandRadius * (0.7 + Math.random() * 0.6),
-                    spin: (0.5 + Math.random() * 0.85) * (Math.random() < 0.5 ? -1 : 1),
-                    size: 0.9 + Math.random() * 1.4,
-                    color: pickColor(),
-                    delay: Math.random() * GATHER_MS * 0.18,
-                    a1: 0,
-                    px: c.x,
-                    py: c.y,
-                    alpha: 0
-                });
-            }
-            return list;
-        }
-
-        // 螺旋凝聚：elapsed 沿用原实现的时间语义（约 816ms 即全部到位）
-        function updateGather(list, elapsed, c) {
-            var span = Math.max(1, GATHER_MS);
-            for (var i = 0; i < list.length; i++) {
-                var p = list[i];
-                var t = clamp01((elapsed - p.delay) / span);
-                var e = 1 - Math.pow(1 - t, 3);
-                var r = p.r0 + (p.r1 - p.r0) * e;
-                var a = p.a0 + p.spin * Math.PI * 2.4 * (1 - Math.pow(1 - t, 2));
-                p.a1 = a;
-                p.px = c.x + Math.cos(a) * r;
-                p.py = c.y + Math.sin(a) * r;
-                p.alpha = 0.12 + 0.88 * t;
-            }
-        }
-
-        function updateBurst(list, elapsed, c) {
-            var t = clamp01(elapsed / BURST_MS);
-            var e = 1 - Math.pow(1 - t, 2);
-            for (var i = 0; i < list.length; i++) {
-                var p = list[i];
-                var a = p.a1 + p.spin * Math.PI * 1.1 * e;
-                var r = p.r1 + (p.r0 * 0.85 + 140) * e;
-                p.px = c.x + Math.cos(a) * r;
-                p.py = c.y + Math.sin(a) * r;
-                var al = 1 - t;
-                p.alpha = al * al;
-            }
-        }
-
-        function paint(list) {
-            ctx.clearRect(0, 0, viewW, viewH);
-            var table = buildColorTable();
-            for (var i = 0; i < list.length; i++) {
-                var p = list[i];
-                if (p.alpha <= 0.02) continue;
-                var idx = Math.round(p.alpha * ALPHA_STEPS);
-                if (idx > ALPHA_STEPS) idx = ALPHA_STEPS;
-                ctx.fillStyle = table[p.color][idx];
-                ctx.fillRect(p.px, p.py, p.size, p.size);
-            }
-        }
-
-        function drawRing(c, radius, alpha) {
-            if (alpha <= 0.01) return;
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            var inner = Math.max(1, radius * 0.72);
-            var outer = Math.max(inner + 1, radius * 1.2);
-            var grad = ctx.createRadialGradient(c.x, c.y, inner, c.x, c.y, outer);
-            grad.addColorStop(0, themeRgba(0));
-            grad.addColorStop(0.55, themeRgba(0.42));
-            grad.addColorStop(1, themeRgba(0));
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, outer, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
-
-        function drawBrand(c, size, scale, alpha) {
-            if (alpha <= 0.01) return;
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            ctx.translate(c.x, c.y);
-            ctx.scale(scale, scale);
-            ctx.font = '900 ' + size + 'px "MapleMono", monospace';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = themeRgba(0.55);
-            ctx.shadowBlur = 28;
-            // 字样本身也跟随主题色（与 app-routing.js 的 drawBrand 保持一致）
-            ctx.fillStyle = themeRgba(0.5);
-            ctx.fillText(TEXT, 0, 0);
-            ctx.shadowBlur = 0;
-            var grad = ctx.createLinearGradient(0, -size * 0.6, 0, size * 0.6);
-            grad.addColorStop(0, themeRgba(0.95));
-            grad.addColorStop(0.45, themeRgba(0.45));
-            grad.addColorStop(1, themeRgba(0.18));
-            ctx.fillStyle = grad;
-            ctx.fillText(TEXT, 0, 0);
-            ctx.strokeStyle = themeRgba(0.25);
-            ctx.lineWidth = 1;
-            ctx.strokeText(TEXT, 0, 0);
-            ctx.restore();
-        }
-
-        // MapleMono 由 JS 注册（非 CSS @font-face），字体到位后每帧绘制自动换用
-        try {
-            if (window.FontFace) {
-                var face = new FontFace('MapleMono', 'url(/fonts/MapleMono-Italic.ttf)');
-                face.load().then(function () { document.fonts.add(face); }).catch(function () { /* 回退 monospace */ });
-            }
-        } catch (e) { /* 忽略 */ }
-
-        // ---------- 加载进度 ----------
         var progress = 0;
         var lastProgressAt = now();
+        var stall = 0;               // 停滞兜底：缓慢缓推，避免进度环看起来卡死
+        var STALL_AFTER_MS = 2500;
+        var STALL_RATE = 0.09;
+        var SLOW_HINT_MS = 6000;
+        var HARD_MAX_MS = 20000;
+        var FADE_MS = 320;           // 与 #bootSplash 的 transition 对齐
 
-        // 记录真实加载进度：只驱动粒子汇聚度，界面上不再有独立的进度条
         function mark(value) {
             if (value <= progress) return;
             progress = value;
@@ -598,7 +388,7 @@
                 var href = links[i].getAttribute('href') || '';
                 for (var j = 0; j < CRITICAL_STYLES.length; j++) {
                     if (href.indexOf(CRITICAL_STYLES[j]) !== -1) {
-                        if (!links[i].sheet) return false;   // 仍在加载或尚未转成样式表
+                        if (!links[i].sheet) return false;
                         pending--;
                     }
                 }
@@ -606,92 +396,45 @@
             return pending <= 0;
         }
 
-        // 关键样式就绪 = 首屏可以正常绘制：占 45% 进度
         var stylePolls = 0;
         (function pollStyles() {
             if (criticalStylesReady() || ++stylePolls > 100) { mark(0.45); return; }
             setTimeout(pollStyles, 50);
         })();
 
-        // DOM 解析完成：65%
         document.addEventListener('readystatechange', function () {
             if (document.readyState === 'interactive') mark(0.65);
         });
 
-        // DOM 解析完成、defer 脚本执行完：进度到 90%。
-        // 注意：这里不直接收尾。"defer 都跑完"不等于"首页可交互"——真正决定点不点得动的是
-        // 首页事件绑定（js/app/app.js 的 setupEventListeners）与邀请码门禁的显示/绑定，
-        // 它们都在 DOMContentLoaded 的监听器里执行，而监听器的执行顺序并不保证在本脚本之后。
-        // 旧实现挂在 DOMContentLoaded 上收尾，慢网下会撤掉遮罩露出"页面在、点不动"的画面。
-        // 现在改为等业务侧广播就绪信号（window.__LELETV_BOOT_READY__）。
+        // defer 脚本跑完 ≠ 首页可交互；真正就绪由业务侧 window.__LELETV_BOOT_READY__ 广播，
+        // 两帧兜底确保 DOMContentLoaded 上的全部监听器（含邀请码门禁）已执行
         document.addEventListener('DOMContentLoaded', function () {
             mark(0.9);
-            // 兜底：业务侧没广播（脚本异常 / 当前页没有 searchInput）时，等两帧自行放行。
-            // 两帧足以让 DOMContentLoaded 的全部监听器跑完，不会早于邀请码弹窗的就绪
             requestAnimationFrame(function () {
                 requestAnimationFrame(function () { setTimeout(markReady, 0); });
             });
         });
-
         window.addEventListener('load', function () { mark(1); });
 
-        // ---------- 退场闸门 ----------
-        // 首页就绪 = 关键样式就绪 + defer 脚本执行完 + 首页事件已绑定 + 邀请码门禁就绪。
-        // 由 js/app/app.js 在 setupEventListeners() 之后调用；
-        // 上面的两帧兜底与下面的 HARD_MAX_MS 上限也会调到它
-        var ready = false;
-        function markReady() {
-            if (ready || state === 'out') return;
-            ready = true;
-            mark(1);
-            if (animate) {
-                beginFinish();
-            } else {
-                // 降级路径（减弱动效 / 无 canvas）没有 frame 推进阶段，等一帧后直接淡出
-                requestAnimationFrame(function () { release(); });
+        // ---------- 进度环渲染 ----------
+        // r=19（viewBox 44），周长 = 2π·r ≈ 119.4，与 CSS stroke-dasharray 一致
+        var CIRC = 119.4;
+        var shown = 0; // 平滑显示的进度，跟随真实进度避免跳变
+
+        function renderRing() {
+            var target = clamp01(Math.max(progress, stall));
+            shown += (target - shown) * 0.18;
+            if (Math.abs(target - shown) < 0.002) shown = target;
+            if (ringValue) {
+                ringValue.style.strokeDashoffset = (CIRC * (1 - shown)).toFixed(2);
             }
         }
-        window.__LELETV_BOOT_READY__ = markReady;
 
-        // ---------- 阶段状态机 ----------
-        var state = 'gather';   // gather → settle → hold → burst → out
-        var stateAt = 0;
-        var gNow = 0;           // 当前汇聚参数（1.2 = 完全到位）
-        var stall = 0;
-        var finishing = false;
-        var prevNow = now();
-
-        // 进入收尾：先确认 MapleMono 就绪再实体化（否则字样会先用回退字形画出来、字体到了再跳一下）。
-        // 字体在 head 已 preload，通常此刻已经到位，最多再等 300ms
-        function beginFinish() {
-            if (state !== 'gather' || finishing) return;
-            finishing = true;
-
-            var waited = 0;
-            (function waitBrandFont() {
-                // 局部名刻意不叫 ready：与上方退场闸门的 ready 同名会造成遮蔽与误读
-                var fontReady = true;
-                try {
-                    if (document.fonts && document.fonts.check) {
-                        fontReady = document.fonts.check('900 16px "MapleMono"');
-                    }
-                } catch (e) { fontReady = true; }
-                if (fontReady || waited >= 6) {
-                    state = 'settle';
-                    stateAt = now();
-                    return;
-                }
-                waited++;
-                setTimeout(waitBrandFont, 50);
-            })();
-        }
-
-        // 退场前确认门禁就绪：未通过邀请码校验时，登录弹窗必须先可见可交互。
-        // 否则遮罩一撤，用户看到的就是"首页能看见却点不动、像是跳过了邀请码"的画面
+        // ---------- 退场闸门 ----------
+        // 退场前确认邀请码门禁：未通过时弹窗必须先可见可交互，否则遮罩一撤就是"能看不能点"
         function ensureGate() {
             try {
                 var auth = window.INVITE_AUTH;
-                // 鉴权模块尚未加载（bundle 慢或异常）时无从判断，交给 HARD_MAX_MS 兜底
                 if (!auth || typeof auth.isVerified !== 'function') return;
                 if (auth.isVerified()) return;
                 var modal = document.getElementById('inviteLoginModal');
@@ -701,120 +444,59 @@
             } catch (e) { /* 忽略：宁可正常退场，也不要卡死 */ }
         }
 
-        // 退场只能发生一次：爆开期间会提前调用，尾部的兜底路径也可能再调一次
         var released = false;
-        function release() {
+        function release(removeDelay) {
             if (released) return;
             released = true;
             ensureGate();
             splash.classList.add('boot-splash--done');
             setTimeout(function () {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);
-            }, FADE_MS);
+            }, (typeof removeDelay === 'number') ? removeDelay : FADE_MS);
         }
 
-        if (animate) {
-            // 占位已经演过入场 → 通知首页跳过 playHomeIntro，避免同一套动画播两遍
-            window.__LELETV_BOOT_INTRO__ = true;
-            sizeCanvas();
-            particles = makeParticles(brandFontSize() * 1.5);
-            window.addEventListener('resize', sizeCanvas);
-            requestAnimationFrame(frame);
+        var ready = false;
+        function markReady() {
+            if (ready || released) return;
+            ready = true;
+            mark(1);
+            // 1) 进度环消失；2) logo 放大淡化（爆开）；3) 遮罩随后开始淡出
+            // 爆开先跑约 0.18s 再让黑底开始溶解，logo 向外胀开时首页渐显出来
+            if (ring) ring.classList.add('boot-progress-ring--done');
+            if (stage) stage.classList.add('boot-splash-stage--burst');
+            if (reducedMotion()) { release(); return; }
+            setTimeout(function () { release(460); }, 120);
         }
-        // 降级（减弱动效 / 无 canvas）不跑粒子，由 markReady 直接放行（见上）；
-        // 同样不再挂在 DOMContentLoaded 上——那样会赶在首页事件绑定之前撤掉遮罩
+        // 业务侧（js/app/app.js）在 setupEventListeners 之后调用此函数
+        window.__LELETV_BOOT_READY__ = markReady;
+        // 通知首页跳过 playHomeIntro：本启动屏已接管入场视觉，不要播第二遍
+        window.__LELETV_BOOT_INTRO__ = true;
 
-        // ---------- 兜底：慢网下宁可不退场，也不露出未就绪的页面 ----------
-        // 旧实现是"8 秒无条件撤遮罩"，结果是页面在、事件没绑：能看见却点不动，
-        // 邀请码弹窗也还没弹出来。现在分两级：先给提示（用户知道没卡死，也可主动进入），
-        // 再由 HARD_MAX_MS 最终放行
-        var hintEl = document.getElementById('bootSplashHint');
-        var hintBtn = document.getElementById('bootSplashSkipBtn');
+        // ---------- 慢速提示与硬上限 ----------
         var hintShown = false;
-
         function showHint() {
             if (hintShown || released) return;
             hintShown = true;
             if (hintEl) hintEl.classList.add('is-visible');
         }
-
-        // 用户主动放行：同样会经过 ensureGate，遮罩之下至少是能点的
-        if (hintBtn) {
-            hintBtn.addEventListener('click', markReady);
-        }
-
+        if (hintBtn) hintBtn.addEventListener('click', markReady);
         setTimeout(showHint, SLOW_HINT_MS);
         setTimeout(markReady, HARD_MAX_MS);
 
-        function frame(t) {
-            if (state === 'out') return;
-
-            var dt = Math.min(Math.max(t - prevNow, 0), 100); // 后台恢复时不要大跳
-            prevNow = t;
-
-            // 进度长时间不动 → 兜底缓推，画面不会看起来卡死（但不会越过"已就绪"去触发爆开）
+        // ---------- 主循环：驱动进度环 + 停滞兜底 ----------
+        var prev = now();
+        function tick(t) {
+            if (released) return;
+            if (typeof t !== 'number') t = now();
+            var dt = Math.min(Math.max(t - prev, 0), 100);
+            prev = t;
             if (t - lastProgressAt > STALL_AFTER_MS) {
                 stall = clamp01(stall + (dt / 1000) * STALL_RATE);
             }
-
-            var c = center();
-            var size = brandFontSize();
-            var brandRadius = size * 1.5;
-            var ringStart = c.maxR * 0.55;
-
-            if (state === 'gather' || state === 'settle' || state === 'hold') {
-                var target = (state === 'gather')
-                    ? G_FULL * clamp01(Math.max(progress, stall) / GATHER_START)
-                    : G_FULL;
-                gNow += (target - gNow) * (1 - Math.exp(-dt / TAU));
-
-                var gather = clamp01(gNow / G_FULL);
-                updateGather(particles, gNow * GATHER_MS, c);
-                paint(particles);
-
-                // 粒子开始向中心收拢 → CSS 标题层淡出：两者画的是同一个字样，
-                // 趁粒子还在外围时交接，避免同屏出现两个"LeLeTV"。
-                // 减弱动效 / 无 canvas 时 frame() 根本不跑，标题层因此一直显示到 release()
-                if (!brandHidden && gather >= BRAND_HANDOFF) {
-                    brandHidden = true;
-                    if (brandEl) brandEl.classList.add('boot-splash-brand--out');
-                }
-
-                var reveal = clamp01((gather - 0.4) / 0.6);
-                var revealEase = 1 - Math.pow(1 - reveal, 3);
-                // 进度已停但字样已成型时，给环带一点呼吸，避免完全静止
-                var breathe = (state === 'gather' && gather >= 0.999)
-                    ? 0.92 + 0.08 * Math.sin(t * 0.0035)
-                    : 1;
-                drawRing(c, ringStart + (brandRadius - ringStart) * revealEase, 0.55 * revealEase * breathe);
-                drawBrand(c, size, 0.88 + 0.12 * revealEase, revealEase);
-
-                if (state === 'settle' && t - stateAt >= SETTLE_MS) {
-                    state = 'hold';
-                    stateAt = t;
-                } else if (state === 'hold' && t - stateAt >= HOLD_MS) {
-                    state = 'burst';
-                    stateAt = t;
-                }
-                requestAnimationFrame(frame);
-                return;
-            }
-
-            // 爆开 → 遮罩与爆开同步渐隐，露出新页面（不再等爆开演完才退场）
-            var be = t - stateAt;
-            var bt = clamp01(be / BURST_MS);
-            updateBurst(particles, be, c);
-            paint(particles);
-            drawRing(c, brandRadius + 220 * bt, 0.5 * (1 - bt));
-            drawBrand(c, size, 1 + 0.35 * bt, 1 - bt);
-            // 爆开刚起势就开始淡出：粒子还在向外扩散时页面已经渐显，两边重叠才是"爆开的同时恢复页面"
-            if (bt >= 0.18) release();
-            if (bt >= 1) {
-                state = 'out';
-                return;
-            }
-            requestAnimationFrame(frame);
+            renderRing();
+            requestAnimationFrame(tick);
         }
+        requestAnimationFrame(tick);
     })();
     </script>
 

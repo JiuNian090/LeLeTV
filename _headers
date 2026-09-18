@@ -17,6 +17,10 @@
 /service-worker.js
   Cache-Control: no-cache
 
+# Manifest：禁止缓存，PWA 启动屏配色（background_color/theme_color）更新后需及时生效
+/manifest.json
+  Cache-Control: no-cache
+
 # 版本相关文件：必须实时校验
 /CHANGELOG.md
   Cache-Control: no-cache
