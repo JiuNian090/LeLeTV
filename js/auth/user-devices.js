@@ -56,6 +56,14 @@ const USER_DEVICES_PANEL = {
     const auth = window.INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
+    // 签名叠加了设备名：改名后必须重算并上报，否则「设备 ID 丢失找回」会对不上
+    let newSignature = '';
+    try {
+      newSignature = await window.INVITE_AUTH.computeDeviceSignature(newName);
+    } catch {
+      newSignature = '';
+    }
+
     try {
       const res = await fetch(this._inviteUrl('/invite/rename-device'), {
         method: 'POST',
@@ -63,11 +71,16 @@ const USER_DEVICES_PANEL = {
         body: JSON.stringify({
           code: auth.code,
           device_fingerprint: auth.device_fingerprint,
-          new_name: newName
+          new_name: newName,
+          new_signature: newSignature
         })
       });
       const data = await res.json();
-      return data.ok;
+      if (data.ok) {
+        window.INVITE_AUTH.updateLocalDeviceName(newName);
+        return true;
+      }
+      return false;
     } catch {
       return false;
     }

@@ -758,7 +758,7 @@ async function handleSetRemark(request, env) {
 // POST /invite/rename-device - 重命名设备（同码用户可操作，仅限当前设备）
 async function handleRenameDevice(request, env) {
   const body = await request.json();
-  const { code, device_fingerprint, new_name } = body;
+  const { code, device_fingerprint, new_name, new_signature } = body;
   
   if (!code || !device_fingerprint || !new_name) {
     return jsonResponse({ ok: false, error: '缺少参数' }, 400);
@@ -779,9 +779,19 @@ async function handleRenameDevice(request, env) {
     return jsonResponse({ ok: false, error: '设备名不能为空' }, 400);
   }
   
-  await env.INVITE_DB.prepare(
-    'UPDATE devices SET device_name = ? WHERE code = ? AND device_fingerprint = ?'
-  ).bind(name, code, device_fingerprint).run();
+  // 设备名已叠加进软指纹：改名时同步更新签名，否则设备 ID 丢失后无法找回
+  const signature = String(new_signature || '').trim();
+  const withSignature = signature && await hasSignatureColumn(env);
+
+  if (withSignature) {
+    await env.INVITE_DB.prepare(
+      'UPDATE devices SET device_name = ?, device_signature = ? WHERE code = ? AND device_fingerprint = ?'
+    ).bind(name, signature, code, device_fingerprint).run();
+  } else {
+    await env.INVITE_DB.prepare(
+      'UPDATE devices SET device_name = ? WHERE code = ? AND device_fingerprint = ?'
+    ).bind(name, code, device_fingerprint).run();
+  }
   
   return jsonResponse({ ok: true });
 }

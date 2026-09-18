@@ -158,12 +158,11 @@ const INVITE_AUTH = {
   },
 
   /**
-   * 软指纹：本机硬件/渲染特征哈希
-   * 只作「设备 ID 丢失后找回」的依据——同型号同系统设备仍可能算出相同值，
-   * 因此服务端仅在「同一邀请码下唯一命中」时才使用它
+   * 基础软指纹：仅含本机硬件/渲染特征（canvas / WebGL / UA / 屏幕 / 时区等）。
+   * 这部分计算较贵且同一会话内不变，缓存起来避免改名时重复跑 canvas。
    */
-  async computeDeviceSignature() {
-    if (INVITE_AUTH._cachedSignature) return INVITE_AUTH._cachedSignature;
+  async _computeBaseSignature() {
+    if (INVITE_AUTH._cachedBaseSignature) return INVITE_AUTH._cachedBaseSignature;
     const components = [
       navigator.userAgent,
       screen.width + 'x' + screen.height,
@@ -179,9 +178,26 @@ const INVITE_AUTH = {
       'gpu:' + INVITE_AUTH._gpuSignature(),
       'canvas:' + INVITE_AUTH._canvasSignature()
     ];
-    const signature = await INVITE_AUTH._sha256Hex(components.join('||') + 'LELETV_SIGNATURE_SALT');
-    INVITE_AUTH._cachedSignature = signature;
-    return signature;
+    const base = await INVITE_AUTH._sha256Hex(components.join('||') + 'LELETV_SIGNATURE_SALT');
+    INVITE_AUTH._cachedBaseSignature = base;
+    return base;
+  },
+
+  /**
+   * 软指纹：基础硬件特征 + 用户设备名（昵称）。
+   *
+   * 同型号同系统设备的硬件特征完全一致，仅靠基础指纹无法区分；
+   * 叠加用户自取的设备名后，不同昵称的设备会算出不同签名，
+   * 服务端在「设备 ID 丢失找回」时就能更精准地匹配到原记录。
+   *
+   * 未传 deviceName 时返回基础指纹（兼容旧调用与管理员登录场景）。
+   * 改名后需重新调用本函数并把新签名上报服务端，否则找回会失效。
+   */
+  async computeDeviceSignature(deviceName) {
+    const base = await INVITE_AUTH._computeBaseSignature();
+    const name = (deviceName || '').trim();
+    if (!name) return base;
+    return INVITE_AUTH._sha256Hex(base + '||name:' + name);
   },
 
   /** @deprecated 兼容旧调用：请用 computeDeviceSignature（软指纹已不是设备唯一标识） */
@@ -219,6 +235,19 @@ const INVITE_AUTH = {
    */
   clearAuth() {
     localStorage.removeItem(INVITE_AUTH.STORAGE_KEY);
+  },
+
+  /**
+   * 仅更新本地保存的设备名（改名后同步，不重置 verified_at）。
+   * 改名后本地 auth.device_name 需与服务端保持一致，否则旧指纹迁移等逻辑会用到旧名称。
+   */
+  updateLocalDeviceName(name) {
+    const auth = INVITE_AUTH.getAuth();
+    if (!auth) return;
+    auth.device_name = name;
+    try {
+      localStorage.setItem(INVITE_AUTH.STORAGE_KEY, JSON.stringify(auth));
+    } catch { /* 忽略 */ }
   },
 
   /**
@@ -332,8 +361,9 @@ const INVITE_AUTH = {
   async verify(code, deviceName) {
     const deviceInfo = INVITE_AUTH.getOrCreateDeviceId();
     const deviceId = deviceInfo.id;
-    // 软指纹随注册一并上报：本机 ID 丢失（清缓存/无痕）时服务端可据此找回原记录
-    const signature = await INVITE_AUTH.computeDeviceSignature();
+    // 软指纹随注册一并上报：本机 ID 丢失（清缓存/无痕）时服务端可据此找回原记录。
+    // 签名叠加了设备名，同型号但不同昵称的设备可被区分开。
+    const signature = await INVITE_AUTH.computeDeviceSignature(deviceName);
     
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/verify');
