@@ -114,6 +114,17 @@ git log --format="=== %h %ad %s%n%b" --date=short <上个发布提交>..HEAD
 
 **② 与本次改动对应的正文内容（逐项核对，禁止跳过）**
 
+先用第 1 步刷新好的 CodeGraph 索引导航，避免逐文件翻代码：
+
+```bash
+git diff --name-only <上个发布提交>..HEAD   # 本次改了哪些源文件
+codegraph files                            # 核对「目录结构」：文件数 / 模块数 / 子目录
+codegraph query <关键词>                    # 确认 README 提到的模块或功能在当前代码里的真实名称
+codegraph impact <符号>                     # 判断改动影响面，定位需要同步的「机制」描述
+```
+
+索引在步骤 1 已刷新，直接查询即可，不要重复构建。
+
 对照第 4 步拿到的提交记录，判断本次版本涉及 README 的哪些章节，并逐项改到与代码一致：
 
 | 本次改动涉及 | 需要核对的 README 章节 |
