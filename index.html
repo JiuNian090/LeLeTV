@@ -6,6 +6,10 @@
          PWA 从桌面/主屏图标冷启动时，浏览器在拉到样式表之前有一个"默认白底"窗口，
          这段内联样式让第一次绘制就是黑底，杜绝白屏闪烁。 -->
     <meta name="theme-color" content="#000000">
+    <!-- 安卓底部导航栏（小白条区域）配色：必须单独设置，theme-color 不管它。
+         系统浅色模式下默认底部变白，与深色主题冲突；这里强制黑色，与站内背景一致。
+         支持 Chrome 120+ / Android 13+，旧版本自动忽略。 -->
+    <meta name="navigation-bar-color" content="#000000">
     <style>
         html, body { background: #000000 !important; margin: 0; padding: 0; }
     </style>
