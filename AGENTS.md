@@ -60,7 +60,7 @@
 
 <!-- AGENT-INDEX:START -->
 
-> 由 `node scripts/sync-agent-index.mjs` 自动生成（18 个技能、8 个规则文件），请勿手改。
+> 由 `node scripts/sync-agent-index.mjs` 自动生成（12 个技能、8 个规则文件），请勿手改。
 > 新增技能或规则后重跑该脚本：`node scripts/sync-agent-index.mjs`
 
 ### 技能
@@ -69,12 +69,6 @@
 |------|------|
 | `design-taste-frontend` | Anti-slop frontend skill for landing pages, portfolios, and redesigns |
 | `full-output-enforcement` | Overrides default LLM truncation behavior |
-| `gitnexus-cli` | Use when the user needs to run GitNexus CLI commands like analyze/index a repo, check… |
-| `gitnexus-debugging` | Use when the user is debugging a bug, tracing an error, or asking why something fails |
-| `gitnexus-exploring` | Use when the user asks how code works, wants to understand architecture, trace… |
-| `gitnexus-guide` | Use when the user asks about GitNexus itself — available tools, how to query the… |
-| `gitnexus-impact-analysis` | Use when the user wants to know what will break if they change something, or needs… |
-| `gitnexus-refactoring` | Use when the user wants to rename, extract, split, move, or restructure code safely |
 | `high-end-visual-design` | Teaches the AI to design like a high-end agency |
 | `impeccable` | Use when the user wants to design, redesign, shape, critique, audit, polish, clarify,… |
 | `installing-project-skills` | Use when installing skills for a new project, or when the user asks to update, upgrade,… |
@@ -90,7 +84,7 @@
 
 | 文件 | 标题 |
 |------|------|
-| `.agents/rules/code-graph-rules.md` | 代码图谱规则（CodeGraph / GitNexus） |
+| `.agents/rules/code-graph-rules.md` | 代码图谱规则（CodeGraph） |
 | `.agents/rules/code-standards-rules.md` | 代码规范规则 |
 | `.agents/rules/deployment-rules.md` | 部署规则（Cloudflare） |
 | `.agents/rules/project-rules.md` | 项目通用规则 |
@@ -111,48 +105,4 @@
 4. **改核心函数/类之前先跑影响分析** —— `.agents/rules/code-graph-rules.md`
 5. **新增技能或规则后重跑索引** —— `node scripts/sync-agent-index.mjs`
 
----
 
-<!-- gitnexus:start -->
-# GitNexus — Code Intelligence
-
-This project is indexed by GitNexus as **LeLeTV**. Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
-
-> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
-
-## Always Do
-
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
-
-## Never Do
-
-- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
-- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
-
-## Resources
-
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/LeLeTV/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/LeLeTV/clusters` | All functional areas |
-| `gitnexus://repo/LeLeTV/processes` | All execution flows |
-| `gitnexus://repo/LeLeTV/process/{name}` | Step-by-step execution trace |
-
-## CLI
-
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.agents/skills/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.agents/skills/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.agents/skills/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.agents/skills/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.agents/skills/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.agents/skills/gitnexus-cli/SKILL.md` |
-
-<!-- gitnexus:end -->

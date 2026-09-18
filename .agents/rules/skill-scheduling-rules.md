@@ -15,17 +15,17 @@
 
 ## 场景 → 技能分派表
 
-> 只列**实际安装**的技能（共 19 个，索引见 `AGENTS.md`）。
+> 只列**实际安装**的技能（共 12 个，索引见 `AGENTS.md`）。
 
 | # | 场景 | 用户触发词 | 调用链 |
 |---|------|-----------|--------|
 | 1 | 新功能开发 | "实现""添加""新增" | `scheduling-project-skills` → 编码 → `karpathy-guidelines` 自查 |
 | 2 | Bug 修复 | "报错""bug""不工作" | `superpowers-systematic-debugging` → 修复 → 验证 |
-| 3 | 代码重构 | "重构""优化代码""重写" | `gitnexus-impact-analysis` → `gitnexus-refactoring` → 验证 |
-| 4 | 影响分析 | "改了会怎样""影响范围" | `gitnexus-impact-analysis` |
-| 5 | 架构理解 | "怎么实现的""代码怎么走" | `gitnexus-exploring` |
-| 6 | 索引/图谱运维 | "重索引""索引过期" | `gitnexus-cli` |
-| 7 | 工具用法咨询 | "gitnexus 怎么用" | `gitnexus-guide` |
+| 3 | 代码重构 | "重构""优化代码""重写" | `codegraph impact` → 逐处修改 → `codegraph callers` 回查 → 验证 |
+| 4 | 影响分析 | "改了会怎样""影响范围" | `codegraph impact` |
+| 5 | 架构理解 | "怎么实现的""代码怎么走" | `codegraph query` → `codegraph callers` / `callees` |
+| 6 | 索引/图谱运维 | "重索引""索引过期" | `codegraph sync` / `codegraph index` |
+| 7 | 工具用法咨询 | "codegraph 怎么用" | `codegraph-cli` |
 | 8 | UI/UX 设计 | "设计""改界面""新页面" | 见下方「设计技能选择指南」 |
 | 9 | 版本发布 | "发布""新版本""更新日志" | `version-release` + `.agents/rules/version-management-rules.md` |
 | 10 | 技能管理 | "安装/更新/卸载技能" | `managing-project-skills` + `.agents/rules/skill-lifecycle-rules.md` |
@@ -94,9 +94,9 @@
 ## 开发工作流
 
 1. **规划** → 分类任务，判断难度（本文件）
-2. **影响分析** → 改核心符号前先跑 `gitnexus-impact-analysis`
+2. **影响分析** → 改核心符号前先跑 `codegraph impact`
 3. **开发** → 编码，遵守 `.agents/rules/code-standards-rules.md`
 4. **自查** → `karpathy-guidelines`
-5. **验证** → 跑最相关的检查；提交前 `npx gitnexus detect_changes`
+5. **验证** → 跑最相关的检查；改动符号后 `codegraph callers` 回查调用方
 6. **提交** → 提交规范见 `.agents/rules/code-standards-rules.md`
 7. **版本** → 发版走 `version-release`

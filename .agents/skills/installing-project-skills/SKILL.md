@@ -61,7 +61,7 @@ Read `package.json` / `requirements.txt` / `Cargo.toml` / `go.mod` to determine 
 
 Search `**/SKILL.md` and `**/skill.md` across the project. Target dirs: `.agents/skills/`, `.trae/skills/`, `skills/`, `.skills/`, `docs/skills/`.
 
-**Self-managed tools (DO NOT migrate):** GitNexus, codegraph — they manage their own skill dirs via CLI.
+**Self-managed tools (DO NOT migrate):** codegraph — it manages its own skill dirs via CLI.
 
 ### 2.5. Scan & Extract Existing Rules from AGENTS.md / CLAUDE.md
 
@@ -97,7 +97,7 @@ Read `.agents/skills-registry.json` to discover available skill sources. The reg
 - **Source name & URL** — where to clone from
 - **Filter rule** — `always` (install for every project) or `tech-stack` (only when dependencies match)
 - **Skill list** — which skills each source provides
-- **selfManaged** — tools that manage their own skill directories (GitNexus, codegraph), skip migration
+- **selfManaged** — tools that manage their own skill directories (codegraph), skip migration
 
 ```json
 // 示例：skills-registry.json 结构
@@ -105,7 +105,7 @@ Read `.agents/skills-registry.json` to discover available skill sources. The reg
   "sources": [
     { "name": "superpowers", "filter": "always" },
     { "name": "ecc", "filter": "tech-stack", "match": { "dependencies": ["react", "vue"] } },
-    { "name": "gitnexus", "selfManaged": true }
+    { "name": "codegraph", "selfManaged": true }
   ],
   "customSources": { "hint": "新建 .agents/skills-config.json 可自定义源" }
 }
@@ -237,7 +237,7 @@ For each skill that declares `requires_tools` in its frontmatter:
 - `cli` — CLI 安装命令和安装后配置
 - `mcp` — MCP 服务器配置方式（command + args）
 
-**自管理工具**（如 GitNexus、CodeGraph）：它们有自己的 CLI 来管理技能和更新，通过 `psm tool install` 安装后，其技能由自身 CLI 管理，PSM 不做迁移。
+**自管理工具**（如 CodeGraph）：它们有自己的 CLI 来管理技能和更新，通过 `psm tool install` 安装后，其技能由自身 CLI 管理，PSM 不做迁移。
 
 ### 10. Generate INDEX.md
 

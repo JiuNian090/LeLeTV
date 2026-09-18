@@ -41,7 +41,6 @@ apikey/
 # （各工具的接线方式见 .agents/README.md）
 .claude/
 .codegraph/
-.gitnexus/
 .reasonix/
 .zcode/
 reasonix.toml

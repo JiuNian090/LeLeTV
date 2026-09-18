@@ -115,8 +115,6 @@ print_guidance() {
             ok "已安装 ${count} 个技能"
             info "查看技能清单:"
             echo "  ls ${ROOT_DIR}/.agents/skills/"
-            info "如需更新技能，在 IDE 中输入「更新技能和规则」或运行:"
-            echo "  npx psmgr install --yes"
             ;;
     esac
 

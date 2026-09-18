@@ -1,4 +1,4 @@
-# 代码图谱规则（CodeGraph / GitNexus）
+# 代码图谱规则（CodeGraph）
 
 > 按需加载 — 做影响分析、调用链追踪、重构、Bug 排查时读取。
 
@@ -6,11 +6,11 @@
 
 ## 何时必须用
 
-- **改任何函数/类/方法之前**：先跑影响分析（`codegraph impact` 或 `npx gitnexus impact`），把影响范围报告给用户
-- **提交前**：跑 `npx gitnexus detect_changes`，确认改动只影响预期符号
-- **重命名符号**：必须用 `npx gitnexus rename`，禁止用查找替换
+- **改任何函数/类/方法之前**：先跑 `codegraph impact <符号>`，把影响范围报告给用户
+- **重命名符号**：先跑 `codegraph callers <符号>` 列出全部调用点，逐处改完再回查确认，禁止盲目的查找替换
+- **发版前**：先跑 `codegraph sync` 刷新索引，再进入 `version-release` 流程
 
-## CodeGraph CLI（符号级分析）
+## CodeGraph CLI
 
 ```bash
 codegraph <命令> <参数>
@@ -25,50 +25,24 @@ codegraph <命令> <参数>
 | 任务上下文 | `context <描述>` | `context "调试搜索流程"` |
 | 文件结构 | `files` | `files` |
 | 索引状态 | `status` | `status` |
-| 重索引 | `index [--force]` | `index --force` |
+| 增量重索引 | `sync` | `sync` |
+| 全量重索引 | `index [--force]` | `index --force` |
 | 受影响测试 | `affected [文件]` | `affected js/api.js` |
 
-## GitNexus CLI（执行流级分析）
+## 使用纪律
 
-```bash
-npx gitnexus <命令> [参数]
-```
-
-| 任务 | 命令 | 示例 |
-|------|------|------|
-| 执行流搜索 | `query <词>` | `query "搜索流程"` |
-| 符号全景 | `context <符号>` | `context searchByAPIAndKeyWord` |
-| 影响范围 | `impact <符号>` | `impact searchByAPIAndKeyWord` |
-| 变更检测 | `detect_changes` | `detect_changes` |
-| 安全重命名 | `rename <旧> <新>` | `rename oldFunc newFunc` |
-| 索引状态 | `status` | `status` |
-| 重索引 | `analyze [--force]` | `analyze --force` |
-
-## 工具选择矩阵
-
-| 任务场景 | 首选 | 为什么 |
+| 任务场景 | 做法 | 为什么 |
 |---------|------|--------|
 | 快速符号搜索 | `codegraph query` | 毫秒级 FTS5 本地索引 |
-| 调用链追踪 | `codegraph callers/callees` | AST 级精确调用关系 |
-| 影响范围分析 | `codegraph impact` | 快速出结果，按符号数定级 |
-| 执行流分析 | `npx gitnexus query / context` | 预索引执行流，按相关性排序 |
-| 安全重命名 | `npx gitnexus rename` | 理解调用图，不会遗漏 |
-| 提交前变更检测 | `npx gitnexus detect_changes` | 验证改动是否超预期 |
-| Bug 排查 | `codegraph query` → `npx gitnexus context` | 先搜符号，再追流程 |
-| 大范围重构 | `codegraph impact` → `npx gitnexus context` | 先扫影响面，再验证流程完整性 |
-| 极简改动（1 行/文案） | 直接编辑 | 不调用任何图谱工具 |
+| 调用链追踪 | `codegraph callers` / `callees` | AST 级精确调用关系 |
+| 影响范围分析 | `codegraph impact` | 按符号数定级 |
+| 改名 / 抽取 / 拆分 | 先 `callers` 列调用点 → 逐处修改 → 再 `callers` 回查 | 避免遗漏调用方 |
+| Bug 排查 | `query` 定位符号 → `callers` / `callees` 追调用链 | 先找到入口再顺链路 |
+| 极简改动（1 行 / 文案） | 直接编辑 | 不调用图谱工具 |
 
-## 配套技能
+## 维护
 
-`.agents/skills/gitnexus-*/SKILL.md` 提供各场景的操作细则：
-
-| 场景 | 技能目录 |
-|---|---|
-| 理解架构 /「X 是怎么工作的」 | `.agents/skills/gitnexus-exploring/` |
-| 影响范围 /「改 X 会破坏什么」 | `.agents/skills/gitnexus-impact-analysis/` |
-| 排查 Bug /「X 为什么失败」 | `.agents/skills/gitnexus-debugging/` |
-| 重命名 / 抽取 / 拆分 / 重构 | `.agents/skills/gitnexus-refactoring/` |
-| 工具、资源、schema 参考 | `.agents/skills/gitnexus-guide/` |
-| 索引、状态、清理等 CLI 命令 | `.agents/skills/gitnexus-cli/` |
-
-> 本项目由 GitNexus 索引为 **LeLeTV**。若工具提示索引过期，先跑 `npx gitnexus analyze`。
+- 索引库位于 `.codegraph/`（已 gitignore，不提交）
+- 代码变更后跑 `codegraph sync` 增量刷新；仅当索引结构异常时才用 `codegraph index --force` 全量重建
+- 全量重建需要索引库未被占用：若报 `EPERM ... database file is in use`，先停掉正在运行的 CodeGraph 服务再重试
+- 命令细则见全局技能 `codegraph-cli`（`~/.trae-cn/skills/codegraph-cli/`）

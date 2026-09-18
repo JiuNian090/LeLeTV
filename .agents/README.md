@@ -13,15 +13,13 @@
 │   ├── code-standards-rules.md       # 编码规范 + 提交规范 + 错误处理等级
 │   ├── security-rules.md             # ECC 安全基线
 │   ├── deployment-rules.md           # Cloudflare 部署与排查
-│   ├── code-graph-rules.md           # CodeGraph / GitNexus 用法
+│   ├── code-graph-rules.md           # CodeGraph 用法
 │   ├── skill-scheduling-rules.md     # 技能编排 + 设计技能选择指南
 │   ├── skill-lifecycle-rules.md      # 技能安装/升级/卸载
-│   ├── version-management-rules.md   # 版本发布流程
-│   └── templates/                    # psm 模板（重装时用）
+│   └── version-management-rules.md   # 版本发布流程
 ├── skills/                   # 技能正文，每个技能一个目录
 │   └── <skill-name>/SKILL.md
-├── skills-registry.json      # psm 上游技能源
-├── tools.json                # codegraph / gitnexus 安装状态
+├── tools.json                # codegraph 安装状态
 └── skills/INDEX.md           # 自动生成的技能与规则索引
 ```
 

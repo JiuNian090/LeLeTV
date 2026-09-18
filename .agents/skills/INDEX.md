@@ -6,18 +6,12 @@
 
 ---
 
-## 技能（18）
+## 技能（12）
 
 | 技能 | 用途 | 路径 |
 |------|------|------|
 | `design-taste-frontend` | Anti-slop frontend skill for landing pages, portfolios, and redesigns | `.agents/skills/design-taste-frontend/` |
 | `full-output-enforcement` | Overrides default LLM truncation behavior | `.agents/skills/full-output-enforcement/` |
-| `gitnexus-cli` | Use when the user needs to run GitNexus CLI commands like analyze/index a repo, check… | `.agents/skills/gitnexus-cli/` |
-| `gitnexus-debugging` | Use when the user is debugging a bug, tracing an error, or asking why something fails | `.agents/skills/gitnexus-debugging/` |
-| `gitnexus-exploring` | Use when the user asks how code works, wants to understand architecture, trace… | `.agents/skills/gitnexus-exploring/` |
-| `gitnexus-guide` | Use when the user asks about GitNexus itself — available tools, how to query the… | `.agents/skills/gitnexus-guide/` |
-| `gitnexus-impact-analysis` | Use when the user wants to know what will break if they change something, or needs… | `.agents/skills/gitnexus-impact-analysis/` |
-| `gitnexus-refactoring` | Use when the user wants to rename, extract, split, move, or restructure code safely | `.agents/skills/gitnexus-refactoring/` |
 | `high-end-visual-design` | Teaches the AI to design like a high-end agency | `.agents/skills/high-end-visual-design/` |
 | `impeccable` | Use when the user wants to design, redesign, shape, critique, audit, polish, clarify,… | `.agents/skills/impeccable/` |
 | `installing-project-skills` | Use when installing skills for a new project, or when the user asks to update, upgrade,… | `.agents/skills/installing-project-skills/` |
@@ -33,7 +27,7 @@
 
 | 文件 | 标题 |
 |------|------|
-| `.agents/rules/code-graph-rules.md` | 代码图谱规则（CodeGraph / GitNexus） |
+| `.agents/rules/code-graph-rules.md` | 代码图谱规则（CodeGraph） |
 | `.agents/rules/code-standards-rules.md` | 代码规范规则 |
 | `.agents/rules/deployment-rules.md` | 部署规则（Cloudflare） |
 | `.agents/rules/project-rules.md` | 项目通用规则 |

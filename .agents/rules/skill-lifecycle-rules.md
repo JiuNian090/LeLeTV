@@ -12,7 +12,7 @@
 
 ## 已安装技能清单
 
-共 19 个，按用途分组：
+共 12 个，按用途分组：
 
 | 分组 | 技能 |
 |------|------|
@@ -21,7 +21,7 @@
 | 索引维护 | `syncing-agent-index` |
 | 工程规范 | `karpathy-guidelines` |
 | 调度调试 | `superpowers-systematic-debugging` |
-| 代码图谱 | `gitnexus-cli`、`gitnexus-debugging`、`gitnexus-exploring`、`gitnexus-guide`、`gitnexus-impact-analysis`、`gitnexus-refactoring` |
+| 代码图谱 | `codegraph-cli`（全局技能，不在 `.agents/skills/` 内） |
 | 设计风格 | `design-taste-frontend`、`redesign-existing-projects`、`high-end-visual-design`、`impeccable`、`full-output-enforcement` |
 
 ## 安装流程
@@ -30,7 +30,7 @@
 
 1. 检测项目信息（读取依赖文件确定技术栈）
 2. 扫描现有技能（搜索 `.agents/skills/` 下的 `SKILL.md`）
-3. 整合上游来源（ECC、GitNexus、codegraph、superpowers、karpathy、设计技能集）
+3. 整合上游来源（ECC、codegraph、superpowers、karpathy、设计技能集）
 4. 按技术栈适配筛选
 5. 冲突处理（同名技能合并而非覆盖）
 6. 安装到 `.agents/skills/<name>/`
@@ -52,10 +52,10 @@
 
 ## 状态检查
 
-列出 `.agents/skills/` 下所有技能及其 `SKILL.md` 的 `description`；检查 `.agents/tools.json` 中的依赖工具（codegraph / gitnexus）是否可用；报告索引是否与磁盘一致（重跑 `node scripts/sync-agent-index.mjs --check`）。
+列出 `.agents/skills/` 下所有技能及其 `SKILL.md` 的 `description`；检查 `.agents/tools.json` 中的依赖工具（codegraph）是否可用；报告索引是否与磁盘一致（重跑 `node scripts/sync-agent-index.mjs --check`）。
 
 ## 注意事项
 
-- `.agents/skills/INDEX.md` 由 `scripts/sync-agent-index.mjs` 生成。若运行过 `npx psmgr install` 把它覆盖成只含 psm 技能的版本，重跑该脚本即可恢复
+- `.agents/skills/INDEX.md` 由 `scripts/sync-agent-index.mjs` 生成。若它被其他工具覆盖成不完整的版本，重跑该脚本即可恢复
 - 新增技能后**必须**重跑索引脚本，否则索引与磁盘不一致
-- **工具注入式技能不要手动搬动**：`gitnexus`、`codegraph` 在 `.agents/skills-registry.json` 里标记为 `selfManaged`，它们的技能由工具自己安装与更新，落点可能是 `.agents/skills/gitnexus/<name>/` 这类分组目录。索引脚本同时支持「顶层」与「分组」两种结构并按名称去重，因此**只需保证索引能收录，无需移动文件**
+- **工具注入式技能不要手动搬动**：`codegraph` 这类工具会自己安装与更新技能，落点可能是 `.agents/skills/codegraph/<name>/` 这类分组目录。索引脚本同时支持「顶层」与「分组」两种结构并按名称去重，因此**只需保证索引能收录，无需移动文件**

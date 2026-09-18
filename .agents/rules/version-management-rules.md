@@ -1,6 +1,3 @@
-<!-- psm:auto-generated version=1.0 -->
-<!-- 本文件由 psm install 生成。安装时如检测到 AGENTS.md/CLAUDE.md 有版本管理规则，会提取到此文件 -->
-
 # 版本管理规则
 
 > 按需加载 — 用户说「更新更新日志为 vx.x.x」「发布新版本」「打 tag」时加载

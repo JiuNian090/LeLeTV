@@ -35,7 +35,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
 | 页面 | `index.html`（SPA，1392 行）+ `player.html`（独立播放页，319 行） |
 | 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
-| 代码图谱 | CodeGraph 1,232 节点 / 5,840 边 · GitNexus 2,346 符号 / 207 执行流 |
+| 代码图谱 | CodeGraph 172 文件 / 4,917 节点 / 18,550 边 |
 
 ## ⚠️ 重要声明
 
@@ -504,12 +504,11 @@ npm run dev
 
 ## 🤖 代码图谱与 AI 集成
 
-项目已建立代码知识图谱，便于人（和 AI）快速理解与安全改动：
+项目已建立代码知识图谱（CodeGraph），便于人（和 AI）快速理解与安全改动：
 
 | 工具 | 能力 | 规模 |
 |------|------|------|
-| **CodeGraph** | 符号查询、调用链、影响范围 | 63 文件 / 1,232 节点 / 5,840 边 |
-| **GitNexus** | 执行流、上下文、安全重命名、变更检测 | 2,346 符号 / 4,206 关系 / 207 执行流 |
+| **CodeGraph** | 符号查询、调用链、影响范围 | 172 文件 / 4,917 节点 / 18,550 边 |
 
 常用命令：
 
@@ -517,12 +516,10 @@ npm run dev
 codegraph query search          # 搜索符号
 codegraph callers searchByAPIAndKeyWord
 codegraph impact shareInviteInfo
-
-npx gitnexus query "搜索流程"
-npx gitnexus detect_changes
+codegraph sync                  # 刷新索引（发版前先跑）
 ```
 
-相关说明文件：`AGENTS.md`、`CLAUDE.md`，以及 `.claude/skills/gitnexus/`、`.agents/skills/`、`.agents/rules/` 下的技能与规则。
+相关说明文件：`AGENTS.md`、`CLAUDE.md`，以及 `.agents/skills/`、`.agents/rules/` 下的技能与规则。
 
 ## 📄 免责声明
 

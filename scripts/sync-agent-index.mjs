@@ -49,7 +49,7 @@ function summarize(raw, max = 88) {
 /**
  * 索引技能，支持两种存放结构：
  *   顶层  .agents/skills/<name>/SKILL.md
- *   分组  .agents/skills/<group>/<name>/SKILL.md   ← 工具注入式技能（gitnexus / codegraph 等）常用
+ *   分组  .agents/skills/<group>/<name>/SKILL.md   ← 工具注入式技能（codegraph 等）常用
  * 同名技能优先取顶层，避免工具重装后出现重复条目。
  */
 function collectSkills() {

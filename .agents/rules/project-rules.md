@@ -36,7 +36,7 @@
 | 🎨 UI/设计 | `.agents/rules/skill-scheduling-rules.md` 的「设计技能选择指南」 | 按任务特征选具体设计技能 |
 | 🔧 Bug 修复 | `superpowers-systematic-debugging` | 先诊断再修复 |
 | 🏗️ 新功能/复杂改动 | `scheduling-project-skills` + `karpathy-guidelines` | 先编排再编码 |
-| 🧹 代码改进 | `gitnexus-impact-analysis` → `gitnexus-refactoring` | 改前先分析影响面 |
+| 🧹 代码改进 | `codegraph impact` → 逐处修改 → `codegraph callers` 回查 | 改前先分析影响面 |
 | ✏️ 简单改动 | 直接执行 | 不调用技能 |
 
 ### 第三步：执行纪律
