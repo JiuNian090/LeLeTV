@@ -206,20 +206,20 @@
          这段"HTML 已到、样式未到"的空白。改成 preload 后，HTML 一到达就能先画出启动占位，
          等样式真正就绪（见 body 末尾的退场脚本）再淡出让位，避免无样式内容闪一下。
          禁用 JS 时 preload 不会转成样式表，故保留 noscript 回退。 -->
-    <link rel="preload" href="css/variables.css?v=v3.6.5" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/output.css?v=v3.6.5" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/styles.css?v=v3.6.5" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/variables.css?v=v3.6.6" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/output.css?v=v3.6.6" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/styles.css?v=v3.6.6" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
-        <link rel="stylesheet" href="css/variables.css?v=v3.6.5">
-        <link rel="stylesheet" href="css/output.css?v=v3.6.5">
-        <link rel="stylesheet" href="css/styles.css?v=v3.6.5">
+        <link rel="stylesheet" href="css/variables.css?v=v3.6.6">
+        <link rel="stylesheet" href="css/output.css?v=v3.6.6">
+        <link rel="stylesheet" href="css/styles.css?v=v3.6.6">
     </noscript>
 
     <!-- 二级页面样式（分类/设置/邀请码管理/README/影片页）：不在首屏关键路径上，但提前取回可避免
          切页时的样式跳变。preload 默认是 High 优先级，会和 dist bundle 抢带宽，故降为 low：
          该到的时候通常早已到位，抢不到也不影响首页。 -->
-    <link rel="preload" href="css/pages.css?v=v3.6.5" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.6.5"></noscript>
+    <link rel="preload" href="css/pages.css?v=v3.6.6" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.6.6"></noscript>
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <!-- MapleMono：启动占位与首页标题的显示字体，~99KB，不是首屏可用的必要条件
@@ -1325,7 +1325,7 @@
     </script>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v3.6.5"></script>
+    <script src="libs/sha256.min.js?v=v3.6.6"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
@@ -1341,15 +1341,16 @@
 
 
 
-    <script src="dist/leletv-core.dlmsiv.js?v=v3.6.5" defer></script>
-    <script src="dist/leletv-app.8nekg4.js?v=v3.6.5" defer></script>
+
+    <script src="dist/leletv-core.dlmsiv.js?v=v3.6.6" defer></script>
+    <script src="dist/leletv-app.8nekg4.js?v=v3.6.6" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v3.6.5";
+        window.__LELETV_VERSION__ = "v3.6.6";
     </script>
 
     <!-- 版本更新检测模块 -->
