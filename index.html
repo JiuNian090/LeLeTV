@@ -23,7 +23,17 @@
     <!-- Favicon -->
     <link rel="icon" href="/image/logo.png">
     <link rel="apple-touch-icon" href="/image/logo-black.png">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json" id="appManifest">
+    <!-- Android 专用清单：display:fullscreen 让 PWA 进入沉浸模式，规避系统浅色模式下
+         底部系统导航栏被 Android 画成白色（该对比底色网页侧没有 API 可改，调 theme-color
+         只影响顶部状态栏）。仅 Android 换用；iOS / 桌面仍走 manifest.json，行为与之前完全
+         一致。启用沉浸后状态栏一并隐藏，需下拉/上滑才浮现，且此时系统栏为纯黑。
+         该文件由 npm run build 从 manifest.json 自动派生，勿手工编辑。 -->
+    <script>
+        if (/Android/i.test(navigator.userAgent)) {
+            document.getElementById('appManifest').href = '/manifest-android.json';
+        }
+    </script>
 
     <!-- PWA：添加到主屏/桌面后以独立窗口运行（无浏览器 UI） -->
     <!-- mobile-web-app-capable 为标准化写法（Chrome 已废弃 apple-* 前缀）；apple-* 保留以兼容 iOS Safari -->
