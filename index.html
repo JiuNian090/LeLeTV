@@ -42,38 +42,164 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- iOS 主屏启动屏（launch screen）：网页视图加载前由系统绘制，白/黑闪屏就是这一帧。
-         未配置时 iOS 默认白底；这里按各机型像素提供黑底+居中 logo 的启动图，
-         与站内 #bootSplash 首帧一致，实现"图标 → 启动屏 → 启动占位"全程黑底无闪。
-         媒体查询按 CSS 分辨率 + 像素比匹配，物理尺寸见 image/splash/ -->
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-320x568@2x.png"
-          media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+         未配置时 iOS 默认白底；这里提供黑底+居中 logo 的启动图，与站内 #bootSplash
+         首帧一致，实现"图标 → 启动屏 → 启动占位"全程黑底无闪。
+
+         图片按「宽高比」分组复用（组内缩放），不逐机型出图 —— 共 4 张覆盖全部 iPhone：
+           A 组 0.562      320×568 / 375×667            → iphone-375x667@2x.png
+           B 组 0.460~462  375×812 ~ 440×956 共 9 台     → iphone-440x956@3x.png
+           C 组 0.687      466×678（Duo 外屏）           → iphone-466x678@3x.png
+           D 组 0.703      626×890（Duo 内屏）           → iphone-626x890@3x.png
+         B 组取组内最大分辨率做源，其余 8 台全是缩小（过采样，比 1:1 更抗锯齿），
+         全组宽高比最大差 0.42%，肉眼不可辨。
+         注意 media 省不掉：iOS 只认 device-width/height 精确命中的那一条（差 1px 即
+         静默丢弃并回退成空白启动屏），所以每条 link 仍逐机型写，能省的只是图片文件。 -->
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-375x667@2x.png"
-          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-375x812@3x.png"
-          media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-414x896@2x.png"
-          media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-414x896@3x.png"
-          media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-420x912@3x.png"
-          media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-390x844@3x.png"
-          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-393x852@3x.png"
-          media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-428x926@3x.png"
-          media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-430x932@3x.png"
-          media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
-    <link rel="apple-touch-startup-image" href="/image/splash/iphone-402x874@3x.png"
-          media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3)">
+          media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-375x667@2x.png"
+          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
-          media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)">
+          media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
     <!-- iPhone Duo（2026 折叠屏）：外屏 466x678、展开内屏 626x890，按当前折叠状态由系统匹配 -->
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-466x678@3x.png"
-          media="(device-width: 466px) and (device-height: 678px) and (-webkit-device-pixel-ratio: 3)">
+          media="(device-width: 466px) and (device-height: 678px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-626x890@3x.png"
-          media="(device-width: 626px) and (device-height: 890px) and (-webkit-device-pixel-ratio: 3)">
+          media="(device-width: 626px) and (device-height: 890px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+
+    <!-- iPhone 横屏：PWA 的横屏启动图必须是「横图（宽 > 高）」且 logo 保持正立，
+         只把 media 加 (orientation: landscape) —— 这与原生 App 的 LaunchImage 规则
+         正好相反（那套是"竖屏尺寸 + 内容转 90°"），两者常被混为一谈，别照搬。
+         另外 device-width/device-height 该保持竖屏值还是交换，社区两派说法长期并存
+         （pwa-asset-generator issue #18 的实测是保持竖屏值，但该工具当前版本又按交换值
+         生成）。单写一种有 50% 概率整块横屏失效，故每个机型两条都写、指向同一张图；
+         交换后的组合不与任何机型的竖屏值重合（已逐条核对），因此不会有副作用。
+         主力 9 个机型（375×812 ~ 440×956）不在此单列，由末尾的横屏兜底以 2868×1320
+         统一覆盖，宽高比最大差 0.42%；这里只列比例特殊的老机型与折叠屏。 -->
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-667x375@2x.png"
+          media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-667x375@2x.png"
+          media="(device-width: 568px) and (device-height: 320px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-667x375@2x.png"
+          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-667x375@2x.png"
+          media="(device-width: 667px) and (device-height: 375px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-678x466@3x.png"
+          media="(device-width: 466px) and (device-height: 678px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-678x466@3x.png"
+          media="(device-width: 678px) and (device-height: 466px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-890x626@3x.png"
+          media="(device-width: 626px) and (device-height: 890px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-890x626@3x.png"
+          media="(device-width: 890px) and (device-height: 626px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+    <!-- iPad：全系 DPR = 2，媒体查询里写竖屏 CSS 点、图片物理尺寸 = 点数 ×2。
+         按宽高比分 3 组复用图片、组内缩放（最大差 1.5%，肉眼不可辨）：
+           A 组 744×1133  → mini 6 / A17 Pro
+           B 组 820~834 档 → iPad 10 / Air 11" / Pro 11"（含 M4）
+           C 组 768~1024 档 → iPad 6~9 / mini 2019 / Pro 12.9" / Air 13"
+         三张图与 iPhone 组同一规则合成（源 image/logo.png，logo 宽 = 图宽 22%、水平垂直居中）。
+         另一个 iPad 专属坑：媒体查询里的 device-width/device-height 恒取竖屏值、不随旋转
+         交换，横屏也应保留竖屏数值、只改 orientation（注意 JS 的 screen.width 会随旋转变，
+         两者不等价，别拿 JS 值推媒体查询）。本块暂只覆盖竖屏。 -->
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-744x1133@2x.png"
+          media="(device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-834x1194@2x.png"
+          media="(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-834x1194@2x.png"
+          media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-834x1194@2x.png"
+          media="(device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1024x1366@2x.png"
+          media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1024x1366@2x.png"
+          media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1024x1366@2x.png"
+          media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
+    <!-- iPad 横屏：同样用「横图 + 正立 logo」，同样对每个机型写保持竖屏值与交换值两条，
+         理由见上面 iPhone 横屏那段。三张横图与竖屏组一一对应（旋转画布、logo 大小不变）。 -->
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1133x744@2x.png"
+          media="(device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1133x744@2x.png"
+          media="(device-width: 1133px) and (device-height: 744px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 1180px) and (device-height: 820px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 1194px) and (device-height: 834px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 1210px) and (device-height: 834px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 1024px) and (device-height: 768px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 1080px) and (device-height: 810px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 1366px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+    <!-- 兜底条目：必须排在所有精确条目之后。
+         iOS 只取「第一条媒体查询命中」的启动图（WebKit 按 Document 里 link 的顺序求值），
+         精确条目全不命中时不会降级到别的条目，而是直接回退成空白启动屏 —— 跟随系统
+         外观表现为浅色白屏 / 深色黑屏，且没有 logo。所以下面按 iPhone / iPad 各补一组，
+         保证「未列出的尺寸」也拿到黑底 logo，而不是整帧空白。
+
+         iPhone（4 条）：
+           · device-width 是屏幕自然方向（竖屏）的尺寸、不随旋转变化，iPhone 全系
+             <500px 而 iPad 最小 744px，用 500px 阈值即可只兜 iPhone、不误伤 iPad；
+           · 横屏那条必须带 orientation —— 早期版本这里不限定方向，导致 iPhone 横屏
+             命中竖图并被 scale-to-fill 硬拉伸约 4.7 倍（logo 成一条横线），比空屏更糟；
+           · 横屏再分 max-device-width / max-device-height 两条，覆盖 device 值
+             "保持竖屏"与"随方向交换"两种规则，两者都成立时也只会命中其一。
+           这组同时兜住未来新机型，以及开启"显示缩放"（像素比变成 3.28 之类、所有精确
+           条目一起失配）的情况，用最高物理分辨率图按比例铺满，组内宽高比差 <0.5%。
+
+         iPad（2 条）：iPad 的 device-width 无论是否随方向交换都是大值（744~1366），
+           故用 min-device-width: 700px 一条即可覆盖竖/横两种规则；取中间档 834×1194
+           那张做底图，对未列入的尺寸最大变形约 7%，远好过整帧空白。已知 iPad 机型都有
+           精确条目在前，此组只在出现未列出尺寸时生效。
+           顺序上这组必须排在 iPhone 横屏兜底之后：当 device 值随方向交换时，iPhone 横屏
+           的 device-width 会变成 956 ≥ 700 而被这组误捞，靠前面 iPhone 那条
+           max-device-height: 500px 抢先命中来挡住。 -->
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(orientation: portrait) and (-webkit-min-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
+          media="(orientation: portrait) and (max-device-width: 500px)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-956x440@3x.png"
+          media="(orientation: landscape) and (max-device-width: 500px)">
+    <link rel="apple-touch-startup-image" href="/image/splash/iphone-956x440@3x.png"
+          media="(orientation: landscape) and (max-device-height: 500px)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-834x1194@2x.png"
+          media="(orientation: portrait) and (min-device-width: 700px)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(orientation: landscape) and (min-device-width: 700px)">
 
     <!-- 首屏关键样式：非阻塞加载，配合 body 首部的启动占位使用。
          阻塞式 CSS 会让浏览器在样式到达前拒绝绘制任何像素——冷启动时的"黑屏"有相当一部分就是
