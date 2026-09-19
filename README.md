@@ -88,7 +88,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 - 设置页可勾选/重置/导入/导出数据源配置，最多添加 5 个自定义采集站
 - 云端数据源：采集源存放在 D1，可在 `/admin` 面板在线增删改，前端启动时自动同步并缓存；内置源始终兜底
 - 智能缓存管理：24 小时清理临时数据，保护用户设置与历史
-- PWA 可安装（`standalone` + `window-controls-overlay`）
+- PWA 可安装（`standalone` + `window-controls-overlay`；安卓端为沉浸式 `fullscreen`，隐藏状态栏与系统导航栏）
 - 启动体验：冷启动全程黑底无白屏，启动屏显示真实加载进度环；添加到主屏后（含 iPhone）启动画面同样为黑底 Logo
 - 版本更新自动检测，提示后重载生效
 
@@ -231,9 +231,10 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 ```bash
 npm run build
-# ├─ node scripts/generate-version.mjs   # 读取 VERSION.txt，注入 {{LELETV_VERSION}} 与 ?v= 缓存参数
-# ├─ node scripts/build-bundles.mjs      # 按 CORE / APP / PLAYER 三类拼接并用 esbuild 压缩 → dist/
-# └─ npx tailwindcss@3.4.19 …            # 编译 css/tailwind.css → css/output.css（--minify）
+# ├─ node scripts/generate-version.mjs           # 读取 VERSION.txt，注入 {{LELETV_VERSION}} 与 ?v= 缓存参数
+# ├─ node scripts/generate-manifest-android.mjs  # 从 manifest.json 派生安卓专用清单（display: fullscreen）
+# ├─ node scripts/build-bundles.mjs              # 按 CORE / APP / PLAYER 三类拼接并用 esbuild 压缩 → dist/
+# └─ npx tailwindcss@3.4.19 …                    # 编译 css/tailwind.css → css/output.css（--minify）
 ```
 
 打包分组：
@@ -267,6 +268,7 @@ LeLeTV/
 ├── server.mjs                  # 本地开发服务器（Express）
 ├── service-worker.js           # 已退役的 SW（仅用于注销旧缓存，勿添加逻辑）
 ├── manifest.json               # PWA Manifest
+├── manifest-android.json       # 安卓专用 PWA Manifest（沉浸式 fullscreen，构建派生，勿手改）
 ├── _headers                    # Pages 响应头（缓存策略 + CSP）
 ├── _routes.json                # Pages Functions 路由排除规则
 ├── wrangler.toml               # Cloudflare Workers 配置
@@ -294,7 +296,7 @@ LeLeTV/
 ├── workers/
 │   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API + 数据源下发 + /admin 面板
 ├── migrations/                 # D1 迁移脚本（001 表结构 → 004 数据源表）
-├── scripts/                    # 版本生成、打包、钩子安装、技能索引同步脚本
+├── scripts/                    # 版本生成、安卓清单派生、打包、钩子安装、技能索引同步脚本
 ├── image/                      # Logo、占位图与启动图（PWA / iOS 主屏）
 ├── .agents/                    # AI 技能与规则（技能正文、规则文档、注册表，跨 Agent 共用）
 └── .github/                    # Issue 模板与工作流
@@ -314,7 +316,7 @@ npm install
 cp .env.example .env
 # 编辑 .env：至少填写 TMDB_WORKER_URL（线上 Worker 地址）
 
-# 构建（版本注入 + 打包 + 样式）
+# 构建（版本注入 + 安卓清单派生 + 打包 + 样式）
 npm run build
 
 # 启动开发服务器（热重载）
@@ -330,7 +332,8 @@ npm run dev
 |------|------|
 | `npm run dev` | nodemon 热重载开发服务器 |
 | `npm start` | 生产模式启动 |
-| `npm run build` | 版本注入 + esbuild 打包 + Tailwind 编译 |
+| `npm run build` | 版本注入 + 安卓清单派生 + esbuild 打包 + Tailwind 编译 |
+| `npm run build:manifest` | 单独派生安卓专用 PWA 清单 |
 | `npm run setup:hooks` | 安装 Git 钩子 |
 
 ## 📦 部署指南
@@ -472,7 +475,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v3.6.4`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v3.6.5`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -484,6 +487,10 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v3.6.5 (2026-09-19)
+- 🔧 修复 安卓端添加到主屏后底部出现白色系统导航栏、与深色界面割裂的问题，改为沉浸式全屏显示
+- 🔧 修复 iPhone 添加到主屏后页面整体错位的问题，布局恢复原样
+
 ### v3.6.4 (2026-09-19)
 - 🔧 修复 安卓系统处于浅色模式时，添加到主屏后底部导航栏区域显示白色、与深色界面割裂的问题
 
@@ -491,11 +498,6 @@ npm run dev
 - 🎉 新增 播放页线路切换面板标题显示当前播放源名称，一眼看出正在用哪个源
 - ✨ 优化 线路测速结果更准确，无法测到视频响应的线路会单独标注，不与正常结果混淆
 - 🔧 修复 同型号设备可能被误认为同一台的问题，现在按设备名（昵称）区分
-
-### v3.6.2 (2026-09-18)
-- 🎉 新增 启动界面显示真实加载进度环，加载完成时 Logo 放大淡出过渡到首页
-- ✨ 优化 启动界面改为黑底 + 居中 Logo，冷启动不再白屏闪烁
-- 🔧 修复 iPhone 添加到主屏后启动时白屏的问题，补全各机型启动图
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
