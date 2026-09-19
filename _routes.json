@@ -11,6 +11,7 @@
         "/CHANGELOG.md",
         "/VERSION.txt",
         "/manifest.json",
+        "/manifest-android.json",
         "/robots.txt",
         "/dist/*",
         "/api/*"
