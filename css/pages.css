@@ -53,12 +53,15 @@
     color: #e2e8f0;
 }
 
-/* 筛选区折叠/展开按钮：放在类型切换按钮右侧 */
+/* 筛选区整体折叠/展开按钮：放在类型切换行右端。
+   与下面各标签行的「更多类型…/收起类型」「更多年份…/收起年份」分工不同——
+   这个按钮管的是「整块筛选区」，所以用独立的漏斗图标、拉开到行尾，
+   不与标签行的胶囊按钮挤在一起，避免误点。 */
 .tmdb-filter-collapse-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-left: 0.25rem;
+    margin-left: auto;
     padding: 0.4rem;
     width: 2rem;
     height: 2rem;
@@ -77,6 +80,11 @@
 }
 .tmdb-filter-collapse-btn:active {
     transform: scale(0.94);
+}
+/* 整区处于收起状态时点亮，提示「筛选条件被折叠了」 */
+.tmdb-filter-collapse-btn.collapsed {
+    border-color: rgba(var(--color-primary-rgb), 0.5);
+    color: var(--color-primary);
 }
 .tmdb-filter-btn-icon {
     width: 1rem;
@@ -379,6 +387,11 @@
     .tmdb-type-btn {
         padding: 0.375rem 1rem;
         font-size: 0.75rem;
+    }
+
+    /* 窄屏横向空间紧张：筛选按钮贴着类型切换，不做行尾拉开 */
+    .tmdb-filter-collapse-btn {
+        margin-left: 0.25rem;
     }
 
     .tmdb-card-title {

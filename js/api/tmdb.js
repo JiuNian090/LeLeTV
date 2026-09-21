@@ -287,8 +287,8 @@ function renderYearFilter() {
         <button class="tmdb-genre-btn${TMDB_STATE.selectedYear === y.value ? ' active' : ''}${i >= MAX_VISIBLE ? ' year-btn-extra' : ''}" data-year="${y.value}">${y.label}</button>
       `).join('')}
       ${hasHiddenYears ? `
-        <button class="tmdb-genre-btn year-toggle-btn" data-year-toggle>
-          ${expanded ? '收起' : `更多年份...`}
+        <button class="tmdb-genre-btn year-toggle-btn" data-year-toggle title="${expanded ? '收起多余的年份标签' : '展开全部年份标签'}">
+          ${expanded ? '收起年份' : `更多年份...`}
         </button>
       ` : ''}
     </div>
@@ -318,7 +318,7 @@ function renderTmdbFilters() {
           <button class="tmdb-type-btn${type === 'anime' ? ' active' : ''}" data-type="anime">动漫</button>
           <button class="tmdb-type-btn${type === 'variety' ? ' active' : ''}" data-type="variety">综艺</button>
         </div>
-        <button class="tmdb-filter-collapse-btn" data-filter-toggle aria-label="${TMDB_STATE._filtersCollapsed ? '展开筛选' : '收起筛选'}" aria-expanded="${!TMDB_STATE._filtersCollapsed}" title="${TMDB_STATE._filtersCollapsed ? '展开筛选' : '收起筛选'}">
+        <button class="tmdb-filter-collapse-btn${TMDB_STATE._filtersCollapsed ? ' collapsed' : ''}" data-filter-toggle aria-label="${TMDB_STATE._filtersCollapsed ? '展开全部筛选条件' : '收起全部筛选条件'}" aria-expanded="${!TMDB_STATE._filtersCollapsed}" title="${TMDB_STATE._filtersCollapsed ? '展开全部筛选条件' : '收起全部筛选条件'}">
           <svg viewBox="0 0 24 24" fill="currentColor" class="tmdb-filter-btn-icon" aria-hidden="true"><path d="M0 4a2 2 0 0 1 2-2h20a2 2 0 0 1 1.386 3.414L15 13v6.5a1.5 1.5 0 0 1-2.2 1.32l-2-1.2A1.5 1.5 0 0 1 10 18.5V13L.614 5.414A2 2 0 0 1 0 4Z"/></svg>
         </button>
       </div>
@@ -330,8 +330,8 @@ function renderTmdbFilters() {
             <button class="tmdb-genre-btn${TMDB_STATE.selectedGenre === g.id ? ' active' : ''}${i >= 8 ? ' genre-btn-extra' : ''}" data-genre="${g.id}">${g.name}</button>
           `).join('')}
           ${GENRE_MAP[getEffectiveType(type)].length > 8 ? `
-            <button class="tmdb-genre-btn genre-toggle-btn" data-genre-toggle>
-              ${TMDB_STATE._genreExpanded ? '收起' : '更多类型...'}
+            <button class="tmdb-genre-btn genre-toggle-btn" data-genre-toggle title="${TMDB_STATE._genreExpanded ? '收起多余的类型标签' : '展开全部类型标签'}">
+              ${TMDB_STATE._genreExpanded ? '收起类型' : '更多类型...'}
             </button>
           ` : ''}
         </div>
@@ -388,6 +388,7 @@ function renderTmdbFilters() {
   `;
 
   bindTypeSwitch();
+  bindFilterToggle();
   bindFilterTags();
 }
 
@@ -406,19 +407,25 @@ function bindTypeSwitch() {
   });
 }
 
+// 筛选区整体折叠按钮（漏斗图标）：独立绑定在按钮自身上，
+// 只切换 _filtersCollapsed（隐藏/显示整块标签行），与下面各标签行的
+// 「更多类型…/收起类型」「更多年份…/收起年份」互不干涉。
+function bindFilterToggle() {
+  const btn = document.querySelector('.tmdb-filter-collapse-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    TMDB_STATE._filtersCollapsed = !TMDB_STATE._filtersCollapsed;
+    renderTmdbFilters();
+  });
+}
+
 function bindFilterTags() {
   const section = document.querySelector('.tmdb-filter-section');
   if (!section) return;
 
   section.addEventListener('click', (e) => {
-    // 筛选区折叠/展开按钮（独立于 genre 标签）
-    const collapseBtn = e.target.closest('.tmdb-filter-collapse-btn');
-    if (collapseBtn) {
-      TMDB_STATE._filtersCollapsed = !TMDB_STATE._filtersCollapsed;
-      renderTmdbFilters();
-      return;
-    }
-
     const btn = e.target.closest('.tmdb-genre-btn');
     if (!btn) return;
 
