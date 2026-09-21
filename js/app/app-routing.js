@@ -1219,9 +1219,9 @@ function shareInviteInfo(targetCode) {
 // ===================== 移动端滑动手势 =====================
 (function() {
   var startX, startY, startTime;
-  var SWIPE_THRESHOLD = 60;    // px
+  var SWIPE_THRESHOLD = 100;   // px - 必须划过此距离才切换页面，避免轻微滑动误触
   var VERTICAL_LIMIT = 30;     // px - 垂直偏移超过此值不触发水平滑动
-  var MAX_TIME = 300;          // ms - 超过此时间不触发
+  var MAX_TIME = 500;          // ms - 超过此时间不触发（距离变长后放宽时间）
 
   var pages = ['home', 'category', 'history', 'settings', 'about'];
   // 私密模式下分类页不可达：左右滑动翻页也跳过它，否则会"滑不动"
@@ -1230,9 +1230,11 @@ function shareInviteInfo(targetCode) {
   }
 
   document.addEventListener('touchstart', function(e) {
-    // 不在播放器页面或搜索输入框内触发
-    if (e.target.closest('#player') || e.target.closest('#searchInput') || 
-        e.target.closest('.art-controls') || e.target.closest('input, textarea, select')) {
+    // 不在播放器、搜索框、表单元素、或水平可滚动的标签区域内触发
+    // 标签区域的水平滑动应滚动标签而非切换页面，否则用户滑标签时经常误触翻页
+    if (e.target.closest('#player') || e.target.closest('#searchInput') ||
+        e.target.closest('.art-controls') || e.target.closest('input, textarea, select') ||
+        e.target.closest('.tmdb-filter-section, .source-filter-tabs, .movies-sources-list')) {
       startX = null;
       return;
     }
@@ -1274,6 +1276,28 @@ function shareInviteInfo(targetCode) {
 
     startX = null;
   }, { passive: true });
+
+  // 桌面端：左右方向键切换页面
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+
+    // 播放器内左右键是快进/快退，输入框内是光标移动，均不触发翻页
+    if (e.target.closest('#player') || e.target.closest('#searchInput') ||
+        e.target.closest('input, textarea, select, [contenteditable="true"]')) {
+      return;
+    }
+
+    var curIdx = pages.indexOf(currentPage);
+    if (curIdx === -1) return;
+
+    if (e.key === 'ArrowLeft') {
+      // 左键 → 上一页
+      if (curIdx > 0) switchPage(pages[curIdx - 1]);
+    } else {
+      // 右键 → 下一页
+      if (curIdx < pages.length - 1) switchPage(pages[curIdx + 1]);
+    }
+  });
 })();
 
 
