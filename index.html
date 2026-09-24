@@ -30,7 +30,7 @@
     <!-- iOS 主屏启动屏（launch screen）：网页视图加载前由系统绘制，白/黑闪屏就是这一帧。
          未配置时 iOS 默认白底；这里按各机型像素提供黑底+居中 logo 的启动图，
          与站内 #bootSplash 首帧一致，实现"图标 → 启动屏 → 启动占位"全程黑底无闪。
-         媒体查询按 CSS 分辨率 + 像素比匹配，物理尺寸见 image/splash/ -->
+         媒体查询按 CSS 分辨率 + 像素比匹配，物理尺寸见 image/splash/（iPad 见下方 iPad 区块） -->
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-320x568@2x.png"
           media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-375x667@2x.png"
@@ -53,6 +53,42 @@
           media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3)">
     <link rel="apple-touch-startup-image" href="/image/splash/iphone-440x956@3x.png"
           media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)">
+
+    <!-- iPad（竖屏 / 横屏各一套：iOS 按 media 精确匹配，缺哪个方向就回退白屏；
+         横屏条目的 device-width/device-height 随方向互换，图片像素是长边 × 短边。
+         重新生成：node scripts/generate-splash.mjs -->
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-768x1024@2x.png"
+          media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1024x768@2x.png"
+          media="(device-width: 1024px) and (device-height: 768px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-810x1080@2x.png"
+          media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1080x810@2x.png"
+          media="(device-width: 1080px) and (device-height: 810px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-744x1133@2x.png"
+          media="(device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1133x744@2x.png"
+          media="(device-width: 1133px) and (device-height: 744px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-820x1180@2x.png"
+          media="(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1180x820@2x.png"
+          media="(device-width: 1180px) and (device-height: 820px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-834x1112@2x.png"
+          media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1112x834@2x.png"
+          media="(device-width: 1112px) and (device-height: 834px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-834x1194@2x.png"
+          media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1194x834@2x.png"
+          media="(device-width: 1194px) and (device-height: 834px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1024x1366@2x.png"
+          media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1366x1024@2x.png"
+          media="(device-width: 1366px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1032x1376@2x.png"
+          media="(device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/image/splash/ipad-1376x1032@2x.png"
+          media="(device-width: 1376px) and (device-height: 1032px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
 
     <!-- 首屏关键样式：非阻塞加载，配合 body 首部的启动占位使用。
          阻塞式 CSS 会让浏览器在样式到达前拒绝绘制任何像素——冷启动时的"黑屏"有相当一部分就是
@@ -1195,7 +1231,7 @@
 
 
     <script src="dist/leletv-core.dlmsiv.js?v=v3.6.4" defer></script>
-    <script src="dist/leletv-app.kzkxmo.js?v=v3.6.4" defer></script>
+    <script src="dist/leletv-app.maqbtu.js?v=v3.6.4" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
