@@ -173,9 +173,20 @@ function renderMoviesEmpty() {
 
 // ===================== 对外入口 =====================
 
+// 丢弃残留的结果页缓存（sessionStorage: leletv_search_cache）。
+// 该缓存只服务于「点卡片进播放页 → 返回结果页秒开」；而类别页发起的搜索在播放页返回时
+// 会被跳过（见 player-bridge.js 的 buildPlayerBackUrl：returnTo=category → 直达类别页），
+// 缓存因此不会被消费而残留在会话里。若不清掉，下一次进入结果页时 initMoviesPage 会拿它恢复，
+// 把新入口的关键词换成上一部影片（标题错、卡片随后被新搜索结果覆盖）。
+// 所以任何新入口（首页搜索 / 类别入口）都先丢掉旧缓存，只保留本次搜索的结果。
+function _discardStaleSearchCache() {
+  try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (e) { /* 隐私模式等场景忽略 */ }
+}
+
 // 搜索结果完成后统一进入结果页（search() 调用）
 function showMoviesResults(keyword, results, opts) {
   opts = opts || {};
+  _discardStaleSearchCache();
   // 作为一次新的结果页渲染，作废仍在途的旧加载管道
   _moviesEpoch++;
   _moviesState = {
@@ -203,6 +214,7 @@ function showMoviesResults(keyword, results, opts) {
 // 类别入口（tmdb.js 调用）：直接进入结果页并独立发起搜索
 function openMoviesPage(keyword, opts) {
   opts = opts || {};
+  _discardStaleSearchCache();
   // 新入口发起：作废仍在途的旧搜索/旧加载管道（后发起者优先）
   _moviesEpoch++;
   _moviesState = {
