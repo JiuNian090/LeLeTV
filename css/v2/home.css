@@ -1111,12 +1111,12 @@ html[data-motion="off"] .v2-hero-glass {
         gap: 6px;
     }
 
-    /* 字标省掉，方块标 + 六个入口才放得下 */
-    .v2-brand {
+    /* 字标省掉，方块标 + 六个入口才放得下。只限导航：页脚那份品牌标在窄屏照常显示 */
+    .v2-nav .v2-brand {
         --lockup: 30px;
     }
 
-    .v2-brand-word {
+    .v2-nav .v2-brand-word {
         display: none;
     }
 

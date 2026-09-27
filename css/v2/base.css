@@ -1294,6 +1294,27 @@ html body {
     font-variant-numeric: tabular-nums;
 }
 
+/* 版本号前的品牌标：图形标 + 字标横向排（同导航那份品牌），不套方块底。
+   order: -2 让它排到绿色呼吸灯（.v2-ver-dot 的 order: -1）前面 */
+.v2-footer-lockup {
+    order: -2;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+}
+
+/* 尺寸只按使用处定，不走 --lockup（页脚没有这个变量，.v2-brand-word 的宽度算不出来） */
+.v2-footer-lockup .v2-mark {
+    width: 16px;
+    height: 12px;
+}
+
+.v2-footer-lockup .v2-brand-word {
+    width: 37px;
+    height: 10px;
+}
+
 @media (max-width: 640px) {
     .v2-dialog {
         padding: 28px 20px 22px;
