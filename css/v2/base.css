@@ -1233,13 +1233,13 @@ html body {
 }
 
 /* ============ 页脚 ============ */
+/* 布局照 v3.6.5：一行三段（版本号 / 版权 / 链接），两端对齐，窄屏居中堆叠。
+   不带背景色：让全站的背景光直接铺到页面底部，避免在渐层上切出一条分界 */
 .footer.v2-footer {
     position: relative;
     z-index: 1;
     margin-top: auto;
-    padding: 0;
-    background: transparent;
-    border-top: 1px solid var(--v2-line);
+    padding: 16px 0;
     transition: none;
 }
 
@@ -1248,27 +1248,13 @@ html body {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px 32px;
-    padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px));
-}
-
-.v2-footer-brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-}
-
-.v2-footer-brand .v2-lockup {
-    --lockup: 26px;
-    flex: none;
-    opacity: 0.9;
+    gap: 4px;
 }
 
 .v2-footer-legal {
     margin: 0;
-    color: var(--v2-t3);
-    font-size: 12.5px;
+    color: var(--v2-t2);
+    font-size: 14px;
     line-height: 1.6;
 }
 
@@ -1276,7 +1262,7 @@ html body {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px 20px;
+    gap: 20px;
 }
 
 .v2-footer-links a,
@@ -1286,7 +1272,7 @@ html body {
     background: none;
     color: var(--v2-t2);
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
     text-decoration: none;
     cursor: pointer;
     transition: color var(--v2-dur) var(--v2-ease);
@@ -1294,7 +1280,7 @@ html body {
 
 .v2-footer-links a:hover,
 .v2-footer-links button:hover {
-    color: var(--v2-t1);
+    color: var(--v2-accent);
     text-decoration: none;
 }
 
@@ -1303,8 +1289,8 @@ html body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: var(--v2-t3);
-    font-size: 12.5px;
+    color: var(--v2-t2);
+    font-size: 14px;
     font-variant-numeric: tabular-nums;
 }
 
@@ -1318,17 +1304,22 @@ html body {
         font-size: 20px;
     }
 
-    .v2-footer-inner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 14px;
-        padding-block: 24px calc(28px + env(safe-area-inset-bottom, 0px));
+    .footer.v2-footer {
+        padding: 10px 0;
     }
 
-    .v2-footer-brand {
+    .v2-footer-inner {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+    }
+
+    .v2-footer-legal,
+    .v2-footer-links a,
+    .v2-footer-links button,
+    #footerVersionDisplay {
+        font-size: 12px;
     }
 
     #toast.v2-toast {
@@ -1497,19 +1488,23 @@ html[data-init-page="settings"]:not([data-domain-shown]) #page-settings {
     margin-bottom: clamp(20px, 3vw, 32px);
 }
 
+/* 页面里只剩操作按钮（观看记录的「清空记录」）时靠右收尾：按钮自带下间距，
+   它被 hidden 藏起来时（display: none !important）间距一并消失，不留空白 */
+.v2-page-head--end {
+    justify-content: flex-end;
+    margin-bottom: 0;
+}
+
+.v2-page-head--end > .v2-btn {
+    margin-bottom: clamp(20px, 3vw, 32px);
+}
+
 .v2-page-title {
     margin: 0;
     font-size: clamp(26px, 3vw, 34px);
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.015em;
-}
-
-.v2-page-sub {
-    margin: 8px 0 0;
-    color: var(--v2-t3);
-    font-size: 14px;
-    line-height: 1.6;
 }
 
 /* 空态 / 出错 / 加载：统一的居中说明块 */

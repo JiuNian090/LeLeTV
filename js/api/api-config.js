@@ -103,7 +103,7 @@ function resetDataSourceLogic() {
     // 显示提示信息
     showToast(isHiddenContentMode()
         ? '已重置，随机选取 5 个私密内容源'
-        : '已重置，随机选取 5 个数据源', 'success');
+        : `已重置，恢复默认 ${DEFAULT_DATA_SOURCE_KEYS.length} 个数据源`, 'success');
     
     // 重新初始化API复选框，应用新逻辑
     initAPICheckboxes();
@@ -181,15 +181,17 @@ function initAPICheckboxes() {
     checkHiddenAPIsSelected();
 }
 
+// 数据源选择逻辑版本：升版本会让所有用户按下面的默认逻辑重新选源（v2 起默认固定 6 个源）
+const DATA_SOURCE_LOGIC_VERSION = 'v2';
+
 // 从当前版本开始，对所有用户应用新的数据源选择逻辑
 function applyNewDataSourceLogic() {
-    const DATA_SOURCE_LOGIC_VERSION = 'v1';
     const currentVersion = localStorage.getItem('dataSourceLogicVersion');
     const currentTime = Date.now();
     const dayInMs = 24 * 60 * 60 * 1000;
 
-    // 两个数据域都在各自域内随机选 5 个源（正常域取普通源，隐藏域取隐藏源）
-    const defaultSelected = getRandomDataSources(5);
+    // 按当前数据域取默认源（正常域固定 6 个，隐藏域随机 5 个）
+    const defaultSelected = getDefaultDataSources();
 
     if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
         selectedAPIs = defaultSelected.slice();
@@ -232,7 +234,20 @@ function refreshDataSources(hasUserSelected) {
     localStorage.setItem('lastRefreshTime', currentTime.toString());
 }
 
+// 默认选中的数据源（正常域固定，顺序即界面里的展示顺序）
+const DEFAULT_DATA_SOURCE_KEYS = ['gszy', 'bfzy', 'zuid', 'lzzy', 'hnzy', 'jszy'];
+
+// 数据域内的默认选中源：正常域取固定清单，隐藏域仍从私密源里随机抽 5 个
+function getDefaultDataSources() {
+    if (!isHiddenContentMode()) {
+        const keys = DEFAULT_DATA_SOURCE_KEYS.filter(key => API_SITES[key] && !API_SITES[key].hidden);
+        if (keys.length > 0) return keys;
+    }
+    return getRandomDataSources(5);
+}
+
 // 随机选择指定数量的数据源（按当前数据域取池子：正常域取普通源，隐藏域取隐藏源）
+// 仅隐藏域还在用；正常域的默认源见 getDefaultDataSources()
 function getRandomDataSources(count) {
     const pool = Object.keys(API_SITES).filter(key =>
         isHiddenContentMode() ? !!API_SITES[key].hidden : !API_SITES[key].hidden

@@ -533,7 +533,7 @@ function setupEventListeners() {
             case 'select-all-apis': selectAllAPIs(true); break;
             case 'deselect-all-apis': selectAllAPIs(false); break;
             case 'reset-apis': {
-                // 重置后从当前数据域随机选 5 个源（正常域取普通源，隐藏域取隐藏源）
+                // 重置为当前数据域的默认源（正常域固定 6 个，隐藏域随机 5 个）
                 resetDataSourceLogic();
                 break;
             }

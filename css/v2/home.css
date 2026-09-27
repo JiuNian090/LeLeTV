@@ -2,7 +2,8 @@
    类名统一 v2- 前缀；需要覆盖旧规则的地方用「旧类名 + v2 类名」提高优先级，不改旧样式文件。 */
 
 /* ============ 导航 ============ */
-/* 毛玻璃画在 ::before 上：导航本身不能带 backdrop-filter，否则手机底部标签栏（position: fixed）会以导航为定位基准 */
+/* 毛玻璃画在 ::before 上：导航本身不能带 backdrop-filter，否则会给滚动穿过的内容建立新的包含块。
+   底色只留极淡的一层（0.2），让背景光透出来、不切出色块，同时滚动时仍有遮挡保证文字可读 */
 .top-nav-bar.v2-nav {
     position: sticky;
     top: 0;
@@ -18,7 +19,7 @@
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: rgba(10, 10, 11, 0.72);
+    background: rgba(10, 10, 11, 0.2);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
     backdrop-filter: blur(18px) saturate(1.4);
 }
@@ -1103,50 +1104,48 @@ html[data-motion="off"] .v2-hero-glass {
 }
 
 /* ============ 窄屏 ============ */
-/* 手机：顶栏只留品牌，五个入口改成底部标签栏 */
+/* 手机：入口留在顶栏右侧，和 v3.6.5 一样只显示图标（文字留给读屏器），只有搜索入口点开的是手机搜索层 */
 @media (max-width: 720px) {
     .v2-nav .nav-container {
         height: 56px;
+        gap: 6px;
     }
 
+    /* 字标省掉，方块标 + 六个入口才放得下 */
     .v2-brand {
         --lockup: 30px;
     }
 
+    .v2-brand-word {
+        display: none;
+    }
+
     .v2-nav .nav-actions {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: var(--v2-z-nav);
-        justify-content: space-around;
         gap: 0;
-        padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
-        background: rgba(12, 12, 14, 0.86);
-        -webkit-backdrop-filter: blur(20px) saturate(1.4);
-        backdrop-filter: blur(20px) saturate(1.4);
-        border-top: 1px solid var(--v2-line);
     }
 
     .v2-nav .nav-btn {
-        flex: 1;
-        flex-direction: column;
-        justify-content: center;
-        gap: 4px;
-        height: 48px;
+        width: 38px;
+        height: 40px;
         padding: 0;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 500;
+        gap: 0;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    /* 导航项文字：只留给读屏器，名称看按钮的 title */
+    .v2-nav .nav-btn > span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
     }
 
     .v2-nav .nav-btn svg {
-        width: 22px;
-        height: 22px;
-    }
-
-    .v2-nav .nav-btn.active {
-        background: transparent;
+        width: 20px;
+        height: 20px;
     }
 
     /* 搜索入口留在顶栏右侧，只留图标，点开的是手机搜索层 */
@@ -1158,15 +1157,6 @@ html[data-motion="off"] .v2-hero-glass {
         width: 40px;
         height: 40px;
         border-radius: 10px;
-    }
-
-    /* 给底部标签栏让出位置 */
-    html body {
-        padding-bottom: calc(61px + env(safe-area-inset-bottom, 0px));
-    }
-
-    #toast.v2-toast {
-        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -1273,8 +1263,8 @@ html:not([data-home-hub="off"]) .v2-hub {
 
 @media (max-width: 720px) {
     html:not([data-home-hub="off"]) .v2-hero {
-        min-height: calc(100vh - 56px - 61px - 320px * var(--hub-s, 1));
-        min-height: calc(100svh - 56px - 61px - 320px * var(--hub-s, 1));
+        min-height: calc(100vh - 56px - 320px * var(--hub-s, 1));
+        min-height: calc(100svh - 56px - 320px * var(--hub-s, 1));
     }
 }
 
@@ -1305,12 +1295,12 @@ html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
 
 @media (max-width: 720px) {
     html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
-        min-height: calc(100vh - 56px - 61px - 160px);
-        min-height: calc(100svh - 56px - 61px - 160px);
+        min-height: calc(100vh - 56px - 160px);
+        min-height: calc(100svh - 56px - 160px);
     }
 }
 
-/* 导航只显示图标：文字只留给读屏器，悬停看 title；手机底栏仍带文字 */
+/* 导航只显示图标（桌面设置项）：文字只留给读屏器，悬停看 title；手机端见上面的窄屏块，一律只显示图标 */
 @media (min-width: 721px) {
     html[data-nav="icons"] .v2-nav .nav-btn {
         width: 40px;

@@ -11,9 +11,10 @@ let _lastAllResults = [];
 // 搜索框就绪标志，初始化期间不响应任何事件
 let _searchReady = false;
 
-// ====== 默认数据源（随机） ======
-// 首次初始化与「重置」都从当前数据域的池子里随机选 5 个源（正常域取普通源，隐藏域取隐藏源）。
-// 实现见 api-config.js 的 getRandomDataSources()。
+// ====== 默认数据源 ======
+// 首次初始化的默认源见 api-config.js 的 getDefaultDataSources()：正常域固定 6 个源
+// （光速 / 暴风 / 最大 / 量子 / 红牛 / 极速），隐藏域仍从私密源里随机抽 5 个。
+// 「重置」走的也是同一份默认逻辑。
 
 // 过滤配置缓存
 let _filterConfig = null;
@@ -35,12 +36,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
     if (!localStorage.getItem('hasInitializedDefaults')) {
-        // 首次初始化：从当前数据域随机选 5 个源
-        selectedAPIs = (typeof getRandomDataSources === 'function') ? getRandomDataSources(5) : [];
+        // 首次初始化：正常域固定 6 个默认源，隐藏域随机 5 个私密源
+        selectedAPIs = (typeof getDefaultDataSources === 'function') ? getDefaultDataSources() : [];
         localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
         localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');
         localStorage.setItem('hasInitializedDefaults', 'true');
-        localStorage.setItem('dataSourceLogicVersion', 'v1');
+        localStorage.setItem('dataSourceLogicVersion', DATA_SOURCE_LOGIC_VERSION);
         // 首次访问（含清除缓存后重开）：首页播放"粒子凝聚成 LeLeTV → 爆开"的入场过渡
         setTimeout(function () {
             if (typeof playHomeIntro === 'function') playHomeIntro();

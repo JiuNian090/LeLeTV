@@ -17,9 +17,7 @@ function loadViewingHistory() {
 
     const history = getViewingHistory();
 
-    // 页头：条数与「清空记录」
-    const countEl = document.getElementById('historyCount');
-    if (countEl) countEl.textContent = history.length ? `共 ${history.length} 条，仅保存在本机浏览器` : '仅保存在本机浏览器';
+    // 页头：「清空记录」（没有记录时藏起来）
     const clearBtn = document.getElementById('clearHistoryBtn');
     if (clearBtn) clearBtn.hidden = history.length === 0;
 

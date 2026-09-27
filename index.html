@@ -27,7 +27,7 @@
     <link rel="preload" as="font" type="font/woff2" crossorigin href="/libs/geist/Geist-Regular.woff2?v=v3.4.0">
     <link rel="preload" as="font" type="font/woff2" crossorigin href="/libs/geist/Geist-Bold.woff2?v=v3.4.0">
     <!-- 播放页 bundle 的文件名（打包脚本会更新），结果页出来后用它预取播放页资源 -->
-    <meta name="leletv-player-bundle" content="dist/leletv-player.wcma8e.js">
+    <meta name="leletv-player-bundle" content="dist/leletv-player.y1shlj.js">
 
     <!-- PWA：添加到主屏/桌面后以独立窗口运行（无浏览器 UI） -->
     <!-- mobile-web-app-capable 为标准化写法（Chrome 已废弃 apple-* 前缀）；apple-* 保留以兼容 iOS Safari -->
@@ -756,12 +756,6 @@
         <!-- 分类 -->
         <div id="page-category" class="page-content">
             <div class="v2-wrap v2-page">
-                <header class="v2-page-head">
-                    <div>
-                        <h1 class="v2-page-title">分类</h1>
-                        <p class="v2-page-sub">按类型、地区与年份浏览片单，选中影片后在已启用的片源中检索。</p>
-                    </div>
-                </header>
                 <div id="tmdb-filters"></div>
                 <div id="tmdb-results" class="tmdb-results-grid"></div>
                 <div id="tmdb-pagination"></div>
@@ -771,13 +765,9 @@
         <!-- 观看记录 -->
         <div id="page-history" class="page-content">
             <div class="v2-wrap v2-page">
-                <header class="v2-page-head">
-                    <div>
-                        <h1 class="v2-page-title">观看记录</h1>
-                        <p class="v2-page-sub" id="historyCount">仅保存在本机浏览器</p>
-                    </div>
+                <div class="v2-page-head v2-page-head--end">
                     <button type="button" id="clearHistoryBtn" class="v2-btn v2-btn--ghost v2-btn--sm" hidden>清空记录</button>
-                </header>
+                </div>
                 <div id="historyList"></div>
             </div>
         </div>
@@ -785,13 +775,6 @@
         <!-- 设置 -->
         <div id="page-settings" class="page-content">
             <div class="v2-wrap v2-page">
-                <header class="v2-page-head">
-                    <div>
-                        <h1 class="v2-page-title">设置</h1>
-                        <p class="v2-page-sub">片源、播放与外观。所有设置仅保存在本机浏览器。</p>
-                    </div>
-                </header>
-
                 <div class="settings-dashboard-grid">
                     <!-- 数据源 -->
                     <section class="dash-card">
@@ -929,7 +912,7 @@
                             <div class="dash-switch-row">
                                 <div class="dash-switch-info">
                                     <span class="dash-switch-label">导航栏只显示图标</span>
-                                    <span class="dash-switch-desc">桌面端导航项去掉文字，鼠标悬停显示名称；手机底栏保留文字。</span>
+                                    <span class="dash-switch-desc">桌面端导航项去掉文字，鼠标悬停显示名称；手机端一律只显示图标。</span>
                                 </div>
                                 <label class="dash-switch-toggle" for="layoutNavIconsToggle">
                                     <input type="checkbox" id="layoutNavIconsToggle" class="dash-switch-input" data-layout-pref="navIcons">
@@ -977,12 +960,6 @@
         <!-- 关于 -->
         <div id="page-about" class="page-content">
             <div class="v2-wrap v2-page">
-                <header class="v2-page-head">
-                    <div>
-                        <h1 class="v2-page-title">关于</h1>
-                        <p class="v2-page-sub">项目说明、隐私与版权声明、版本记录。</p>
-                    </div>
-                </header>
                 <div class="about-grid">
                     <section class="about-hero">
                         <span class="about-hero-mark" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
@@ -1108,18 +1085,12 @@
         </div>
     </div>
 
-    <!-- 页脚 -->
+    <!-- 页脚：一行三段（版本号 / 版权 / 链接），窄屏居中堆叠 -->
     <footer class="footer v2-footer">
         <div class="v2-wrap v2-footer-inner">
-            <div class="v2-footer-brand">
-                <span class="v2-lockup" role="img" aria-label="LeLeTV">
-                    <span class="v2-brand-tile" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
-                    <svg class="v2-brand-word" viewBox="0 0 756.5 204.5" aria-hidden="true"><use href="#lele-word"/></svg>
-                </span>
-                <p class="v2-footer-legal">© 2026 LeLeTV - 仅供个人学习使用，禁止商业用途</p>
-            </div>
+            <span id="footerVersionDisplay"></span>
+            <p class="v2-footer-legal">© 2026 LeLeTV - 仅供个人学习使用，禁止商业用途</p>
             <div class="v2-footer-links">
-                <span id="footerVersionDisplay"></span>
                 <button type="button" data-action="open-disclaimer">使用须知</button>
                 <button type="button" data-action="switch-page" data-page="about">关于</button>
             </div>
@@ -1296,7 +1267,7 @@
     </script>
 
     <script src="dist/leletv-core.miuqd5.js?v=v4.0.0" defer></script>
-    <script src="dist/leletv-app.ukk9yz.js?v=v4.0.0" defer></script>
+    <script src="dist/leletv-app.dvyugf.js?v=v4.0.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
