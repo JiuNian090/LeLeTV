@@ -2,15 +2,14 @@
    类名统一 v2- 前缀；需要覆盖旧规则的地方用「旧类名 + v2 类名」提高优先级，不改旧样式文件。 */
 
 /* ============ 导航 ============ */
-/* 毛玻璃画在 ::before 上：导航本身不能带 backdrop-filter，否则会给滚动穿过的内容建立新的包含块。
-   底色 0.3：在彩色光晕上足够稳、文字可读，又不会切成一块实心板；
-   去掉硬边框，用 ::after 底部渐隐阴影代替——滚动时内容自然淡出，不切硬线 */
+/* 平时：半透明深色底，不模糊，图标清晰；
+   滚动后（.scrolled）：才启用 backdrop-filter 模糊，让穿过的内容虚化 */
 .top-nav-bar.v2-nav {
     position: sticky;
     top: 0;
     z-index: var(--v2-z-nav);
     isolation: isolate;
-    /* 顶部安全区：毛玻璃背景延伸到刘海/灵动岛后方，nav-container 被推到安全区内 */
+    /* 顶部安全区：背景延伸到刘海/灵动岛后方，nav-container 被推到安全区内 */
     padding: env(safe-area-inset-top, 0px) 0 0;
     background: transparent;
 }
@@ -20,21 +19,13 @@
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: rgba(10, 10, 11, 0.3);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    backdrop-filter: blur(20px) saturate(1.4);
+    background: rgba(10, 10, 11, 0.72);
 }
 
-/* 底部渐隐阴影：替代 border-bottom 硬线，内容滚到导航下方时自然淡出 */
-.top-nav-bar.v2-nav::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 24px;
-    z-index: -1;
-    background: linear-gradient(to bottom, rgba(10, 10, 11, 0.35), transparent);
+/* 滚动后才启用毛玻璃：内容穿过导航栏时模糊虚化 */
+.top-nav-bar.v2-nav.scrolled::before {
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
 }
 
 .v2-nav .nav-container {
