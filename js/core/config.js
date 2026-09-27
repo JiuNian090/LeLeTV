@@ -260,7 +260,8 @@ const CACHE_CONFIG = {
         'leletv_theme_normal',   // 主题色（正常模式）
         'leletv_theme_hidden',   // 主题色（私密模式）
         'leletv_motion',         // 动态效果偏好（跟随系统 / 开启 / 关闭）
-        'leletv_layout',         // 首页与导航布局偏好
+        'leletv_layout',         // 首页与导航布局偏好（正常模式）
+        'leletv_layout_hidden',  // 首页与导航布局偏好（私密模式；默认关聚合动效与内容板块）
         'leletv_lights'          // 播放页关灯
     ],
     // 带时间戳的临时数据键名前缀

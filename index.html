@@ -156,9 +156,12 @@
         } catch (e) { /* 忽略 */ }
         try {
             // 首页与导航布局偏好（设置 › 首页与导航）：首帧就按它隐藏聚合动效 / 内容板块、导航只留图标
-            var layout = JSON.parse(localStorage.getItem('leletv_layout') || '{}') || {};
-            if (layout.hub === false) d.setAttribute('data-home-hub', 'off');
-            if (layout.shelves === false) d.setAttribute('data-home-shelves', 'off');
+            // 按数据域取键（同 leletv_theme_normal / leletv_theme_hidden 的惯例）；
+            // 私密模式下 hub / shelves 默认关闭，用户在设置里手动打开才会写 true
+            var hiddenLayout = d.hasAttribute('data-hidden-mode');
+            var layout = JSON.parse(localStorage.getItem(hiddenLayout ? 'leletv_layout_hidden' : 'leletv_layout') || '{}') || {};
+            if (layout.hub === false || (hiddenLayout && layout.hub !== true)) d.setAttribute('data-home-hub', 'off');
+            if (layout.shelves === false || (hiddenLayout && layout.shelves !== true)) d.setAttribute('data-home-shelves', 'off');
             if (layout.navIcons === true) d.setAttribute('data-nav', 'icons');
         } catch (e) { /* 忽略 */ }
 
@@ -1095,7 +1098,7 @@
                     <span class="v2-brand-tile" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
                     <svg class="v2-brand-word" viewBox="0 0 756.5 204.5" aria-hidden="true"><use href="#lele-word"/></svg>
                 </span>
-                <p class="v2-footer-legal">仅供个人学习与研究使用。本站不存储任何视频，检索结果均来自第三方公开接口。</p>
+                <p class="v2-footer-legal">© 2026 LeLeTV - 仅供个人学习使用，禁止商业用途</p>
             </div>
             <div class="v2-footer-links">
                 <span id="footerVersionDisplay"></span>
@@ -1268,31 +1271,14 @@
     <!-- 搜索历史下拉（桌面） -->
     <div id="searchHistoryDropdown" class="v2-dropdown hidden" role="listbox" aria-label="搜索历史"></div>
 
-    <!-- JSON-LD 结构化数据 -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "LeLeTV",
-        "url": "https://jntv.776645.xyz/",
-        "description": "自用免费观影平台",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://jntv.776645.xyz/?s={search_term_string}",
-            "query-input": "required name=search_term_string"
-        }
-    }
-    </script>
-
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
     <script src="libs/sha256.min.js?v=v3.6.5"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-
-    <script src="dist/leletv-core.4yft9c.js?v=v3.6.5" defer></script>
-    <script src="dist/leletv-app.fk9wr5.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-core.6aekrm.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-app.ejszkg.js?v=v3.6.5" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
