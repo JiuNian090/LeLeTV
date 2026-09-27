@@ -37,7 +37,6 @@ const APP = {
     'js/app/app-search.js', 'js/app/app-config.js', 'js/app/app.js',
     'js/app/app-init.js', 'js/app/app-routing.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
-    'js/effects/aurora-bg.js', 'js/effects/title-animation.js', 'js/utils/index-page.js',
     'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
     'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
   ],
@@ -53,7 +52,6 @@ const PLAYER = {
     'js/player/player-core.js', 'js/player/player-episodes.js',
     'js/player/player-ui.js', 'js/player/player-failover.js', 'js/player/player-lights.js', 'js/player/player-detail.js', 'js/player/player-quality.js', 'js/player/player.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
-    'js/effects/aurora-bg.js',
   ],
 };
 

@@ -222,11 +222,6 @@ html[data-motion="off"] .v2-glow > span {
     animation: none;
 }
 
-/* 旧的极光背景由环境光取代 */
-#auroraContainer {
-    display: none !important;
-}
-
 ::selection {
     background: rgba(var(--v2-accent-rgb), 0.35);
     color: #FFFFFF;

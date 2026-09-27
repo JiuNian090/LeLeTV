@@ -70,14 +70,6 @@ function _themeRgba(alpha) {
   var c = _themeRgbParts();
   return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + alpha + ')';
 }
-function _themeHex() {
-  try {
-    var v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-    if (v) return v;
-  } catch (e) { /* 忽略 */ }
-  return document.documentElement.hasAttribute('data-hidden-mode') ? '#B87333' : '#ec4899';
-}
-
 var DOMAIN_GATHER_MS = 680;      // 粒子螺旋凝聚 + 字样成形
 var DOMAIN_HOLD_MS = 140;        // 成型停留
 var DOMAIN_BURST_MS = 380;       // 爆开
@@ -1122,9 +1114,6 @@ function closeInviteGuideModal() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  AppInit.register('aurora', AppInit.PHASES.POST, function() {
-    initAurora({ selector: '#auroraContainer', colorStops: ['#3A29FF', _themeHex(), '#FFD700'], amplitude: 0.45, blend: 0.6, speed: 0.35 });
-  });
   AppInit.register('hash-routing', AppInit.PHASES.POST, function() {
     // 重载恢复页优先（如切换隐藏/正常内容模式后要留在设置页），其次 URL hash，最后默认首页
     var resumePage = '';
