@@ -7,7 +7,8 @@
  *   node scripts/brand/make-brand.mjs --color '#FFFFFF'     # 先把源 SVG 里 Le 的填充改成该色，再重出
  *   node scripts/brand/make-brand.mjs --bump le3            # 顺带把 HTML/manifest 的缓存版本号升到 le3
  *
- * 注意：源 SVG 里 Le 路径的 fill 会被 --color 改写（radialGradient 的粉色氛围光晕不动）。
+ * 注意：源 SVG 里 Le 路径的 fill 会被 --color 改写；背景是纯黑实底、无光晕层，
+ * 要调底色直接改源里 <rect ... fill> 那一行。
  * 输出直接覆盖 image/brand/ 与 image/splash/，改动后记得走一遍 git diff 核对。
  */
 import fs from 'node:fs';

@@ -739,8 +739,8 @@ html[data-motion="off"] .v2-hero-glass {
     position: absolute;
     inset: 0;
     background: var(--v2-accent);
-    -webkit-mask: url("../../image/brand/leletv-mark-currentcolor.svg?v=le3") center / 42% auto no-repeat;
-    mask: url("../../image/brand/leletv-mark-currentcolor.svg?v=le3") center / 42% auto no-repeat;
+    -webkit-mask: url("../../image/brand/leletv-mark-currentcolor.svg?v=le4") center / 42% auto no-repeat;
+    mask: url("../../image/brand/leletv-mark-currentcolor.svg?v=le4") center / 42% auto no-repeat;
     opacity: 0.2;
 }
 

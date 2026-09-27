@@ -11,7 +11,8 @@
 | `image/brand/leletv-app-icon.svg` | PWA 图标 / apple-touch-icon 的母版 |
 | `image/brand/leletv-app-icon-maskable.svg` | maskable 图标母版（Le 缩到安全区内、满幅底色） |
 
-三个 SVG 里 Le 路径的 `fill` 就是换色点；`radialGradient` 的粉色氛围光晕**不在**换色范围内。
+三个 SVG 里 Le 路径的 `fill` 就是换色点（`make-brand.mjs --color` 只改这一处）。
+背景是 `#000000` 纯黑实底、**不带光晕层**；要调底色直接改源里 `<rect ... fill>` 那一行。
 
 ## 一键重出
 
