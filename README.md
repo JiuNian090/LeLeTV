@@ -491,7 +491,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.0.1`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.0.2`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -502,6 +502,10 @@ npm run dev
 ## 📝 更新日志
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
+
+### v4.0.2 (2026-09-28)
+- ✨ 优化 iPhone 添加到桌面后，页面背景可延伸到刘海/灵动岛两侧，导航按钮不再被遮挡
+- 🎨 样式 导航栏底部改为渐变过渡，滚动内容自然淡出，去掉生硬的分隔线
 
 ### v4.0.1 (2026-09-28)
 - ✨ 优化 手机端导航入口回到顶栏，去掉底部标签栏，页面显示区域更完整
@@ -528,10 +532,6 @@ npm run dev
 - ✨ 优化 从播放页返回搜索结果页近乎秒开
 - 🔧 修复 播放页网页全屏尺寸异常的问题
 - 💝 特别鸣谢 本次界面改版由贡献者 6uos 参与完成
-
-### v3.6.5 (2026-09-24)
-- 🔧 修复 搜索结果页残留旧缓存导致关键词与影片卡片显示异常的问题
-- 🔧 修复 iPad 添加到主屏后启动时会闪屏的问题，补全横竖屏启动图
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
