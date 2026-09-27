@@ -99,11 +99,11 @@
           media="(device-width: 1376px) and (device-height: 1032px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
 
     <!-- 样式：变量与背景 → 通用组件 → 首页 → 内页 → 线上版管理面板 -->
-    <link rel="stylesheet" href="css/v2/tokens.css?v=v4.0.2">
-    <link rel="stylesheet" href="css/v2/base.css?v=v4.0.2">
-    <link rel="stylesheet" href="css/v2/home.css?v=v4.0.2">
-    <link rel="stylesheet" href="css/v2/views.css?v=v4.0.2">
-    <link rel="stylesheet" href="css/v2/admin.css?v=v4.0.2">
+    <link rel="stylesheet" href="css/v2/tokens.css?v=v4.0.3">
+    <link rel="stylesheet" href="css/v2/base.css?v=v4.0.3">
+    <link rel="stylesheet" href="css/v2/home.css?v=v4.0.3">
+    <link rel="stylesheet" href="css/v2/views.css?v=v4.0.3">
+    <link rel="stylesheet" href="css/v2/admin.css?v=v4.0.3">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -1274,20 +1274,20 @@
     <div id="searchHistoryDropdown" class="v2-dropdown hidden" role="listbox" aria-label="搜索历史"></div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v4.0.2"></script>
+    <script src="libs/sha256.min.js?v=v4.0.3"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.miuqd5.js?v=v4.0.2" defer></script>
-    <script src="dist/leletv-app.dvyugf.js?v=v4.0.2" defer></script>
+    <script src="dist/leletv-core.miuqd5.js?v=v4.0.3" defer></script>
+    <script src="dist/leletv-app.dvyugf.js?v=v4.0.3" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v4.0.2";
+        window.__LELETV_VERSION__ = "v4.0.3";
     </script>
 
     <!-- 导航栏滚动毛玻璃：未滚动时纯半透明底，滚动后才启用 backdrop-filter -->
