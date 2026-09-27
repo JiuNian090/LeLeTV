@@ -64,7 +64,7 @@
 
     <!-- iPad（竖屏 / 横屏各一套：iOS 按 media 精确匹配，缺哪个方向就回退白屏；
          横屏条目的 device-width/device-height 随方向互换，图片像素是长边 × 短边。
-         重新生成：node scripts/generate-splash.mjs -->
+         重新生成：node scripts/brand/gen-splash.mjs -->
     <link rel="apple-touch-startup-image" href="/image/splash/ipad-768x1024@2x.png"
           media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
     <link rel="apple-touch-startup-image" href="/image/splash/ipad-1024x768@2x.png"
@@ -99,11 +99,11 @@
           media="(device-width: 1376px) and (device-height: 1032px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
 
     <!-- 样式：变量与背景 → 通用组件 → 首页 → 内页 → 线上版管理面板 -->
-    <link rel="stylesheet" href="css/v2/tokens.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/v2/base.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/v2/home.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/v2/views.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/v2/admin.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/tokens.css?v=v4.0.0">
+    <link rel="stylesheet" href="css/v2/base.css?v=v4.0.0">
+    <link rel="stylesheet" href="css/v2/home.css?v=v4.0.0">
+    <link rel="stylesheet" href="css/v2/views.css?v=v4.0.0">
+    <link rel="stylesheet" href="css/v2/admin.css?v=v4.0.0">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -1290,20 +1290,20 @@
     <div id="searchHistoryDropdown" class="v2-dropdown hidden" role="listbox" aria-label="搜索历史"></div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v3.6.5"></script>
+    <script src="libs/sha256.min.js?v=v4.0.0"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.ly7pqq.js?v=v3.6.5" defer></script>
-    <script src="dist/leletv-app.bd9d37.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-core.miuqd5.js?v=v4.0.0" defer></script>
+    <script src="dist/leletv-app.ukk9yz.js?v=v4.0.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v3.6.5";
+        window.__LELETV_VERSION__ = "v4.0.0";
     </script>
 
     <!-- 版本更新检测模块 -->
