@@ -2064,11 +2064,26 @@
     line-height: 1.75;
 }
 
+/* 四个入口：宽屏一行四个，窄屏两行两列。用 grid 而不是 flex-wrap——
+   每列等宽，两行的左右边缘都对齐。
+   断点跟 .about-grid 的单列断点一致：900px 以下卡片已经单列，
+   这里再放四个就会挤在 hero 的文字栏里（901px 起 hero 才是「图标 + 文字」两栏） */
 .about-actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
     margin-top: 18px;
+}
+
+.about-actions .v2-btn {
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    .about-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .about-text {
