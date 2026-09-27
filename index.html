@@ -1290,6 +1290,30 @@
         window.__LELETV_VERSION__ = "v4.0.2";
     </script>
 
+    <!-- 导航栏滚动毛玻璃：未滚动时纯半透明底，滚动后才启用 backdrop-filter -->
+    <script>
+    (function () {
+        var nav = document.querySelector('.top-nav-bar.v2-nav');
+        if (!nav) return;
+        var ticking = false;
+        function updateNav() {
+            if (window.scrollY > 8) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+            ticking = false;
+        }
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                requestAnimationFrame(updateNav);
+                ticking = true;
+            }
+        }, { passive: true });
+        updateNav();
+    })();
+    </script>
+
     <!-- 版本更新检测模块 -->
 
     <!-- 缓存管理模块 -->
