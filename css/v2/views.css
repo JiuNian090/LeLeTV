@@ -2502,6 +2502,17 @@
 }
 
 @media (max-width: 720px) {
+    /* 数据源勾选：窄屏强制 3 列，缩小 gap 和 item 内边距给名称留空间 */
+    .dash-api-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px 6px;
+    }
+
+    .dash-api-grid .v2-src-item {
+        gap: 6px;
+        padding: 6px 4px;
+    }
+
     .movies-topbar-inner {
         gap: 10px;
         min-height: 60px;
