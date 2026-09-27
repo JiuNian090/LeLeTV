@@ -103,6 +103,18 @@ function stripJsScripts(html) {
   return html.replace(/    <script src="(js|dist)\/.*?"[^>]*><\/script>\r?\n/g, '');
 }
 
+/** 文件行尾：HTML 用 CRLF，写回时保持原样，避免把 LF 混进 CRLF 文件 */
+function detectEol(html) {
+  return html.includes('\r\n') ? '\r\n' : '\n';
+}
+
+/** 连续空行压成一个（3 个以上换行 → 2 个）：
+    必须按 \r?\n 计数，否则 CRLF 文件里 \n 之间隔着 \r 匹配不到，每构建一次就多攒一个空行 */
+function collapseBlankLines(html) {
+  const eol = detectEol(html);
+  return html.replace(/(?:\r?\n){3,}/g, eol + eol);
+}
+
 async function main() {
   if (!fs.existsSync(DIST)) fs.mkdirSync(DIST, { recursive: true });
   for (const f of fs.readdirSync(DIST)) {
@@ -120,24 +132,28 @@ async function main() {
 
   // --- index.html ---
   let idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const idxEol = detectEol(idx);
   idx = stripJsScripts(idx);
   const envMarker = '    <!-- \u73af\u5883\u53d8\u91cf\u6ce8\u5165\u811a\u672c -->';
-  const idxBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>\n    <script src="dist/' + appFile + '?v=' + version + '" defer></script>';
-  idx = idx.replace(envMarker, idxBundle + '\n\n' + envMarker);
+  const idxBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>' + idxEol
+    + '    <script src="dist/' + appFile + '?v=' + version + '" defer></script>';
+  idx = idx.replace(envMarker, idxBundle + idxEol + idxEol + envMarker);
   // 结果页预取播放页资源用的 bundle 名
   idx = idx.replace(/dist\/leletv-player\.[a-z0-9]+\.js/g, 'dist/' + playerFile);
-  idx = idx.replace(/\n{3,}/g, '\n\n');
+  idx = collapseBlankLines(idx);
   fs.writeFileSync(path.join(ROOT, 'index.html'), idx, 'utf8');
   console.log('[index.html] -> dist/' + coreFile + ' + dist/' + appFile);
 
   // --- player.html ---
   let ply = fs.readFileSync(path.join(ROOT, 'player.html'), 'utf8');
+  const plyEol = detectEol(ply);
   ply = stripJsScripts(ply);
   // Insert after artplayer script (outside any <script> block)
   const plyAnchor = '    <script src="libs/artplayer.min.js?v=' + version + '" defer crossorigin="anonymous"></script>';
-  const plyBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>\n    <script src="dist/' + playerFile + '?v=' + version + '" defer></script>';
-  ply = ply.replace(plyAnchor, plyAnchor + '\n' + plyBundle);
-  ply = ply.replace(/\n{3,}/g, '\n\n');
+  const plyBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>' + plyEol
+    + '    <script src="dist/' + playerFile + '?v=' + version + '" defer></script>';
+  ply = ply.replace(plyAnchor, plyAnchor + plyEol + plyBundle);
+  ply = collapseBlankLines(ply);
   fs.writeFileSync(path.join(ROOT, 'player.html'), ply, 'utf8');
   console.log('[player.html] -> dist/' + coreFile + ' + dist/' + playerFile);
 
