@@ -1,71 +1,149 @@
 // LeLeTV — 搜索结果卡片渲染模块
 // 从 app-search.js 拆分
 
-// 封面加载失败的本地 fallback（内联 SVG data URI，永不失效）
-// 注意：必须在替换 src 前先添加 loaded 类，否则 img.loading-fade 仍为 opacity:0
-var _CARD_IMG_FALLBACK_SRC = "data:image/svg+xml;charset=utf-8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect width="300" height="450" fill="#191919"/><g fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="100" y="160" width="100" height="80" rx="4"/><circle cx="120" cy="182" r="6" fill="#444"/><path d="M100 235 L145 195 L200 250"/></g><text x="150" y="290" font-size="18" fill="#666" text-anchor="middle" font-family="sans-serif">无封面</text></svg>');
+// 封面加载失败：去掉图片，露出下面的片名首字占位（没有占位层的卡片现补一个）
 function _cardImgFallback(img) {
   img.onerror = null;
+  var box = img.parentElement;
+  if (!box) return;
+  if (!box.querySelector('.v2-poster-empty')) {
+    var title = (img.getAttribute('data-title') || '').trim();
+    var empty = document.createElement('div');
+    empty.className = 'v2-poster-empty';
+    var mark = document.createElement('b');
+    mark.textContent = title.slice(0, 1) || '·';
+    var name = document.createElement('span');
+    name.textContent = title;
+    empty.append(mark, name);
+    box.insertBefore(empty, box.firstChild);
+  }
+  img.remove();
+}
+
+// 封面加载完成：明显不是竖版 2:3 的（横版、方图）改成完整居中 + 同图模糊垫底
+function _posterLoaded(img) {
   img.classList.add('loaded');
-  img.classList.add('object-contain');
-  img.src = _CARD_IMG_FALLBACK_SRC;
+  var w = img.naturalWidth, h = img.naturalHeight;
+  if (!w || !h || w / h <= 0.8) return;
+  var box = img.parentElement;
+  if (!box) return;
+  box.classList.add('is-wide');
+  box.style.setProperty('--poster', 'url("' + (img.currentSrc || img.src).replace(/["\\\n\r]/g, '') + '")');
 }
 
-// 来源多色色板：角标 / 来源标识 / 侧栏图标按 source_code 稳定取色
-var _SOURCE_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#14b8a6', '#6366f1', '#eab308'];
-
-function _sourceColor(code) {
-  var s = String(code || '');
-  var h = 0;
-  for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return _SOURCE_COLORS[h % _SOURCE_COLORS.length];
+function _escAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function _buildSearchCardsHtml(items) {
-  return items.map(function(item) {
-    var sid = (item.vod_id || "").toString().replace(/[^\w-]/g, "");
-    var sn = (item.vod_name || "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    var srcInfo = "";
-    if (item.source_name) {
-      srcInfo += "<span class='source-label-tag'>" + item.source_name + "</span>";
-      // 该源本次搜索的耗时：<1s 快（绿）/ 1-2s 中（黄）/ ≥2s 慢（红）
-      var lat = item.source_latency;
-      if (typeof lat === "number" && lat > 0) {
-        var lvl = lat < 1000 ? "fast" : (lat < 2000 ? "mid" : "slow");
-        var lvlName = lat < 1000 ? "快" : (lat < 2000 ? "中" : "慢");
-        // 秒数向下取整到 0.1s，避免 1999ms 与 2000ms 显示成同一个 "2.0s"
-        var latText = lat < 1000 ? (lat + "ms") : ((Math.floor(lat / 100) / 10).toFixed(1) + "s");
-        srcInfo += "<span class='source-latency-tag latency-" + lvl + "' title='该源本次搜索耗时 " + lat + "ms（" + lvlName + "）'>" + latText + "</span>";
-      }
+// 片源速度分档：<1s 快 / 1-2s 中 / ≥2s 慢（与播放页线路列表同一口径）
+function _latencyLevel(lat) {
+  if (typeof lat !== 'number' || lat <= 0) return '';
+  return lat < 1000 ? 'fast' : (lat < 2000 ? 'mid' : 'slow');
+}
+
+function _latencyText(lat) {
+  if (typeof lat !== 'number' || lat <= 0) return '';
+  // 秒数向下取整到 0.1s，避免 1999ms 与 2000ms 显示成同一个 "2.0s"
+  return lat < 1000 ? (lat + 'ms') : ((Math.floor(lat / 100) / 10).toFixed(1) + 's');
+}
+
+// 合并用的片名：去掉空白、标点和大小写差异
+function _normTitle(name) {
+  return String(name || '').toLowerCase()
+    .replace(/[\s　·•・:：,，.。!！?？'"“”‘’()（）【】\[\]《》<>\-—_~～]/g, '');
+}
+
+/**
+ * 合并用的键：有的资源站把别名接在片名后面（「片名$别名」或「片名（别名）」），
+ * 去掉别名再规范化，同一部片在各站的写法才对得上
+ */
+function _mergeKey(name) {
+  var main = String(name || '').split('$')[0].trim().replace(/[（(【\[][^）)】\]]*[）)】\]]\s*$/, '');
+  return _normTitle(main);
+}
+
+/**
+ * 同名影片合并：片名规范化后相同、年份相同（或缺年份）的条目归为一组。
+ * 传入的列表已按片源速度排好序，组内第一条就是最快的片源，点卡片即播放它；
+ * 其余片源在播放页的「线路切换」里可以换。
+ */
+function _mergeResultsByTitle(items) {
+  var groups = [];
+  var byName = {};
+  (items || []).forEach(function(item) {
+    var key = _mergeKey(item.vod_name);
+    if (!key) { groups.push({ lead: item, items: [item] }); return; }
+    var year = String(item.vod_year || '').trim();
+    var bucket = byName[key] || (byName[key] = []);
+    var hit = null;
+    for (var i = 0; i < bucket.length; i++) {
+      var gy = bucket[i].year;
+      if (!year || !gy || gy === year) { hit = bucket[i]; break; }
     }
-    var sc = item.source_code || "";
-    var au = item.api_url ? " data-api-url='" + item.api_url.replace(/"/g, "&quot;") + "'" : "";
-    var cv = item.vod_pic && item.vod_pic.indexOf("http") === 0;
-    // 提取简介：优先 vod_blurb，其次从 vod_content 中剥离HTML
-    var desc = "";
-    if (item.vod_blurb) {
-      desc = item.vod_blurb.toString().replace(/<[^>]+>/g, "").replace(/</g, "&lt;").trim();
-    } else if (item.vod_content) {
-      desc = item.vod_content.toString().replace(/<[^>]+>/g, "").replace(/</g, "&lt;").trim();
+    if (hit) {
+      hit.items.push(item);
+      if (!hit.year && year) hit.year = year;
+    } else {
+      var g = { lead: item, items: [item], year: year };
+      bucket.push(g);
+      groups.push(g);
     }
-    if (desc.length > 200) desc = desc.substring(0, 200);
-    var remarks = (item.vod_remarks || "").toString().replace(/</g, "&lt;");
-    // 项目卡片样式：圆角、左海报 + 右内容、粉色标签
-    var h = "<div class='card-hover search-result-card rounded-lg overflow-hidden cursor-pointer transition-all hover:scale-[1.02] h-full shadow-sm hover:shadow-md' data-action='play-directly' data-id='" + sid + "' data-name='" + sn + "' data-source='" + sc + "'" + au + ">";
-    h += "<div class='flex h-full'>";
-    if (cv) { h += "<div class='search-card-img-container'><img src='" + item.vod_pic + "' alt='" + sn + "' loading='lazy' class='loading-fade' onerror=\"_cardImgFallback(this)\" onload=\"this.classList.add('loaded')\"></div>"; }
-    h += "<div class='card-content'><div class='card-content-header'><h3 title='" + sn + "'>" + sn + "</h3><div class='card-content-tags'>";
-    var tn = (item.type_name || "").toString().replace(/</g, "&lt;");
-    if (tn) h += "<span>" + tn + "</span>";
-    if (item.vod_year) h += "<span>" + item.vod_year + "</span>";
-    h += "</div></div>";
-    if (remarks) h += "<p class='card-content-remarks'>" + remarks + "</p>";
-    if (desc) h += "<p class='card-content-synopsis'>" + desc + "</p>";
-    h += "<div class='card-content-footer'>" + (srcInfo || "") + "</div></div></div>";
-    h += "<button class='card-share-btn' data-action='share-video' data-title='" + sn + "' data-url='" + (item.vod_id ? window.location.origin + "/player.html?id=" + encodeURIComponent(item.vod_id) + "&source=" + encodeURIComponent(sc || "") + "&title=" + encodeURIComponent(sn) : "") + "' onclick='event.stopPropagation();_shareVideo(this.dataset.title, this.dataset.url)' title='分享'>&#x2197;</button></div>";
-    return h;
-  }).join("");
+  });
+  return groups;
 }
+
+// 单张结果卡片：2:3 海报 + 片名 + 年份类型；左下角标最快片源与速度，合并了多个片源时标 +N
+function _buildResultCard(item, sameTitle) {
+  var sid = (item.vod_id || '').toString().replace(/[^\w-]/g, '');
+  var nameRaw = (item.vod_name || '').toString().trim();
+  var sn = _escAttr(nameRaw);
+  var sc = _escAttr(item.source_code || '');
+  var au = item.api_url ? ' data-api-url="' + _escAttr(item.api_url) + '"' : '';
+  var cover = item.vod_pic && /^https?:\/\//.test(item.vod_pic) ? item.vod_pic : '';
+  var remarks = _escAttr((item.vod_remarks || '').toString().replace(/<[^>]+>/g, '').trim());
+  var meta = [item.vod_year, item.type_name].filter(Boolean).map(function(v) { return _escAttr(String(v).trim()); }).join(' · ');
+  var others = (sameTitle || []).slice(1);
+  var lvl = _latencyLevel(item.source_latency);
+  var latText = _latencyText(item.source_latency);
+  var srcTitle = [item.source_name + (latText ? '（' + latText + '）' : '')].concat(others.map(function(o) { return o.source_name; })).filter(Boolean).join('、');
+
+  var h = '<article class="v2-pcard v2-rcard search-result-card card-hover" role="button" tabindex="0" data-action="play-directly" data-id="' + sid + '" data-name="' + sn + '" data-source="' + sc + '"' + au + ' aria-label="播放 ' + sn + '">';
+  // 片名首字占位垫在最下层：资源站的图床普遍偏慢，图片到之前卡片也不是一块黑
+  h += '<div class="v2-poster"><div class="v2-poster-empty"><b>' + _escAttr(nameRaw.slice(0, 1) || '·') + '</b><span>' + sn + '</span></div>';
+  if (cover) {
+    h += '<img src="' + _escAttr(cover) + '" alt="" data-title="' + sn + '" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="_posterLoaded(this)" onerror="_cardImgFallback(this)">';
+  }
+  if (remarks) h += '<span class="v2-badge v2-badge--note">' + remarks + '</span>';
+  if (item.source_name) {
+    h += '<span class="v2-rcard-src" title="' + _escAttr('可用片源：' + srcTitle) + '">' + (lvl ? '<i class="lat-' + lvl + '"></i>' : '') + '<span>' + _escAttr(item.source_name) + '</span>' + (others.length ? '<em>+' + others.length + '</em>' : '') + '</span>';
+  }
+  h += '</div>';
+  h += '<h3 title="' + sn + '">' + sn + '</h3>';
+  h += '<p>' + (meta || '&nbsp;') + '</p>';
+  var shareUrl = item.vod_id ? window.location.origin + '/player.html?id=' + encodeURIComponent(item.vod_id) + '&source=' + encodeURIComponent(item.source_code || '') + '&title=' + encodeURIComponent(nameRaw) : '';
+  h += '<button type="button" class="v2-rcard-share card-share-btn" data-title="' + sn + '" data-url="' + _escAttr(shareUrl) + '" onclick="event.stopPropagation();_shareVideo(this.dataset.title, this.dataset.url)" aria-label="分享 ' + sn + '">';
+  h += '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></button>';
+  h += '</article>';
+  return h;
+}
+
+/** 结果卡片列表。opts.merge 为 true 时先按片名合并（「全部」视图），单个片源的视图不合并 */
+function _buildSearchCardsHtml(items, opts) {
+  opts = opts || {};
+  if (opts.merge) {
+    return _mergeResultsByTitle(items).map(function(g) { return _buildResultCard(g.lead, g.items); }).join('');
+  }
+  return (items || []).map(function(item) { return _buildResultCard(item, null); }).join('');
+}
+
+// 卡片是 role="button" 的 <article>（里面还有分享按钮，不能用 <button> 嵌套），键盘回车 / 空格也要能触发
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var card = e.target && e.target.classList && e.target.classList.contains('search-result-card') ? e.target : null;
+  if (!card) return;
+  e.preventDefault();
+  card.click();
+});
 
 function _chineseToNumber(str) {
   var n = {零:0, 一:1, 二:2, 三:3, 四:4, 五:5, 六:6, 七:7, 八:8, 九:9, 十:10, 百:100, 千:1000};
@@ -212,23 +290,20 @@ function _applySourceFilter(sourceFilter) {
 function animateCardEntrance(containerSel) {
   var root = document.querySelector(containerSel || '#results');
   if (!root) return;
+  if (window.LeLeMotion ? window.LeLeMotion.reduced() : (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   root.querySelectorAll('.card-hover').forEach(function(card, i) {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(16px)';
-    setTimeout(function() {
-      card.style.transition = 'opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1)';
-      card.style.opacity = '1';
-      card.style.transform = 'translateY(0)';
-    }, i * 50);
+    if (i > 24) return;   // 只给首屏附近的卡片做入场，列表很长时不拖慢
+    card.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 380, delay: i * 30, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' });
   });
 }
 
+// 加载中的海报骨架，与首页海报卡片同一形状
 function generateSkeletonCards(count) {
-  if (count === undefined) count = 8;
-  var cols = window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1440 ? 3 : window.innerWidth < 1920 ? 4 : 5;
-  var cards = [];
-  for (var i = 0; i < Math.max(count, cols * 2); i++) {
-    cards.push('<div class="skeleton-card"><div class="skeleton-card-img"></div><div class="skeleton-card-body"><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:55%"></div><div class="skeleton-tags"><div class="skeleton-tag"></div><div class="skeleton-tag"></div></div><div class="skeleton-line-sm" style="width:40%"></div><div class="skeleton-line-xs"></div><div class="skeleton-line-xs" style="width:90%"></div><div class="skeleton-line-xs" style="margin-top:auto"></div></div></div>');
+  var n = count || 12;
+  var html = '';
+  for (var i = 0; i < n; i++) {
+    html += '<div class="v2-pcard v2-skel" aria-hidden="true"><div class="v2-poster"></div><h3>　</h3><p>　</p></div>';
   }
-  return cards.join('');
+  return html;
 }

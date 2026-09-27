@@ -279,6 +279,8 @@ document.addEventListener('passwordVerified', function() {
 });
 
 document.addEventListener('inviteVerified', function() {
+    // 本地版没有邀请码后端，设备管理无数据可取
+    if (window.INVITE_AUTH && window.INVITE_AUTH.isLocalMode()) return;
     // 显示设备管理
     const userContainer = document.getElementById('userDeviceContainer');
     if (userContainer && window.USER_DEVICES_PANEL) {
@@ -292,6 +294,8 @@ document.addEventListener('inviteVerified', function() {
 // 首次执行时它们还不存在，需要在延后加载完成后再跑一次。
 // 两个模块的 render() 都是整体重建 container.innerHTML，重复调用是安全的
 function initSettingsPanels() {
+    // 本地版没有邀请码后端：设备管理、邀请码管理都不渲染
+    if (window.INVITE_AUTH && window.INVITE_AUTH.isLocalMode()) return;
     const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
     const hasInviteAuth = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
 

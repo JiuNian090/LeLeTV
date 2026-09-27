@@ -36,6 +36,14 @@ function createHlsConfig() {
         loader: Hls.DefaultConfig.loader,
         enableWorker: true,
         lowLatencyMode: true,                   // 低延迟模式加速起播
+        // 坏线路要快点失败，自动换线才接得上：清单 / 分片各只等 6～8s、只重试一次
+        manifestLoadingTimeOut: 6000,
+        manifestLoadingMaxRetry: 0,
+        manifestLoadingRetryDelay: 500,
+        levelLoadingTimeOut: 6000,
+        levelLoadingMaxRetry: 0,
+        fragLoadingTimeOut: 8000,
+        fragLoadingMaxRetry: 2,
         startFragPrefetch: true,                // manifest 加载时预取首个分片（v1.4.0+）
         backBufferLength: 30,                   // 后向缓冲30秒，释放内存
         maxBufferLength: 30,                    // 前向缓冲30秒（约7~8个分片），抗跨境链路抖动
@@ -79,6 +87,7 @@ function setupHlsCustomType(video, url, hlsConfig) {
 
     video.addEventListener('playing', function () {
         playbackStarted = true;
+        if (window.LeLeFailover) window.LeLeFailover.markPlaying();
 
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
@@ -129,11 +138,28 @@ function setupHlsCustomType(video, url, hlsConfig) {
         }
 
         if (data.fatal && !playbackStarted) {
+            // 起播前线路就坏了：清单取不到（跨域被拦、404、超时）直接换线；分片连着失败两次也换；
+            // 换不了（没有别的线路、已换满次数）才走原来的重试与报错
+            const failover = window.LeLeFailover;
+            const manifestDead = /^(manifest|level)(Load|Parsing)/.test(data.details || '');
+            const fragDead = /^frag(Load|Parsing)/.test(data.details || '') && errorCount >= 2;
+            if (failover && data.type === Hls.ErrorTypes.NETWORK_ERROR && (manifestDead || fragDead)) {
+                failover.autoSwitchLine('当前线路无法加载').then(function (switched) {
+                    if (!switched) hls.startLoad();
+                });
+                return;
+            }
             switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
                     hls.startLoad();
                     break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
+                    if (failover && errorCount >= 3) {
+                        failover.autoSwitchLine('当前线路的视频无法解码').then(function (switched) {
+                            if (!switched) hls.recoverMediaError();
+                        });
+                        return;
+                    }
                     hls.recoverMediaError();
                     break;
                 default:
@@ -475,6 +501,7 @@ function initPlayer(videoUrl) {
 
     art = createArtPlayerInstance(videoUrl, hlsConfig);
     PlayerManager.setInstance(art);
+    if (window.LeLeFailover) window.LeLeFailover.watch(art);
 
     const fullScreenController = createFullScreenController();
 

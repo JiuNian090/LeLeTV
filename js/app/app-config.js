@@ -19,16 +19,16 @@ function itemStorageKey(item) {
 
 async function importConfigFromUrl() {
     showModal({
-        title: '从URL导入配置',
+        title: '从链接导入配置',
         content: (body, overlay) => {
             body.innerHTML = `
-                <div class="mb-4">
-                    <input type="text" id="configUrl" placeholder="输入配置文件URL" 
-                           class="w-full px-3 py-2 bg-[#222] border border-[var(--color-border-default)] rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <div class="v2-field">
+                    <label class="v2-label" for="configUrl">配置文件地址</label>
+                    <input type="url" id="configUrl" class="v2-input" placeholder="https://example.com/leletv-config.json" autocomplete="off" spellcheck="false">
                 </div>
-                <div class="flex justify-end space-x-2">
-                    <button id="confirmUrlImport" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">导入</button>
-                    <button id="cancelUrlImport" class="bg-[#444] hover:bg-[#555] text-white px-4 py-2 rounded">取消</button>
+                <div class="v2-dialog-foot is-end">
+                    <button type="button" id="cancelUrlImport" class="v2-btn v2-btn--secondary">取消</button>
+                    <button type="button" id="confirmUrlImport" class="v2-btn v2-btn--primary">导入</button>
                 </div>
             `;
             overlay.querySelector('#confirmUrlImport').addEventListener('click', async () => {
@@ -212,4 +212,4 @@ function closeMobileSearch() {
     overlay.style.height = '';
     overlay.style.top = '';
     document.body.style.overflow = '';
-}
+}

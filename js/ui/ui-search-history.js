@@ -81,13 +81,13 @@ function _historyItemHtml(item, itemId) {
     const attr = safeText.replace(/"/g, '&quot;');
     return `
             <div class="search-history-item" id="${itemId}" role="option" aria-selected="false" data-query="${attr}">
-                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <svg class="v2-history-ic" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 7.5V12l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                 </svg>
                 <span class="history-text">${safeText}</span>
                 <button class="history-delete" data-query="${attr}" aria-label="删除搜索记录">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 18 18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
@@ -97,7 +97,7 @@ function _historyItemHtml(item, itemId) {
 function _historyListHtml(history, idPrefix) {
     let html = '';
     history.forEach((item, index) => { html += _historyItemHtml(item, idPrefix + index); });
-    html += '<button class="search-history-clear" type="button">清除搜索历史</button>';
+    html += '<button class="search-history-clear" type="button">清空搜索历史</button>';
     return html;
 }
 
@@ -285,7 +285,7 @@ function renderMobileSearchHistory(filterText) {
 
     const history = getSearchHistory();
     if (history.length === 0) {
-        container.innerHTML = '<div class="search-history-empty">暂无搜索历史</div>';
+        container.innerHTML = '<div class="search-history-empty">暂无搜索记录</div>';
         container.dataset.historyKey = '';
         return;
     }
@@ -294,7 +294,7 @@ function renderMobileSearchHistory(filterText) {
     const hasVisible = _filterHistoryIn(container, filterText);
     if (!hasVisible) {
         // 桌面是直接收起下拉，移动端列表常驻，用一句空态代替
-        container.innerHTML = '<div class="search-history-empty">无匹配的历史记录</div>';
+        container.innerHTML = '<div class="search-history-empty">没有匹配的搜索记录</div>';
         container.dataset.historyKey = '';
     }
 }

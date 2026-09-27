@@ -23,7 +23,7 @@ const CORE = {
     'js/core/leletv-global.js', 'js/core/storage-service.js',
     'js/core/listener-tracker.js', 'js/core/timing.js',
     'js/auth/proxy-auth.js', 'js/auth/password.js', 'js/auth/invite-auth.js',
-    'js/ui/ui-core.js',
+    'js/ui/ui-core.js', 'js/ui/motion-pref.js', 'js/ui/line-probe.js',
   ],
 };
 
@@ -38,6 +38,8 @@ const APP = {
     'js/app/app-init.js', 'js/app/app-routing.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/aurora-bg.js', 'js/effects/title-animation.js', 'js/utils/index-page.js',
+    'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
+    'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
   ],
 };
 
@@ -49,7 +51,7 @@ const PLAYER = {
     'js/ui/ui-viewing-history.js',
     'js/player/player-manager.js', 'js/player/player-shortcuts.js',
     'js/player/player-core.js', 'js/player/player-episodes.js',
-    'js/player/player-ui.js', 'js/player/player-detail.js', 'js/player/player-quality.js', 'js/player/player.js',
+    'js/player/player-ui.js', 'js/player/player-failover.js', 'js/player/player-lights.js', 'js/player/player-detail.js', 'js/player/player-quality.js', 'js/player/player.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/aurora-bg.js',
   ],
@@ -122,6 +124,8 @@ async function main() {
   const envMarker = '    <!-- \u73af\u5883\u53d8\u91cf\u6ce8\u5165\u811a\u672c -->';
   const idxBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>\n    <script src="dist/' + appFile + '?v=' + version + '" defer></script>';
   idx = idx.replace(envMarker, idxBundle + '\n\n' + envMarker);
+  // 结果页预取播放页资源用的 bundle 名
+  idx = idx.replace(/dist\/leletv-player\.[a-z0-9]+\.js/g, 'dist/' + playerFile);
   idx = idx.replace(/\n{3,}/g, '\n\n');
   fs.writeFileSync(path.join(ROOT, 'index.html'), idx, 'utf8');
   console.log('[index.html] -> dist/' + coreFile + ' + dist/' + appFile);

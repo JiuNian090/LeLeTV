@@ -17,19 +17,19 @@ function loadViewingHistory() {
 
     const history = getViewingHistory();
 
+    // 页头：条数与「清空记录」
+    const countEl = document.getElementById('historyCount');
+    if (countEl) countEl.textContent = history.length ? `共 ${history.length} 条，仅保存在本机浏览器` : '仅保存在本机浏览器';
+    const clearBtn = document.getElementById('clearHistoryBtn');
+    if (clearBtn) clearBtn.hidden = history.length === 0;
+
     if (history.length === 0) {
         historyList.innerHTML = `
-            <div class="empty-state text-center py-16">
-                <div class="empty-icon mb-4">
-                    <svg class="w-12 h-12 mx-auto text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <p class="text-gray-400 text-lg mb-2">暂无观看记录</p>
-                ${categoryEntryHidden ? '' : `<p class="text-gray-600 text-sm mb-6">去分类发现更多精彩内容</p>
-                <button data-action="switch-to-category" class="px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                    去分类浏览
-                </button>`}
+            <div class="v2-state">
+                <span class="v2-state-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 7.5V12l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>
+                <h3>还没有观看记录</h3>
+                <p>播放过的影片会按时间顺序出现在这里，并记住上次看到的位置。</p>
+                ${categoryEntryHidden ? '' : '<button type="button" data-action="switch-to-category" class="v2-btn v2-btn--secondary v2-btn--sm">浏览分类</button>'}
             </div>
         `;
         return;
@@ -65,12 +65,7 @@ function loadViewingHistory() {
 
         html += `
             <div class="history-group">
-                <div class="history-group-title">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    ${groupName}
-                </div>
+                <div class="history-group-title">${groupName}</div>
                 <div class="history-grid">
                     ${items.map(item => renderHistoryCard(item)).join('')}
                 </div>
@@ -119,32 +114,26 @@ function renderHistoryCard(item) {
         `;
     }
 
-    const hasCover = item.cover && item.cover.startsWith('http');
-    const coverUrl = hasCover ? item.cover : '';
+    const hasCover = item.cover && /^https?:\/\//.test(item.cover);
+    const coverUrl = hasCover ? item.cover.replace(/"/g, '%22') : '';
+    const placeholder = '<div class="history-cover-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1Z"/></svg></div>';
 
-    const coverHtml = hasCover ? `
-            <img src="${coverUrl}" alt="${safeTitle}"
-                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'history-cover-placeholder\\'><svg class=\\'w-6 h-6\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'1.5\\' d=\\'M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z\\'/></svg></div>';">` : `
-            <div class="history-cover-placeholder">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
-                </svg>
-            </div>`;
+    // 封面失败时换成占位（通过 data 属性取模板，不在 onerror 里拼 HTML）
+    const coverHtml = hasCover
+        ? `<img src="${coverUrl}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.outerHTML=this.parentElement.dataset.placeholder;">`
+        : placeholder;
 
     return `
-        <div class="history-item" data-action="play-from-history" 
-             data-url="${item.url}" 
+        <div class="history-item" data-action="play-from-history" role="button" tabindex="0"
+             data-url="${String(item.url || '').replace(/"/g, '&quot;')}" 
              data-title="${safeTitle}" 
              data-index="${item.episodeIndex || 0}" 
              data-position="${item.playbackPosition || 0}">
-            <button data-action="delete-history-item" data-url="${safeURL}" data-title="${safeTitle}"
-                    class="delete-btn"
-                    title="删除记录">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+            <button type="button" data-action="delete-history-item" data-url="${safeURL}" data-title="${safeTitle}"
+                    class="delete-btn" aria-label="删除这条记录">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
-            <div class="history-cover">
+            <div class="history-cover" data-placeholder="${placeholder.replace(/"/g, '&quot;')}">
                 ${coverHtml}
             </div>
             <div class="history-content">
@@ -442,11 +431,43 @@ function addToViewingHistory(videoInfo) {
     }
 }
 
+// 页头「清空记录」：先确认再清空
+function confirmClearViewingHistory() {
+    const overlay = showModal({
+        title: '清空观看记录',
+        content: (body) => {
+            body.innerHTML = `
+                <p class="v2-confirm-text">将删除本机保存的全部观看记录与播放进度。<strong>此操作无法撤销。</strong></p>
+                <div class="v2-dialog-foot is-end">
+                    <button type="button" class="v2-btn v2-btn--secondary" data-role="cancel">取消</button>
+                    <button type="button" class="v2-btn v2-btn--danger" data-role="confirm">清空</button>
+                </div>
+            `;
+            body.querySelector('[data-role="cancel"]').addEventListener('click', () => overlay.remove());
+            body.querySelector('[data-role="confirm"]').addEventListener('click', () => {
+                overlay.remove();
+                clearViewingHistory();
+            });
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('clearHistoryBtn')?.addEventListener('click', confirmClearViewingHistory);
+    // 记录卡片是 role="button" 的 div，键盘回车 / 空格也要能打开
+    document.getElementById('historyList')?.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (!e.target.classList || !e.target.classList.contains('history-item')) return;
+        e.preventDefault();
+        e.target.click();
+    });
+});
+
 function clearViewingHistory() {
     try {
         localStorage.removeItem(scopedKey('viewingHistory'));
         loadViewingHistory(); // 重新加载空的历史记录
-        showToast('观看历史已清空', 'success');
+        showToast('观看记录已清空', 'success');
     } catch (e) {
         // console.error('清除观看历史失败:', e);
         showToast('清除观看历史失败', 'error');

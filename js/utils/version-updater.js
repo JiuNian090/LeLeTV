@@ -51,7 +51,7 @@ async function performUpdate() {
   if (localStorage.getItem(UPDATING_KEY) === 'true') return;
   localStorage.setItem(UPDATING_KEY, 'true');
 
-  updateFooterBtn('更新中...');
+  updateFooterBtn('正在更新');
 
   if (latestChangelogVersion) {
     localStorage.setItem(LAST_VERSION_KEY, latestChangelogVersion);
@@ -71,19 +71,13 @@ function updateFooterBtn(text) {
   const btn = document.getElementById('checkUpdateBtn');
   if (!btn) return;
   btn.textContent = text;
-  if (text === '立即更新') {
-    btn.classList.add('text-blue-400', 'hover:text-blue-300');
-    btn.classList.remove('text-gray-400', 'hover:text-white');
-  } else {
-    btn.classList.remove('text-blue-400', 'hover:text-blue-300');
-    btn.classList.add('text-gray-400', 'hover:text-white');
-  }
+  btn.classList.toggle('is-update', text === '立即更新');
 }
 
 function setStatusDot(color) {
   var dot = document.getElementById('statusDot');
   if (!dot) return;
-  dot.className = 'status-dot status-dot-' + color;
+  dot.className = 'v2-ver-dot is-' + color;
 }
 
 /** 从 VERSION.txt 获取最新版本号 */
@@ -115,7 +109,7 @@ async function checkForUpdates() {
   if (!lastVersion) {
     localStorage.setItem(LAST_VERSION_KEY, changelogVersion);
     hasNewVersion = false;
-    updateFooterBtn('最新版本');
+    updateFooterBtn('已是最新');
     setStatusDot('green');
     return false;
   }
@@ -128,7 +122,7 @@ async function checkForUpdates() {
   }
 
   hasNewVersion = false;
-  updateFooterBtn('最新版本');
+  updateFooterBtn('已是最新');
   setStatusDot('green');
   return false;
 }
@@ -139,7 +133,7 @@ function initFooterBtn() {
 
   var versionSpan = document.createElement('span');
   versionSpan.id = 'footerVersionText';
-  versionSpan.className = 'mr-1';
+  versionSpan.className = 'v2-ver';
   var storedVersion = localStorage.getItem(LAST_VERSION_KEY);
   if (storedVersion) {
     versionSpan.textContent = storedVersion;
@@ -153,20 +147,21 @@ function initFooterBtn() {
 
   var btn = document.createElement('button');
   btn.id = 'checkUpdateBtn';
-  btn.className = 'text-gray-400 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer max-sm:text-xs';
-  btn.textContent = '检测中...';
+  btn.type = 'button';
+  btn.className = 'v2-ver-btn';
+  btn.textContent = '检测中';
   displayEl.appendChild(btn);
 
   var dot = document.createElement('span');
   dot.id = 'statusDot';
-  dot.className = 'status-dot status-dot-red';
+  dot.className = 'v2-ver-dot is-red';
   displayEl.appendChild(dot);
 
   btn.addEventListener('click', function() {
     if (hasNewVersion) {
       performUpdate();
     } else {
-      btn.textContent = '检测中...';
+      btn.textContent = '检测中';
       checkForUpdates().then(function(found) {
         if (found) performUpdate();
       });
@@ -189,7 +184,7 @@ function setupSwUpdateListener() {
 }
 
 window.checkLeLeTVUpdate = function() {
-  updateFooterBtn('检测中...');
+  updateFooterBtn('检测中');
   checkForUpdates().then(function(found) {
     if (found) performUpdate();
   });
@@ -269,7 +264,7 @@ function bindUpdateModal() {
   if (btn) {
     btn.addEventListener('click', function () {
       btn.disabled = true;
-      btn.textContent = '更新中...';
+      btn.textContent = '正在更新';
       performUpdate();
     });
   }

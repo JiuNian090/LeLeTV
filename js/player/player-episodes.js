@@ -45,7 +45,7 @@ function renderEpisodes() {
     if (!episodesList) return;
 
     if (!currentEpisodes || currentEpisodes.length === 0) {
-        episodesList.innerHTML = '<div class="col-span-full text-center text-gray-400 py-8">没有可用的集数</div>';
+        episodesList.innerHTML = '<div class="episode-empty">没有可播放的剧集</div>';
         return;
     }
 
@@ -58,11 +58,8 @@ function renderEpisodes() {
         const isActive = realIndex === currentEpisodeIndex;
 
         html += `
-            <button id="episode-${realIndex}" 
-                    data-action="play-episode" data-index="${realIndex}" 
-                    class="px-4 py-2 ${isActive ? 'episode-active' : '!bg-[rgba(34,34,34,0.5)] hover:!bg-[rgba(255,255,255,0.1)] hover:!shadow-none'} !border ${isActive ? '!border-transparent' : '!border-[var(--color-border-default)]'} rounded-lg transition-all text-center episode-btn">
-                ${realIndex + 1}
-            </button>
+            <button type="button" id="episode-${realIndex}" data-action="play-episode" data-index="${realIndex}"
+                    class="episode-btn${isActive ? ' episode-active' : ''}"${isActive ? ' aria-current="true"' : ''}>${realIndex + 1}</button>
         `;
     });
 

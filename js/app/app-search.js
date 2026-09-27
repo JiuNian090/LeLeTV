@@ -202,6 +202,9 @@ function setupEventListeners() {
         if (!_searchReady) return;
         if (window.innerWidth <= 639) {
             e.preventDefault();
+            // 同一次点按在抬起后还会补发一次 click，落点正好在刚打开的搜索层上（常常压着某条历史记录），
+            // 不拦下来就会直接用那条记录发起搜索
+            swallowNextClick();
             openMobileSearch();
             return;
         }
@@ -555,12 +558,11 @@ function setupEventListeners() {
                     // 给当前点击卡片添加加载状态（按压缩放），并注入水波纹反馈
                     el.classList.add('card-loading');
                     addCardRipple(el, e);
-                    // 动画期间先展示反馈再跳转播放页。
-                    // iOS Safari 若立即跳转会跳过中间渲染帧，动画完全不可见。
+                    // 留一帧多一点给按压反馈就跳，别让人等：iOS Safari 立即跳转会跳过中间渲染帧，所以不能是 0
                     _pendingPlayDirectTimer = setTimeout(function () {
                         _pendingPlayDirectTimer = null;
                         playDirectly(id, name, source);
-                    }, 800);
+                    }, 150);
                 }
                 break;
             }
@@ -578,6 +580,7 @@ function setupEventListeners() {
             case 'cancel-edit-custom-api': cancelEditCustomApi(); break;
             case 'load-tmdb-results': loadTmdbResults(); break;
             case 'tmdb-search-video': tmdbSearchVideo(el.dataset.title, el.dataset.genres || ''); break;
+            case 'recent-more': if (typeof openTmdbCategory === 'function') openTmdbCategory(el.dataset.recentType); break;
             case 'play-from-history': {
                 const url = el.dataset.url;
                 const title = el.dataset.title;
@@ -599,6 +602,7 @@ function setupEventListeners() {
             case 'import-config-from-url': importConfigFromUrl(); break;
             case 'switch-to-category': switchPage('category'); break;
             case 'share-invite': shareInviteInfo(); break;
+            case 'pwa-install': case 'pwa-dismiss': case 'pwa-guide-close': break; // 由 js/ui/pwa-install.js 处理
         }
     });
 
@@ -666,6 +670,17 @@ function resetSearchArea() {
     // 恢复后再统一隐藏搜索历史下拉
     _resettingSearchArea = false;
     hideSearchHistory();
+}
+
+// 在捕获阶段拦下接下来 600ms 内的一次 click，不让它落到任何元素上
+function swallowNextClick() {
+    const stop = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.removeEventListener('click', stop, true);
+    };
+    document.addEventListener('click', stop, true);
+    setTimeout(() => document.removeEventListener('click', stop, true), 600);
 }
 
 function closeSearchResults() {
@@ -774,6 +789,18 @@ async function search() {
 
     // 初始渲染标签：基于 selectedAPIs，但过滤掉配置中已不存在的源
     _initFilterTabs();
+
+    // 结果页可用：直接进入结果页，各片源谁先返回先显示，不再用整屏加载层挡住页面
+    if (routeToMovies && typeof openMoviesPage === 'function') {
+        saveSearchHistory(query);
+        try {
+            window.history.pushState({ search: query }, `搜索: ${query} - LeLeTV`, `/s=${encodeURIComponent(query)}`);
+            document.title = `搜索: ${query} - LeLeTV`;
+        } catch (e) { /* 地址栏更新失败不影响搜索 */ }
+        openMoviesPage(query, { from: 'home' });
+        setTimeout(releaseThrottle, TIMING.SEARCH_THROTTLE_RELEASE);
+        return;
+    }
 
     showLoading();
 
@@ -903,13 +930,9 @@ async function search() {
                 showMoviesResults(query, [], { from: 'home', fallbackGenres: [] });
             } else {
                 resultsDiv.innerHTML = `
-                    <div class="col-span-full text-center py-16">
-                        <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 class="mt-2 text-lg font-medium text-gray-400">没有找到匹配的结果</h3>
-                        <p class="mt-1 text-sm text-gray-500">请尝试其他关键词或更换数据源</p>
+                    <div class="v2-state">
+                        <h3>没有找到结果</h3>
+                        <p>换个关键词试试，或在「设置 › 数据源」中启用更多片源。</p>
                     </div>
                 `;
                 document.getElementById('sourceFilterTabs').innerHTML = '';

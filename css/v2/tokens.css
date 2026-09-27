@@ -1,0 +1,258 @@
+/* LeLeTV v2 设计变量 · 配色「霓虹夜场」
+   加载顺序：本文件 → base.css → home.css → views.css。
+   原则：只留一个强调色（跟随设置里的主题色，默认霓虹粉），其余信息靠灰阶分层；
+   灰阶统一带一点冷紫调；功能色只以小圆点出现。 */
+
+:root {
+    /* 底色与表面：夜黑 + 三级抬升 */
+    --v2-bg: #0A0A0B;
+    --v2-bg-raised: #111114;
+    --v2-surface: #16161A;
+    --v2-surface-2: #1D1D22;
+    --v2-surface-3: #25252B;
+
+    /* 描边：白色透明度 */
+    --v2-line: rgba(255, 255, 255, 0.07);
+    --v2-line-2: rgba(255, 255, 255, 0.12);
+    --v2-line-3: rgba(255, 255, 255, 0.2);
+
+    /* 文字：主 / 次 / 辅助（辅助色在底色上 5.4:1） */
+    --v2-t1: #F5F5F7;
+    --v2-t2: #A8A8B3;
+    --v2-t3: #86868F;
+
+    /* 强调色跟随配色方案的主色；logo 图形也用它 */
+    --v2-accent: var(--color-primary, #EC4899);
+    --v2-accent-rgb: var(--color-primary-rgb, 236, 72, 153);
+    --v2-accent-hi: var(--color-primary-400, #F472B6);
+    --v2-accent-lo: var(--color-primary-600, #DB2777);
+
+    /* 由配色方案派生的几个值（默认为「霓虹夜场」：主色霓虹粉、辅助色樱花白）。
+       设置里换配色时 theme-system.js 把算好的值写到 <html> 行内样式上，首帧脚本按存档回放 */
+    --v2-blush: #FFE4F1;                       /* 主色的浅色：渐变字顶端、链接悬停、聚合区光线的光芯 */
+    --v2-aux: #FFE4F1;                         /* 辅助色 */
+    --v2-aux-rgb: 255, 228, 241;
+    --v2-word: #FFE4F1;                        /* 导航与页脚的字标 */
+    --v2-glow-2: rgba(255, 228, 241, 0.15);    /* 左上角背景光（辅助色） */
+    --v2-tile: #2C292E;                        /* logo 图形的圆角底（辅助色混入深底） */
+    --v2-on-accent: #FFFFFF;                   /* 主色按钮上的文字：浅主色时换成深色字 */
+
+    /* 功能色：只用于 6px 状态点 */
+    --v2-ok: #62C28E;
+    --v2-warn: #D8A657;
+    --v2-bad: #D9716B;
+
+    /* 字体与字号 */
+    --v2-font: "Geist", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --v2-fs-display: clamp(2.25rem, 5.2vw, 3.75rem);
+    --v2-fs-h2: clamp(1.4rem, 2.6vw, 1.85rem);
+    --v2-fs-h3: 1.125rem;
+    --v2-fs-body: 0.9375rem;
+    --v2-fs-small: 0.8125rem;
+
+    /* 圆角：内小外大 */
+    --v2-r-xs: 6px;
+    --v2-r-s: 10px;
+    --v2-r-m: 14px;
+    --v2-r-l: 20px;
+    --v2-r-xl: 28px;
+
+    /* 间距：4 的倍数 */
+    --v2-s1: 4px;
+    --v2-s2: 8px;
+    --v2-s3: 12px;
+    --v2-s4: 16px;
+    --v2-s5: 20px;
+    --v2-s6: 24px;
+    --v2-s7: 32px;
+    --v2-s8: 48px;
+    --v2-s9: 72px;
+
+    /* 内容宽度 */
+    --v2-max: 1240px;
+    --v2-gutter: clamp(16px, 4vw, 40px);
+
+    /* 动效 */
+    --v2-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --v2-dur: 0.24s;
+
+    /* 层级 */
+    --v2-z-nav: 40;
+    --v2-z-overlay: 60;
+
+    /* ---- 主题色（正常模式霓虹粉；私密模式铜色见下方 html[data-hidden-mode]）----
+       设置里改主题色时，head 内联脚本和 theme-system.js 会把这些值写到 <html> 的行内样式上 */
+    --color-primary: #EC4899;
+    --color-primary-rgb: 236, 72, 153;
+    --color-primary-300: #F9A8D4;
+    --color-primary-400: #F472B6;
+    --color-primary-400-rgb: 244, 114, 182;
+    --color-primary-600: #DB2777;
+    --color-primary-600-rgb: 219, 39, 119;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ---- 旧变量名：仍有脚本读取，统一指向新色板 ---- */
+    --color-bg: var(--v2-bg);
+    --color-bg-secondary: var(--v2-bg-raised);
+    --color-surface-base: var(--v2-bg-raised);
+    --color-surface-raised: var(--v2-surface);
+    --color-surface-overlay: var(--v2-surface-2);
+    --color-surface-hover: var(--v2-surface-3);
+    --color-surface-subtle: var(--v2-surface);
+    --color-surface-cover: var(--v2-surface);
+    --color-border-subtle: var(--v2-line);
+    --color-border-default: var(--v2-line-2);
+    --color-border-hover: var(--v2-line-3);
+    --color-text-primary: var(--v2-t1);
+    --color-text-secondary: var(--v2-t2);
+    --color-text-tertiary: var(--v2-t3);
+    --font-sans: var(--v2-font);
+}
+
+/* 底色交给 html，body 透明，才能透出下面的渐变层。
+   index.html 的首帧内联样式是 html, body { background: #000 !important }，这里要同级覆盖。 */
+/* 私密模式：默认主题色换成铜色（属性由 head 内联脚本在首帧前打上） */
+html[data-hidden-mode] {
+    --color-primary: #B87333;
+    --color-primary-rgb: 184, 115, 51;
+    --color-primary-300: #DFA96F;
+    --color-primary-400: #D08A45;
+    --color-primary-400-rgb: 208, 138, 69;
+    --color-primary-600: #96602A;
+    --color-primary-600-rgb: 150, 96, 42;
+    /* 铜色没有配套的辅助色，按 theme-system.js 的规则取主色的浅色 */
+    --v2-blush: #F2E6DA;
+    --v2-aux: #F4E9DE;
+    --v2-aux-rgb: 244, 233, 222;
+    --v2-word: #F2E6DA;
+    --v2-glow-2: rgba(244, 233, 222, 0.15);
+    --v2-tile: #2A292C;
+    --v2-on-accent: #FFFFFF;
+}
+
+/* 私密模式下分类页整体不可达，入口首帧就隐藏（路由拦截见 app-routing.js） */
+html[data-hidden-mode] .nav-btn[data-page="category"] {
+    display: none !important;
+}
+
+html:root {
+    background: var(--v2-bg) !important;
+    color-scheme: dark;
+}
+
+html body {
+    background: transparent !important;
+    color: var(--v2-t1);
+    font-family: var(--v2-font);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 全站背景：结构与参数照搬 flux.inch.red 的 .glow-bg（三团径向光、尺寸、位置、周期、缓动都不变），
+   只把颜色换成配色方案里的颜色：
+   - 下方主光：主色（原紫 #a855f7，透明度 0x33）
+   - 左上辅光：辅助色（原蓝 #3b82f6，透明度 0x26），透明度按辅助色深浅由 theme-system.js 算好
+   - 右侧辅光：主色的 600 档（原粉 #ec4899，透明度 0x21）
+   配色可在设置里切换，所以颜色都从主题变量派生。 */
+.v2-glow {
+    position: fixed;
+    inset: -140px;
+    z-index: -10;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.v2-glow > span {
+    position: absolute;
+    display: block;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    will-change: transform;
+}
+
+.v2-glow .g-main {
+    top: 78%;
+    left: 50%;
+    width: 115vmax;
+    height: 115vmax;
+    background: radial-gradient(circle, rgba(var(--v2-accent-rgb), 0.2), transparent 65%);
+    animation: v2GlowDrift1 22s ease-in-out infinite alternate;
+}
+
+.v2-glow .g-blush {
+    top: 6%;
+    left: 12%;
+    width: 100vmax;
+    height: 100vmax;
+    background: radial-gradient(circle, var(--v2-glow-2), transparent 65%);
+    animation: v2GlowDrift2 27s ease-in-out infinite alternate;
+}
+
+.v2-glow .g-deep {
+    top: 46%;
+    left: 92%;
+    width: 90vmax;
+    height: 90vmax;
+    background: radial-gradient(circle, rgba(var(--color-primary-600-rgb, 219, 39, 119), 0.13), transparent 65%);
+    animation: v2GlowDrift3 31s ease-in-out infinite alternate;
+}
+
+@keyframes v2GlowDrift1 {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    to { transform: translate(-42%, -58%) scale(1.15); }
+}
+
+@keyframes v2GlowDrift2 {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    to { transform: translate(-36%, -40%) scale(1.18); }
+}
+
+@keyframes v2GlowDrift3 {
+    0% { transform: translate(-50%, -50%) scale(1.1); }
+    to { transform: translate(-62%, -42%) scale(1); }
+}
+
+/* 减少动态效果：跟随系统；设置里可强制开启（data-motion="on"）或关闭（data-motion="off"） */
+@media (prefers-reduced-motion: reduce) {
+    html:not([data-motion="on"]) .v2-glow > span {
+        animation: none;
+    }
+}
+
+html[data-motion="off"] .v2-glow > span {
+    animation: none;
+}
+
+/* 旧的极光背景由环境光取代 */
+#auroraContainer {
+    display: none !important;
+}
+
+::selection {
+    background: rgba(var(--v2-accent-rgb), 0.35);
+    color: #FFFFFF;
+}
+
+:focus-visible {
+    outline: 2px solid rgba(var(--v2-accent-rgb), 0.85);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:not([data-motion="on"]) *,
+    html:not([data-motion="on"]) *::before,
+    html:not([data-motion="on"]) *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}

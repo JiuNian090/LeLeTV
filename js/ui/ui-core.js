@@ -11,26 +11,29 @@ function showToast(message, type = 'error', duration = 3000) {
     }
 
     let toast = document.getElementById('toast');
-    let toastMessage = document.getElementById('toastMessage');
 
+    // 播放页等没有预置提示条的页面：按首页同一结构补一个
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toast';
-        toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 shadow-lg transform transition-all duration-300 opacity-0 scale-50 z-50 pointer-events-none';
-        // 与 css/styles.css 的层级约定保持一致（toast 高于 loading 10001，低于极限值）
-        toast.style = 'z-index: 10050';
-        toastMessage = document.createElement('p');
-        toastMessage.id = 'toastMessage';
-        toast.appendChild(toastMessage);
+        toast.className = 'v2-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        const dot = document.createElement('span');
+        dot.className = 'v2-toast-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('p');
+        text.id = 'toastMessage';
+        toast.append(dot, text);
         document.body.appendChild(toast);
     }
 
     const maxMessageLength = 120;
     if (message.length > maxMessageLength) {
-        message = message.substring(0, maxMessageLength) + '...';
+        message = message.substring(0, maxMessageLength) + '…';
     }
 
-    toastQueue.push({ message, duration });
+    toastQueue.push({ message, type, duration });
 
     if (!isShowingToast) {
         showNextToast();
@@ -49,47 +52,26 @@ function showNextToast() {
     }
 
     isShowingToast = true;
-    const { message, duration } = toastQueue.shift();
+    const { message, type, duration } = toastQueue.shift();
 
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
 
-    toast.style.background = 'rgba(40, 40, 40, 0.8)';
-    toast.style.backdropFilter = 'blur(8px)';
-    toast.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-    toast.style.borderRadius = '999px';
-    toast.style.fontSize = '0.9rem';
-    toast.style.lineHeight = '1.4';
-    toast.style.padding = '0.55rem 1.25rem';
-    toast.style.textAlign = 'center';
-    toast.style.color = 'rgba(255, 255, 255, 0.9)';
-    toast.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.3)';
-
-    if (window.innerWidth <= 640) {
-        toast.style.fontSize = '0.85rem';
-        toast.style.padding = '0.5rem 1rem';
-    }
-
+    // 类型只决定左侧状态点的颜色：success / error / warning / info
+    toast.dataset.type = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
     toastMessage.textContent = message;
 
-    setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(-50%) scale(1)';
-        toast.style.transition = 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
-    }, 50);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
 
     currentToastTimeout = setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) scale(0.5)';
-        toast.style.transition = 'all 0.2s ease-in';
-
+        toast.classList.remove('is-visible');
         setTimeout(() => {
             showNextToast();
-        }, 250);
+        }, 220);
     }, duration);
 }
 
-function showLoading(message = '加载中...') {
+function showLoading(message = '正在加载') {
     // 清除任何现有的超时
     if (loadingTimeoutId) {
         clearTimeout(loadingTimeoutId);
@@ -125,7 +107,7 @@ function closeModal() {
 }
 
 function showModal(options) {
-    const { title, content, width = 'max-w-md', closeOnBackdrop = true, onClose } = options;
+    const { title, content, width = 'narrow', closeOnBackdrop = true, onClose } = options;
 
     // 移除已有模态框
     const existing = document.getElementById('leletv-modal');
@@ -133,18 +115,36 @@ function showModal(options) {
 
     const overlay = document.createElement('div');
     overlay.id = 'leletv-modal';
-    overlay.className = 'fixed inset-0 bg-black/95 items-center justify-center z-50 flex';
+    overlay.className = 'v2-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
 
-    overlay.innerHTML = `
-        <div class="bg-[#111] rounded-lg p-6 w-11/12 ${width} max-h-[90vh] overflow-y-auto relative">
-            <button class="modal-close-btn absolute top-4 right-4 text-gray-400 hover:text-white text-xl leading-none p-1 z-10">&times;</button>
-            ${title ? `<h3 class="text-xl font-bold mb-4">${title}</h3>` : ''}
-            <div class="modal-body"></div>
-        </div>
-    `;
+    const dialog = document.createElement('div');
+    // width 兼容旧调用写法（Tailwind 的 max-w-*）：较宽的一律用宽版弹窗
+    dialog.className = 'v2-dialog' + (/wide|max-w-(lg|xl|2xl|3xl|4xl)/.test(width) ? ' v2-dialog--wide' : '');
 
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'v2-icon-btn v2-dialog-close modal-close-btn';
+    closeBtn.setAttribute('aria-label', '关闭');
+    closeBtn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>';
+    dialog.appendChild(closeBtn);
+
+    if (title) {
+        const head = document.createElement('div');
+        head.className = 'v2-dialog-head';
+        const h = document.createElement('h3');
+        h.className = 'v2-dialog-title';
+        h.textContent = title;
+        head.appendChild(h);
+        dialog.appendChild(head);
+    }
+
+    const bodyEl = document.createElement('div');
+    bodyEl.className = 'modal-body';
+    dialog.appendChild(bodyEl);
+    overlay.appendChild(dialog);
     document.body.appendChild(overlay);
-    const bodyEl = overlay.querySelector('.modal-body');
 
     // 填充内容
     if (typeof content === 'function') {
@@ -153,19 +153,17 @@ function showModal(options) {
         bodyEl.innerHTML = content;
     }
 
-    // 关闭按钮
-    overlay.querySelector('.modal-close-btn').addEventListener('click', () => {
+    const close = () => {
         overlay.remove();
         if (onClose) onClose();
-    });
+    };
+
+    closeBtn.addEventListener('click', close);
 
     // 点击遮罩关闭
     if (closeOnBackdrop) {
         overlay.addEventListener('click', e => {
-            if (e.target === overlay) {
-                overlay.remove();
-                if (onClose) onClose();
-            }
+            if (e.target === overlay) close();
         });
     }
 
@@ -216,14 +214,13 @@ function formatPlaybackTime(seconds) {
 
 function clearLocalStorage() {
     const overlay = showModal({
-        title: '⚠️ 警告',
+        title: '清除本地数据',
         content: (body, modal) => {
             body.innerHTML = `
-                <div class="text-sm font-medium text-gray-300">确定要清除页面缓存吗？</div>
-                <div class="text-sm font-medium text-gray-300 mb-4">此功能会删除你的观看记录、自定义 API 接口和 Cookie，<span class="text-red-500 font-bold">此操作不可恢复！</span></div>
-                <div class="flex justify-end space-x-2">
-                    <button id="confirmClearBtn" class="px-4 py-1 rounded bg-gray-600 hover:bg-gray-700 text-white">确定</button>
-                    <button id="cancelClearBtn" class="px-4 py-1 rounded bg-pink-600 hover:bg-pink-700 text-white">取消</button>
+                <p class="v2-confirm-text">将删除本机保存的观看记录、搜索历史、自定义资源站与 Cookie。<strong>此操作无法撤销。</strong></p>
+                <div class="v2-dialog-foot is-end">
+                    <button type="button" id="cancelClearBtn" class="v2-btn v2-btn--secondary">取消</button>
+                    <button type="button" id="confirmClearBtn" class="v2-btn v2-btn--danger">清除</button>
                 </div>
             `;
             modal.querySelector('#confirmClearBtn').addEventListener('click', function () {
@@ -238,7 +235,7 @@ function clearLocalStorage() {
                     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
                 }
                 body.innerHTML = `
-                    <div class="text-sm font-medium text-gray-300 mb-4">页面缓存和Cookie已清除，<span id="countdown">3</span> 秒后自动刷新本页面。</div>
+                    <p class="v2-confirm-text">本地数据已清除，<span id="countdown">3</span> 秒后重新载入页面。</p>
                 `;
                 let countdown = 3;
                 const countdownElement = document.getElementById('countdown');
@@ -256,4 +253,4 @@ function clearLocalStorage() {
         },
         closeOnBackdrop: true
     });
-}
+}

@@ -5,21 +5,29 @@
     <!-- 首帧即黑：必须紧跟 charset，早于一切外部资源与脚本。
          PWA 从桌面/主屏图标冷启动时，浏览器在拉到样式表之前有一个"默认白底"窗口，
          这段内联样式让第一次绘制就是黑底，杜绝白屏闪烁。 -->
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0A0A0B">
     <style>
-        html, body { background: #000000 !important; margin: 0; padding: 0; }
+        html, body { background: #0A0A0B !important; margin: 0; padding: 0; }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
     <title>LeLeTV</title>
-    <meta name="description" content="LeLeTV是一个乐乐自用的在线视频搜索平台。">
+    <meta name="description" content="LeLeTV：多源影视检索与播放。">
     <meta name="keywords" content="在线视频,视频搜索,电影,电视剧,LeLeTV">
     <meta name="author" content="LeLeTV Team">
 
     <!-- Favicon -->
-    <link rel="icon" href="/image/logo.png">
-    <link rel="apple-touch-icon" href="/image/logo-black.png">
+    <link rel="icon" href="/image/brand/leletv-favicon.svg?v=le2" type="image/svg+xml">
+    <link rel="icon" href="/image/brand/favicon-32.png?v=le2" sizes="32x32">
+    <link rel="apple-touch-icon" href="/image/brand/apple-touch-icon-180.png?v=le2">
     <link rel="manifest" href="/manifest.json">
+
+    <!-- 提前握手海报图床；正文两种字重先取，首屏文字不等字体 -->
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/libs/geist/Geist-Regular.woff2?v=v3.4.0">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/libs/geist/Geist-Bold.woff2?v=v3.4.0">
+    <!-- 播放页 bundle 的文件名（打包脚本会更新），结果页出来后用它预取播放页资源 -->
+    <meta name="leletv-player-bundle" content="dist/leletv-player.vivihl.js">
 
     <!-- PWA：添加到主屏/桌面后以独立窗口运行（无浏览器 UI） -->
     <!-- mobile-web-app-capable 为标准化写法（Chrome 已废弃 apple-* 前缀）；apple-* 保留以兼容 iOS Safari -->
@@ -90,30 +98,14 @@
     <link rel="apple-touch-startup-image" href="/image/splash/ipad-1376x1032@2x.png"
           media="(device-width: 1376px) and (device-height: 1032px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
 
-    <!-- 首屏关键样式：非阻塞加载，配合 body 首部的启动占位使用。
-         阻塞式 CSS 会让浏览器在样式到达前拒绝绘制任何像素——冷启动时的"黑屏"有相当一部分就是
-         这段"HTML 已到、样式未到"的空白。改成 preload 后，HTML 一到达就能先画出启动占位，
-         等样式真正就绪（见 body 末尾的退场脚本）再淡出让位，避免无样式内容闪一下。
-         禁用 JS 时 preload 不会转成样式表，故保留 noscript 回退。 -->
-    <link rel="preload" href="css/variables.css?v=v3.6.5" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/output.css?v=v3.6.5" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="css/styles.css?v=v3.6.5" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="css/variables.css?v=v3.6.5">
-        <link rel="stylesheet" href="css/output.css?v=v3.6.5">
-        <link rel="stylesheet" href="css/styles.css?v=v3.6.5">
-    </noscript>
-
-    <!-- 二级页面样式（分类/设置/邀请码管理/README/影片页）：不在首屏关键路径上，但提前取回可避免
-         切页时的样式跳变。preload 默认是 High 优先级，会和 dist bundle 抢带宽，故降为 low：
-         该到的时候通常早已到位，抢不到也不影响首页。 -->
-    <link rel="preload" href="css/pages.css?v=v3.6.5" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="css/pages.css?v=v3.6.5"></noscript>
+    <!-- 样式：变量与背景 → 通用组件 → 首页 → 内页 → 线上版管理面板 -->
+    <link rel="stylesheet" href="css/v2/tokens.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/base.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/home.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/views.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/admin.css?v=v3.6.5">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
-    <!-- MapleMono：启动占位与首页标题的显示字体，~99KB，不是首屏可用的必要条件
-         （占位里有 monospace 回退，字体到位后逐帧换用），因此同样降为 low 优先级 -->
-    <link rel="preload" href="/fonts/MapleMono-Italic.ttf" as="font" type="font/ttf" crossorigin fetchpriority="low">
     <style>
         @font-face {
             font-family: 'Geist';
@@ -141,43 +133,6 @@
         }
     </style>
 
-    <!-- README 弹窗 Markdown 样式 -->
-    <style>
-        .markdown-body { color: #d1d5db; line-height: 1.7; font-size: 14px; word-wrap: break-word; }
-        .markdown-body h1 { color: var(--color-primary); font-size: 1.5em; margin: 1em 0 0.5em; padding-bottom: 0.3em; border-bottom: 1px solid #333; }
-        .markdown-body h2 { color: var(--color-primary-400); font-size: 1.25em; margin: 1em 0 0.4em; }
-        .markdown-body h3 { color: var(--color-primary-300); font-size: 1.1em; margin: 0.8em 0 0.3em; }
-        .markdown-body h4 { color: var(--color-primary-300); font-size: 1em; margin: 0.6em 0 0.3em; }
-        .markdown-body p { margin: 0.5em 0; }
-        .markdown-body a { color: #60a5fa; text-decoration: underline; }
-        .markdown-body a:hover { color: #93c5fd; }
-        .markdown-body ul, .markdown-body ol { margin: 0.5em 0; padding-left: 1.5em; }
-        .markdown-body li { margin: 0.25em 0; }
-        .markdown-body code { background: #1f2937; color: var(--color-primary-400); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
-        .markdown-body pre { background: #1a1a2e; padding: 1em; border-radius: 8px; overflow-x: auto; margin: 0.8em 0; border: 1px solid #333; }
-        .markdown-body pre code { background: transparent; color: #d1d5db; padding: 0; font-size: 0.85em; }
-        .markdown-body blockquote { border-left: 3px solid var(--color-primary); padding: 0.25em 1em; margin: 0.8em 0; background: #1a1a2e; border-radius: 0 8px 8px 0; color: #9ca3af; }
-        .markdown-body table { width: 100%; border-collapse: collapse; margin: 0.8em 0; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .markdown-body th, .markdown-body td { border: 1px solid #333; padding: 0.5em 0.75em; text-align: left; }
-        .markdown-body th { background: #1f2937; color: var(--color-primary-400); font-weight: 600; }
-        .markdown-body td { background: #111; }
-        .markdown-body hr { border: none; border-top: 1px solid #333; margin: 1.5em 0; }
-        .markdown-body img { max-width: 100%; border-radius: 6px; margin: 0.8em 0; }
-        .markdown-body strong { color: #f3f4f6; }
-        @media (max-width: 768px) {
-            .markdown-body { font-size: 13px; }
-            .markdown-body h1 { font-size: 1.35em; }
-            .markdown-body h2 { font-size: 1.15em; }
-            .markdown-body h3 { font-size: 1.05em; }
-        }
-        @media (max-width: 399px) {
-            .markdown-body { font-size: 12px; }
-            .markdown-body h1 { font-size: 1.2em; }
-            .markdown-body h2 { font-size: 1.05em; }
-            .markdown-body h3 { font-size: 0.95em; }
-        }
-    </style>
-
     <!-- 主题：私密模式标记 + 已保存的主题色，均在首帧之前落到 <html> 上
      · 私密模式：css/variables.css 的 html[data-hidden-mode] 据此把默认色切成铜色
      · 自定义主题色：把派生色写进行内样式（优先级高于上面的样式表规则），
@@ -190,6 +145,22 @@
                 d.setAttribute('data-hidden-mode', '1');
             }
         } catch (e) { /* localStorage 不可用时按正常模式渲染 */ }
+        try {
+            // 动态效果偏好：设置里强制开启 / 关闭时打到 <html> 上，css 与脚本据此放行或停掉动画
+            // 地址带 ?motion=on / off / auto 时先按它记下来（排查时一次性强制开启用）
+            var motionParam = new URLSearchParams(location.search).get('motion');
+            if (motionParam === 'on' || motionParam === 'off') localStorage.setItem('leletv_motion', motionParam);
+            else if (motionParam === 'auto') localStorage.removeItem('leletv_motion');
+            var motion = localStorage.getItem('leletv_motion');
+            if (motion === 'on' || motion === 'off') d.setAttribute('data-motion', motion);
+        } catch (e) { /* 忽略 */ }
+        try {
+            // 首页与导航布局偏好（设置 › 首页与导航）：首帧就按它隐藏聚合动效 / 内容板块、导航只留图标
+            var layout = JSON.parse(localStorage.getItem('leletv_layout') || '{}') || {};
+            if (layout.hub === false) d.setAttribute('data-home-hub', 'off');
+            if (layout.shelves === false) d.setAttribute('data-home-shelves', 'off');
+            if (layout.navIcons === true) d.setAttribute('data-nav', 'icons');
+        } catch (e) { /* 忽略 */ }
 
         try {
             // 按数据域取已保存的主题（两个模式各存一套；没存过就保持 css 默认色）
@@ -239,6 +210,16 @@
             for (var i = 0; i < STOPS.length; i++) {
                 st.setProperty('--tw-pink-' + STOPS[i] + '-rgb', shade(LS[i]).rgb.join(' '));
             }
+            // 配色派生的其余变量（辅助色、字标色、logo 底色、按钮文字色）由 theme-system.js 算好存在存档里，
+            // 这里按名单回放；名单与 theme-system.js 的 EXTRA_VARS 一致
+            var vars = (JSON.parse(raw) || {}).vars;
+            var ALLOW = ['--v2-blush', '--v2-word', '--v2-aux', '--v2-aux-rgb', '--v2-glow-2', '--v2-tile', '--v2-on-accent', '--v2-bg'];
+            if (vars && typeof vars === 'object') {
+                for (var j = 0; j < ALLOW.length; j++) {
+                    var val = vars[ALLOW[j]];
+                    if (typeof val === 'string' && val.length < 64 && /^[#\w(),.\s%-]+$/.test(val)) st.setProperty(ALLOW[j], val);
+                }
+            }
         } catch (e) { /* 读取失败时回落到 css 默认主题色 */ }
     })();
 </script>
@@ -260,13 +241,8 @@
     </script>
 
     <!-- 桌面端图标声明 -->
-    <link rel="icon" href="/image/logo-black.png" sizes="48x48">
-    <link rel="icon" href="/image/logo-black.png" sizes="96x96">
-    <link rel="icon" href="/image/logo-black.png" sizes="192x192">
-    <link rel="icon" href="/image/logo-black.png" sizes="512x512">
-    <link rel="icon" href="/image/logo-black.png" sizes="1024x1024">
-    <link rel="icon" href="/image/logo-black.png" sizes="256x256">
-    <link rel="icon" href="/image/logo-black.png" sizes="384x384">
+    <link rel="icon" href="/image/brand/leletv-icon-192.png?v=le2" sizes="192x192">
+    <link rel="icon" href="/image/brand/leletv-icon-512.png?v=le2" sizes="512x512">
 
     <!-- marked.js 已移出首屏关键路径：它是 README 弹窗专用的 35KB，且作为 head 里的 defer 脚本
          会排在 dist bundle 之前执行，把 DOMContentLoaded 一起拖晚（启动占位的退场要等它之后的首页就绪）。
@@ -278,14 +254,14 @@
     <style>
         /* 底色兜底：样式表（variables.css 的 --color-bg）还在路上时，html/body 的默认背景是白色，
            解析过程中的任何一次重绘都会露出白。把底色直接写在这里，让第一次绘制就是占位的黑 */
-        html, body { background: #000000; }
+        html, body { background: #0A0A0B; }
         /* 占位期间页面尚未样式化，先按住滚动，避免出现临时滚动条；元素移除后规则自动失效 */
         html:has(#bootSplash) { overflow: hidden; }
         #bootSplash {
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: #000000; /* 与 manifest.background_color 一致，避免启动屏与首屏之间跳色 */
+            background: #0A0A0B; /* 与 manifest.background_color 一致，避免启动屏与首屏之间跳色 */
             opacity: 1;
             visibility: visible;
             display: flex;
@@ -318,25 +294,25 @@
             width: clamp(80px, 22vw, 120px);
             height: auto;
             border-radius: 22%;
-            filter: drop-shadow(0 0 28px rgba(255, 255, 255, 0.18));
+            filter: drop-shadow(0 12px 36px rgba(236, 72, 153, 0.32));
         }
         /* 白色进度圆环：SVG 画，r=19（viewBox 44），周长 ≈ 119.4。
            用 stroke-dashoffset 实时反映加载进度；默认从 12 点方向起、顺时针走 */
         #bootSplash .boot-progress-ring {
-            width: 34px;
-            height: 34px;
+            width: 28px;
+            height: 28px;
             transform: rotate(-90deg);
             transition: opacity 0.2s ease;
         }
         #bootSplash .boot-progress-ring--done { opacity: 0; }
         #bootSplash .boot-progress-ring circle {
             fill: none;
-            stroke-width: 3;
+            stroke-width: 2.5;
             stroke-linecap: round;
         }
-        #bootSplash .boot-progress-track { stroke: rgba(255, 255, 255, 0.15); }
+        #bootSplash .boot-progress-track { stroke: rgba(255, 255, 255, 0.1); }
         #bootSplash .boot-progress-value {
-            stroke: #ffffff;
+            stroke: var(--color-primary, #EC4899);
             stroke-dasharray: 119.4;
             stroke-dashoffset: 119.4; /* 0 = 满圈，119.4 = 空 */
             transition: stroke-dashoffset 0.15s linear;
@@ -364,8 +340,8 @@
         #bootSplash .boot-splash-hint.is-visible { display: flex; }
         #bootSplash .boot-splash-hint-text {
             font-size: 13px;
-            letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.62);
+            letter-spacing: 0.02em;
+            color: rgba(255, 255, 255, 0.56);
         }
         #bootSplash .boot-splash-hint-btn {
             padding: 8px 20px;
@@ -374,7 +350,7 @@
             cursor: pointer;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.35);
-            border-radius: 999px;
+            border-radius: 10px;
             transition: background 0.2s ease, border-color 0.2s ease;
         }
         #bootSplash .boot-splash-hint-btn:hover {
@@ -383,22 +359,22 @@
         }
     </style>
 </head>
-<body class="page-bg text-white">
+<body class="text-white">
     <!-- 首屏启动占位：冷启动时第一时间出现。
          黑底 + logo 居中 + 下方白色进度圆环（按真实加载进度填充）。
          加载完成时进度环消失、logo 放大淡化（爆开），随后露出首页。
          样式内联在 head，不依赖外部 CSS / JS / 字体到达 -->
     <div id="bootSplash" aria-hidden="true">
         <div class="boot-splash-stage" id="bootSplashStage">
-            <img class="boot-splash-logo" src="/image/logo.png" alt="" width="120" height="120" decoding="async" fetchpriority="high">
+            <img class="boot-splash-logo" src="/image/brand/leletv-icon-512.png?v=le2" alt="" width="120" height="120" decoding="async" fetchpriority="high">
             <svg class="boot-progress-ring" id="bootProgressRing" viewBox="0 0 44 44" aria-hidden="true">
                 <circle class="boot-progress-track" cx="22" cy="22" r="19"></circle>
                 <circle class="boot-progress-value" id="bootProgressValue" cx="22" cy="22" r="19"></circle>
             </svg>
         </div>
         <div class="boot-splash-hint" id="bootSplashHint">
-            <span class="boot-splash-hint-text">网络较慢，仍在加载…</span>
-            <button type="button" class="boot-splash-hint-btn" id="bootSplashSkipBtn">仍然进入</button>
+            <span class="boot-splash-hint-text">网络响应较慢，仍在加载</span>
+            <button type="button" class="boot-splash-hint-btn" id="bootSplashSkipBtn">直接进入</button>
         </div>
     </div>
     <script>
@@ -428,7 +404,7 @@
 
         // ---------- 加载进度（与旧版同口径，外部契约不变） ----------
         // 关键样式就绪 45% → DOM interactive 65% → DOMContentLoaded 90% → 业务就绪 100%
-        var CRITICAL_STYLES = ['variables.css', 'output.css', 'styles.css'];
+        var CRITICAL_STYLES = ['v2/tokens.css', 'v2/base.css', 'v2/home.css'];
         var progress = 0;
         var lastProgressAt = now();
         var stall = 0;               // 停滞兜底：缓慢缓推，避免进度环看起来卡死
@@ -563,639 +539,734 @@
     })();
     </script>
 
-    <!-- Aurora 极光背景 -->
-    <div id="auroraContainer" class="aurora-bg"></div>
+    <!-- 全站背景：三团缓慢漂移的径向光，参数见 css/v2/tokens.css -->
+    <div class="v2-glow" aria-hidden="true"><span class="g-main"></span><span class="g-blush"></span><span class="g-deep"></span></div>
+    <!-- 品牌 sprite：图形与字标各一份，颜色由使用处的 currentColor 决定 -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="lele-mark" viewBox="170.6 154.9 432.4 326.3"><path fill-rule="evenodd" d="M214.7 480.1C203.7 479.1 193 474.1 185.9 466.7C175.7 456 171.1 440.5 173.4 424.1C174.6 414.9 182.5 392 191.5 371.7C192.9 368.6 194 365.9 194 365.8C194 364.4 220.3 310.8 227.7 296.9C229 294.5 231.4 289.9 233.1 286.8C240.5 272.8 255.3 247.2 262.3 236.3C263.6 234.4 265.2 231.8 266 230.4C273.8 217.6 295.7 185 300.6 178.8C301.7 177.5 303.2 175.6 304 174.6C305.9 172.1 310.1 168.2 313.5 165.6C325 157.4 338.8 155.4 351.3 160.4C361.5 164.4 368.4 173.8 368.4 183.7C368.4 191.4 364.4 200.6 353.3 218.3C352.4 219.9 350.2 223.4 348.5 226.2C346.8 228.9 344.7 232.3 343.8 233.7C342.9 235 339.9 239.8 337.2 244.2C319 273.4 306.6 293.8 299.7 305.8C298.5 307.8 296.7 311 295.7 312.8C294.6 314.7 292.6 318.3 291.2 320.8C289.7 323.4 288.3 325.9 288 326.3C287.7 326.8 287 328 286.5 329C286 330 284.2 333.3 282.5 336.3C278.4 343.7 274.1 351.5 272.2 355.2C271.3 356.8 270.3 358.6 270 359.2C266 366 250.3 397.4 246.9 405.3C244.2 411.7 243.9 412.7 244.1 415.2C244.3 418.9 245.9 420.6 249.6 420.9C252.5 421.2 256.2 420.3 277 414.3C280.2 413.3 284.3 412.2 286.2 411.8C288 411.3 291.8 410.2 294.7 409.3C299.7 407.8 306 405.9 321 401.5C325.1 400.3 330.7 398.6 333.3 397.8C336 397 342.8 395 348.5 393.3C365.3 388.4 366.3 388.1 366.8 387.2C367 386.8 367.4 384.6 367.6 382C368.3 374.5 369.5 369 371.9 362.3C381.2 336.9 399.7 313.3 425.3 294C432.4 288.7 434.8 287.1 445.5 280.9C466.6 268.6 491 261.5 512.3 261.5C542 261.6 564 274.6 569.5 295.4C573.9 312.2 568 329.5 552.1 346.2C540.2 358.9 523.1 370.6 500.5 381.5C486.9 388.1 475.9 392.7 452.7 401.6C444.5 404.7 444.5 404.8 447.7 407.2C453.9 411.7 462.2 413.8 473.8 413.8C491 413.8 507.8 409.1 529 398.5C539.2 393.5 545.5 390 556.2 383.6C569 375.8 572.3 374.5 578.7 374.5C583.3 374.5 585.6 375.1 590 377.3C597.1 380.8 601.8 387.7 602.3 395.2C602.5 399.3 602 401.8 600 405.8C595.3 415.6 581.9 425.3 557 437.2C538.4 446.1 515.7 454 498 457.6C481 461.1 470.3 462.2 454.3 461.9C440.7 461.7 435.8 461 423.9 457.8C406 453.1 392.6 444.5 381.9 431.2C380.2 429.1 379.4 428.3 378.8 428.3C378.4 428.3 374.9 429.6 371.1 431.2C363.3 434.4 362 435 345.3 441.6C338.8 444.3 332.1 447 330.3 447.7C299.3 460.2 260.8 473.2 242.1 477.3C231.4 479.7 221.1 480.7 214.7 480.1ZM457.7 365C461.2 363.1 465.3 360.9 466.7 360.2C474.2 355.9 482.2 351.6 488.2 348.5C489.3 347.9 491.4 346.8 492.8 346C497.2 343.5 503.3 340.2 507.3 338.1C513.4 335.1 516 332.1 516 328.4C516 325.1 514.8 323.5 510.1 321C508.7 320.2 506.7 319 505.7 318.4C504.7 317.8 501.1 315.7 497.7 313.8C494.3 312 489.6 309.3 487.3 308C485 306.7 481.7 304.8 479.8 303.7L476.5 301.8L473.3 301.8C470.4 301.8 470 301.9 468.1 302.9C466 304 463.3 306.4 462.5 308C462.1 308.8 455.5 325.8 451.2 337.2C449.9 340.5 448.1 345.3 447.1 347.8C445.1 353 443.3 357.7 442.3 360.9C441.5 363.3 441.8 364.9 443.2 366.7C444.6 368.3 445.8 368.7 448.7 368.6C451.1 368.5 451.3 368.4 457.7 365Z"/></symbol>
+        <symbol id="lele-word" viewBox="646.6 235.6 756.5 204.5"><path fill-rule="evenodd" d="M673.9 439.2C667.1 438.2 663.2 437 659 434.4C653.3 431.1 649.8 426.4 648.1 420.2C647.1 416.6 647.1 409.1 648.1 404.9C649.4 399.7 654 388.9 657.7 382.4C658.3 381.3 659.5 379.1 660.3 377.7C663.2 372.2 670.9 358.8 674.7 352.4C675.3 351.6 677 348.8 678.5 346.3C684.7 336 687.1 332 688.3 330.2C688.9 329.2 690.2 327.1 691.1 325.6C692.1 324.2 694 321.1 695.4 318.8C696.9 316.5 699.6 312.3 701.5 309.3C703.3 306.3 706.6 301.1 708.8 297.7C711 294.3 713.3 290.8 713.9 289.9C715.5 287.3 727.3 269.5 730.5 264.9C740 250.9 746.6 242.7 750.5 240.2C755.1 237.2 758.8 236.1 764.3 236.1C770.2 236.1 774.2 237.6 777.9 241.3C780 243.3 781.2 245.5 782 248.8C783.8 255.5 782.1 260.5 772.7 275.7C770 280 767.4 284.2 766.9 285C766.4 285.8 765 288 763.8 289.8C761.2 293.8 750.7 309.5 740.1 325.2C722 352.1 712.6 366.3 710.4 369.7C709.2 371.7 706.6 376 704.6 379.2C699.4 387.6 695.6 394.2 693.6 398.7C692.1 402.1 691.8 402.8 691.7 405.1C691.3 412.3 695.9 412.9 714.9 408C727.6 404.7 753.9 396.4 754.2 395.6C754.3 395.4 754.2 393.9 754.1 392.4C752.2 374.2 770 348.5 793.9 334.6C811.2 324.6 828 320.8 842.9 323.6C853.3 325.5 860.8 331.9 863.1 340.9C863.9 343.9 863.6 349.3 862.4 352.9C859.1 363.5 849.4 374.3 834.8 383.6C827.5 388.2 817.9 393.2 810.7 396C809.5 396.5 806.7 397.6 804.5 398.5C802.4 399.4 799.6 400.4 798.3 400.8C795.2 401.7 794.9 402.1 796.5 403.6C803.8 410.5 817.3 410.8 834.7 404.4C843.9 401 859.9 393.1 865.8 389.1C867.7 387.7 873.4 384.9 875.1 384.5C876.3 384.2 878.1 384 879.8 384C881.3 384.1 882.6 384 882.8 383.9C883 383.8 883.4 382.9 883.7 382C885.4 376.7 888.5 369.2 891.1 363.5C899.3 346.2 908.4 329.2 920.3 309C921.2 307.4 922.7 305 923.5 303.6C924.3 302.2 926.4 298.8 928.1 296C929.8 293.2 931.6 290.1 932.2 289.2C940 275.7 955.2 253.5 961.9 245.7C967.6 239.2 973.7 236.1 981.2 236.1C992.1 236.1 999.6 242.8 999.7 252.7C999.8 258.8 998.1 262.4 987.5 279.6C984.6 284.3 978.9 293 968.4 309.1C965.9 312.9 961.6 319.6 958.7 324.1C955.8 328.6 950.8 336.4 947.6 341.4C940.5 352.6 934.2 362.6 932.8 365C932.3 365.9 930.2 369.4 928.2 372.7C919.3 387.8 915.5 396.2 915.4 401.3C915.4 407.2 919.2 410 926.1 409.1C933.2 408.2 944.4 405.1 960.3 399.7C970.3 396.3 971.2 395.9 971.2 394.8C971.1 394.3 971 392.6 970.9 390.9C970 378.7 978.8 361.7 993.1 347.9C1004.7 336.8 1019.5 328.5 1034.8 324.7C1050.2 320.8 1065.5 323.4 1073.4 331.2C1079.7 337.4 1081.2 346.2 1077.5 355.6C1073.2 366.5 1062.1 377.5 1045.6 387C1037.7 391.6 1023.4 398 1015 400.7C1013.5 401.2 1012.1 401.8 1012 402.1C1011.8 402.8 1015.1 405.7 1017.5 406.8C1021 408.5 1023.2 408.8 1029.6 408.9C1035.3 408.9 1037.5 408.6 1045.6 407C1051.6 405.7 1064.9 401.5 1071.9 398.6C1073.2 398 1075.7 397 1077.3 396.4C1113.6 381.7 1149.5 357.5 1165.7 336.9C1170.7 330.5 1171.2 329.4 1173.3 322.5C1173.9 320.3 1174.8 317.4 1175.2 316C1175.8 314.4 1175.9 313.4 1175.7 313.2C1175.4 312.9 1170 313.9 1165.5 315C1163.9 315.4 1160.9 316.1 1151.1 318.4C1149.5 318.8 1146.7 319.5 1144.9 319.9C1128.6 324.3 1124.7 324.9 1120.4 324C1114 322.7 1109.5 316.5 1110.6 310.5C1111.6 304.9 1115.7 300.3 1121.8 297.8C1127.8 295.3 1156.7 288.1 1176.9 284.1C1183.8 282.7 1200.9 279.6 1204.4 279C1205.6 278.8 1209.1 278.3 1212.3 277.7C1227.5 275.2 1249.6 272.7 1262.1 272C1271 271.6 1282.9 271.6 1285.5 272.2C1291.9 273.5 1296.2 278.7 1296.2 284.9C1296.2 292 1290 297.7 1281.9 298.2C1280.6 298.3 1276.2 298.5 1272.1 298.7C1259.1 299.3 1251.5 300 1235.4 302.2C1222.8 303.9 1214.3 305.3 1213.5 305.8C1213 306.1 1212.6 307 1212.1 308.6C1211.8 309.8 1209.9 315.6 1208 321.4C1201 342.7 1196.2 357.4 1194.5 362.9C1193.5 366 1191.9 371.2 1190.9 374.3C1187.5 384.7 1182.6 401.1 1180.3 409.4C1176.2 424.2 1175.9 425.1 1174.5 427.8C1171.9 432.8 1168.4 436.1 1163.7 437.9C1161.3 438.9 1155.5 439 1152.8 438.2C1149.2 437 1145.9 433.9 1144.7 430.2C1143.2 426 1143.8 422.4 1150.8 396.4C1151.5 393.7 1154.5 383.1 1155.3 380.3C1155.8 378.6 1155 378.6 1152.7 380.4C1138.7 391.3 1119.5 403.3 1101.6 412.1C1076.5 424.5 1053.8 431.8 1034.5 433.7C1011.3 435.9 994.4 431 982.2 418.4C980.6 416.8 979.1 415.4 979 415.4C978.7 415.4 975.3 416.9 965.5 421.3C939.3 433 918.4 439.2 907.3 438.5C892.7 437.5 883 427.7 880.6 411.5C880.4 410.1 880.1 408.9 879.9 408.9C879.7 408.8 877.1 410.1 874.3 411.8C861.9 419.2 846.8 425.6 832.3 429.5C823.4 432 810.4 433.4 802 432.9C786.5 431.8 775 427.3 765.6 418.4C763.9 416.8 762.3 415.4 762.1 415.4C761.9 415.4 759.7 416.3 757.2 417.3C743.1 423.3 742.3 423.7 731.4 427.8C717.7 433 703.4 437.1 692.9 438.7C689.3 439.3 676.9 439.6 673.9 439.2ZM1262.9 438.9C1258.1 438.1 1253.8 435.9 1251 432.8C1246 427.3 1245 421.9 1242.4 386.9C1241.4 372.6 1240.5 362.6 1239.6 353.1C1239.1 348.7 1238.5 343 1238.3 340.4C1238 337.8 1237.6 333.7 1237.3 331.3C1236.9 327.8 1236.9 326.5 1237.2 324.8C1238.3 318.2 1243 313.5 1249.8 312C1258.1 310.3 1266.7 315.5 1269.3 323.9C1270.1 326.3 1271.6 337.7 1272.7 348.8C1273.6 358.2 1273.8 361.9 1274.6 373.7C1274.8 376.3 1275.1 380.4 1275.3 382.7C1275.4 385.1 1275.6 388.5 1275.6 390.3C1275.6 395.5 1275.9 395.6 1278.6 391.5C1283.3 384.3 1291.4 372.2 1295.4 366.5C1303 355.7 1305 352.9 1310.6 345.5C1318.8 334.6 1320.6 332.3 1331 319.6C1334.3 315.7 1335 314.8 1339.5 309.6C1349.8 297.5 1363.9 282.4 1369.1 277.9C1374.3 273.4 1379.8 270.8 1385.3 270.5C1391.1 270.2 1396.5 272.5 1399 276.4C1402.6 282.1 1401.4 288 1395.1 296.2C1392.8 299.1 1387.3 305.8 1382.9 311C1379.2 315.5 1377.3 317.8 1370.7 325.5C1365.6 331.5 1346.5 354.5 1342 360.2C1340.8 361.7 1336.4 367.2 1332.2 372.4C1321.8 385.5 1315.2 393.7 1312.8 397C1312.5 397.4 1311.1 399.2 1309.8 400.8C1308.5 402.5 1306.7 404.7 1305.9 405.9C1305 407 1302.7 409.9 1300.7 412.4C1286.2 430.3 1282.9 433.6 1276.6 436.8C1273.2 438.5 1266.7 439.5 1262.9 438.9ZM801.9 382.6C811.2 379.4 822.8 370.8 828.5 362.7C833.8 355.3 834.1 349.2 829.3 347.1C826.4 345.8 821.2 346.8 815.6 349.6C807.8 353.6 798.5 362.8 794.6 370.7C790 379.7 793.5 385.5 801.9 382.6ZM1015.8 382.9C1022.3 380.9 1035.3 373.3 1040.5 368.3C1047.6 361.5 1049.7 354.5 1046 350.3C1042.9 346.9 1037.3 346.9 1029.9 350.4C1018.4 355.7 1007.2 369.3 1007.2 377.9C1007.2 382.2 1010.9 384.3 1015.8 382.9Z"/></symbol>
+    </svg>
     
     <!-- 导航栏 -->
-    <nav class="top-nav-bar">
+    <nav class="top-nav-bar v2-nav" aria-label="主导航">
         <div class="nav-container">
-            <!-- 左侧 Logo -->
-            <div class="nav-logo">
-                <a href="#" data-action="switch-page" data-page="home" class="flex items-center">
-                    <img src="image/nomedia.png" alt="LeLeTV Logo" class="logo-img">
-                </a>
-            </div>
-            
-            <!-- 右侧功能按钮 -->
+            <a href="#" class="v2-brand v2-lockup" data-action="switch-page" data-page="home" aria-label="LeLeTV 首页">
+                <span class="v2-brand-tile" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
+                <svg class="v2-brand-word" viewBox="0 0 756.5 204.5" aria-hidden="true"><use href="#lele-word"/></svg>
+            </a>
+            <!-- 迷你搜索入口：桌面点图标在导航栏里向左展开输入框；手机点开手机搜索层（js/ui/nav-search.js） -->
+            <form class="nav-search" id="navSearch" role="search" autocomplete="off">
+                <input type="search" class="nav-search-input" placeholder="搜索片名或关键词" aria-label="搜索影片" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" tabindex="-1">
+                <button type="button" class="nav-btn nav-search-btn" aria-label="搜索" aria-expanded="false">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                </button>
+            </form>
             <div class="nav-actions">
-                <!-- 搜索按钮 -->
-                <button class="nav-btn" data-action="switch-page" data-page="home" aria-label="搜索">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
-                    </svg>
+                <button class="nav-btn" data-action="switch-page" data-page="home" title="首页">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.25c0 .41.34.75.75.75H10v-5.25c0-.41.34-.75.75-.75h2.5c.41 0 .75.34.75.75V20h3.75c.41 0 .75-.34.75-.75V10"/></svg>
+                    <span>首页</span>
                 </button>
-
-                <!-- 分类按钮 -->
-                <button class="nav-btn" data-action="switch-page" data-page="category" aria-label="分类">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z"/>
-                    </svg>
+                <button class="nav-btn" data-action="switch-page" data-page="category" title="分类">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z"/></svg>
+                    <span>分类</span>
                 </button>
-                
-                <!-- 历史记录按钮 -->
-                <button class="nav-btn" data-action="switch-page" data-page="history" aria-label="观看历史">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                <button class="nav-btn" data-action="switch-page" data-page="history" title="历史">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>历史</span>
                 </button>
-                
-                <!-- 设置按钮 -->
-                <button class="nav-btn" data-action="switch-page" data-page="settings" aria-label="打开设置">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
-                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+                <button class="nav-btn" data-action="switch-page" data-page="settings" title="设置">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/> <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>设置</span>
                 </button>
-                
-                <!-- 关于按钮 -->
-                <button class="nav-btn" data-action="switch-page" data-page="about" aria-label="关于">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
-                    </svg>
+                <button class="nav-btn" data-action="switch-page" data-page="about" title="关于">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                    <span>关于</span>
                 </button>
             </div>
         </div>
     </nav>
 
     <!-- 主内容区域 -->
-    <div class="main-container">
+    <div class="main-container" data-page="home">
         <!-- 首页 = 搜索页 -->
         <div id="page-home" class="page-content active">
-            <div class="home-layout">
-                <header class="text-center mb-8">
-                    <div class="flex justify-center items-center mb-4" id="titleContainer">
-                    </div>
-                    <p class="text-gray-400 mb-8">自由观影，畅享精彩</p>
-                </header>
-
-                <div id="searchArea" class="flex flex-col items-center justify-center">
-                    <div class="w-full max-w-5xl mx-auto">
-                        <div class="relative mb-3">
-                            <div class="home-search-bar h-12 rounded-full overflow-hidden flex items-center transition-all duration-300 hover:border-[#555] focus-within:border-[#555] focus-within:shadow-lg" data-searchbar>
-                                <button data-action="reset-home" class="h-full w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white transition-colors" aria-label="返回首页">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                    </svg>
-                                </button>
-                                <input type="search" id="searchInput" class="flex-1 bg-transparent text-white px-4 py-0 focus:outline-none transition-colors" placeholder="搜索你喜欢的视频..." autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-label="视频搜索框" aria-autocomplete="list" aria-expanded="false" aria-controls="searchHistoryDropdown">
-                                <button id="clearSearchInput" type="button" class="search-input-clear" aria-label="清空搜索内容">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                                <button data-action="close-results" id="closeSearchResults" class="h-full w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-white transition-colors hidden" aria-label="关闭搜索结果">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                                <button data-action="search" class="h-full w-12 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-white transition-colors" aria-label="搜索按钮">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </button>
-                            </div>
+            <div class="home-layout v2-home">
+                <section class="v2-hero v2-wrap" aria-labelledby="heroTitle">
+                    <div id="titleContainer" hidden></div>
+                    <div class="v2-hero-brand" aria-hidden="true">
+                        <!-- 光学薄玻璃刻字：玻璃本身不带颜色、不发光。.v2-hero-glass 按字形裁剪，用 backdrop-filter 做轻微折射；
+                             SVG 光照滤镜只画边缘一条细窄高光和一圈极细轮廓线，不带阴影 -->
+                        <div class="v2-hero-glassbox">
+                            <div class="v2-hero-glass"></div>
+                            <svg class="v2-hero-word" viewBox="-60 -60 876.5 324.5" focusable="false">
+                                <defs>
+                                    <clipPath id="heroWordClip" clipPathUnits="objectBoundingBox">
+                                        <path fill-rule="evenodd" transform="scale(0.00132188 0.00488998) translate(-646.6 -235.6)" d="M673.9 439.2C667.1 438.2 663.2 437 659 434.4C653.3 431.1 649.8 426.4 648.1 420.2C647.1 416.6 647.1 409.1 648.1 404.9C649.4 399.7 654 388.9 657.7 382.4C658.3 381.3 659.5 379.1 660.3 377.7C663.2 372.2 670.9 358.8 674.7 352.4C675.3 351.6 677 348.8 678.5 346.3C684.7 336 687.1 332 688.3 330.2C688.9 329.2 690.2 327.1 691.1 325.6C692.1 324.2 694 321.1 695.4 318.8C696.9 316.5 699.6 312.3 701.5 309.3C703.3 306.3 706.6 301.1 708.8 297.7C711 294.3 713.3 290.8 713.9 289.9C715.5 287.3 727.3 269.5 730.5 264.9C740 250.9 746.6 242.7 750.5 240.2C755.1 237.2 758.8 236.1 764.3 236.1C770.2 236.1 774.2 237.6 777.9 241.3C780 243.3 781.2 245.5 782 248.8C783.8 255.5 782.1 260.5 772.7 275.7C770 280 767.4 284.2 766.9 285C766.4 285.8 765 288 763.8 289.8C761.2 293.8 750.7 309.5 740.1 325.2C722 352.1 712.6 366.3 710.4 369.7C709.2 371.7 706.6 376 704.6 379.2C699.4 387.6 695.6 394.2 693.6 398.7C692.1 402.1 691.8 402.8 691.7 405.1C691.3 412.3 695.9 412.9 714.9 408C727.6 404.7 753.9 396.4 754.2 395.6C754.3 395.4 754.2 393.9 754.1 392.4C752.2 374.2 770 348.5 793.9 334.6C811.2 324.6 828 320.8 842.9 323.6C853.3 325.5 860.8 331.9 863.1 340.9C863.9 343.9 863.6 349.3 862.4 352.9C859.1 363.5 849.4 374.3 834.8 383.6C827.5 388.2 817.9 393.2 810.7 396C809.5 396.5 806.7 397.6 804.5 398.5C802.4 399.4 799.6 400.4 798.3 400.8C795.2 401.7 794.9 402.1 796.5 403.6C803.8 410.5 817.3 410.8 834.7 404.4C843.9 401 859.9 393.1 865.8 389.1C867.7 387.7 873.4 384.9 875.1 384.5C876.3 384.2 878.1 384 879.8 384C881.3 384.1 882.6 384 882.8 383.9C883 383.8 883.4 382.9 883.7 382C885.4 376.7 888.5 369.2 891.1 363.5C899.3 346.2 908.4 329.2 920.3 309C921.2 307.4 922.7 305 923.5 303.6C924.3 302.2 926.4 298.8 928.1 296C929.8 293.2 931.6 290.1 932.2 289.2C940 275.7 955.2 253.5 961.9 245.7C967.6 239.2 973.7 236.1 981.2 236.1C992.1 236.1 999.6 242.8 999.7 252.7C999.8 258.8 998.1 262.4 987.5 279.6C984.6 284.3 978.9 293 968.4 309.1C965.9 312.9 961.6 319.6 958.7 324.1C955.8 328.6 950.8 336.4 947.6 341.4C940.5 352.6 934.2 362.6 932.8 365C932.3 365.9 930.2 369.4 928.2 372.7C919.3 387.8 915.5 396.2 915.4 401.3C915.4 407.2 919.2 410 926.1 409.1C933.2 408.2 944.4 405.1 960.3 399.7C970.3 396.3 971.2 395.9 971.2 394.8C971.1 394.3 971 392.6 970.9 390.9C970 378.7 978.8 361.7 993.1 347.9C1004.7 336.8 1019.5 328.5 1034.8 324.7C1050.2 320.8 1065.5 323.4 1073.4 331.2C1079.7 337.4 1081.2 346.2 1077.5 355.6C1073.2 366.5 1062.1 377.5 1045.6 387C1037.7 391.6 1023.4 398 1015 400.7C1013.5 401.2 1012.1 401.8 1012 402.1C1011.8 402.8 1015.1 405.7 1017.5 406.8C1021 408.5 1023.2 408.8 1029.6 408.9C1035.3 408.9 1037.5 408.6 1045.6 407C1051.6 405.7 1064.9 401.5 1071.9 398.6C1073.2 398 1075.7 397 1077.3 396.4C1113.6 381.7 1149.5 357.5 1165.7 336.9C1170.7 330.5 1171.2 329.4 1173.3 322.5C1173.9 320.3 1174.8 317.4 1175.2 316C1175.8 314.4 1175.9 313.4 1175.7 313.2C1175.4 312.9 1170 313.9 1165.5 315C1163.9 315.4 1160.9 316.1 1151.1 318.4C1149.5 318.8 1146.7 319.5 1144.9 319.9C1128.6 324.3 1124.7 324.9 1120.4 324C1114 322.7 1109.5 316.5 1110.6 310.5C1111.6 304.9 1115.7 300.3 1121.8 297.8C1127.8 295.3 1156.7 288.1 1176.9 284.1C1183.8 282.7 1200.9 279.6 1204.4 279C1205.6 278.8 1209.1 278.3 1212.3 277.7C1227.5 275.2 1249.6 272.7 1262.1 272C1271 271.6 1282.9 271.6 1285.5 272.2C1291.9 273.5 1296.2 278.7 1296.2 284.9C1296.2 292 1290 297.7 1281.9 298.2C1280.6 298.3 1276.2 298.5 1272.1 298.7C1259.1 299.3 1251.5 300 1235.4 302.2C1222.8 303.9 1214.3 305.3 1213.5 305.8C1213 306.1 1212.6 307 1212.1 308.6C1211.8 309.8 1209.9 315.6 1208 321.4C1201 342.7 1196.2 357.4 1194.5 362.9C1193.5 366 1191.9 371.2 1190.9 374.3C1187.5 384.7 1182.6 401.1 1180.3 409.4C1176.2 424.2 1175.9 425.1 1174.5 427.8C1171.9 432.8 1168.4 436.1 1163.7 437.9C1161.3 438.9 1155.5 439 1152.8 438.2C1149.2 437 1145.9 433.9 1144.7 430.2C1143.2 426 1143.8 422.4 1150.8 396.4C1151.5 393.7 1154.5 383.1 1155.3 380.3C1155.8 378.6 1155 378.6 1152.7 380.4C1138.7 391.3 1119.5 403.3 1101.6 412.1C1076.5 424.5 1053.8 431.8 1034.5 433.7C1011.3 435.9 994.4 431 982.2 418.4C980.6 416.8 979.1 415.4 979 415.4C978.7 415.4 975.3 416.9 965.5 421.3C939.3 433 918.4 439.2 907.3 438.5C892.7 437.5 883 427.7 880.6 411.5C880.4 410.1 880.1 408.9 879.9 408.9C879.7 408.8 877.1 410.1 874.3 411.8C861.9 419.2 846.8 425.6 832.3 429.5C823.4 432 810.4 433.4 802 432.9C786.5 431.8 775 427.3 765.6 418.4C763.9 416.8 762.3 415.4 762.1 415.4C761.9 415.4 759.7 416.3 757.2 417.3C743.1 423.3 742.3 423.7 731.4 427.8C717.7 433 703.4 437.1 692.9 438.7C689.3 439.3 676.9 439.6 673.9 439.2ZM1262.9 438.9C1258.1 438.1 1253.8 435.9 1251 432.8C1246 427.3 1245 421.9 1242.4 386.9C1241.4 372.6 1240.5 362.6 1239.6 353.1C1239.1 348.7 1238.5 343 1238.3 340.4C1238 337.8 1237.6 333.7 1237.3 331.3C1236.9 327.8 1236.9 326.5 1237.2 324.8C1238.3 318.2 1243 313.5 1249.8 312C1258.1 310.3 1266.7 315.5 1269.3 323.9C1270.1 326.3 1271.6 337.7 1272.7 348.8C1273.6 358.2 1273.8 361.9 1274.6 373.7C1274.8 376.3 1275.1 380.4 1275.3 382.7C1275.4 385.1 1275.6 388.5 1275.6 390.3C1275.6 395.5 1275.9 395.6 1278.6 391.5C1283.3 384.3 1291.4 372.2 1295.4 366.5C1303 355.7 1305 352.9 1310.6 345.5C1318.8 334.6 1320.6 332.3 1331 319.6C1334.3 315.7 1335 314.8 1339.5 309.6C1349.8 297.5 1363.9 282.4 1369.1 277.9C1374.3 273.4 1379.8 270.8 1385.3 270.5C1391.1 270.2 1396.5 272.5 1399 276.4C1402.6 282.1 1401.4 288 1395.1 296.2C1392.8 299.1 1387.3 305.8 1382.9 311C1379.2 315.5 1377.3 317.8 1370.7 325.5C1365.6 331.5 1346.5 354.5 1342 360.2C1340.8 361.7 1336.4 367.2 1332.2 372.4C1321.8 385.5 1315.2 393.7 1312.8 397C1312.5 397.4 1311.1 399.2 1309.8 400.8C1308.5 402.5 1306.7 404.7 1305.9 405.9C1305 407 1302.7 409.9 1300.7 412.4C1286.2 430.3 1282.9 433.6 1276.6 436.8C1273.2 438.5 1266.7 439.5 1262.9 438.9ZM801.9 382.6C811.2 379.4 822.8 370.8 828.5 362.7C833.8 355.3 834.1 349.2 829.3 347.1C826.4 345.8 821.2 346.8 815.6 349.6C807.8 353.6 798.5 362.8 794.6 370.7C790 379.7 793.5 385.5 801.9 382.6ZM1015.8 382.9C1022.3 380.9 1035.3 373.3 1040.5 368.3C1047.6 361.5 1049.7 354.5 1046 350.3C1042.9 346.9 1037.3 346.9 1029.9 350.4C1018.4 355.7 1007.2 369.3 1007.2 377.9C1007.2 382.2 1010.9 384.3 1015.8 382.9Z"/>
+                                    </clipPath>
+                                    <filter id="heroWordGlass" x="-3%" y="-8%" width="106%" height="116%" color-interpolation-filters="sRGB">
+                                        <!-- 高度图很浅：只有边缘一圈有法线，笔画中间是平的——薄片，不是鼓起来的水滴 -->
+                                        <feGaussianBlur in="SourceAlpha" stdDeviation="1.6" result="edge"/>
+                                        <!-- 光源侧的细高光 -->
+                                        <feSpecularLighting in="edge" surfaceScale="4" specularConstant="0.9" specularExponent="48" lighting-color="#FFFFFF" result="rimA">
+                                            <feDistantLight class="v2-hero-light-a" azimuth="230" elevation="42"/>
+                                        </feSpecularLighting>
+                                        <feComposite in="rimA" in2="SourceAlpha" operator="in" result="rimAin"/>
+                                        <!-- 对侧更淡的一条，交代玻璃厚度 -->
+                                        <feSpecularLighting in="edge" surfaceScale="4" specularConstant="0.3" specularExponent="48" lighting-color="#FFFFFF" result="rimB">
+                                            <feDistantLight class="v2-hero-light-b" azimuth="50" elevation="42"/>
+                                        </feSpecularLighting>
+                                        <feComposite in="rimB" in2="SourceAlpha" operator="in" result="rimBin"/>
+                                        <!-- 一圈极细的轮廓线：边界干净 -->
+                                        <feMorphology in="SourceAlpha" operator="erode" radius="1.2" result="inner"/>
+                                        <feComposite in="SourceAlpha" in2="inner" operator="out" result="outline"/>
+                                        <feFlood flood-color="#FFFFFF" flood-opacity="0.16" result="outlineCol"/>
+                                        <feComposite in="outlineCol" in2="outline" operator="in" result="outlineLit"/>
+                                        <feMerge><feMergeNode in="outlineLit"/><feMergeNode in="rimBin"/><feMergeNode in="rimAin"/></feMerge>
+                                    </filter>
+                                </defs>
+                                <use href="#lele-word" x="0" y="0" width="756.5" height="204.5" fill="#000" filter="url(#heroWordGlass)"/>
+                            </svg>
                         </div>
                     </div>
-                </div>
+                    <h1 id="heroTitle" class="v2-hero-title">自由观影 <em>畅享精彩</em></h1>
 
-                <!-- 搜索结果区域 -->
-                <div id="resultsArea" class="w-full mt-4 hidden">
-                    <div class="mx-auto max-w-7xl px-2">
-                        <div id="sourceFilterTabs" class="source-filter-tabs"></div>
-                        <div id="results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+                    <div id="searchArea" class="v2-search-wrap">
+                        <div class="home-search-bar v2-search" data-searchbar>
+                            <svg class="v2-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                            <input type="search" id="searchInput" placeholder="输入片名或关键词" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-label="搜索影片" aria-autocomplete="list" aria-expanded="false" aria-controls="searchHistoryDropdown">
+                            <button id="clearSearchInput" type="button" class="search-input-clear" aria-label="清空搜索内容">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
+                            </button>
+                            <button data-action="close-results" id="closeSearchResults" class="hidden" aria-label="关闭搜索结果">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
+                            </button>
+                            <button data-action="search" class="v2-search-btn" aria-label="搜索">搜索</button>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- 旧版首页内嵌结果区：保留元素供现有脚本引用，搜索结果统一在结果页展示 -->
+                    <div id="resultsArea" class="hidden">
+                        <div id="sourceFilterTabs" class="source-filter-tabs"></div>
+                        <div id="results"></div>
+                    </div>
+                </section>
+
+                <section class="v2-hub" aria-label="多源聚合动效">
+                    <div id="hubFlow" class="v2-hub-stage" aria-hidden="true"></div>
+                </section>
+
+                <section id="homeContinue" class="v2-shelf v2-wrap" aria-labelledby="continueTitle" hidden>
+                    <div class="v2-shelf-head">
+                        <h2 id="continueTitle">继续观看</h2>
+                        <button type="button" class="v2-more" data-action="switch-page" data-page="history">
+                            观看记录
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                        </button>
+                    </div>
+                    <div id="homeContinueList" class="v2-poster-grid"></div>
+                </section>
+
+                <!-- 最近更新：四行按类型分开，每行 6 张、右端是「更多」入口。
+                     内容与筛选条件由 js/ui/home-recent.js 渲染 -->
+                <section id="homeRecent" class="v2-recent" hidden aria-label="最近更新">
+                    <div class="v2-shelf v2-wrap" data-recent="movie" hidden>
+                        <div class="v2-shelf-head">
+                            <h2>最近更新的电影</h2>
+                            <span class="v2-shelf-note">数据来源 TMDB</span>
+                            <button type="button" class="v2-more" data-action="recent-more" data-recent-type="movie">
+                                更多
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                            </button>
+                        </div>
+                        <div class="v2-poster-grid" data-recent-list></div>
+                    </div>
+                    <div class="v2-shelf v2-wrap" data-recent="tv" hidden>
+                        <div class="v2-shelf-head">
+                            <h2>最近更新的电视剧</h2>
+                            <button type="button" class="v2-more" data-action="recent-more" data-recent-type="tv">
+                                更多
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                            </button>
+                        </div>
+                        <div class="v2-poster-grid" data-recent-list></div>
+                    </div>
+                    <div class="v2-shelf v2-wrap" data-recent="anime" hidden>
+                        <div class="v2-shelf-head">
+                            <h2>最近更新的动漫</h2>
+                            <button type="button" class="v2-more" data-action="recent-more" data-recent-type="anime">
+                                更多
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                            </button>
+                        </div>
+                        <div class="v2-poster-grid" data-recent-list></div>
+                    </div>
+                    <div class="v2-shelf v2-wrap" data-recent="variety" hidden>
+                        <div class="v2-shelf-head">
+                            <h2>最近更新的综艺</h2>
+                            <button type="button" class="v2-more" data-action="recent-more" data-recent-type="variety">
+                                更多
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                            </button>
+                        </div>
+                        <div class="v2-poster-grid" data-recent-list></div>
+                    </div>
+                </section>
             </div>
         </div>
 
-        <!-- 影片结果页（左筛选 + 右网格，复用项目极光主题） -->
+        <!-- 结果页：顶栏（返回 + 关键词 + 状态 + 再次搜索）→ 片源筛选条 → 海报网格 -->
         <div id="page-movies" class="page-content">
             <div class="movies-page-layout">
-                <!-- 顶部导航栏：左返回 + 居中标题 -->
-                <div class="movies-topbar">
-                    <button class="movies-back-btn" data-action="movies-back" aria-label="返回">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 12H5m7-7l-7 7 7 7"/>
-                        </svg>
-                    </button>
-                    <div class="movies-topbar-center">
-                        <div class="movies-title-row">
-                            <h1 id="moviesTitle" class="movies-title"></h1>
-                        </div>
-                        <p class="movies-subtitle-row" aria-live="polite">
+                <!-- 顶栏：返回 + 常驻搜索框（关键词可直接改）+ 结果计数 -->
+                <header class="movies-topbar">
+                    <div class="v2-wrap movies-topbar-inner">
+                        <button type="button" class="movies-back-btn" data-action="movies-back" aria-label="返回">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+                        </button>
+                        <h1 id="moviesTitle" class="movies-sr"></h1>
+                        <form id="moviesResearchForm" class="movies-search" role="search">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                            <input type="search" id="moviesResearchInput" placeholder="搜索片名" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="搜索影片">
+                            <button type="button" class="movies-search-clear" data-role="clear" aria-label="清空搜索词">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                            </button>
+                        </form>
+                        <p class="movies-bar-meta" aria-live="polite">
                             <span class="movies-status-dot" id="moviesStatusDot"></span>
                             <span id="moviesSubtitle" class="movies-subtitle"></span>
                         </p>
                     </div>
-                    <div class="movies-topbar-spacer"></div>
+                </header>
+                <div class="v2-wrap movies-body">
+                    <!-- 筛选一行：左边按类型分段（全部 / 正片 / 其他版本 / 衍生短剧 / 相关），右边来源与本次延迟 -->
+                    <div id="moviesFilters" class="movies-filters" hidden>
+                        <div id="moviesSegs" class="movies-seg" role="tablist" aria-label="按类型筛选"></div>
+                        <div id="moviesSourcesList" class="movies-sources" aria-label="按片源筛选"></div>
+                    </div>
+                    <!-- 最佳匹配：海报取色背景 + 季切换 + 播放 / 线路 -->
+                    <section id="moviesHero" class="movies-hero" aria-label="最佳匹配" hidden></section>
+                    <!-- 分组货架 / 单个片源的平铺列表 -->
+                    <div id="moviesResults" class="movies-shelves" aria-label="检索结果"></div>
                 </div>
-                <div class="movies-body">
-                    <aside class="movies-sources-panel">
-                        <div class="movies-sources-header">影片源</div>
-                        <div id="moviesSourcesList" class="movies-sources-list"></div>
-                    </aside>
-                    <section class="movies-results-panel">
-                        <div id="moviesResults" class="movies-results-grid"></div>
+            </div>
+        </div>
+
+        <!-- 分类 -->
+        <div id="page-category" class="page-content">
+            <div class="v2-wrap v2-page">
+                <header class="v2-page-head">
+                    <div>
+                        <h1 class="v2-page-title">分类</h1>
+                        <p class="v2-page-sub">按类型、地区与年份浏览片单，选中影片后在已启用的片源中检索。</p>
+                    </div>
+                </header>
+                <div id="tmdb-filters"></div>
+                <div id="tmdb-results" class="tmdb-results-grid"></div>
+                <div id="tmdb-pagination"></div>
+            </div>
+        </div>
+
+        <!-- 观看记录 -->
+        <div id="page-history" class="page-content">
+            <div class="v2-wrap v2-page">
+                <header class="v2-page-head">
+                    <div>
+                        <h1 class="v2-page-title">观看记录</h1>
+                        <p class="v2-page-sub" id="historyCount">仅保存在本机浏览器</p>
+                    </div>
+                    <button type="button" id="clearHistoryBtn" class="v2-btn v2-btn--ghost v2-btn--sm" hidden>清空记录</button>
+                </header>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <!-- 设置 -->
+        <div id="page-settings" class="page-content">
+            <div class="v2-wrap v2-page">
+                <header class="v2-page-head">
+                    <div>
+                        <h1 class="v2-page-title">设置</h1>
+                        <p class="v2-page-sub">片源、播放与外观。所有设置仅保存在本机浏览器。</p>
+                    </div>
+                </header>
+
+                <div class="settings-dashboard-grid">
+                    <!-- 数据源 -->
+                    <section class="dash-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7c0-1.66 3.58-3 8-3s8 1.34 8 3-3.58 3-8 3-8-1.34-8-3Zm0 0v5c0 1.66 3.58 3 8 3s8-1.34 8-3V7m-16 5v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5"/></svg>
+                            </span>
+                            <div class="dash-card-title">数据源<p class="dash-card-desc">检索时并行请求已勾选的片源</p></div>
+                        </header>
+                        <div class="dash-card-body">
+                            <div class="dash-toolbar">
+                                <button type="button" data-action="select-all-apis" class="v2-btn v2-btn--secondary v2-btn--sm">全选</button>
+                                <button type="button" data-action="deselect-all-apis" class="v2-btn v2-btn--secondary v2-btn--sm">全不选</button>
+                                <button type="button" data-action="reset-apis" class="v2-btn v2-btn--ghost v2-btn--sm">恢复默认</button>
+                            </div>
+                            <div id="apiCheckboxes" class="dash-api-grid"></div>
+                            <div class="dash-stats">
+                                <span>已选 <b id="selectedApiCount">0</b> 个片源</span>
+                                <span id="siteStatus"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 自定义资源站 -->
+                    <section class="dash-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m17.25 6.75 5.25 5.25-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/></svg>
+                            </span>
+                            <div class="dash-card-title">自定义资源站<p class="dash-card-desc">接入兼容苹果 CMS 接口的资源站</p></div>
+                            <button type="button" data-action="show-add-custom-api" class="dash-add-btn" aria-label="添加资源站">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            </button>
+                        </header>
+                        <div class="dash-card-body">
+                            <div id="customApisList" class="custom-apis-list"></div>
+                            <div id="addCustomApiForm" class="hidden">
+                                <input type="text" id="customApiName" placeholder="名称" class="v2-input" autocomplete="off">
+                                <input type="text" id="customApiUrl" placeholder="https://xxx.example.com/api.php/provide/vod/" value="https://xxx.example.com/api.php/provide/vod/" class="v2-input" autocomplete="off" spellcheck="false">
+                                <input type="text" id="customApiDetail" placeholder="详情接口地址（可选）" class="v2-input" autocomplete="off" spellcheck="false">
+                                <label class="v2-check-row" for="customApiIsHidden">
+                                    <input type="checkbox" id="customApiIsHidden" class="v2-check">
+                                    <span>私密资源站</span>
+                                </label>
+                                <div>
+                                    <button type="button" data-action="cancel-add-custom-api" class="v2-btn v2-btn--secondary v2-btn--sm">取消</button>
+                                    <button type="button" data-action="add-custom-api" class="v2-btn v2-btn--primary v2-btn--sm">添加</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 播放 -->
+                    <section class="dash-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/></svg>
+                            </span>
+                            <div class="dash-card-title">播放与内容</div>
+                        </header>
+                        <div class="dash-card-body dash-switch-body">
+                            <div class="dash-switch-row" data-role="filter-section">
+                                <div class="dash-switch-info">
+                                    <span class="dash-switch-label">私密模式</span>
+                                    <span class="dash-switch-desc">切换到私密片源，需输入访问密码。如需密码，请<a href="mailto:jiunian929@gmail.com" class="contact-link">联系管理员</a>。</span>
+                                </div>
+                                <label class="dash-switch-toggle" for="hiddenContentModeToggle">
+                                    <input type="checkbox" id="hiddenContentModeToggle" class="dash-switch-input">
+                                    <span class="dash-switch-track"></span>
+                                    <span class="dash-switch-dot"></span>
+                                </label>
+                            </div>
+                            <div class="dash-switch-row" data-role="filter-ad">
+                                <div class="dash-switch-info">
+                                    <span class="dash-switch-label">分片广告过滤</span>
+                                    <span class="dash-switch-desc">跳过视频流中插入的广告片段；旧设备上卡顿时可关闭。</span>
+                                </div>
+                                <label class="dash-switch-toggle" for="adFilterToggle">
+                                    <input type="checkbox" id="adFilterToggle" class="dash-switch-input">
+                                    <span class="dash-switch-track"></span>
+                                    <span class="dash-switch-dot"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 数据管理 -->
+                    <section class="dash-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+                            </span>
+                            <div class="dash-card-title">数据管理<p class="dash-card-desc">在不同设备之间迁移配置</p></div>
+                        </header>
+                        <div class="dash-card-body">
+                            <div class="dash-action-grid">
+                                <button type="button" data-action="import-config" class="v2-btn v2-btn--secondary">导入配置</button>
+                                <button type="button" data-action="export-config" class="v2-btn v2-btn--secondary">导出配置</button>
+                                <button type="button" data-action="clear-cache" class="v2-btn v2-btn--secondary is-danger">清除本地数据</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 首页与导航（占满一行）：简洁首页的三个开关 + 动态效果，由 js/ui/layout-pref.js / motion-pref.js 处理 -->
+                    <section class="dash-card theme-full-width">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M9 20V9"/></svg>
+                            </span>
+                            <div class="dash-card-title">首页与导航<p class="dash-card-desc">只想要一个搜索框的简洁首页，把前两项关掉即可</p></div>
+                        </header>
+                        <div class="dash-card-body dash-switch-body is-two-col">
+                            <div class="dash-switch-row">
+                                <div class="dash-switch-info">
+                                    <span class="dash-switch-label">首页聚合动效</span>
+                                    <span class="dash-switch-desc">首页中部「多源聚合」的卡片流动画。</span>
+                                </div>
+                                <label class="dash-switch-toggle" for="layoutHubToggle">
+                                    <input type="checkbox" id="layoutHubToggle" class="dash-switch-input" data-layout-pref="hub" checked>
+                                    <span class="dash-switch-track"></span>
+                                    <span class="dash-switch-dot"></span>
+                                </label>
+                            </div>
+                            <div class="dash-switch-row">
+                                <div class="dash-switch-info">
+                                    <span class="dash-switch-label">首页内容板块</span>
+                                    <span class="dash-switch-desc">继续观看，以及最近更新的电影 / 电视剧 / 动漫 / 综艺四行。</span>
+                                </div>
+                                <label class="dash-switch-toggle" for="layoutShelvesToggle">
+                                    <input type="checkbox" id="layoutShelvesToggle" class="dash-switch-input" data-layout-pref="shelves" checked>
+                                    <span class="dash-switch-track"></span>
+                                    <span class="dash-switch-dot"></span>
+                                </label>
+                            </div>
+                            <div class="dash-switch-row">
+                                <div class="dash-switch-info">
+                                    <span class="dash-switch-label">导航栏只显示图标</span>
+                                    <span class="dash-switch-desc">桌面端导航项去掉文字，鼠标悬停显示名称；手机底栏保留文字。</span>
+                                </div>
+                                <label class="dash-switch-toggle" for="layoutNavIconsToggle">
+                                    <input type="checkbox" id="layoutNavIconsToggle" class="dash-switch-input" data-layout-pref="navIcons">
+                                    <span class="dash-switch-track"></span>
+                                    <span class="dash-switch-dot"></span>
+                                </label>
+                            </div>
+                            <div class="dash-switch-row" data-role="motion-pref">
+                                <div class="dash-switch-info">
+                                    <span class="dash-switch-label">动态效果</span>
+                                    <span class="dash-switch-desc">首页聚合动效、背景光晕与换色过渡。系统开着「减少动态效果」（Windows 关掉了「动画效果」、macOS 开了「减弱动态效果」）时会自动静止，可在此强制开启。<span class="dash-switch-note" data-role="motion-note"></span></span>
+                                </div>
+                                <div class="v2-seg-mini" role="radiogroup" aria-label="动态效果">
+                                    <button type="button" role="radio" data-motion="auto" class="is-active" aria-checked="true">跟随系统</button>
+                                    <button type="button" role="radio" data-motion="on" aria-checked="false">开启</button>
+                                    <button type="button" role="radio" data-motion="off" aria-checked="false">关闭</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 主题（占满一行）：色盘与取色气泡由 js/ui/theme-system.js 渲染 -->
+                    <section class="dash-card theme-full-width">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 9-9c0 1.66-1.34 3-3 3h-1.5a1.5 1.5 0 0 0-1.1 2.52A1.5 1.5 0 0 1 14.3 20 9 9 0 0 1 12 21Z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>
+                            </span>
+                            <div class="dash-card-title">主题配色<p class="dash-card-desc">每套配色由主色与辅助色组成：主色管按钮、选中态与 logo 图形，辅助色管背景光与 logo 底色</p></div>
+                            <button type="button" id="themeResetBtn" class="v2-btn v2-btn--ghost v2-btn--sm" hidden>恢复默认</button>
+                        </header>
+                        <div class="dash-card-body">
+                            <div id="themeDiscGrid" class="theme-scheme-grid" role="group" aria-label="主题配色"></div>
+                        </div>
+                    </section>
+
+                    <!-- 设备管理（线上版普通用户可见） -->
+                    <div id="userDeviceContainer" class="hidden"></div>
+
+                    <!-- 邀请码管理（线上版管理员可见，占满一行） -->
+                    <div id="inviteAdminContainer" class="hidden invite-full-width"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关于 -->
+        <div id="page-about" class="page-content">
+            <div class="v2-wrap v2-page">
+                <header class="v2-page-head">
+                    <div>
+                        <h1 class="v2-page-title">关于</h1>
+                        <p class="v2-page-sub">项目说明、隐私与版权声明、版本记录。</p>
+                    </div>
+                </header>
+                <div class="about-grid">
+                    <section class="about-hero">
+                        <span class="about-hero-mark" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
+                        <div>
+                            <h2>LeLeTV</h2>
+                            <p>自用的影视检索与播放工具：并行检索多个第三方资源站，合并同名影片，支持分类浏览、观看记录与多线路切换，适配手机与桌面。本站仅供个人学习与研究，请勿公开分享；问题与建议可通过<a class="v2-link" href="https://www.kdocs.cn/l/cjXqmrb9r8IJ" target="_blank" rel="noopener noreferrer">反馈表</a>提交。</p>
+                            <div class="about-actions">
+                                <button type="button" data-action="switch-page" data-page="readme" class="v2-btn v2-btn--primary v2-btn--sm">项目说明</button>
+                                <a href="https://github.com/JiuNian090/LeLeTV" target="_blank" rel="noopener noreferrer" class="v2-btn v2-btn--secondary v2-btn--sm">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                    项目仓库
+                                </a>
+                                <button type="button" data-action="pwa-install" class="v2-btn v2-btn--ghost v2-btn--sm">安装到桌面</button>
+                                <button type="button" data-action="share-invite" class="v2-btn v2-btn--ghost v2-btn--sm">分享</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="privacy" class="dash-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 10 4-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                            <h2 class="dash-card-title">隐私</h2>
+                        </header>
+                        <div class="dash-card-body about-text">
+                            <p>本站不投放广告，也不接入任何统计或行为追踪代码。视频画面中出现的广告来自第三方资源站，请勿轻信。</p>
+                            <p>搜索历史、观看记录、主题与功能设置仅保存在本机浏览器，不会上传服务器；清除浏览器数据或使用「设置 › 清除本地数据」即可移除。</p>
+                            <p>邀请码登录时，仅向服务器提交邀请码、设备名称与设备标识，用于登录校验与设备管理。影片信息与播放地址均来自第三方公开接口，本站不存储视频内容。</p>
+                        </div>
+                    </section>
+
+                    <section id="copyright" class="dash-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M14.5 9.5a3 3 0 1 0 0 5"/></svg></span>
+                            <h2 class="dash-card-title">版权与投诉</h2>
+                        </header>
+                        <div class="dash-card-body about-text">
+                            <p>LeLeTV 仅提供检索服务，不提供、存储或上传任何视频内容；检索结果与播放地址均来自第三方公开接口，本站不保证其准确性、完整性与可用性。</p>
+                            <p>本站仅供个人学习与研究，禁止任何商业用途。使用者须遵守相关法律法规，不得利用检索结果下载或传播未经授权的作品。权利人如认为相关信息侵犯其合法权益，请<a href="mailto:jiunian929@gmail.com" class="contact-link">联系我们</a>，核实后将及时处理。</p>
+                        </div>
+                    </section>
+
+                    <section id="changelog" class="dash-card about-changelog-card">
+                        <header class="dash-card-header">
+                            <span class="dash-card-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7.5V12l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>
+                            <h2 class="dash-card-title">更新日志</h2>
+                        </header>
+                        <div class="dash-card-body">
+                            <div id="aboutChangelogContent">
+                                <div class="v2-state-inline"><span class="v2-spinner" aria-hidden="true"></span>正在加载更新日志</div>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </div>
         </div>
 
-        <!-- 分类页面 -->
-        <div id="page-category" class="page-content">
-            <div class="category-page-layout">
-                <div class="category-content-container">
-                    <!-- 筛选区域 -->
-                    <div id="tmdb-filters" class="mt-4"></div>
-
-                    <!-- 结果区域 -->
-                    <div id="tmdb-results" class="tmdb-results-grid mt-6"></div>
-
-                    <!-- 分页 -->
-                    <div id="tmdb-pagination" class="mt-6"></div>
+        <!-- 项目说明（README） -->
+        <div id="page-readme" class="page-content">
+            <div class="v2-wrap v2-page">
+                <div class="readme-topbar">
+                    <button type="button" data-action="switch-page" data-page="about" class="movies-back-btn readme-back-btn" aria-label="返回关于">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+                    </button>
+                    <h1 class="v2-page-title readme-title">项目说明</h1>
                 </div>
-            </div>
-        </div>
-
-        <!-- 历史记录页面 -->
-        <div id="page-history" class="page-content">
-            <div class="history-page-layout">
-                <div class="history-content-container">
-                    <div id="historyList"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 设置页面 -->
-        <div id="page-settings" class="page-content">
-            <div class="settings-page-layout">
-                <div class="settings-container">
-                    <div class="settings-dashboard-header">
-                        <h2 class="settings-dashboard-title">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/>
-                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            设置
-                        </h2>
+                <div class="readme-body">
+                    <div id="readmeLoading" class="readme-state">
+                        <span class="v2-spinner" aria-hidden="true"></span>
+                        <span>正在加载</span>
                     </div>
-
-                    <div class="settings-dashboard-grid">
-                        <!-- 数据源设置 -->
-                        <div class="dash-card">
-                            <div class="dash-card-header">
-                                <span class="dash-card-icon">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/>
-                                    </svg>
-                                </span>
-                                <h3 class="dash-card-title">数据源</h3>
-                            </div>
-                            <div class="dash-card-body">
-                                <div class="flex gap-2 mb-3 flex-wrap">
-                                    <button data-action="select-all-apis" class="dash-btn dash-btn-gray">全选</button>
-                                    <button data-action="deselect-all-apis" class="dash-btn dash-btn-gray">全不选</button>
-                                    <button data-action="reset-apis" class="dash-btn dash-btn-green">重置</button>
-                                </div>
-                            <div id="apiCheckboxes" class="dash-api-grid"></div>
-                                <div class="dash-stats">
-                                    <span>已选 <span id="selectedApiCount" class="text-white font-semibold">0</span></span>
-                                    <span id="siteStatus"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 自定义API管理 -->
-                        <div class="dash-card">
-                            <div class="dash-card-header">
-                                <span class="dash-card-icon">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/>
-                                    </svg>
-                                </span>
-                                <h3 class="dash-card-title">自定义API</h3>
-                                <button data-action="show-add-custom-api" class="dash-add-btn" title="添加">+</button>
-                            </div>
-                            <div class="dash-card-body">
-                                <div id="customApisList" class="custom-apis-list"></div>
-                                <div id="addCustomApiForm" class="hidden mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#333]">
-                                    <input type="text" id="customApiName" placeholder="API名称" class="dash-input mb-2" autocomplete="off">
-                                    <input type="text" id="customApiUrl" placeholder="https://xxx.example.com/api.php/provide/vod/" value="https://xxx.example.com/api.php/provide/vod/" class="dash-input mb-2" autocomplete="off">
-                                    <input type="text" id="customApiDetail" placeholder="detail地址（可选）" class="dash-input mb-2" autocomplete="off">
-                                    <div class="flex items-center mb-3">
-                                        <input type="checkbox" id="customApiIsHidden" class="dash-checkbox">
-                                        <label for="customApiIsHidden" class="ml-2 text-xs text-pink-400">私密资源站</label>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button data-action="add-custom-api" class="dash-btn dash-btn-green flex-1">添加</button>
-                                        <button data-action="cancel-add-custom-api" class="dash-btn dash-btn-gray flex-1">取消</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 功能开关 -->
-                        <div class="dash-card">
-                            <div class="dash-card-header">
-                                <span class="dash-card-icon">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/>
-                                    </svg>
-                                </span>
-                                <h3 class="dash-card-title">功能开关</h3>
-                            </div>
-                            <div class="dash-card-body dash-switch-body">
-                                <div class="dash-switch-row" data-role="filter-section">
-                                    <div class="dash-switch-info">
-                                        <span class="dash-switch-label">私密模式❗️</span>
-                                        <span class="dash-switch-desc">开启后切换至私密模式，获取密码请<a href="mailto:jiunian929@gmail.com" class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系作者</a>。</span>
-                                    </div>
-                                    <label class="dash-switch-toggle" for="hiddenContentModeToggle">
-                                        <input type="checkbox" id="hiddenContentModeToggle" class="dash-switch-input">
-                                        <div class="dash-switch-track"></div>
-                                        <div class="dash-switch-dot"></div>
-                                    </label>
-                                </div>
-                                <div class="dash-switch-row" data-role="filter-ad">
-                                    <div class="dash-switch-info">
-                                        <span class="dash-switch-label">分片广告过滤</span>
-                                        <span class="dash-switch-desc">关闭可减少旧版浏览器卡顿</span>
-                                    </div>
-                                    <label class="dash-switch-toggle" for="adFilterToggle">
-                                        <input type="checkbox" id="adFilterToggle" class="dash-switch-input">
-                                        <div class="dash-switch-track"></div>
-                                        <div class="dash-switch-dot"></div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 一般功能 -->
-                        <div class="dash-card">
-                            <div class="dash-card-header">
-                                <span class="dash-card-icon">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z"/>
-                                    </svg>
-                                </span>
-                                <h3 class="dash-card-title">一般功能</h3>
-                            </div>
-                            <div class="dash-card-body">
-                                <div class="dash-action-grid">
-                                    <button data-action="import-config" class="dash-action-btn dash-action-btn-gray">导入配置</button>
-                                    <button data-action="export-config" class="dash-action-btn dash-action-btn-export">导出配置</button>
-                                    <button data-action="clear-cache" class="dash-action-btn dash-action-btn-danger">清除缓存</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 主题（桌面端占两栏宽）：主色盘与取色气泡由 js/ui/theme-system.js 渲染 -->
-                        <div class="dash-card theme-full-width">
-                            <div class="dash-card-header">
-                                <span class="dash-card-icon">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/>
-                                    </svg>
-                                </span>
-                                <h3 class="dash-card-title">主题</h3>
-                            </div>
-                            <div class="dash-card-body">
-                                <div id="themeDiscGrid" class="theme-disc-grid" role="group" aria-label="主题主色"></div>
-                            </div>
-                        </div>
-
-                        <!-- 设备管理（普通用户可见） -->
-                        <div id="userDeviceContainer" class="hidden"></div>
-
-                        <!-- 邀请码管理（仅管理员可见，桌面端占两栏宽） -->
-                        <div id="inviteAdminContainer" class="hidden invite-full-width"></div>
+                    <div id="readmeContent" class="markdown-body hidden"></div>
+                    <div id="readmeError" class="readme-state hidden">
+                        <span>加载失败，请检查网络后重试。</span>
+                        <button type="button" id="retryReadmeBtn" class="v2-btn v2-btn--secondary v2-btn--sm">重新加载</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-        <!-- 关于页面 -->
-        <div id="page-about" class="page-content">
-            <div class="about-page-layout">
-                <div class="about-dashboard-container">
-                    
-                    <div class="about-dashboard-grid">
-                        <!-- 项目介绍 -->
-                        <div class="dash-card about-intro-card">
-                            <div class="dash-card-body">
-                                <div class="text-center">
-                                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4">
-                                        <img src="image/logo-black.png" alt="LeLeTV Logo" class="w-14 h-14 rounded-xl">
-                                    </div>
-                                    <p class="text-gray-300 text-sm sm:text-base mb-5 leading-relaxed">
-                                        LeLeTV 是一个自用的在线视频搜索与播放平台：聚合多个第三方影视站点，支持关键词搜索、分类浏览、影片详情与在线播放，并适配手机与桌面端。本站仅供个人学习研究使用，请勿公开分享；如需分享或有任何问题、建议，欢迎☞<a href="https://www.kdocs.cn/l/cjXqmrb9r8IJ" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">提交反馈</a>。
-                                    </p>
-                                    <div class="flex flex-row flex-wrap justify-center gap-3">
-                                        <button data-action="switch-page" data-page="readme" class="flex-1 px-4 py-2.5 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-all duration-300 flex items-center justify-center font-semibold text-sm cursor-pointer">
-                                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                            项目说明
-                                        </button>
-                                        <a href="https://github.com/JiuNian090/LeLeTV" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center justify-center text-sm">
-                                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                                            </svg>
-                                            项目仓库
-                                        </a>
-                                        <button data-action="share-invite" class="flex-1 px-4 py-2.5 bg-[#24292e] hover:bg-[#2b3137] text-white rounded-lg transition-all duration-300 flex items-center justify-center text-sm cursor-pointer">
-                                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/>
-                                            </svg>
-                                            分享
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 隐私政策 -->
-                        <div id="privacy" class="dash-card">
-                            <div class="dash-card-header">
-                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                </svg>
-                                <h3 class="dash-card-title">隐私政策</h3>
-                            </div>
-                            <div class="dash-card-body">
-                                <p class="text-gray-300 text-sm leading-relaxed mb-3">
-                                    LeLeTV 尊重并保护你的隐私：本站不投放广告，也不接入任何统计或用户行为追踪代码。请不要相信使用过程中出现的任何广告，也不要随意把本站分享给他人，如需分享请先和乐乐说一声。
-                                </p>
-                                <div class="pt-3 border-t border-[#333]">
-                                    <p class="text-gray-300 text-sm leading-relaxed mb-3">
-                                        搜索历史、观看记录、主题与功能开关等数据仅保存在你本机浏览器（localStorage）中，不会上传到服务器；清除浏览器数据或使用设置里的「清除缓存」即可随时移除。
-                                    </p>
-                                    <p class="text-gray-300 text-sm leading-relaxed mb-3">
-                                        邀请码登录时，仅会向服务器提交邀请码、设备名称与设备标识，用于登录校验和「设备管理」中的设备列表展示，不作其他用途。
-                                    </p>
-                                    <p class="text-gray-300 text-sm leading-relaxed">
-                                        所有影片信息与播放地址均来自第三方公开接口，本站不存储视频内容，也不会追踪你的观看行为。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 版权声明与投诉机制 -->
-                        <div id="copyright" class="dash-card">
-                            <div class="dash-card-header">
-                                <div class="w-2.5 h-2.5 bg-yellow-500 rounded-full mr-2"></div>
-                                <h3 class="dash-card-title">版权声明与投诉机制</h3>
-                            </div>
-                            <div class="dash-card-body">
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0 w-7 h-7 bg-yellow-500/20 rounded-lg flex items-center justify-center mt-0.5">
-                                        <svg class="w-3.5 h-3.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                        </svg>
-                                    </div>
-                                    <p class="text-gray-300 text-sm leading-relaxed">
-                                        LeLeTV 仅提供视频搜索服务，不直接提供、存储或上传任何视频内容，所有搜索结果与播放地址均来自第三方公开接口，本站不保证第三方内容的准确性、完整性与可用性。本站仅供个人学习研究使用，禁止任何商业用途；用户使用本站服务时须遵守相关法律法规，不得利用搜索结果从事下载、传播未经授权作品等侵权行为。若相关权利人认为本站展示的信息侵犯了其合法权益，可通过 ☞<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span> 与我们联系，我们会在核实后及时处理。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 更新日志 -->
-                        <div id="changelog" class="dash-card about-changelog-card">
-                            <div class="dash-card-header">
-                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
-                                </svg>
-                                <h3 class="dash-card-title">更新日志</h3>
-                            </div>
-                            <div class="dash-card-body">
-                                <div id="aboutChangelogContent">
-                                    <div class="text-center py-6">
-                                        <svg class="animate-spin h-6 w-6 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        <p class="mt-3 text-gray-400 text-xs">加载更新日志中...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- 安装到桌面：提示条（js/ui/pwa-install.js 控制显示）与手动步骤弹窗 -->
+    <aside id="pwaBanner" class="pwa-banner" role="complementary" aria-label="安装到桌面" hidden>
+        <span class="pwa-banner-mark" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
+        <div class="pwa-banner-text">
+            <b data-role="title">安装 LeLeTV 到桌面</b>
+            <span data-role="sub">独立窗口全屏运行，像原生应用一样打开</span>
         </div>
-
-    </div>  <!-- 关闭 page-about -->
-
-    <!-- README 页面（项目说明） -->
-    <div id="page-readme" class="page-content">
-        <div class="readme-page-wrapper">
-            <!-- 顶部返回栏 -->
-            <div class="readme-topbar">
-                <button data-action="switch-page" data-page="about" class="readme-back-btn">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 12H5m7-7l-7 7 7 7"/>
-                    </svg>
-                    <span>返回</span>
-                </button>
-                <h2 class="readme-title">项目说明</h2>
-                <div class="readme-topbar-spacer"></div>
+        <div class="pwa-banner-actions">
+            <button type="button" class="v2-btn v2-btn--ghost v2-btn--sm" data-action="pwa-dismiss">以后再说</button>
+            <button type="button" class="v2-btn v2-btn--primary v2-btn--sm" data-action="pwa-install">安装</button>
+        </div>
+    </aside>
+    <div id="pwaGuideModal" class="v2-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwaGuideTitle">
+        <div class="v2-dialog">
+            <div class="v2-dialog-head is-center">
+                <span class="v2-emblem" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
+                <h2 id="pwaGuideTitle" class="v2-dialog-title" data-role="title">添加到主屏幕</h2>
+                <p class="v2-dialog-sub">安装后以独立窗口全屏运行，打开方式与原生应用一致。</p>
             </div>
-            <!-- 内容区域 -->
-            <div class="readme-body">
-                <div id="readmeLoading" class="flex flex-col items-center justify-center py-20">
-                    <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-gray-400 mt-3">加载中...</span>
-                </div>
-                <div id="readmeContent" class="markdown-body hidden"></div>
-                <div id="readmeError" class="flex flex-col items-center justify-center py-20">
-                    <p class="text-red-400 mb-4">加载失败，请检查网络后重试</p>
-                    <button id="retryReadmeBtn" class="px-5 py-2 gradient-btn rounded-lg text-sm cursor-pointer">重新加载</button>
-                </div>
+            <ol class="v2-steps pwa-guide-steps" data-role="steps"></ol>
+            <div class="v2-dialog-actions">
+                <button type="button" class="v2-btn v2-btn--primary v2-btn--block" data-action="pwa-guide-close">知道了</button>
             </div>
         </div>
     </div>
 
-    <!-- 页脚区域 -->
-    <footer class="footer py-4 bg-[#0a0a0a] max-sm:py-2.5">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-1 max-sm:text-center">
-                <span id="footerVersionDisplay" class="text-gray-400 text-sm max-sm:text-xs sm:text-left"></span>
-                <p class="text-gray-400 text-sm max-sm:text-xs text-center">© 2025 LeLeTV — 仅供学习使用，禁止商业用途</p>
-                <button data-action="open-disclaimer" class="text-gray-400 hover:text-pink-500 text-sm max-sm:text-xs transition-colors cursor-pointer bg-transparent border-none p-0">《用户使用协议》</button>
+    <!-- 页脚 -->
+    <footer class="footer v2-footer">
+        <div class="v2-wrap v2-footer-inner">
+            <div class="v2-footer-brand">
+                <span class="v2-lockup" role="img" aria-label="LeLeTV">
+                    <span class="v2-brand-tile" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
+                    <svg class="v2-brand-word" viewBox="0 0 756.5 204.5" aria-hidden="true"><use href="#lele-word"/></svg>
+                </span>
+                <p class="v2-footer-legal">仅供个人学习与研究使用。本站不存储任何视频，检索结果均来自第三方公开接口。</p>
+            </div>
+            <div class="v2-footer-links">
+                <span id="footerVersionDisplay"></span>
+                <button type="button" data-action="open-disclaimer">使用须知</button>
+                <button type="button" data-action="switch-page" data-page="about">关于</button>
             </div>
         </div>
     </footer>
 
-    <!-- 详情模态框 -->
-    <div id="modal" class="fixed inset-0 bg-black/95 items-center justify-center transition-opacity duration-300 z-50 hidden">
-        <div class="bg-[#111] p-8 rounded-lg w-11/12 max-w-4xl border border-[#333] max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-6 flex-none">
-                <h2 id="modalTitle" class="text-2xl font-bold gradient-text break-words pr-4 max-w-[80%]"></h2>
-                <button data-action="close-modal" class="text-gray-400 hover:text-white text-2xl transition-colors flex-shrink-0">&times;</button>
+    <!-- 影片详情（内容由脚本填充） -->
+    <div id="modal" class="v2-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="v2-dialog v2-dialog--xl">
+            <div class="v2-dialog-head">
+                <h2 id="modalTitle" class="v2-dialog-title"></h2>
             </div>
-            <div id="modalContent" class="overflow-auto flex-1 min-h-0">
-                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2"></div>
-            </div>
+            <button type="button" class="v2-icon-btn v2-dialog-close" data-action="close-modal" aria-label="关闭">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+            <div id="modalContent"></div>
         </div>
     </div>
 
-    <!-- 邀请码登录弹窗 -->
-    <div id="inviteLoginModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[80] transition-opacity duration-300">
-        <div class="bg-[#111] p-7 rounded-xl w-11/12 max-w-md border border-[#222] shadow-[0_8px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(var(--color-primary-rgb),0.1)]">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold gradient-text">🎬 LeLeTV</h2>
-                <p class="text-gray-400 text-sm mt-2">输入邀请码和设备名进入</p>
+    <!-- 邀请码登录 -->
+    <div id="inviteLoginModal" class="v2-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+        <div class="v2-dialog">
+            <div class="v2-dialog-head is-center">
+                <span class="v2-emblem" aria-hidden="true"><svg class="v2-mark" viewBox="0 0 432.4 326.3"><use href="#lele-mark"/></svg></span>
+                <h2 id="inviteTitle" class="v2-dialog-title">登录 LeLeTV</h2>
+                <p class="v2-dialog-sub">本站采用邀请制，请输入邀请码继续访问。</p>
             </div>
-            <form id="inviteLoginForm" autocomplete="on">
-                <div class="mb-4">
-                    <label class="text-gray-300 text-sm block mb-1" for="inviteDeviceName">📱 设备名（昵称）</label>
-                    <input type="text" id="inviteDeviceName" name="username" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200" placeholder="xxx的手机/平板/电脑/昵称" autocomplete="username" maxlength="30">
-                    <p class="text-gray-600 text-[10px] mt-1">用于标识当前设备，最多 30 个字符</p>
+            <form id="inviteLoginForm" class="v2-invite-form" autocomplete="on" novalidate>
+                <div class="v2-field">
+                    <label class="v2-label" for="inviteDeviceName">设备名称</label>
+                    <input type="text" id="inviteDeviceName" name="username" class="v2-input" placeholder="例如：客厅电视、我的 iPhone" autocomplete="username" maxlength="30">
+                    <p class="v2-help">用于在设备管理中识别这台设备，最多 30 个字符</p>
                 </div>
-                <div class="mb-5">
-                    <label class="text-gray-300 text-sm block mb-1" for="inviteCodeInput">🔑 邀请码</label>
-                    <div class="relative">
-                        <input type="password" id="inviteCodeInput" name="password" class="w-full bg-[#161616] border border-[#2a2a2a] text-white px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/30 transition-all duration-200 tracking-widest" placeholder="LELE-XXXX-XXXX" autocomplete="current-password" maxlength="19" style="font-family:'Courier New',monospace;letter-spacing:0.15em;padding-right:2.5rem;">
-                        <button type="button" id="inviteCodeToggle" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors text-sm px-1 py-1" tabindex="-1" title="显示/隐藏邀请码">👁️</button>
+                <div class="v2-field">
+                    <div class="v2-invite-meta">
+                        <label class="v2-label" for="inviteCodeInput">邀请码</label>
+                        <span class="v2-help">每个邀请码可绑定 5 台设备</span>
+                    </div>
+                    <div class="v2-control">
+                        <input type="password" id="inviteCodeInput" name="password" class="v2-input v2-input--mono has-trailing" placeholder="LELE-XXXX-XXXX" autocomplete="current-password" maxlength="19" spellcheck="false" autocapitalize="characters">
+                        <button type="button" id="inviteCodeToggle" class="v2-icon-btn" aria-label="显示邀请码" aria-pressed="false">
+                            <svg class="v2-eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                            <svg class="v2-eye-closed" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                        </button>
                     </div>
                 </div>
-                <button type="submit" id="inviteLoginBtn" class="w-full gradient-btn py-2.5 rounded-lg font-semibold text-sm tracking-wide">进入 LeLeTV</button>
-            </form>
-            <p id="inviteLoginError" class="text-red-400 text-xs text-center mt-3 hidden"></p>
-            <div class="h-px bg-[rgba(255,255,255,0.06)] my-4"></div>
-            <p class="text-gray-500 text-xs text-center">没有邀请码？☞ <span class="text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300" data-action="open-invite-guide">获取</span></p>
-        </div>
-    </div>
-
-    <!-- 邀请码获取指南弹窗 -->
-    <div id="inviteGuideModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]">
-        <div class="bg-[#111] p-6 rounded-lg border border-[#333] w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 class="text-xl font-bold text-pink-500 mb-5 text-center">获取邀请码</h2>
-            <div class="text-gray-300 space-y-4 text-sm">
-                <p>邀请码是访问 LeLeTV 的通行凭证，目前获取方式如下：</p>
-                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
-                    <p class="text-pink-400 font-semibold mb-2 text-xs flex items-center gap-1.5"><span>✉️</span> 联系作者获取</p>
-                    <p class="text-gray-400 text-xs"><a href="mailto:jiunian929@gmail.com" class="contact-link text-pink-400 underline cursor-pointer transition-colors hover:text-pink-300">☞联系LeLe</a>，说明来意即可获赠邀请码。</p>
-                </div>
-                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
-                    <p class="text-pink-400 font-semibold mb-2 text-xs flex items-center gap-1.5"><span>🔑</span> 已有邀请码？</p>
-                    <p class="text-gray-400 text-xs">返回登录界面，输入设备名和邀请码即可进入。一个邀请码可绑定 5 台设备。</p>
-                </div>
-                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-[#333]">
-                    <p class="text-pink-400 font-semibold mb-2 text-xs flex items-center gap-1.5"><span>💡</span> 使用提示</p>
-                    <p class="text-gray-400 text-xs">登录后可在「设置」中查看已绑定的设备和管理邀请码。播放卡顿可切换视频源或刷新页面。</p>
-                </div>
-            </div>
-            <button class="w-full gradient-btn py-2.5 rounded-lg mt-5 text-sm font-semibold" data-action="close-invite-guide">知道了</button>
-        </div>
-    </div>
-
-    <!-- 版权声明弹窗 -->
-    <div id="disclaimerModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60]">
-        <div class="bg-[#111] p-8 rounded-lg border border-[#333] w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 class="text-2xl font-bold gradient-text mb-6 text-center">使用说明</h2>
-            <div class="text-gray-300 space-y-3">
-                <p class="text-center font-bold">欢迎使用LeLeTV，请知悉以下事项：</p>
-                <p>
-                    <strong class="text-blue-400">📱一.便捷使用：</strong> 
-                    <br>使用浏览器打开本站（iPhone推荐Safari🧭），通过菜单「添加到桌面」即可像App一样访问。
-                </p>
-                <p>
-                    <strong class="text-blue-400">🔑二.邀请码说明：</strong>
-                    <br>邀请码是访问LeLeTV的通行凭证。没有邀请码？☞<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>获取。登录时输入设备名（如：xxx的手机）和邀请码即可进入，一个邀请码可绑定5台设备，登录后可在「设置」中查看和管理已绑定的设备。
-                </p>
-                <p>
-                    <strong class="text-blue-400">👇三.如何使用：</strong>
-                    <br>在「设置」中选择视频源；播放卡顿可切换资源，建议全选源后根据延迟择优选择；播放异常可尝试切换源或刷新页面。
-                </p>
-                <p>
-                    <strong class="text-blue-400">⚠️四.广告风险：</strong> 
-                    <br>视频来自第三方采集站，出现的广告与本站无关，请勿相信或点击，谨防上当受骗。
-                </p>
-                <p>
-                    <strong class="text-red-600 font-bold">❗五.特别注意：</strong> 
-                    <br>请勿大量分享，避免服务器过载；如需分享或有疑问请☞<span class="contact-link text-blue-400 underline cursor-pointer transition-all duration-300 hover:text-blue-300 hover:underline-offset-2">联系乐乐</span>。
-                </p>
-            </div>
-            <div class="mt-6 flex justify-center">
-                <button id="acceptDisclaimerBtn" data-action="accept-disclaimer" class="px-6 py-3 gradient-btn font-semibold rounded-lg">
-                    我已了解并接受
+                <p id="inviteLoginError" class="v2-error hidden" role="alert"></p>
+                <button type="submit" id="inviteLoginBtn" class="v2-btn v2-btn--primary v2-btn--block">
+                    <span class="v2-spinner" aria-hidden="true"></span>
+                    <span class="v2-btn-label">进入</span>
                 </button>
+            </form>
+            <hr class="v2-divider">
+            <p class="v2-invite-foot">还没有邀请码？<button type="button" class="v2-link" data-action="open-invite-guide">了解获取方式</button></p>
+        </div>
+    </div>
+
+    <!-- 获取邀请码 -->
+    <div id="inviteGuideModal" class="v2-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="inviteGuideTitle">
+        <div class="v2-dialog">
+            <div class="v2-dialog-head">
+                <h2 id="inviteGuideTitle" class="v2-dialog-title">获取邀请码</h2>
+                <p class="v2-dialog-sub">邀请码由站点管理员发放，用于登录与设备绑定。</p>
+            </div>
+            <ol class="v2-steps">
+                <li>
+                    <h3>联系管理员</h3>
+                    <p>发送邮件至 <a class="v2-link" href="mailto:jiunian929@gmail.com">jiunian929@gmail.com</a>，并注明申请用途。</p>
+                </li>
+                <li>
+                    <h3>登录并绑定设备</h3>
+                    <p>收到邀请码后返回登录页，填写设备名称与邀请码即可进入。</p>
+                </li>
+                <li>
+                    <h3>管理已绑定设备</h3>
+                    <p>每个邀请码最多绑定 5 台设备，不再使用的设备可在「设置 › 设备管理」中移除。</p>
+                </li>
+            </ol>
+            <div class="v2-dialog-foot">
+                <button type="button" class="v2-btn v2-btn--secondary" data-action="close-invite-guide">返回登录</button>
             </div>
         </div>
     </div>
 
-    <!-- 版本更新弹窗（主题卡片） -->
-    <div id="updateModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[70] px-4">
-        <div class="update-card">
-            <div class="update-card-header">
-                <span class="update-card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                </span>
-                <div class="update-card-heading">
-                    <h3 class="update-card-title">发现新版本</h3>
-                    <p class="update-card-version" id="updateModalVersion"></p>
-                </div>
+    <!-- 使用须知 -->
+    <div id="disclaimerModal" class="v2-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
+        <div class="v2-dialog v2-dialog--wide">
+            <div class="v2-dialog-head">
+                <h2 id="disclaimerTitle" class="v2-dialog-title">使用须知</h2>
+                <p class="v2-dialog-sub">开始使用前，请阅读以下事项。</p>
             </div>
-            <div class="update-card-body">
-                <div class="update-card-log" id="updateModalLog"></div>
-            </div>
-            <div class="update-card-footer">
-                <button type="button" id="updateModalBtn" class="update-card-btn">立即更新</button>
+            <ol class="v2-steps">
+                <li>
+                    <h3>添加到主屏幕</h3>
+                    <p>在 Safari 或 Chrome 中打开本站，通过「添加到主屏幕」安装后即可全屏使用，操作方式与原生应用一致。</p>
+                </li>
+                <li>
+                    <h3>片源与线路</h3>
+                    <p>可在「设置 › 数据源」中启用或停用资源站。播放不流畅时，可在播放页切换线路或刷新页面。</p>
+                </li>
+                <li>
+                    <h3>第三方广告</h3>
+                    <p>视频由第三方资源站提供，画面中出现的广告、网址与联系方式均与本站无关，请勿轻信。</p>
+                </li>
+                <li>
+                    <h3>内容与版权</h3>
+                    <p>本站仅提供检索服务，不存储、不上传任何视频内容，仅限个人学习与研究，禁止用于商业用途。</p>
+                </li>
+                <li>
+                    <h3>请勿公开传播</h3>
+                    <p>为保障访问稳定，请勿在公开渠道分享本站地址。</p>
+                </li>
+            </ol>
+            <div class="v2-dialog-foot">
+                <button type="button" id="acceptDisclaimerBtn" data-action="accept-disclaimer" class="v2-btn v2-btn--primary">我已阅读并同意</button>
             </div>
         </div>
     </div>
 
-    <!-- 错误提示框 -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 shadow-lg transform transition-all duration-300 opacity-0 scale-50 z-50 pointer-events-none">
+    <!-- 版本更新：有更新时必须点更新进入网站，不提供关闭 -->
+    <div id="updateModal" class="v2-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+        <div class="v2-dialog v2-dialog--wide">
+            <div class="v2-dialog-head">
+                <span class="v2-dialog-kicker">版本更新</span>
+                <h2 id="updateTitle" class="v2-dialog-title">LeLeTV 已发布新版本</h2>
+                <p class="v2-version-flow" id="updateModalVersion"></p>
+            </div>
+            <div class="v2-update-log" id="updateModalLog"></div>
+            <div class="v2-dialog-foot">
+                <button type="button" id="updateModalBtn" class="v2-btn v2-btn--primary">立即更新</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示条 -->
+    <div id="toast" class="v2-toast" role="status" aria-live="polite">
+        <span class="v2-toast-dot" aria-hidden="true"></span>
         <p id="toastMessage"></p>
     </div>
 
-    <!-- 添加 loading 提示框 -->
-    <div id="loading" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
-        <div class="bg-[#111] p-8 rounded-lg border border-[#333] flex items-center space-x-4">
-            <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-white text-lg">加载中...</p>
+    <!-- 加载层 -->
+    <div id="loading" class="v2-overlay hidden" role="status" aria-live="polite">
+        <div class="v2-loading-card">
+            <span class="v2-spinner" aria-hidden="true"></span>
+            <p>正在加载</p>
         </div>
     </div>
 
-    <!-- 移动端全屏搜索覆盖层（手机/窄窗口） -->
-    <div id="mobileSearchOverlay" class="mobile-search-overlay">
+    <!-- 手机搜索层（窄屏点搜索框时全屏打开） -->
+    <div id="mobileSearchOverlay" role="dialog" aria-modal="true" aria-label="搜索">
         <div class="mobile-search-header">
-            <div class="mobile-search-input-wrapper">
-                <div class="mobile-search-back-icon">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <input type="search" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索你喜欢的视频..." autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="视频搜索框">
+            <div class="v2-msearch-field">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" id="mobileSearchInput" placeholder="输入片名或关键词" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="搜索影片">
                 <button id="clearMobileSearchInput" type="button" class="search-input-clear" aria-label="清空搜索内容">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
                 </button>
-                <button id="mobileSearchClose" type="button" class="mobile-search-icon-btn mobile-search-close" aria-label="关闭搜索">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-                <button id="mobileSearchSubmit" type="button" class="mobile-search-icon-btn mobile-search-submit" aria-label="搜索">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
+                <button id="mobileSearchSubmit" type="button" class="v2-msearch-go" aria-label="搜索">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </button>
             </div>
+            <button id="mobileSearchClose" type="button" class="v2-msearch-cancel">取消</button>
         </div>
-        <div id="mobileSearchHistoryList" class="mobile-search-history-list"></div>
+        <div id="mobileSearchHistoryList" class="mobile-search-history-list" role="listbox" aria-label="搜索历史"></div>
     </div>
 
-    <!-- 搜索历史下拉菜单 -->
-    <div id="searchHistoryDropdown" class="search-history-dropdown hidden"></div>
+    <!-- 搜索历史下拉（桌面） -->
+    <div id="searchHistoryDropdown" class="v2-dropdown hidden" role="listbox" aria-label="搜索历史"></div>
 
     <!-- JSON-LD 结构化数据 -->
     <script type="application/ld+json">
@@ -1220,18 +1291,8 @@
     </script>
 
 
-
-
-
-
-
-
-
-
-
-
-    <script src="dist/leletv-core.dlmsiv.js?v=v3.6.5" defer></script>
-    <script src="dist/leletv-app.maqbtu.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-core.4yft9c.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-app.fk9wr5.js?v=v3.6.5" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -1304,106 +1365,139 @@
     </script>
 
 <script>
-// 邀请码登录事件绑定
-document.addEventListener('DOMContentLoaded', function() {
+// 邀请码登录弹窗
+// 线上（配置了 Worker 地址）：校验邀请码；本地版：只保留视觉框架，点「进入」即放行（见 js/auth/invite-auth.js 的本地模式）
+document.addEventListener('DOMContentLoaded', function () {
     const loginModal = document.getElementById('inviteLoginModal');
+    const guideModal = document.getElementById('inviteGuideModal');
     const loginForm = document.getElementById('inviteLoginForm');
     const deviceNameInput = document.getElementById('inviteDeviceName');
     const codeInput = document.getElementById('inviteCodeInput');
     const loginBtn = document.getElementById('inviteLoginBtn');
     const loginError = document.getElementById('inviteLoginError');
     const codeToggle = document.getElementById('inviteCodeToggle');
-    
-    if (window.INVITE_AUTH && window.INVITE_AUTH.isVerified()) {
+    const auth = window.INVITE_AUTH;
+    const isLocal = !!(auth && typeof auth.isLocalMode === 'function' && auth.isLocalMode());
+
+    if (auth && auth.isVerified()) {
         if (loginModal) loginModal.style.display = 'none';
     } else if (loginModal) {
         loginModal.style.display = 'flex';
     }
-    
-    // 邀请码显示/隐藏切换
+
+    // 显示 / 隐藏邀请码
     if (codeToggle && codeInput) {
-        codeToggle.addEventListener('click', function() {
-            const isPassword = codeInput.type === 'password';
-            codeInput.type = isPassword ? 'text' : 'password';
-            codeToggle.textContent = isPassword ? '🙈' : '👁️';
-            codeToggle.title = isPassword ? '隐藏邀请码' : '显示邀请码';
+        codeToggle.addEventListener('click', function () {
+            const reveal = codeInput.type === 'password';
+            codeInput.type = reveal ? 'text' : 'password';
+            codeToggle.setAttribute('aria-pressed', reveal ? 'true' : 'false');
+            codeToggle.setAttribute('aria-label', reveal ? '隐藏邀请码' : '显示邀请码');
         });
     }
-    
-    // 表单提交
+
+    // 设备名称里按回车：跳到邀请码，而不是直接提交
+    if (deviceNameInput) {
+        deviceNameInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.isComposing) {
+                e.preventDefault();
+                codeInput?.focus();
+            }
+        });
+    }
+
+    [deviceNameInput, codeInput].forEach(function (input) {
+        input?.addEventListener('input', function () {
+            input.removeAttribute('aria-invalid');
+        });
+    });
+
     if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', function (e) {
             e.preventDefault();
             handleInviteLogin();
         });
     }
-    
-    if (deviceNameInput) {
-        deviceNameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') codeInput?.focus();
-        });
-    }
 
-    // 邀请码获取指南弹窗开关
-    document.querySelectorAll('[data-action="open-invite-guide"]').forEach(function(el) {
-        el.addEventListener('click', function() {
-            var loginModal = document.getElementById('inviteLoginModal');
+    // 登录 ⇄ 获取方式：两个弹窗互相切换
+    document.querySelectorAll('[data-action="open-invite-guide"]').forEach(function (el) {
+        el.addEventListener('click', function () {
             if (loginModal) loginModal.style.display = 'none';
-            var modal = document.getElementById('inviteGuideModal');
-            if (modal) modal.style.display = 'flex';
+            if (guideModal) guideModal.style.display = 'flex';
         });
     });
-    document.querySelectorAll('[data-action="close-invite-guide"]').forEach(function(el) {
-        el.addEventListener('click', function() {
-            var modal = document.getElementById('inviteGuideModal');
-            if (modal) modal.style.display = 'none';
-            var loginModal = document.getElementById('inviteLoginModal');
+    document.querySelectorAll('[data-action="close-invite-guide"]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            if (guideModal) guideModal.style.display = 'none';
             if (loginModal && !window.INVITE_AUTH?.isVerified()) {
                 loginModal.style.display = 'flex';
             }
         });
     });
-    
-    async function handleInviteLogin() {
-        const deviceName = deviceNameInput?.value?.trim();
-        const code = codeInput?.value?.trim();
-        
-        if (!deviceName) {
-            if (loginError) {
-                loginError.textContent = '请输入设备名（昵称）';
-                loginError.classList.remove('hidden');
-            }
-            deviceNameInput?.focus();
-            return;
+
+    function setBusy(busy) {
+        if (!loginBtn) return;
+        loginBtn.disabled = busy;
+        loginBtn.classList.toggle('is-busy', busy);
+        const label = loginBtn.querySelector('.v2-btn-label');
+        if (label) label.textContent = busy ? '正在验证' : '进入';
+    }
+
+    function showError(message, field) {
+        if (loginError) {
+            loginError.textContent = message;
+            loginError.classList.remove('hidden');
         }
-        if (!code) {
-            if (loginError) {
-                loginError.textContent = '请输入邀请码';
-                loginError.classList.remove('hidden');
-            }
-            codeInput?.focus();
-            return;
+        if (field) {
+            field.setAttribute('aria-invalid', 'true');
+            field.focus();
         }
-        
-        if (loginBtn) loginBtn.disabled = true;
+    }
+
+    function clearError() {
         if (loginError) loginError.classList.add('hidden');
-        
-        const result = await window.INVITE_AUTH.verify(code, deviceName);
-        
-        if (loginBtn) loginBtn.disabled = false;
-        
+        deviceNameInput?.removeAttribute('aria-invalid');
+        codeInput?.removeAttribute('aria-invalid');
+    }
+
+    // 关闭时先播放淡出，再收起
+    function closeLoginModal() {
+        if (!loginModal) return;
+        loginModal.classList.add('is-leaving');
+        setTimeout(function () {
+            loginModal.style.display = 'none';
+            loginModal.classList.remove('is-leaving');
+        }, 220);
+    }
+
+    async function handleInviteLogin() {
+        const deviceName = deviceNameInput?.value?.trim() || '';
+        const code = codeInput?.value?.trim() || '';
+
+        if (!isLocal) {
+            if (!deviceName) { showError('请填写设备名称', deviceNameInput); return; }
+            if (!code) { showError('请填写邀请码', codeInput); return; }
+        }
+
+        clearError();
+        setBusy(true);
+        // 本地版没有网络往返，留一个短暂的验证态，完整呈现按钮的状态变化
+        const results = await Promise.all([
+            window.INVITE_AUTH.verify(code, deviceName),
+            new Promise(function (resolve) { setTimeout(resolve, isLocal ? 650 : 0); })
+        ]);
+        const result = results[0];
+        setBusy(false);
+
         if (result.ok) {
-            if (loginModal) loginModal.style.display = 'none';
+            closeLoginModal();
             // 管理员登录已由 invite-auth.js 内部触发 passwordVerified 事件
             if (!result.is_admin) {
                 document.dispatchEvent(new CustomEvent('inviteVerified'));
             }
-            showToast(result.message || '欢迎进入', 'success');
+            const disclaimerNext = window.LELETV_DISCLAIMER && window.LELETV_DISCLAIMER.pending && !window.LELETV_DISCLAIMER.handled;
+            if (!disclaimerNext) showToast(result.message || '欢迎使用 LeLeTV', 'success');
         } else {
-            if (loginError) {
-                loginError.textContent = result.error || '验证失败';
-                loginError.classList.remove('hidden');
-            }
+            showError(result.error || '验证未通过，请检查邀请码后重试');
         }
     }
 });

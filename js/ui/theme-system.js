@@ -1,19 +1,20 @@
-/* LeLeTV - 主题色系统（设置页「主题」卡片）
+/* LeLeTV - 主题配色系统（设置页「主题配色」卡片）
  *
  * 组成：
- *   1) 预设色系：12 个主色盘（两行 × 6），最后一个为自定义；
- *   2) Popover ColorPicker：点击色盘弹出气泡，内含该色系的梯度色块 + 二维坐标取色板（S/V 平面）；
- *      自定义额外提供色相条与 RGB 输入框（全色彩）；
- *   3) 原地换色：应用后全屏粒子自四周螺旋凝聚 → 爆开瞬间闪换成新主题色，
+ *   1) 配色方案：11 套预设 + 自定义（两行 × 6）。每套由主色、辅助色、底色组成：
+ *      主色管按钮、选中态和 logo 图形；辅助色管左上角的背景光和 logo 的圆角底；
+ *   2) Popover ColorPicker：点击色盘弹出气泡，内含主色系、辅助色系两条梯度色块 + 主色的二维取色板；
+ *      自定义额外提供色相条与 RGB / HEX 输入框（全色彩），辅助色取主色的浅色；
+ *   3) 原地换色：应用后全屏粒子自四周螺旋凝聚 → 爆开瞬间闪换成新配色，
  *      不重载页面、不丢当前状态；粒子视觉语言与私密模式切换同源；
- *   4) 按模式各存一套：正常模式 / 私密模式各记自己的主题色，互不干扰；
- *      某模式从未设置过主题时不写入任何覆盖，继续沿用 css 的默认色
- *      （正常 = 霓虹粉 #ec4899，私密 = 铜色 #B87333）。
+ *   4) 按模式各存一套：正常模式 / 私密模式各记自己的配色，互不干扰；
+ *      某模式从未设置过时不写入任何覆盖，沿用 css 的默认色（正常 = 霓虹夜场，私密 = 铜色）；
+ *      「恢复默认」就是删掉这份存档、撤掉覆盖。
  *
- * 主题色的落点与 css/variables.css 完全一致：只改写这一组 CSS 变量，
- * 其余派生色（--pink-*、rgba(var(--color-primary-rgb), …)）自动跟随。
- * 刷新时的首帧应用由 index.html / player.html 的 head 内联脚本用同一套算法先行完成
- * （避免先闪默认色再切到目标色），改动派生算法时三处需同步。
+ * 落点：主色写 --color-primary 一组变量（其余派生色 rgba(var(--color-primary-rgb), …) 自动跟随），
+ * 辅助色等派生值写 --v2-* 变量，算好后连同存档一起保存。
+ * 刷新时的首帧由 index.html / player.html 的 head 内联脚本先行应用：主色按同一套算法现算，
+ * 派生变量直接读存档（避免先闪默认色再切到目标色），改动主色派生算法时三处需同步。
  */
 (function () {
     'use strict';
@@ -35,21 +36,43 @@
     // 默认落点：与 css 的 :root 默认色一致的预设
     var DEFAULT_KEY = 'neon';
 
-    // 12 个主色（两行 × 6，与卡片中的网格顺序一致）
+    /*
+     * 配色方案（两行 × 6，与卡片中的网格顺序一致）
+     * 命名：方案名取自观影的场景或电影术语，色名 = 意象 + 颜色。
+     * 前三套沿用 logo 的三套配色；其余按色相铺开，彩度（OKLCH C）压在 0.08～0.15，
+     * 只有默认的霓虹粉保留品牌原色。主色在夜黑底上的对比度都在 5.5:1 以上。
+     *   word：导航字标颜色，'main' 取主色、'aux' 取辅助色，缺省取主色的浅色
+     *   blush：主色浅色的替代值，'aux' 表示直接用辅助色（樱花白本就是霓虹粉的浅色）
+     */
     var PRESETS = [
-        { key: 'red', name: '红色系', hex: '#ef4444' },
-        { key: 'orange', name: '橙色系', hex: '#f97316' },
-        { key: 'yellow', name: '黄色系', hex: '#eab308' },
-        { key: 'green', name: '绿色系', hex: '#22c55e' },
-        { key: 'blue', name: '蓝色系', hex: '#3b82f6' },
-        { key: 'purple', name: '紫色系', hex: '#a855f7' },
-        { key: 'pink', name: '粉色系', hex: '#f472b6' },
-        { key: 'earth', name: '大地系', hex: '#8a6f47' },
-        { key: 'gray', name: '灰色系', hex: '#808080' },
-        { key: 'brown', name: '棕褐色系', hex: '#b45309' },
-        { key: 'neon', name: '霓虹系', hex: '#ec4899' },
-        { key: 'custom', name: '自定义', hex: null }
+        { key: 'neon', name: '霓虹夜场', main: { name: '霓虹粉', hex: '#EC4899' }, aux: { name: '樱花白', hex: '#FFE4F1' }, bg: '#0A0A0B', word: 'aux', blush: 'aux' },
+        { key: 'screening', name: '私人放映厅', main: { name: '黄铜金', hex: '#F0B862' }, aux: { name: '丝绒红', hex: '#6E1F38' }, bg: '#0E0B0A', word: 'main' },
+        { key: 'aurora', name: '极光穹顶', main: { name: '极光紫', hex: '#8B7BFF' }, aux: { name: '极光青', hex: '#46E3D0' }, bg: '#07070F' },
+        { key: 'darkroom', name: '胶片暗房', main: { name: '安全灯红', hex: '#D9695F' }, aux: { name: '相纸白', hex: '#F2E7DC' }, bg: '#0D0A0A' },
+        { key: 'magichour', name: '魔幻时刻', main: { name: '晚霞橘', hex: '#E8956B' }, aux: { name: '暮光紫', hex: '#8D7CC6' }, bg: '#0C0A0E' },
+        { key: 'openair', name: '露天影院', main: { name: '萤火绿', hex: '#9DC47F' }, aux: { name: '灯串黄', hex: '#EFD48E' }, bg: '#090B09' },
+        { key: 'seaside', name: '海岸放映', main: { name: '海雾青', hex: '#6CBFB5' }, aux: { name: '珊瑚橘', hex: '#EE9D87' }, bg: '#080B0B' },
+        { key: 'latenight', name: '深夜影院', main: { name: '月夜蓝', hex: '#7FA5DC' }, aux: { name: '星光银', hex: '#DAE2EE' }, bg: '#08090E' },
+        { key: 'curtain', name: '谢幕时分', main: { name: '帷幕紫', hex: '#B48BD8' }, aux: { name: '追光白', hex: '#F4EDE2' }, bg: '#0B090E' },
+        { key: 'spring', name: '春日影展', main: { name: '桃花粉', hex: '#E2799F' }, aux: { name: '新芽绿', hex: '#B7D59B' }, bg: '#0C0A0B' },
+        { key: 'silent', name: '黑白默片', main: { name: '银盐灰', hex: '#C4C8D0' }, aux: { name: '碳素灰', hex: '#5C606A' }, bg: '#0A0A0A' },
+        { key: 'custom', name: '自定义', main: null, aux: null }
     ];
+
+    // 私密模式的默认主色（css html[data-hidden-mode] 的铜色），恢复默认时粒子过渡用
+    var HIDDEN_DEFAULT_RGB = [184, 115, 51];
+    var DEFAULT_BG = '#0A0A0B';
+    var INK_DARK = '#111113';          // 浅色主色按钮上的深色文字
+    var TILE_BASE = [20, 20, 24];      // logo 圆角底：辅助色按深浅混进这个深底
+    // 除主色外，由配色派生、写在 <html> 行内样式上的变量（首帧脚本按同一份名单读存档）
+    var EXTRA_VARS = ['--v2-blush', '--v2-word', '--v2-aux', '--v2-aux-rgb', '--v2-glow-2', '--v2-tile', '--v2-on-accent', '--v2-bg'];
+
+    function presetOf(key) {
+        for (var i = 0; i < PRESETS.length; i++) {
+            if (PRESETS[i].key === key) return PRESETS[i];
+        }
+        return null;
+    }
 
     // Tailwind pink 调色板的档位与对应亮度（暗色主题下由深到浅的层次）
     var RAMP_STOPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -159,7 +182,7 @@
      * 彩色主色则得到与霓虹粉同構的明度层次。
      */
     function buildPalette(hex) {
-        var rgb = hexToRgb(hex) || hexToRgb(PRESETS[PRESETS.length - 2].hex);
+        var rgb = hexToRgb(hex) || hexToRgb(presetOf(DEFAULT_KEY).main.hex);
         var hsl = rgbToHsl(rgb);
         var h = hsl[0];
         var s = clamp(hsl[1], 0, 100);
@@ -176,7 +199,83 @@
         };
     }
 
+    /** WCAG 相对亮度 */
+    function relLum(rgb) {
+        var f = function (v) {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
+    }
+
+    function contrastRatio(a, b) {
+        var x = relLum(a), y = relLum(b);
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    }
+
+    /** 两色按比例混合，t 为 a 的占比 */
+    function mixRgb(a, b, t) {
+        return [0, 1, 2].map(function (i) { return a[i] * t + b[i] * (1 - t); });
+    }
+
+    /** 自定义主色没有配套的辅助色：取主色的浅色，和霓虹粉 / 樱花白的关系一致 */
+    function defaultAuxFor(pal, preset) {
+        if (preset && preset.aux) return preset.aux.hex;
+        return rgbToHex(mixRgb(pal.rgb, [255, 255, 255], 0.16));
+    }
+
+    /**
+     * 由主色 + 辅助色派生其余变量：
+     *   --v2-blush      主色的浅色：渐变字顶端、链接悬停、聚合区分割线的光芯
+     *   --v2-word       导航字标
+     *   --v2-aux(-rgb)  辅助色本身
+     *   --v2-glow-2     左上角背景光：浅辅助色透明度 0.15，越深越浓（最高 0.36），否则深底上看不出来
+     *   --v2-tile       logo 图形的圆角底：浅辅助色只混 10%，深辅助色混到一半
+     *   --v2-on-accent  主色按钮上的文字：白字对比度不到 3:1（黄铜金、萤火绿这类浅色）改用深色字
+     *   --v2-bg         页面底色
+     */
+    function deriveVars(pal, auxHex, preset) {
+        var aux = hexToRgb(auxHex) || hexToRgb(defaultAuxFor(pal, preset));
+        var auxRgb = aux.map(function (v) { return Math.round(v); });
+        var auxL = relLum(aux);
+        var blush = (preset && preset.blush === 'aux') ? rgbToHex(aux) : rgbToHex(mixRgb(pal.rgb, [255, 255, 255], 0.18));
+        var word = blush;
+        if (preset && preset.word === 'main') word = pal.hex;
+        else if (preset && preset.word === 'aux') word = rgbToHex(aux);
+        var glowA = clamp(0.15 + (0.35 - auxL) * 0.6, 0.15, 0.36);
+        var tile = mixRgb(aux, TILE_BASE, clamp(0.5 - auxL * 1.1, 0.1, 0.5));
+        var btnMid = mixRgb(hexToRgb(pal.p400), hexToRgb(pal.p600), 0.5);
+        return {
+            '--v2-blush': blush.toUpperCase(),
+            '--v2-word': word.toUpperCase(),
+            '--v2-aux': rgbToHex(aux).toUpperCase(),
+            '--v2-aux-rgb': auxRgb.join(', '),
+            '--v2-glow-2': 'rgba(' + auxRgb.join(', ') + ', ' + glowA.toFixed(3) + ')',
+            '--v2-tile': rgbToHex(tile).toUpperCase(),
+            '--v2-on-accent': contrastRatio([255, 255, 255], btnMid) >= 3 ? '#FFFFFF' : INK_DARK,
+            '--v2-bg': (preset && preset.bg) || DEFAULT_BG
+        };
+    }
+
+    /** 一套完整配色：{ key, pal（主色派生）, aux, vars（其余派生变量） } */
+    function buildTheme(key, mainHex, auxHex) {
+        var preset = presetOf(key);
+        var pal = buildPalette(mainHex);
+        var auxRgb = hexToRgb(auxHex);
+        var aux = auxRgb ? rgbToHex(auxRgb) : defaultAuxFor(pal, preset);
+        return { key: key, pal: pal, aux: aux, vars: deriveVars(pal, aux, preset) };
+    }
+
     // ===================== 应用 / 清除主题变量 =====================
+
+    function applyTheme(theme) {
+        applyPalette(theme.pal);
+        var st = document.documentElement.style;
+        EXTRA_VARS.forEach(function (name) {
+            if (typeof theme.vars[name] === 'string') st.setProperty(name, theme.vars[name]);
+            else st.removeProperty(name);
+        });
+    }
 
     /** 把派生色写进 <html> 的行内样式：行内样式优先级高于 css 的 html[data-hidden-mode] 规则 */
     function applyPalette(pal) {
@@ -195,10 +294,10 @@
         });
     }
 
-    /** 撤掉覆盖，回落到 css 的默认色（正常 = 霓虹粉，私密 = 铜色） */
+    /** 撤掉覆盖，回落到 css 的默认色（正常 = 霓虹夜场，私密 = 铜色） */
     function clearPalette() {
         var st = document.documentElement.style;
-        BASE_VARS.concat(RAMP_STOPS_SET).forEach(function (name) {
+        BASE_VARS.concat(RAMP_STOPS_SET, EXTRA_VARS).forEach(function (name) {
             st.removeProperty(name);
         });
     }
@@ -221,7 +320,11 @@
 
     function storageKey() { return isHiddenMode() ? KEY_HIDDEN : KEY_NORMAL; }
 
-    /** 读取当前模式已保存的主题：{ key, hex }；从未设置过返回 null */
+    /**
+     * 读取当前模式已保存的配色：{ key, hex, aux, vars }；从未设置过返回 null。
+     * 旧版存档只有 { key, hex }，且色系已换成配色方案：撤下的旧色系（红色系、棕褐色系……）
+     * 保留用户选过的颜色，归到「自定义」。
+     */
     function loadState() {
         try {
             var raw = localStorage.getItem(storageKey());
@@ -229,20 +332,71 @@
             var st = JSON.parse(raw);
             var rgb = st && hexToRgb(st.hex);
             if (!rgb) return null;
-            return { key: String(st.key || 'custom'), hex: rgbToHex(rgb) };
+            var key = String(st.key || 'custom');
+            if (!presetOf(key)) key = 'custom';
+            var auxRgb = hexToRgb(st.aux);
+            return {
+                key: key,
+                hex: rgbToHex(rgb),
+                aux: auxRgb ? rgbToHex(auxRgb) : '',
+                vars: (st.vars && typeof st.vars === 'object') ? st.vars : null
+            };
         } catch (e) { return null; }
     }
 
-    function saveState(state) {
-        try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch (e) { /* 隐私模式等场景忽略 */ }
+    function saveTheme(theme) {
+        try {
+            localStorage.setItem(storageKey(), JSON.stringify({
+                key: theme.key,
+                hex: theme.pal.hex,
+                aux: theme.aux,
+                vars: theme.vars
+            }));
+        } catch (e) { /* 隐私模式等场景忽略 */ }
     }
 
-    // ===================== 主色盘卡片 =====================
+    function clearState() {
+        try { localStorage.removeItem(storageKey()); } catch (e) { /* 忽略 */ }
+    }
 
+    /** 已保存配色对应的完整主题；没存过返回 null */
+    function savedTheme() {
+        var saved = loadState();
+        return saved ? buildTheme(saved.key, saved.hex, saved.aux) : null;
+    }
+
+    // ===================== 配色卡片 =====================
+
+    /** 色盘显示的主色：自定义且没存过自定义色时用彩虹占位 */
     function discColorOf(preset) {
-        if (preset.key !== 'custom') return preset.hex;
+        if (preset.key !== 'custom') return preset.main.hex;
         var saved = loadState();
         return (saved && saved.key === 'custom') ? saved.hex : CUSTOM_PLACEHOLDER;
+    }
+
+    /** 色盘显示的辅助色：自定义且没存过时留空，让主色占满整圆 */
+    function auxColorOf(preset) {
+        if (preset.key !== 'custom') return preset.aux.hex;
+        var saved = loadState();
+        return (saved && saved.key === 'custom' && saved.aux) ? saved.aux : 'transparent';
+    }
+
+    /** 方案卡片第二行：预设写主色名与辅助色名；自定义写已存的色值，没存过就提示可自选 */
+    function subtitleOf(preset) {
+        if (preset.main) return preset.main.name + ' · ' + preset.aux.name;
+        var saved = loadState();
+        if (saved && saved.key === 'custom') return saved.hex.toUpperCase() + (saved.aux ? ' · ' + saved.aux.toUpperCase() : '');
+        return '自选主色与辅助色';
+    }
+
+    /** 方案卡片的颜色：大圆是主色，右下角的小圆是辅助色；没有辅助色（自定义未设置）时只画主色 */
+    function paintScheme(btn, preset) {
+        var aux = auxColorOf(preset);
+        btn.style.setProperty('--disc-color', discColorOf(preset));
+        btn.style.setProperty('--disc-aux', aux);
+        btn.classList.toggle('is-mono', aux === 'transparent');
+        var sub = btn.querySelector('.theme-scheme-sub');
+        if (sub) sub.textContent = subtitleOf(preset);
     }
 
     function renderCard() {
@@ -251,42 +405,49 @@
         grid.textContent = ''; // 内容全部由代码生成（无用户输入），先清空避免重复渲染
         var frag = document.createDocumentFragment();
         PRESETS.forEach(function (preset) {
-            var item = document.createElement('div');
-            item.className = 'theme-disc-item';
-
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'theme-disc';
+            btn.className = 'theme-scheme';
             btn.setAttribute('data-theme-key', preset.key);
-            btn.setAttribute('aria-label', preset.name);
-            btn.title = preset.name;
-            btn.style.setProperty('--disc-color', discColorOf(preset));
+            btn.title = preset.main ? '主色 ' + preset.main.name + ' ' + preset.main.hex + '　辅助色 ' + preset.aux.name + ' ' + preset.aux.hex : '自定义主色与辅助色';
 
-            var label = document.createElement('span');
-            label.className = 'theme-disc-label';
-            label.textContent = preset.name;
+            var swatch = document.createElement('span');
+            swatch.className = 'theme-swatch';
+            swatch.setAttribute('aria-hidden', 'true');
 
-            item.appendChild(btn);
-            item.appendChild(label);
-            frag.appendChild(item);
+            var text = document.createElement('span');
+            text.className = 'theme-scheme-text';
+            var name = document.createElement('b');
+            name.textContent = preset.name;
+            var sub = document.createElement('small');
+            sub.className = 'theme-scheme-sub';
+            text.appendChild(name);
+            text.appendChild(sub);
+
+            btn.appendChild(swatch);
+            btn.appendChild(text);
+            paintScheme(btn, preset);
+            frag.appendChild(btn);
         });
         grid.appendChild(frag);
         syncSelection();
     }
 
-    /** 高亮当前生效的主色盘（从未设置过时，正常模式与默认色一致的霓虹系算作选中） */
+    /** 高亮当前生效的配色（从未设置过时，正常模式与默认配色算作选中） */
     function syncSelection() {
         var grid = document.getElementById('themeDiscGrid');
         if (!grid) return;
         var saved = loadState();
         var activeKey = saved ? saved.key : (isHiddenMode() ? '' : DEFAULT_KEY);
-        Array.prototype.forEach.call(grid.querySelectorAll('.theme-disc'), function (btn) {
+        Array.prototype.forEach.call(grid.querySelectorAll('.theme-scheme'), function (btn) {
             var on = btn.getAttribute('data-theme-key') === activeKey;
             btn.classList.toggle('is-active', on);
             btn.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
-        var custom = grid.querySelector('.theme-disc[data-theme-key="custom"]');
-        if (custom) custom.style.setProperty('--disc-color', discColorOf(PRESETS[PRESETS.length - 1]));
+        var custom = grid.querySelector('.theme-scheme[data-theme-key="custom"]');
+        if (custom) paintScheme(custom, presetOf('custom'));
+        var reset = document.getElementById('themeResetBtn');
+        if (reset) reset.hidden = !saved;
     }
 
     // ===================== 换色过渡 =====================
@@ -307,6 +468,7 @@
     var RING_SPIN = 0.00025;     // 星环整体缓慢自转（弧度/毫秒）
 
     function reducedMotion() {
+        if (window.LeLeMotion) return window.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
         try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
     }
 
@@ -424,8 +586,10 @@
             }
         }
 
-        /** 中心 LeLeTV：与 index.html 首屏占位、app-routing.js 的 drawBrand 同款做法 */
+        /** 中心 logo：圆角方块里的乐字 + 字标（brand-canvas.js，路径取自页面的品牌 sprite）；取不到 sprite 时退回文字 */
         function drawBrand(alpha, scale) {
+            var brand = window.LeLeBrandCanvas;
+            if (brand && brand.draw(ctx, cx, cy, brandSize * 1.1, useRgb, alpha, scale)) return;
             var rgba = function (v) { return 'rgba(' + useRgb[0] + ',' + useRgb[1] + ',' + useRgb[2] + ',' + v + ')'; };
             ctx.save();
             ctx.globalAlpha = alpha;
@@ -465,6 +629,7 @@
     var _dragging = null;
     var _dragCleanup = null;
     var _busy = false; // 过渡动画进行中：忽略重复提交
+    var _openedAt = 0; // 气泡打开的时刻：滚动事件是异步派发的，点击前那下滚动可能在打开之后才到，得放过
 
     function currentPickerRgb() { return hsvToRgb(_picker.h, _picker.s, _picker.v); }
     function currentPickerHex() { return rgbToHex(currentPickerRgb()); }
@@ -483,7 +648,14 @@
                 '<span class="theme-picker-hex" data-role="hex"></span>' +
                 '<button type="button" class="theme-picker-close" data-role="close" aria-label="关闭">&times;</button>' +
             '</div>' +
-            '<div class="theme-picker-ramp" data-role="ramp"></div>' +
+            '<div class="theme-picker-row" data-role="rampRow">' +
+                '<span class="theme-picker-row-label" data-role="rampLabel">主色</span>' +
+                '<div class="theme-picker-ramp" data-role="ramp"></div>' +
+            '</div>' +
+            '<div class="theme-picker-row">' +
+                '<span class="theme-picker-row-label" data-role="rampAuxLabel">辅助色</span>' +
+                '<div class="theme-picker-ramp" data-role="rampAux"></div>' +
+            '</div>' +
             '<div class="theme-picker-plane" data-role="plane">' +
                 '<span class="theme-picker-plane-dot" data-role="planeDot"></span>' +
             '</div>' +
@@ -499,8 +671,8 @@
                 '<label>HEX<input type="text" maxlength="7" spellcheck="false" autocomplete="off" autocapitalize="off" data-role="hexInput" placeholder="#3366FF" aria-label="十六进制色值"></label>' +
             '</div>' +
             '<div class="theme-picker-actions">' +
-                '<button type="button" class="dash-btn dash-btn-gray" data-role="cancel">取消</button>' +
-                '<button type="button" class="dash-btn dash-btn-green" data-role="apply">应用</button>' +
+                '<button type="button" class="v2-btn v2-btn--secondary v2-btn--sm" data-role="cancel">取消</button>' +
+                '<button type="button" class="v2-btn v2-btn--primary v2-btn--sm" data-role="apply">应用</button>' +
             '</div>';
         document.body.appendChild(el);
 
@@ -508,14 +680,26 @@
         var p = {
             el: el,
             swatch: q('swatch'), name: q('name'), hexText: q('hex'),
-            ramp: q('ramp'), plane: q('plane'), planeDot: q('planeDot'),
+            rampRow: q('rampRow'), ramp: q('ramp'), rampAux: q('rampAux'),
+            rampLabel: q('rampLabel'), rampAuxLabel: q('rampAuxLabel'),
+            plane: q('plane'), planeDot: q('planeDot'),
             hue: q('hue'), hueDot: q('hueDot'),
             rgbBox: q('rgbBox'), r: q('r'), g: q('g'), b: q('b'),
             hexBox: q('hexBox'), hexInput: q('hexInput'),
             custom: false, presetKey: '', presetName: '',
+            auxHex: '#FFE4F1', auxBaseHex: '#FFE4F1',
             h: 330, s: 0.8, v: 0.93
         };
         _picker = p;
+
+        // 辅助色的十档色块只建一次，打开时只换颜色
+        for (var i = 0; i < RAMP_STOPS.length; i++) {
+            var auxSw = document.createElement('button');
+            auxSw.type = 'button';
+            auxSw.setAttribute('data-ramp-index', String(i));
+            auxSw.setAttribute('aria-label', '辅助色阶 ' + RAMP_STOPS[i]);
+            p.rampAux.appendChild(auxSw);
+        }
 
         // --- 拖动取色：二维板（饱和度 × 明度）与色相条 ---
         var startDrag = function (kind) {
@@ -539,7 +723,7 @@
         p.plane.addEventListener('pointerdown', startDrag('plane'));
         p.hue.addEventListener('pointerdown', startDrag('hue'));
 
-        // --- 梯度色块：点一下即取该档颜色 ---
+        // --- 梯度色块：点一下即取该档颜色（主色改取色点，辅助色只换辅助色）---
         p.ramp.addEventListener('click', function (e) {
             var swatch = e.target.closest ? e.target.closest('[data-ramp-index]') : null;
             if (!swatch) return;
@@ -551,6 +735,16 @@
             _picker.s = hsv[1];
             _picker.v = hsv[2];
             paintPicker(true);
+        });
+
+        p.rampAux.addEventListener('click', function (e) {
+            var swatch = e.target.closest ? e.target.closest('[data-ramp-index]') : null;
+            if (!swatch) return;
+            var idx = parseInt(swatch.getAttribute('data-ramp-index'), 10);
+            var rgb = buildPalette(_picker.auxBaseHex).ramp[idx];
+            if (!rgb) return;
+            _picker.auxHex = rgbToHex(rgb);
+            paintAuxRamp();
         });
 
         // --- RGB 输入：手动快速填写 ---
@@ -594,10 +788,11 @@
         q('close').addEventListener('click', closePicker);
         q('cancel').addEventListener('click', closePicker);
         q('apply').addEventListener('click', function () {
-            var hex = currentPickerHex();
+            var mainHex = currentPickerHex();
             var key = _picker.custom ? 'custom' : _picker.presetKey;
+            var auxHex = _picker.auxHex;
             closePicker();
-            commitTheme(key, hex);
+            commitTheme(key, mainHex, auxHex);
         });
 
         return p;
@@ -650,6 +845,26 @@
         }
     }
 
+    /** 辅助色色块：预设按该方案辅助色的色相铺十档，自定义按主色铺开；最接近当前辅助色的一档高亮 */
+    function paintAuxRamp() {
+        var p = _picker;
+        if (!p) return;
+        var ramp = buildPalette(p.auxBaseHex).ramp;
+        var target = hexToRgb(p.auxHex) || [0, 0, 0];
+        var best = -1, bestD = Infinity;
+        ramp.forEach(function (rgb, i) {
+            var d = Math.sqrt(Math.pow(rgb[0] - target[0], 2) + Math.pow(rgb[1] - target[1], 2) + Math.pow(rgb[2] - target[2], 2));
+            if (d < bestD) { bestD = d; best = i; }
+        });
+        var swatches = p.rampAux.children;
+        for (var i = 0; i < swatches.length && i < ramp.length; i++) {
+            var hex = rgbToHex(ramp[i]);
+            swatches[i].style.background = hex;
+            swatches[i].title = hex.toUpperCase();
+            swatches[i].classList.toggle('is-active', i === best && bestD < 48);
+        }
+    }
+
     function buildRamp(presetHex) {
         var p = _picker;
         var ramp = buildPalette(presetHex).ramp;
@@ -686,12 +901,12 @@
 
     function openPicker(anchorEl, preset) {
         var p = ensurePicker();
+        var saved = loadState();
         var baseHex;
         if (preset.key === 'custom') {
-            var saved = loadState();
             baseHex = (saved && saved.key === 'custom' && saved.hex) ? saved.hex : rgbToHex(readPrimaryRgb());
         } else {
-            baseHex = preset.hex;
+            baseHex = preset.main.hex;
         }
 
         p.custom = preset.key === 'custom';
@@ -704,14 +919,24 @@
         p.s = hsv[1];
         p.v = hsv[2];
 
+        // 辅助色：预设取该方案的辅助色（用户改过就用他改的），自定义取主色的浅色
+        p.auxHex = (saved && saved.key === preset.key && saved.aux)
+            ? saved.aux
+            : defaultAuxFor(buildPalette(baseHex), preset);
+        p.auxBaseHex = p.custom ? baseHex : preset.aux.hex;
+
         p.name.textContent = p.custom ? '自定义颜色' : preset.name;
-        // 预设色盘给出该色系的次级（同色相、不同明度）梯度色块供快速挑选；
-        // 自定义是全色彩取色器，用色相条 + RGB / HEX 输入代替梯度块
-        p.ramp.hidden = p.custom;
+        p.rampLabel.textContent = preset.main ? '主色 · ' + preset.main.name : '主色';
+        p.rampAuxLabel.textContent = preset.aux ? '辅助色 · ' + preset.aux.name : '辅助色';
+        // 色块梯度的基准色：预设 = 该方案的主色 / 辅助色；自定义 = 主色的浅色
+        p.ramp.hidden = false;
+        p.rampRow.hidden = false;
+        // 自定义是全色彩取色器，另给色相条 + RGB / HEX 输入
         p.hue.hidden = !p.custom;
         p.rgbBox.hidden = !p.custom;
         p.hexBox.hidden = !p.custom;
-        if (!p.custom) buildRamp(baseHex);
+        buildRamp(baseHex);
+        paintAuxRamp();
         paintPicker(true);
 
         // 先显示再测量，保证气泡按真实高度决定朝上还是朝下
@@ -719,6 +944,7 @@
         p.el.classList.add('is-open');
         positionPicker(anchorEl);
         p.el.style.visibility = '';
+        _openedAt = Date.now();
     }
 
     function closePicker() {
@@ -731,18 +957,34 @@
     // ===================== 应用主题 =====================
 
     /**
-     * 提交主题：存档后原地播放过渡动画，由它在"爆开"那一刻把新色落到页面上。
+     * 应用配色：存档后原地播放过渡动画，由它在"爆开"那一刻把新色落到页面上。
      * 全程不重载、不动 DOM —— 页面保持静止，只有那层过渡画布在动。
      */
-    function commitTheme(key, hex) {
+    function commitTheme(key, mainHex, auxHex) {
         if (_busy) return;
-        var pal = buildPalette(hex);
+        var theme = buildTheme(key, mainHex, auxHex);
         var oldRgb = readPrimaryRgb();
         _busy = true;
-        saveState({ key: key, hex: pal.hex });
+        saveTheme(theme);
 
-        playThemeBurst(oldRgb, pal.rgb, function () {
-            applyPalette(pal);
+        playThemeBurst(oldRgb, theme.pal.rgb, function () {
+            applyTheme(theme);
+            resetParticleThemeCache();
+            syncSelection();
+        }, function () {
+            _busy = false;
+        });
+    }
+
+    /** 恢复默认：删掉当前模式的存档、撤掉覆盖，回落到 css 默认配色 */
+    function resetTheme() {
+        if (_busy) return;
+        var oldRgb = readPrimaryRgb();
+        var target = isHiddenMode() ? HIDDEN_DEFAULT_RGB : hexToRgb(buildTheme(DEFAULT_KEY, presetOf(DEFAULT_KEY).main.hex, '').pal.hex);
+        _busy = true;
+        clearState();
+        playThemeBurst(oldRgb, target, function () {
+            clearPalette();
             resetParticleThemeCache();
             syncSelection();
         }, function () {
@@ -756,20 +998,19 @@
         var grid = document.getElementById('themeDiscGrid');
         if (grid) {
             grid.addEventListener('click', function (e) {
-                var btn = e.target.closest ? e.target.closest('.theme-disc') : null;
+                var btn = e.target.closest ? e.target.closest('.theme-scheme') : null;
                 if (!btn) return;
-                var key = btn.getAttribute('data-theme-key');
-                var preset = PRESETS.filter(function (x) { return x.key === key; })[0];
+                var preset = presetOf(btn.getAttribute('data-theme-key'));
                 if (!preset) return;
                 openPicker(btn, preset);
             });
         }
 
-        // 点击气泡外部关闭（色盘按钮自身除外，否则会被立即关掉）
+        // 点击气泡外部关闭（方案卡片自身除外，否则会被立即关掉）
         document.addEventListener('pointerdown', function (e) {
             if (!_picker || !_picker.el.classList.contains('is-open')) return;
             if (_picker.el.contains(e.target)) return;
-            if (e.target.closest && e.target.closest('.theme-disc')) return;
+            if (e.target.closest && e.target.closest('.theme-scheme')) return;
             closePicker();
         }, true);
 
@@ -779,9 +1020,15 @@
             }
         });
 
-        // 滚动 / 改变窗口尺寸后锚点会错位，直接收起更干净
+        // 恢复默认：清掉当前模式的存档，回到 css 的默认配色
+        var resetBtn = document.getElementById('themeResetBtn');
+        if (resetBtn) resetBtn.addEventListener('click', resetTheme);
+
+        // 滚动 / 改变窗口尺寸后锚点会错位，直接收起更干净；刚打开 400ms 内的滚动事件是点击前那下滚动的余波，不算
         window.addEventListener('scroll', function () {
-            if (_picker && _picker.el.classList.contains('is-open')) closePicker();
+            if (!_picker || !_picker.el.classList.contains('is-open')) return;
+            if (Date.now() - _openedAt < 400) return;
+            closePicker();
         }, true);
         window.addEventListener('resize', function () {
             if (_picker && _picker.el.classList.contains('is-open')) closePicker();
@@ -791,13 +1038,10 @@
     // ===================== 初始化 =====================
 
     function init() {
-        // 已保存过主题才写覆盖；否则保持 css 默认（正常霓虹粉 / 私密铜色）
-        var saved = loadState();
-        if (saved) {
-            applyPalette(buildPalette(saved.hex));
-        } else {
-            clearPalette();
-        }
+        // 已保存过配色才写覆盖；否则保持 css 默认（正常霓虹夜场 / 私密铜色）
+        var theme = savedTheme();
+        if (theme) applyTheme(theme);
+        else clearPalette();
         renderCard();
         bindGlobalEvents();
     }

@@ -29,7 +29,7 @@ var PARTICLE_CARD_SELECTOR = '#page-settings .dash-card';
 var PARTICLE_SWEEP_MS = 950;       // 消散时长（放慢：粒子悠长上飘，不再一闪而过）
 // 消散遮罩渐变的目标深色：与 index.html 的 #bootSplash 背景、--color-bg、.page-bg 保持同一个值，
 // 重载前后才能无缝接续。此处硬编码而非读 CSS 变量：启动占位在样式表之前就会用到它
-var PARTICLE_SWEEP_BG = '#000000';
+var PARTICLE_SWEEP_BG = '#0A0A0B';
 var PARTICLE_SWEEP_STEP = 6;       // 采样步长基准（px）：越小粒子越细密
 var PARTICLE_MAX = 6000;           // 粒子总数上限：采样步长会按卡片面积自适应放宽
 var PARTICLE_RISE = 58;            // 向上飘散高度基准（px）
@@ -109,6 +109,7 @@ if (_particleIncoming && !_bootSplashOwnsTransition) {
 }
 
 function _particleReducedMotion() {
+  if (window.LeLeMotion) return window.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
 }
 
@@ -617,9 +618,12 @@ function _domainDrawRing(ctx, center, radius, alpha) {
   ctx.restore();
 }
 
-// 中心字样：与首页标题同款（MapleMono + 玻璃白），额外叠一层粉色光晕
+// 中心 logo：圆角方块里的乐字 + 字标（brand-canvas.js，路径取自页面的品牌 sprite）；
+// 取不到 sprite 时退回旧的 MapleMono 文字
 function _domainDrawBrand(ctx, center, fontSize, scale, alpha) {
   if (alpha <= 0.01) return;
+  var brand = window.LeLeBrandCanvas;
+  if (brand && brand.draw(ctx, center.x, center.y, fontSize * 1.1, _themeRgbParts(), alpha, scale)) return;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(center.x, center.y);
@@ -862,7 +866,12 @@ function showPage(n) {
   // 粒子过渡（数据域切换重载）时跳过视图过渡：首帧直达已把设置页显示出来，
   // 再叠一层 cross-fade 会与粒子汇聚打架
   if (document.startViewTransition && !_particleIncoming) {
-    document.startViewTransition(_apply);
+    var transition = document.startViewTransition(_apply);
+    // 连着切页（或页面切到后台）时，上一次过渡会被浏览器中止，这几个 promise 会以 InvalidStateError 拒绝，
+    // 属于正常情况，不让它冒成「未处理的 Promise 错误」
+    ['ready', 'finished', 'updateCallbackDone'].forEach(function (key) {
+      if (transition && transition[key] && typeof transition[key].catch === 'function') transition[key].catch(function () {});
+    });
   } else {
     _apply();
   }
@@ -1049,7 +1058,7 @@ function loadAboutPageChangelog() {
       ct.appendChild(renderVersionHistory(entries));
     })
     .catch(function(e) {
-      ct.innerHTML = '<div class="bg-red-900/30 border border-red-800/50 rounded-lg p-4 text-center mt-4"><p class="text-red-400 text-sm">\u52a0\u8f7d\u66f4\u65b0\u65e5\u5fd7\u5931\u8d25</p></div>';
+      ct.innerHTML = '<p class="v2-error">\u66f4\u65b0\u65e5\u5fd7\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u518d\u8bd5</p>';
     });
 }
 
@@ -1063,10 +1072,10 @@ function parseChangelogMarkdown(md) {
       if (m) { cur.version = m[1]; cur.date = m[2]; }
     } else if (line.indexOf('- ') === 0 && cur) {
       var t = line.match(/- \[(.*?)\] (.*?)$/);
-      if (t) cur.content += '<p class="mb-1"><span class="text-green-400">[' + t[1] + ']</span> ' + t[2] + '</p>';
-      else cur.content += '<p class="mb-1">' + line.substring(2) + '</p>';
+      if (t) cur.content += '<p><span class="entry-tag">' + t[1] + '</span>' + t[2] + '</p>';
+      else cur.content += '<p>' + line.substring(2) + '</p>';
     } else if (line.trim() !== '' && cur) {
-      cur.content += '<p class="text-gray-400 text-sm mt-2">' + line + '</p>';
+      cur.content += '<p class="entry-note">' + line + '</p>';
     }
   });
   if (cur) entries.push(cur);
@@ -1074,7 +1083,7 @@ function parseChangelogMarkdown(md) {
 }
 
 function renderVersionHistory(entries) {
-  var html = '<div class="changelog-timeline max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">';
+  var html = '<div class="changelog-timeline">';
   entries.forEach(function(e, i) {
     var latest = i === 0;
     html += '<div class="changelog-entry"><div class="timeline-marker"><div class="timeline-dot' + (latest ? ' latest' : '') + '"></div><div class="timeline-line"></div></div>';
@@ -1086,10 +1095,7 @@ function renderVersionHistory(entries) {
   html += '</div>';
   var d = document.createElement('div');
   d.innerHTML = html;
-  var container = d.firstElementChild;
-  container.style.scrollbarWidth = 'thin';
-  container.style.scrollbarColor = '#4B5563 transparent';
-  return container;
+  return d.firstElementChild;
 }
 
 function openDisclaimerModal() {

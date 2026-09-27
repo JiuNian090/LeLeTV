@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>视频播放器</title>
+    <title>LeLeTV · 播放</title>
+    <meta name="theme-color" content="#0A0A0B">
     <meta name="description" content="LeLeTV 视频播放器">
     
     <!-- Favicon -->
-    <link rel="icon" href="/image/logo.png">
-    <link rel="apple-touch-icon" href="/image/logo-black.png">
+    <link rel="icon" href="/image/brand/leletv-favicon.svg?v=le2" type="image/svg+xml">
+    <link rel="icon" href="/image/brand/favicon-32.png?v=le2" sizes="32x32">
+    <link rel="apple-touch-icon" href="/image/brand/apple-touch-icon-180.png?v=le2">
     <link rel="manifest" href="/manifest.json">
     
-    <link rel="stylesheet" href="css/variables.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/output.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/styles.css?v=v3.6.5">
-    <link rel="stylesheet" href="css/player.css?v=v3.6.5">
+    <!-- 样式：变量与背景 → 通用组件 → 播放页 -->
+    <link rel="stylesheet" href="css/v2/tokens.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/base.css?v=v3.6.5">
+    <link rel="stylesheet" href="css/v2/player.css?v=v3.6.5">
     
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -32,6 +34,15 @@
                 d.setAttribute('data-hidden-mode', '1');
             }
         } catch (e) { /* localStorage 不可用时按正常模式渲染 */ }
+        try {
+            // 动态效果偏好：设置里强制开启 / 关闭时打到 <html> 上，css 与脚本据此放行或停掉动画
+            // 地址带 ?motion=on / off / auto 时先按它记下来（排查时一次性强制开启用）
+            var motionParam = new URLSearchParams(location.search).get('motion');
+            if (motionParam === 'on' || motionParam === 'off') localStorage.setItem('leletv_motion', motionParam);
+            else if (motionParam === 'auto') localStorage.removeItem('leletv_motion');
+            var motion = localStorage.getItem('leletv_motion');
+            if (motion === 'on' || motion === 'off') d.setAttribute('data-motion', motion);
+        } catch (e) { /* 忽略 */ }
 
         try {
             // 按数据域取已保存的主题（两个模式各存一套；没存过就保持 css 默认色）
@@ -81,154 +92,148 @@
             for (var i = 0; i < STOPS.length; i++) {
                 st.setProperty('--tw-pink-' + STOPS[i] + '-rgb', shade(LS[i]).rgb.join(' '));
             }
+            // 配色派生的其余变量（辅助色、字标色、logo 底色、按钮文字色）由 theme-system.js 算好存在存档里，
+            // 这里按名单回放；名单与 theme-system.js 的 EXTRA_VARS 一致
+            var vars = (JSON.parse(raw) || {}).vars;
+            var ALLOW = ['--v2-blush', '--v2-word', '--v2-aux', '--v2-aux-rgb', '--v2-glow-2', '--v2-tile', '--v2-on-accent', '--v2-bg'];
+            if (vars && typeof vars === 'object') {
+                for (var j = 0; j < ALLOW.length; j++) {
+                    var val = vars[ALLOW[j]];
+                    if (typeof val === 'string' && val.length < 64 && /^[#\w(),.\s%-]+$/.test(val)) st.setProperty(ALLOW[j], val);
+                }
+            }
         } catch (e) { /* 读取失败时回落到 css 默认主题色 */ }
     })();
 </script>
 </head>
-<body>
-    <!-- Aurora 极光背景 -->
-    <div id="auroraContainer" class="aurora-bg"></div>
+<body class="player-page">
+    <!-- 全站背景：三团缓慢漂移的径向光，参数见 css/v2/tokens.css -->
+    <div class="v2-glow" aria-hidden="true"><span class="g-main"></span><span class="g-blush"></span><span class="g-deep"></span></div>
     
-    <main class="container mx-auto px-4 py-4">
+    <main class="player-main">
         <div class="player-layout">
-            <!-- 左栏：视频播放区 -->
+            <!-- 左栏：播放器 -->
             <div class="player-layout-left">
                 <div id="playerContainer" class="player-container">
-                    <button data-action="go-home" class="player-back-btn" title="返回首页">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
+                    <button type="button" data-action="go-home" class="player-back-btn" aria-label="返回">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
                     </button>
 
-                    <div class="relative">
-                        <div id="player" class="player-placeholder">
-                        </div>
-                        
+                    <div class="player-stage">
+                        <div id="player" class="player-placeholder"></div>
+
                         <div class="error-container" id="error">
                             <div class="error-icon">
-                            <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                            </svg>
-                        </div>
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 8v4.5m0 3.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                            </div>
                             <div id="error-message">视频加载失败</div>
-                            <div class="error-message-sub">请尝试其他视频源或稍后重试</div>
-                            <button id="error-back-btn" class="error-back-btn" style="display:none;margin-top:16px">返回上一页</button>
+                            <div class="error-message-sub">可以在「线路切换」中换一个片源，或稍后重试。</div>
+                            <button type="button" id="error-back-btn" class="error-back-btn" style="display:none;margin-top:12px">返回上一页</button>
                         </div>
-                        
                     </div>
                 </div>
             </div>
 
-            <!-- 右栏：标题+详情 + 选集 + 资源信息 + 控制按钮 -->
+            <!-- 右栏：标题与详情 → 选集 → 线路切换 → 操作 -->
             <div class="player-layout-right">
-                <!-- 视频标题 + 详情（合并） -->
-                <div class="player-detail-info" id="playerDetailInfo">
+                <section class="player-panel player-detail-info" id="playerDetailInfo">
                     <div class="detail-title-row">
-                        <h2 class="player-right-title" id="videoTitleRight">加载中...</h2>
-                        <div class="detail-toggle-header" data-action="toggle-detail">
+                        <h1 class="player-right-title" id="videoTitleRight">正在加载</h1>
+                        <div class="detail-toggle-header" data-action="toggle-detail" role="button" tabindex="0" aria-label="展开或收起详情">
                             <span class="detail-desc-label">详情</span>
-                            <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                            <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                         </div>
                     </div>
                     <div class="detail-meta-container" id="detailMetaContainer"></div>
                     <div class="detail-desc-section" id="detailDescSection">
                         <div class="detail-collapse-body" id="detailDescBody"></div>
                     </div>
-                </div>
+                </section>
 
-                <!-- 选集区域（可折叠） -->
-                <div class="player-container player-right-item episode-section" id="episodeSection">
+                <section class="player-panel player-container player-right-item episode-section" id="episodeSection">
                     <div class="detail-toggle-header" data-action="toggle-episodes">
                         <div class="episode-title-group">
-                            <h3 class="episode-section-title">选集</h3>
-                            <button data-action="toggle-episode-order" class="episode-order-btn" title="切换排序">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" id="orderIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <h2 class="episode-section-title">选集</h2>
+                            <button type="button" data-action="toggle-episode-order" class="episode-order-btn" aria-label="切换选集排序">
+                                <svg id="orderIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <line x1="3" y1="6" x2="21" y2="6"/><polyline points="17 2 21 6 17 10"/>
                                     <line x1="21" y1="18" x2="3" y2="18"/><polyline points="7 14 3 18 7 22"/>
                                 </svg>
                             </button>
                         </div>
                         <div class="episode-header-right">
-                            <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                            <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                         </div>
                     </div>
                     <div class="episode-collapse-body">
                         <div class="episode-grid" id="episodesGrid">
-                            <div class="grid gap-2" id="episodesList">
-                                <!-- 集数将在这里动态加载 -->
-                                <div class="col-span-full text-center text-gray-400 py-8">加载中...</div>
+                            <div id="episodesList">
+                                <div class="episode-empty">正在加载选集</div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- 线路切换（折叠面板，展开后扫描当前数据域的全部来源） -->
-                <div class="player-container player-right-item resource-collapse collapsed" id="resourceSection">
+                <section class="player-panel player-container player-right-item resource-collapse collapsed" id="resourceSection">
                     <div class="detail-toggle-header resource-collapse-header" data-action="toggle-resource-list">
                         <div class="resource-collapse-title-group">
-                            <h3 class="resource-collapse-title">线路切换</h3>
+                            <h2 class="resource-collapse-title">线路切换</h2>
                             <span class="resource-collapse-source" id="resourceCurrentSource"></span>
                             <span class="resource-collapse-count" id="resourceSourceCount">· 当前集共 - 个来源</span>
                         </div>
-                        <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
+                        <svg class="detail-toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </div>
                     <div class="resource-collapse-body">
                         <div class="resource-source-grid" id="resourceSourceGrid">
-                            <div class="resource-source-hint">展开后开始扫描全部线路…</div>
+                            <div class="resource-source-hint">展开后开始检测全部线路</div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- 控制按钮 -->
-                <div class="player-container player-right-item">
-                    <div class="flex items-center justify-start gap-3 control-buttons-container">
-                        <!-- 自动连播开关 -->
-                        <div class="flex items-center gap-1 autoplay-container control-btn px-3 py-1 rounded-lg justify-center bg-[rgba(255,255,255,0.02)] border border-[#2a2a2a] hover:bg-[rgba(255,255,255,0.05)] transition">
-                            <span class="text-gray-400 text-sm whitespace-nowrap">自动连播</span>
-                            <label class="switch">
+                <section class="player-panel player-container player-right-item">
+                    <div class="player-actions control-buttons-container">
+                        <label class="player-action autoplay-container control-btn" for="autoplayToggle">
+                            <span>自动连播</span>
+                            <span class="switch">
                                 <input type="checkbox" id="autoplayToggle">
                                 <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <!-- 复制链接按钮 -->
-                        <button data-action="copy-links" title="复制播放链接"
-                                class="flex items-center gap-1.5 control-btn px-3 py-1 rounded-lg justify-center bg-[rgba(255,255,255,0.02)] border border-[#2a2a2a] hover:bg-[rgba(255,255,255,0.05)] transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                            </svg>
-                            <span class="text-gray-400 text-sm whitespace-nowrap">复制链接</span>
+                            </span>
+                        </label>
+                        <button type="button" data-action="copy-links" class="player-action control-btn">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 15 15 9m-4-3.5 1.2-1.2a4 4 0 0 1 5.66 5.66L16.6 11.2M7.4 12.8l-1.26 1.26a4 4 0 0 0 5.66 5.66L13 18.5"/></svg>
+                            <span>复制链接</span>
+                        </button>
+                        <button type="button" id="lightsToggle" class="player-action control-btn" aria-pressed="false" title="关灯：整页压黑，只留播放器；点黑色区域或按 Esc 开灯">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.4 10.9c.7.5 1.1 1.3 1.2 2.1h4.4c.1-.8.5-1.6 1.2-2.1A6 6 0 0 0 12 3Z"/></svg>
+                            <span>关灯</span>
                         </button>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </main>
+    <!-- 关灯遮罩：压黑整页，只留播放器 -->
+    <div id="lightsOverlay" class="lights-overlay" aria-hidden="true"></div>
 
     <!-- 添加快捷键提示元素 -->
     <div class="shortcut-hint" id="shortcutHint">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="shortcutIcon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" id="shortcutIcon" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
         <span id="shortcutText"></span>
     </div>
 
-    <!-- 统一的提示框 -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 text-white px-5 py-2.5 shadow-lg transform transition-all duration-300 opacity-0 scale-50 z-50 pointer-events-none">
+    <!-- 提示条 -->
+    <div id="toast" class="v2-toast" role="status" aria-live="polite">
+        <span class="v2-toast-dot" aria-hidden="true"></span>
         <p id="toastMessage"></p>
     </div>
 
-    <!-- 添加 loading 提示框 -->
-    <div id="loading" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[10001]">
-        <div class="bg-[#111] p-8 rounded-lg border border-[var(--color-border-default)] flex items-center space-x-4">
-            <div class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-white text-lg">加载中...</p>
+    <!-- 加载层 -->
+    <div id="loading" class="v2-overlay hidden" role="status" aria-live="polite">
+        <div class="v2-loading-card">
+            <span class="v2-spinner" aria-hidden="true"></span>
+            <p>正在加载</p>
         </div>
     </div>
 
@@ -239,12 +244,15 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <!-- 邀请码验证检查：未登录直接跳回首页 -->
+    <!-- 邀请码验证检查：未登录直接跳回首页。
+         本地版（服务端没有配置 Worker 地址，占位符被替换成空串）没有邀请码后端，看首页的本地放行记录 -->
     <script>
         (function() {
+            const workerUrl = "{{TMDB_WORKER_URL}}";
             const inviteAuth = localStorage.getItem('leletv_invite_auth');
             const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
-            if (!inviteAuth && !isAdmin) {
+            const localPassed = !workerUrl && localStorage.getItem('leletv_local_invite_passed') === '1';
+            if (!inviteAuth && !isAdmin && !localPassed) {
                 window.location.replace('/');
             }
         })();
@@ -252,8 +260,8 @@
     
     <script src="libs/hls.min.js?v=v3.6.5" defer crossorigin="anonymous"></script>
     <script src="libs/artplayer.min.js?v=v3.6.5" defer crossorigin="anonymous"></script>
-    <script src="dist/leletv-core.dlmsiv.js?v=v3.6.5" defer></script>
-    <script src="dist/leletv-player.d406y8.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-core.4yft9c.js?v=v3.6.5" defer></script>
+    <script src="dist/leletv-player.vivihl.js?v=v3.6.5" defer></script>
 
     <script>
         // 创建全局环境变量对象
@@ -262,6 +270,7 @@
         // 注入服务器端环境变量 (将由服务器端替换)
         // HIDDENKEY 变量将在这里被服务器端注入
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
+        window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
         window.__LELETV_VERSION__ = "v3.6.5";
 
         // 确保首页按钮功能正常

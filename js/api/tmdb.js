@@ -288,7 +288,7 @@ function renderYearFilter() {
       `).join('')}
       ${hasHiddenYears ? `
         <button class="tmdb-genre-btn year-toggle-btn" data-year-toggle title="${expanded ? '收起多余的年份标签' : '展开全部年份标签'}">
-          ${expanded ? '收起年份' : `更多年份...`}
+          ${expanded ? '收起' : '更多年份'}
         </button>
       ` : ''}
     </div>
@@ -331,7 +331,7 @@ function renderTmdbFilters() {
           `).join('')}
           ${GENRE_MAP[getEffectiveType(type)].length > 8 ? `
             <button class="tmdb-genre-btn genre-toggle-btn" data-genre-toggle title="${TMDB_STATE._genreExpanded ? '收起多余的类型标签' : '展开全部类型标签'}">
-              ${TMDB_STATE._genreExpanded ? '收起类型' : '更多类型...'}
+              ${TMDB_STATE._genreExpanded ? '收起' : '更多类型'}
             </button>
           ` : ''}
         </div>
@@ -479,12 +479,10 @@ async function loadTmdbResults() {
   const container = document.getElementById('tmdb-results');
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="tmdb-loading">
-      <div class="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-      <span class="text-gray-400 ml-3">加载中...</span>
-    </div>
-  `;
+  // 加载中：与结果同形状的海报骨架
+  container.innerHTML = typeof generateSkeletonCards === 'function'
+    ? generateSkeletonCards(18)
+    : '<div class="v2-state-inline"><span class="v2-spinner"></span>正在加载</div>';
 
   try {
     const type = TMDB_STATE.type;
@@ -562,11 +560,13 @@ async function loadTmdbResults() {
     restoreTmdbScroll();
   } catch (err) {
     console.error('TMDB 加载失败:', err);
+    const safeMessage = String(err && err.message || '未知错误').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     container.innerHTML = `
-      <div class="col-span-full text-center py-12">
-        <div class="text-red-400 text-lg mb-2">加载失败</div>
-        <div class="text-gray-500 text-sm">${err.message}，请检查 TMDB API Key 是否正确配置</div>
-        <button data-action="load-tmdb-results" class="mt-4 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-colors">重试</button>
+      <div class="v2-state is-error">
+        <span class="v2-state-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 8v4.5m0 3.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>
+        <h3>片单加载失败</h3>
+        <p>${safeMessage}。请检查网络，或确认 TMDB API Key 配置正确。</p>
+        <button type="button" data-action="load-tmdb-results" class="v2-btn v2-btn--secondary v2-btn--sm">重试</button>
       </div>
     `;
   } finally {
@@ -580,9 +580,10 @@ function renderTmdbCards(items) {
 
   if (!items || items.length === 0) {
     container.innerHTML = `
-      <div class="col-span-full text-center py-12">
-        <div class="text-gray-400 text-lg">没有找到相关内容</div>
-        <div class="text-gray-500 text-sm mt-2">请尝试调整筛选条件</div>
+      <div class="v2-state">
+        <span class="v2-state-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5L4 5Z"/></svg></span>
+        <h3>没有符合条件的影片</h3>
+        <p>放宽类型、地区或年份等筛选条件后再试。</p>
       </div>
     `;
     return;
@@ -615,31 +616,20 @@ function renderTmdbCards(items) {
     const card = document.createElement('div');
     card.className = 'tmdb-card';
 
+    const meta = [year, genresList.join(' / ')].filter(Boolean).join(' · ');
+    // 片名首字占位垫在下面，封面到了再淡入覆盖
+    const posterHtml = `<div class="v2-poster-empty"><b>${safeTitle.charAt(0) || '·'}</b><span>${safeTitle}</span></div>`
+      + (posterPath ? `<img src="${posterPath}" alt="" data-title="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="_cardImgFallback(this)">` : '');
+    const ratingHtml = item.vote_count >= 20 && item.vote_average ? `<span class="v2-badge">★ ${voteAverage}</span>` : '';
+    const langHtml = langLabel ? `<span class="v2-lang">${langLabel.label}</span>` : '';
+
+    // 整张卡片是按钮：点击后按片名去各片源检索（沿用 data-action="tmdb-search-video"）
     card.innerHTML = `
-      <div class="tmdb-card-inner" data-action="tmdb-search-video" data-title="${safeTitle}" data-genres="${safeGenres}">
-        <div class="tmdb-card-poster">
-          ${posterPath
-            ? `<img src="${posterPath}" alt="${safeTitle}" loading="lazy" class="tmdb-card-img" onerror="this.parentElement.innerHTML = '<div class=\\'tmdb-card-placeholder\\'><svg class=\\'w-12 h-12\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'1.5\\' d=\\'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z\\'></path></svg><span class=\\'text-xs text-gray-500 mt-2\\'>${safeTitle}</span></div>'">
-            <div class="tmdb-card-rating">★ ${voteAverage}</div>
-            ${genresList.length ? `<div class="tmdb-card-genres">${genresList.map(g => `<span>${g}</span>`).join('')}</div>` : ''}`
-            : `<div class="tmdb-card-placeholder">
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-                <span class="text-xs text-gray-500 mt-2">${safeTitle}</span>
-              </div>`
-          }
-          ${langLabel ? `<div class="tmdb-card-lang">${langLabel.label}</div>` : ''}
-        </div>
-        <div class="tmdb-card-body">
-          <div class="tmdb-card-meta">
-            <span class="tmdb-card-year">${year}</span>
-            ${item.vote_count ? `<span class="tmdb-card-votes">${item.vote_count} 票</span>` : ''}
-          </div>
-          <div class="tmdb-card-title" title="${safeTitle}">${safeTitle}</div>
-          <div class="tmdb-card-overview">${safeOverview}</div>
-        </div>
-      </div>
+      <button type="button" class="v2-pcard tmdb-card-inner" data-action="tmdb-search-video" data-title="${safeTitle}" data-genres="${safeGenres}" aria-label="检索 ${safeTitle}" title="${safeOverview}">
+        <div class="v2-poster">${posterHtml}${ratingHtml}${langHtml}</div>
+        <h3>${safeTitle}</h3>
+        <p>${meta || '&nbsp;'}</p>
+      </button>
     `;
 
     fragment.appendChild(card);
@@ -685,19 +675,15 @@ function renderTmdbPagination() {
 
   container.innerHTML = `
     <div class="tmdb-pagination-inner">
-      <button class="tmdb-page-btn${current <= 1 ? ' disabled' : ''}" data-page="${current - 1}"${current <= 1 ? ' disabled' : ''}>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
+      <button class="tmdb-page-btn${current <= 1 ? ' disabled' : ''}" data-page="${current - 1}"${current <= 1 ? ' disabled' : ''} aria-label="上一页">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
       </button>
       ${getPageButtons().map(p => {
-        if (p === 'ellipsis') return '<span class="tmdb-page-ellipsis">...</span>';
+        if (p === 'ellipsis') return '<span class="tmdb-page-ellipsis">…</span>';
         return `<button class="tmdb-page-btn${p === current ? ' active' : ''}" data-page="${p}">${p}</button>`;
       }).join('')}
-      <button class="tmdb-page-btn${current >= total ? ' disabled' : ''}" data-page="${current + 1}"${current >= total ? ' disabled' : ''}>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+      <button class="tmdb-page-btn${current >= total ? ' disabled' : ''}" data-page="${current + 1}"${current >= total ? ' disabled' : ''} aria-label="下一页">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
       </button>
     </div>
   `;
@@ -738,6 +724,17 @@ function tmdbSearchVideo(title, genres) {
     input.value = safeTitle;
     setTimeout(() => search(), 300);
   }
+}
+
+/** 首页「更多」入口：切到分类页并预置类型（电影 / 电视剧 / 动漫 / 综艺），筛选按该类型的默认值重置 */
+function openTmdbCategory(type) {
+  if (!SORT_OPTIONS[type]) type = 'movie';
+  TMDB_STATE.type = type;
+  resetTmdbFilters();
+  TMDB_STATE.isLoaded = false;   // 分类页即使本会话打开过，也重新走一遍筛选渲染与加载
+  saveTmdbState();
+  try { sessionStorage.removeItem(TMDB_SCROLL_KEY); } catch (e) { /* 忽略 */ }
+  if (typeof switchPage === 'function') switchPage('category');
 }
 
 function resetTmdbCategory() {

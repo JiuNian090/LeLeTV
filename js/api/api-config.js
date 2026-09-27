@@ -15,31 +15,31 @@ function verifyAdminPassword() {
         // 检查是否设置了私密密码
         const adminPasswordHash = window.__ENV__ && window.__ENV__.HIDDENKEY;
         if (!adminPasswordHash) {
-            showToast('未设置私密内容密码，无法修改私密内容过滤设置', 'error');
+            showToast('未配置私密模式的访问密码，无法切换', 'error');
             resolve(false);
             return;
         }
 
         const overlay = showModal({
-            title: '私密内容验证',
+            title: '私密模式',
             // 点右上角 × 或点击遮罩关闭时也必须 resolve(false)。否则调用方的 await 会一直挂起，
             // 开关视觉停留在「开」（存储未写入，刷新后才回退）
             onClose: () => resolve(false),
             content: (body) => {
                 body.innerHTML = `
-                    <p class="text-gray-300 mb-4">请输入私密密码以解锁🔓私密🈲内容过滤设置</p>
-                    <input type="password" id="adminPasswordInput" class="w-full bg-[#111] border border-[var(--color-border-default)] text-white px-4 py-3 rounded-lg focus:outline-none focus:border-white transition-colors" placeholder="私密密码...">
-                    <div class="mt-4 flex space-x-4">
-                        <button id="adminPasswordSubmitBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">确认</button>
-                        <button id="adminPasswordCancelBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">取消</button>
+                    <div class="v2-field">
+                        <p class="v2-confirm-text">切换到私密片源前，请输入访问密码。</p>
+                        <input type="password" id="adminPasswordInput" class="v2-input" placeholder="访问密码" autocomplete="current-password">
+                        <p id="adminPasswordError" class="v2-error hidden" role="alert"></p>
                     </div>
-                    <p id="adminPasswordError" class="text-red-500 mt-2 hidden">私密密码错误，请重试，试试password反过来！</p>
+                    <div class="v2-dialog-foot">
+                        <button type="button" id="adminPasswordCancelBtn" class="v2-btn v2-btn--secondary">取消</button>
+                        <button type="button" id="adminPasswordSubmitBtn" class="v2-btn v2-btn--primary">确认</button>
+                    </div>
                 `;
             }
         });
 
-        // 提升 z-index 使其高于其他弹窗
-        overlay.style.zIndex = '70';
 
         const passwordInput = overlay.querySelector('#adminPasswordInput');
         const submitBtn = overlay.querySelector('#adminPasswordSubmitBtn');
@@ -54,7 +54,7 @@ function verifyAdminPassword() {
         const verifyPassword = async () => {
             const inputPassword = passwordInput.value.trim();
             if (!inputPassword) {
-                errorMsg.textContent = '请输入私密内容密码';
+                errorMsg.textContent = '请输入访问密码';
                 errorMsg.classList.remove('hidden');
                 return;
             }
@@ -66,7 +66,7 @@ function verifyAdminPassword() {
                     overlay.remove();
                     resolve(true);
                 } else {
-                    errorMsg.textContent = '私密内容密码错误，请重试';
+                    errorMsg.textContent = '密码不正确，请重试';
                     errorMsg.classList.remove('hidden');
                     passwordInput.select();
                 }
@@ -131,13 +131,13 @@ function initAPICheckboxes() {
     // 标题与可见源都由当前数据域决定：正常域「普通资源」/ 隐藏域「私密资源采集站」
     if (isHiddenContentMode()) {
         normalTitle.className = 'api-group-title hidden';
-        normalTitle.innerHTML = `私密资源采集站 <span class="hidden-warning">
+        normalTitle.innerHTML = `私密片源 <span class="hidden-warning">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
         </span>`;
     } else {
-        normalTitle.textContent = '普通资源';
+        normalTitle.textContent = '全部片源';
     }
     normaldiv.appendChild(normalTitle);
 
@@ -148,16 +148,19 @@ function initAPICheckboxes() {
 
         const checked = selectedAPIs.includes(apiKey);
 
-        const checkbox = document.createElement('div');
-        checkbox.className = 'flex items-center';
+        // 一行一个小开关：input 只负责状态，开关本体是后面的 span，名字在最右
+        const checkbox = document.createElement('label');
+        checkbox.className = 'v2-src-item';
+        checkbox.setAttribute('for', `api_${apiKey}`);
         checkbox.innerHTML = `
-            <input type="checkbox" id="api_${apiKey}" 
-                   class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333]" 
-                   ${checked ? 'checked' : ''} 
+            <input type="checkbox" id="api_${apiKey}" class="v2-switch-input"
+                   ${checked ? 'checked' : ''}
                    data-api="${apiKey}"
-                       data-role="api-toggle">
-            <label for="api_${apiKey}" class="ml-1 text-xs text-gray-400 truncate">${api.name}</label>
+                   data-role="api-toggle">
+            <span class="v2-switch" aria-hidden="true"></span>
+            <span class="v2-src-name"></span>
         `;
+        checkbox.querySelector('.v2-src-name').textContent = api.name;
         normaldiv.appendChild(checkbox);
 
         checkbox.querySelector('[data-role="api-toggle"]').addEventListener('change', function () {
@@ -260,36 +263,37 @@ function renderCustomAPIsList() {
         .filter(({ api }) => hiddenMode ? !!api.isHidden : !api.isHidden);
 
     if (visible.length === 0) {
-        container.innerHTML = `<p class="text-xs text-gray-500 text-center my-2">${hiddenMode ? '未添加私密自定义API' : '未添加自定义API'}</p>`;
+        container.innerHTML = `<p class="v2-empty-line">${hiddenMode ? '尚未添加私密资源站' : '尚未添加自定义资源站'}</p>`;
         return;
     }
 
     container.innerHTML = '';
     visible.forEach(({ api, index }) => {
         const apiItem = document.createElement('div');
-        apiItem.className = 'flex items-center justify-between p-1 mb-1 bg-[#222] rounded';
-        const textColorClass = api.isHidden ? 'text-pink-400' : 'text-white';
-        const hiddenTag = api.isHidden ? '<span class="text-xs text-pink-400 mr-1">(18+)</span>' : '';
-        // 新增 detail 地址显示
-        const detailLine = api.detail ? `<div class="text-xs text-gray-400 truncate">detail: ${api.detail}</div>` : '';
+        apiItem.className = 'v2-custom-api';
+        const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const hiddenTag = api.isHidden ? '<em>私密</em>' : '';
         apiItem.innerHTML = `
-            <div class="flex items-center flex-1 min-w-0">
-                <input type="checkbox" id="custom_api_${index}" 
-                       class="form-checkbox h-3 w-3 text-blue-600 mr-1 ${api.isHidden ? 'api-hidden' : ''}" 
-                       ${selectedAPIs.includes('custom_' + index) ? 'checked' : ''} 
+            <label class="v2-switch-wrap" for="custom_api_${index}">
+                <input type="checkbox" id="custom_api_${index}"
+                       class="v2-switch-input ${api.isHidden ? 'api-hidden' : ''}"
+                       ${selectedAPIs.includes('custom_' + index) ? 'checked' : ''}
                        data-custom-index="${index}"
-                       data-role="api-toggle">
-                <div class="flex-1 min-w-0">
-                    <div class="text-xs font-medium ${textColorClass} truncate">
-                        ${hiddenTag}${api.name}
-                    </div>
-                    <div class="text-xs text-gray-500 truncate">${api.url}</div>
-                    ${detailLine}
-                </div>
+                       data-role="api-toggle" aria-label="启用 ${esc(api.name)}">
+                <span class="v2-switch" aria-hidden="true"></span>
+            </label>
+            <div class="v2-custom-api-info">
+                <div class="v2-custom-api-name">${hiddenTag}${esc(api.name)}</div>
+                <div class="v2-custom-api-url" title="${esc(api.url)}">${esc(api.url)}</div>
+                ${api.detail ? `<div class="v2-custom-api-url" title="${esc(api.detail)}">详情接口：${esc(api.detail)}</div>` : ''}
             </div>
-            <div class="flex items-center">
-                <button class="text-blue-500 hover:text-blue-700 text-xs px-1" data-action="edit-custom-api" data-index="${index}">✎</button>
-                <button class="text-red-500 hover:text-red-700 text-xs px-1" data-action="remove-custom-api" data-index="${index}">✕</button>
+            <div class="v2-custom-api-actions">
+                <button type="button" class="v2-icon-btn" data-action="edit-custom-api" data-index="${index}" aria-label="编辑">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16.86 4.49 2.65 2.65M4 20l3.5-.9 11.3-11.3a1.87 1.87 0 0 0-2.65-2.65L4.85 16.45 4 20Z"/></svg>
+                </button>
+                <button type="button" class="v2-icon-btn is-danger" data-action="remove-custom-api" data-index="${index}" aria-label="删除">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14M10 11v6m4-6v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
             </div>
         `;
         container.appendChild(apiItem);
@@ -314,8 +318,8 @@ function editCustomApi(index) {
         form.classList.remove('hidden');
         const buttonContainer = form.querySelector('div:last-child');
         buttonContainer.innerHTML = `
-            <button data-action="update-custom-api" data-index="${index}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">更新</button>
-            <button data-action="cancel-edit-custom-api" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>
+            <button type="button" data-action="cancel-edit-custom-api" class="v2-btn v2-btn--secondary v2-btn--sm">取消</button>
+            <button type="button" data-action="update-custom-api" data-index="${index}" class="v2-btn v2-btn--primary v2-btn--sm">保存</button>
         `;
     }
 }
@@ -331,11 +335,11 @@ function updateCustomApi(index) {
     let url = urlInput.value.trim();
     const detail = detailInput ? detailInput.value.trim() : '';
     if (!name || !url) {
-        showToast('请输入API名称和链接', 'warning');
+        showToast('请填写名称和接口地址', 'warning');
         return;
     }
     if (!/^https?:\/\/.+/.test(url)) {
-        showToast('API链接格式不正确，需以http://或https://开头', 'warning');
+        showToast('接口地址需以 http:// 或 https:// 开头', 'warning');
         return;
     }
     if (url.endsWith('/')) url = url.slice(0, -1);
@@ -350,7 +354,7 @@ function updateCustomApi(index) {
     if (detailInput) detailInput.value = '';
     if (isHiddenInput) isHiddenInput.checked = false;
     document.getElementById('addCustomApiForm').classList.add('hidden');
-    showToast('已更新自定义API: ' + name, 'success');
+    showToast('已保存：' + name, 'success');
 }
 
 // 取消编辑自定义API
@@ -374,8 +378,8 @@ function restoreAddCustomApiButtons() {
     const form = document.getElementById('addCustomApiForm');
     const buttonContainer = form.querySelector('div:last-child');
     buttonContainer.innerHTML = `
-        <button data-action="add-custom-api" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">添加</button>
-        <button data-action="cancel-add-custom-api" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>
+        <button type="button" data-action="cancel-add-custom-api" class="v2-btn v2-btn--secondary v2-btn--sm">取消</button>
+        <button type="button" data-action="add-custom-api" class="v2-btn v2-btn--primary v2-btn--sm">添加</button>
     `;
 }
 
@@ -461,15 +465,15 @@ function addCustomApi() {
     let url = urlInput.value.trim();
     const detail = detailInput ? detailInput.value.trim() : '';
     if (!name || !url) {
-        showToast('请输入API名称和链接', 'warning');
+        showToast('请填写名称和接口地址', 'warning');
         return;
     }
     if (!/^https?:\/\/.+/.test(url)) {
-        showToast('API链接格式不正确，需以http://或https://开头', 'warning');
+        showToast('接口地址需以 http:// 或 https:// 开头', 'warning');
         return;
     }
     if (url === 'https://xxx.example.com/api.php/provide/vod/') {
-        showToast('请将示例链接替换为实际的API地址', 'warning');
+        showToast('请把示例地址替换为实际的接口地址', 'warning');
         return;
     }
     if (url.endsWith('/')) {
@@ -491,7 +495,7 @@ function addCustomApi() {
     if (detailInput) detailInput.value = '';
     if (isHiddenInput) isHiddenInput.checked = false;
     document.getElementById('addCustomApiForm').classList.add('hidden');
-    showToast('已添加自定义API: ' + name, 'success');
+    showToast('已添加：' + name, 'success');
 }
 
 // 移除自定义API
@@ -530,5 +534,5 @@ function removeCustomApi(index) {
     // 重新检查隐藏API选中状态
     checkHiddenAPIsSelected();
 
-    showToast('已移除自定义API: ' + apiName, 'info');
+    showToast('已删除：' + apiName, 'info');
 }

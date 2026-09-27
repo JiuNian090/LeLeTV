@@ -592,11 +592,15 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
 // 拦截API请求
 (function() {
     const originalFetch = window.fetch;
-    
+    const CLIENT_API_PATHS = ['/api/search', '/api/detail'];
+
     window.fetch = async function(input, init) {
-        const requestUrl = typeof input === 'string' ? new URL(input, window.location.origin) : input.url;
-        
-        if (requestUrl.pathname.startsWith('/api/')) {
+        const requestUrl = typeof input === 'string'
+            ? new URL(input, window.location.origin)
+            : (input instanceof URL ? input : new URL(input.url, window.location.origin));
+
+        // 只拦截由前端自己处理的接口；/api/tmdb、/api/version 等交给本地服务端
+        if (requestUrl.origin === window.location.origin && CLIENT_API_PATHS.includes(requestUrl.pathname)) {
             try {
                 const data = await handleApiRequest(requestUrl);
                 return new Response(data, {

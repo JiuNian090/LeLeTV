@@ -1,0 +1,1334 @@
+/* LeLeTV v2 · 导航与首页
+   类名统一 v2- 前缀；需要覆盖旧规则的地方用「旧类名 + v2 类名」提高优先级，不改旧样式文件。 */
+
+/* ============ 导航 ============ */
+/* 毛玻璃画在 ::before 上：导航本身不能带 backdrop-filter，否则手机底部标签栏（position: fixed）会以导航为定位基准 */
+.top-nav-bar.v2-nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--v2-z-nav);
+    isolation: isolate;
+    padding: 0;
+    background: transparent;
+    border-bottom: 1px solid var(--v2-line);
+}
+
+.top-nav-bar.v2-nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(10, 10, 11, 0.72);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+}
+
+.v2-nav .nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    max-width: calc(var(--v2-max) + var(--v2-gutter) * 2);
+    height: 64px;
+    margin: 0 auto;
+    padding: 0 var(--v2-gutter);
+}
+
+.v2-nav .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* 品牌组合：圆角方块里放「Le」图形标（主色，横版 432.4×326.3），右边接 leleTV 字标（辅助色派生的字标色，756.5×204.5）。
+   尺寸只看 --lockup（方块边长），字标高度、间距按比例跟着走 */
+.v2-lockup {
+    --lockup: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--lockup) * 0.3);
+}
+
+.v2-brand-tile {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--lockup);
+    height: var(--lockup);
+    border-radius: calc(var(--lockup) * 0.29);
+    background: var(--v2-tile);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 16px -8px rgba(var(--v2-accent-rgb), 0.55);
+}
+
+.v2-mark {
+    display: block;
+    fill: currentColor;
+    color: var(--v2-accent);
+}
+
+.v2-brand-tile .v2-mark {
+    width: calc(var(--lockup) * 0.7);
+    height: calc(var(--lockup) * 0.528);
+}
+
+.v2-brand-word {
+    display: block;
+    flex: none;
+    height: calc(var(--lockup) * 0.4);
+    width: calc(var(--lockup) * 1.48);
+    fill: currentColor;
+    color: var(--v2-word);
+}
+
+.v2-brand {
+    height: 40px;
+    border-radius: var(--v2-r-s);
+    transition: opacity var(--v2-dur) var(--v2-ease);
+}
+
+.v2-brand:hover {
+    opacity: 0.85;
+}
+
+.v2-nav .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    border: 0;
+    background: transparent;
+    white-space: nowrap;
+    cursor: pointer;
+    gap: 8px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: var(--v2-r-s);
+    color: var(--v2-t2);
+    font-size: 14px;
+    font-weight: 500;
+    transform: none;
+    transition: color var(--v2-dur) var(--v2-ease), background-color var(--v2-dur) var(--v2-ease);
+}
+
+.v2-nav .nav-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+@media (hover: hover) {
+    .v2-nav .nav-btn:hover {
+        color: var(--v2-t1);
+        background: rgba(255, 255, 255, 0.05);
+        transform: none;
+    }
+}
+
+@media (hover: none) {
+    .v2-nav .nav-btn:hover:not(.active) {
+        color: var(--v2-t2);
+        background: transparent;
+    }
+}
+
+.v2-nav .nav-btn.active {
+    color: var(--v2-t1);
+    background: rgba(255, 255, 255, 0.08);
+    transform: none;
+}
+
+.v2-nav .nav-btn.active::after {
+    display: none;
+}
+
+.v2-nav .nav-btn.active svg {
+    color: var(--v2-accent);
+}
+
+.v2-nav .nav-btn:active {
+    transform: scale(0.97);
+}
+
+/* 导航栏的迷你搜索：平时只有一个图标按钮，点开后输入框向左展开，右边的导航项不动 */
+/* 搜索入口在导航项左边、靠右排：输入框往左展开，占的是中间的空白，导航项不动 */
+.nav-search {
+    display: flex;
+    align-items: center;
+    margin: 0 0 0 auto;
+}
+
+.v2-nav .nav-search-btn {
+    width: 38px;
+    justify-content: center;
+    padding: 0;
+}
+
+.nav-search-input {
+    width: 0;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--v2-t1);
+    font: inherit;
+    font-size: 14px;
+    opacity: 0;
+    outline: none;
+    transition: width 0.26s var(--v2-ease), opacity 0.2s ease, padding 0.26s var(--v2-ease), margin 0.26s var(--v2-ease), border-color var(--v2-dur) var(--v2-ease);
+}
+
+.nav-search-input::placeholder {
+    color: var(--v2-t3);
+}
+
+.nav-search-input::-webkit-search-cancel-button,
+.nav-search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+}
+
+.nav-search.is-open .nav-search-input {
+    width: clamp(160px, 22vw, 260px);
+    margin-right: 2px;
+    padding: 0 12px;
+    border-color: var(--v2-line-2);
+    opacity: 1;
+}
+
+.nav-search.is-open .nav-search-input:focus {
+    border-color: rgba(var(--v2-accent-rgb), 0.6);
+}
+
+.v2-nav .nav-search.is-open .nav-search-btn {
+    color: var(--v2-t1);
+}
+
+.v2-nav .nav-search.is-open .nav-search-btn svg {
+    color: var(--v2-accent);
+}
+
+/* ============ 首页骨架 ============ */
+/* 首页不走旧主容器的 1280px 限宽：文字区块各自用 .v2-wrap 收窄，聚合动效铺满整个视口宽度 */
+.main-container[data-page="home"] {
+    max-width: none;
+    padding: 0;
+}
+
+.home-layout.v2-home {
+    --hub-s: 1;                 /* 聚合动效的缩放比，按断点改；标题区也按它算首屏留白 */
+    display: grid;
+    /* 重置旧 .home-layout 的 flex 居中：justify-content: center 会让网格列按内容收缩 */
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+    align-items: start;
+    min-height: 0;
+    gap: var(--v2-s9);
+    padding: clamp(48px, 8vw, 104px) 0 var(--v2-s9);
+}
+
+.v2-hero {
+    display: grid;
+    justify-items: center;
+    gap: var(--v2-s5);
+    text-align: center;
+}
+
+/* 标题与搜索框之间多留一点 */
+.v2-hero .v2-search-wrap {
+    margin-top: 28px;
+}
+
+.v2-hero-title,
+.v2-hero-sub,
+.v2-section-head h2,
+.v2-section-head p {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+}
+
+/* 首屏字标：光学薄玻璃刻字。玻璃本身不带颜色、不发光——
+   .v2-hero-glass 按字形裁剪（clipPath 在 index.html 里），用 backdrop-filter 做轻微折射；
+   .v2-hero-word 的 SVG 光照滤镜只画边缘一条细窄高光（方位随指针移动，见 js/ui/hero-glass.js）。
+   进场：反射高光从左往右写出来，玻璃体同时淡入。svg 的 viewBox 四周各留 60 单位给落影 */
+.v2-hero-brand {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+}
+
+.v2-hero-glassbox {
+    position: relative;
+    width: clamp(240px, 27vw, 460px);
+}
+
+.v2-hero-word {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    aspect-ratio: 876.5 / 324.5;
+    height: auto;
+    -webkit-mask: linear-gradient(90deg, #000 60%, transparent 66%) 0 0 / 300% 100% no-repeat;
+    mask: linear-gradient(90deg, #000 60%, transparent 66%) 0 0 / 300% 100% no-repeat;
+    animation: v2-hero-word-write 1.8s cubic-bezier(0.3, 0.5, 0.2, 1) 0.15s both;
+}
+
+/* 玻璃体：svg 四周留了 60 单位边距，这里按比例缩进到字形所在的框；只折射，不着色 */
+.v2-hero-glass {
+    position: absolute;
+    inset: 18.49% 6.845%;
+    clip-path: url(#heroWordClip);
+    /* 薄片玻璃体：一点点无色透光 + 轻微折射，没有光斑、没有体积 */
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.05));
+    -webkit-backdrop-filter: blur(3px) saturate(1.3) brightness(1.15);
+    backdrop-filter: blur(3px) saturate(1.3) brightness(1.15);
+    animation: v2-hero-glass-in 1.4s ease-out 0.3s both;
+}
+
+@keyframes v2-hero-word-write {
+    from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+    to { -webkit-mask-position: 0 0; mask-position: 0 0; }
+}
+
+@keyframes v2-hero-glass-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+html[data-motion="off"] .v2-hero-word,
+html[data-motion="off"] .v2-hero-glass {
+    animation: none;
+    -webkit-mask: none;
+    mask: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:not([data-motion="on"]) .v2-hero-word,
+    html:not([data-motion="on"]) .v2-hero-glass {
+        animation: none;
+        -webkit-mask: none;
+        mask: none;
+    }
+}
+
+/* 口号退到字标下面做一行小字 */
+.v2-hero-title {
+    margin: calc(var(--v2-s5) * -0.5) 0 0;
+    font-size: clamp(16px, 1.45vw, 21px);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.1em;
+    color: var(--v2-t2);
+    text-wrap: balance;
+}
+
+.v2-hero-title em {
+    font-style: normal;
+    background: linear-gradient(180deg, var(--v2-blush) 0%, var(--v2-accent-hi) 55%, var(--v2-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.v2-hero-slogan {
+    margin: 0;
+    color: var(--v2-t2);
+    font-size: clamp(15px, 1.5vw, 18px);
+    letter-spacing: 0.12em;
+}
+
+.v2-hero-sub {
+    margin: 0;
+    max-width: 36em;
+    color: var(--v2-t2);
+    font-size: clamp(15px, 1.35vw, 17px);
+    line-height: 1.75;
+    text-wrap: balance;
+}
+
+#heroSourceCount {
+    color: var(--v2-t1);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============ 搜索框 ============ */
+.v2-search-wrap {
+    display: grid;
+    gap: 14px;
+    width: min(680px, 100%);
+    margin-top: var(--v2-s2);
+}
+
+.home-search-bar.v2-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 60px;
+    padding: 0 8px 0 20px;
+    border-radius: 18px;
+    /* 薄片清玻璃：一层轻微折射、0.5px 发丝边、顶边一条更细的高光；不带阴影、不发光 */
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.03));
+    border: 0.5px solid rgba(255, 255, 255, 0.16);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.14);
+    transition: border-color var(--v2-dur) var(--v2-ease), box-shadow var(--v2-dur) var(--v2-ease), background-color var(--v2-dur) var(--v2-ease);
+}
+
+.home-search-bar.v2-search:focus-within {
+    border-color: rgba(255, 255, 255, 0.26);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.04));
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.18), 0 0 0 2px rgba(var(--v2-accent-rgb), 0.1);
+}
+
+.v2-search-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: var(--v2-t3);
+}
+
+.v2-search #searchInput {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    outline: none;
+    color: var(--v2-t1);
+    font: inherit;
+    font-size: 17px;
+}
+
+.v2-search #searchInput::placeholder {
+    color: var(--v2-t3);
+}
+
+.v2-search #searchInput::-webkit-search-cancel-button {
+    display: none;
+}
+
+.v2-search .search-input-clear {
+    display: none;
+    place-items: center;
+    flex: none;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--v2-t2);
+}
+
+.v2-search .search-input-clear.is-visible {
+    display: inline-grid;
+}
+
+.v2-search .search-input-clear svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* 搜索按钮：带一点玫红的清玻璃——半透明主色、0.5px 主色发丝边、顶边细高光；不带阴影、不做霓虹 */
+.v2-search-btn {
+    flex: none;
+    height: 44px;
+    padding: 0 22px;
+    border: 0.5px solid rgba(var(--v2-accent-rgb), 0.55);
+    border-radius: 12px;
+    color: #FFFFFF;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(180deg, rgba(var(--v2-accent-rgb), 0.36), rgba(var(--v2-accent-rgb), 0.22));
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
+    transition: transform 0.15s var(--v2-ease), background-color var(--v2-dur) var(--v2-ease), border-color var(--v2-dur) var(--v2-ease);
+}
+
+.v2-search-btn:hover {
+    border-color: rgba(var(--v2-accent-rgb), 0.68);
+    background: linear-gradient(180deg, rgba(var(--v2-accent-rgb), 0.46), rgba(var(--v2-accent-rgb), 0.3));
+}
+
+.v2-search-btn:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+/* ============ 热门词 ============ */
+.v2-hot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+}
+
+.v2-hot-label {
+    margin-right: 2px;
+    color: var(--v2-t3);
+    font-size: var(--v2-fs-small);
+}
+
+.v2-chip {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--v2-line);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--v2-t2);
+    font: inherit;
+    font-size: var(--v2-fs-small);
+    cursor: pointer;
+    transition: color var(--v2-dur) var(--v2-ease), border-color var(--v2-dur) var(--v2-ease), background-color var(--v2-dur) var(--v2-ease);
+}
+
+@media (hover: hover) {
+    .v2-chip:hover {
+        color: var(--v2-t1);
+        border-color: var(--v2-line-3);
+        background: rgba(255, 255, 255, 0.06);
+    }
+}
+
+/* ============ 区块标题 ============ */
+.v2-section-head {
+    display: grid;
+    justify-items: center;
+    gap: var(--v2-s2);
+    text-align: center;
+}
+
+.v2-section-head h2 {
+    margin: 0;
+    font-size: clamp(28px, 3.4vw, 44px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+}
+
+.v2-section-head p {
+    margin: 0;
+    max-width: 34em;
+    color: var(--v2-t2);
+    font-size: clamp(15px, 1.35vw, 17px);
+    line-height: 1.75;
+    text-wrap: balance;
+}
+
+/* ============ 聚合动效 ============ */
+/* 参数照搬 flux：850 高的画布整体缩放（≥1280 原尺寸，768～1279 为 0.7，更窄为 0.45；
+   2K、4K 宽屏再放大），无边框、铺满视口宽度。画布宽度由 hub-flow.js 按「视口宽度 ÷ 缩放比」定，
+   至少 1920，所以任何分辨率下卡片流都铺到两侧边缘 */
+.v2-hub {
+    display: grid;
+    gap: 40px;
+}
+
+.v2-hub-stage {
+    position: relative;
+    width: 100%;
+    height: calc(850px * var(--hub-s));
+    overflow: hidden;
+}
+
+@media (min-width: 2400px) {
+    .home-layout.v2-home {
+        --hub-s: 1.25;
+    }
+}
+
+@media (min-width: 3400px) {
+    .home-layout.v2-home {
+        --hub-s: 1.7;
+    }
+}
+
+@media (max-width: 1279px) {
+    .home-layout.v2-home {
+        --hub-s: 0.7;
+    }
+}
+
+@media (max-width: 767px) {
+    .home-layout.v2-home {
+        --hub-s: 0.45;
+    }
+}
+
+.hub-canvas {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1920px;             /* 脚本按视口加宽 */
+    height: 850px;
+    transform: translateX(-50%) scale(var(--hub-s));
+    transform-origin: 50% 0;
+}
+
+.hub-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+}
+
+/* 左半边只画卡片、右半边只画海报，两层在光线处对接。
+   左边上下两排沿弧线抬起、落下，会越出画布，上下各留 18% 做渐隐，不出现生硬的切边 */
+.hub-layer.is-left {
+    clip-path: inset(0 50% 0 0);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+}
+
+.hub-layer.is-right {
+    clip-path: inset(0 0 0 50%);
+    transition: opacity 0.6s var(--v2-ease);
+}
+
+/* 海报还在加载：右半边先不出现，加载好再淡入 */
+.hub-layer.is-right.is-pending {
+    opacity: 0;
+}
+
+.hub-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 120px;
+    height: 180px;
+    border-radius: 18px;
+    box-sizing: border-box;
+    will-change: transform;
+}
+
+/* 资源站卡片：深底、细边、顶部一道高光，图标两侧各一段短横线 */
+.hub-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow: hidden;
+    background: #0A0A0B;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+.hub-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 32px;
+    right: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.hub-ic {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    background: rgba(var(--v2-accent-rgb), 0.1);
+    border: 1px solid rgba(var(--v2-accent-rgb), 0.25);
+    color: var(--v2-accent-hi);
+}
+
+.hub-ic::before,
+.hub-ic::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    z-index: -1;
+    width: 24px;
+    height: 1px;
+    background: #27272A;
+}
+
+.hub-ic::before {
+    right: 100%;
+}
+
+.hub-ic::after {
+    left: 100%;
+}
+
+.hub-ic svg {
+    width: 20px;
+    height: 20px;
+}
+
+.hub-card b {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.hub-dot {
+    margin-top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--v2-ok);
+    box-shadow: 0 0 8px rgba(98, 194, 142, 0.8);
+}
+
+.hub-dot.is-warn {
+    background: var(--v2-warn);
+    box-shadow: 0 0 8px rgba(216, 166, 87, 0.8);
+}
+
+/* 海报：同尺寸、同圆角，底部渐暗压标题 */
+.hub-poster {
+    overflow: hidden;
+    background: #0A0A0A center / cover no-repeat;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hub-poster::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 55%);
+}
+
+.hub-poster span {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    display: -webkit-box;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.25;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* 占位海报（私密模式、或海报加载失败）：深色渐变 + 居中淡淡的品牌标，颜色跟随主题色 */
+.hub-poster.is-placeholder {
+    background: linear-gradient(160deg, #2A1623 0%, #16121A 100%);
+}
+
+.hub-poster.is-placeholder:nth-child(3n+2) {
+    background: linear-gradient(160deg, #221726 0%, #141118 100%);
+}
+
+.hub-poster.is-placeholder:nth-child(3n) {
+    background: linear-gradient(160deg, #2B1A1F 0%, #151014 100%);
+}
+
+.hub-poster.is-placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--v2-accent);
+    -webkit-mask: url("../../image/brand/leletv-mark-currentcolor.svg?v=le2") center / 42% auto no-repeat;
+    mask: url("../../image/brand/leletv-mark-currentcolor.svg?v=le2") center / 42% auto no-repeat;
+    opacity: 0.2;
+}
+
+/* 分割线：2px 光线，上下各留 16px、两端渐隐；光幕只在左侧，宽 100px、上下 15% 渐隐，
+   光从线向左逐渐变淡，内部一层条纹缓慢往下流 */
+.hub-beam {
+    position: absolute;
+    top: 16px;
+    bottom: 16px;
+    left: 50%;
+    z-index: 30;
+    width: 2px;
+    margin-left: -1px;
+    background-image: linear-gradient(to bottom, transparent, var(--v2-blush), transparent);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+}
+
+.hub-curtain {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 100%;
+    width: 100px;
+    overflow: hidden;
+    opacity: 0.6;
+    mix-blend-mode: screen;
+    background: linear-gradient(to left, rgba(var(--v2-accent-rgb), 1) 0%, rgba(var(--v2-accent-rgb), 0.55) 30%, rgba(var(--v2-accent-rgb), 0.18) 65%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
+}
+
+.hub-curtain::before {
+    content: "";
+    position: absolute;
+    top: -400px;
+    left: 0;
+    right: 0;
+    height: calc(100% + 800px);
+    background: repeating-linear-gradient(180deg, transparent 0, rgba(255, 255, 255, 0.24) 90px, transparent 200px, rgba(255, 255, 255, 0.1) 290px, transparent 400px);
+    -webkit-mask-image: linear-gradient(to left, #000, transparent);
+    mask-image: linear-gradient(to left, #000, transparent);
+    animation: v2CurtainFlow 7s linear infinite;
+}
+
+@keyframes v2CurtainFlow {
+    from { transform: translateY(0); }
+    to { transform: translateY(400px); }
+}
+
+/* ============ 海报货架 ============ */
+.v2-shelf {
+    display: grid;
+    gap: var(--v2-s5);
+}
+
+.v2-shelf[hidden] {
+    display: none;
+}
+
+.v2-shelf-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--v2-s3);
+}
+
+.v2-shelf-head h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+
+.v2-shelf-note {
+    color: var(--v2-t3);
+    font-size: var(--v2-fs-small);
+}
+
+/* 「更多」入口：右端的小胶囊按钮 */
+.v2-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    align-self: center;
+    margin-left: auto;
+    height: 28px;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--v2-line-2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--v2-t2);
+    font: inherit;
+    font-size: var(--v2-fs-small);
+    cursor: pointer;
+    transition: color var(--v2-dur) var(--v2-ease), border-color var(--v2-dur) var(--v2-ease), background-color var(--v2-dur) var(--v2-ease);
+}
+
+.v2-more svg {
+    width: 14px;
+    height: 14px;
+    transition: transform var(--v2-dur) var(--v2-ease);
+}
+
+.v2-more:hover svg {
+    transform: translateX(2px);
+}
+
+.v2-more:hover {
+    color: var(--v2-t1);
+    border-color: var(--v2-line-3);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ============ 最近更新：四行按类型分开 ============ */
+.v2-recent {
+    display: grid;
+    gap: var(--v2-s8);
+}
+
+.v2-recent[hidden],
+.v2-recent .v2-shelf[hidden] {
+    display: none;
+}
+
+/* 海报底部的评分条：分数金色、评价人数灰白，压在一层渐暗上 */
+.v2-rate {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 26px 9px 8px;
+    background: linear-gradient(to top, rgba(8, 8, 10, 0.88) 0%, rgba(8, 8, 10, 0.55) 55%, rgba(8, 8, 10, 0) 100%);
+    color: #FFFFFF;
+    font-size: 12px;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.v2-rate b {
+    font-weight: 700;
+    color: #F2C879;
+}
+
+.v2-rate i {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: normal;
+    font-size: 11px;
+}
+
+.v2-rate.is-none {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 11px;
+}
+
+/* 「年份 / 地区 / 类型」一行放不下时截断 */
+.v2-pcard--recent p {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 无封面时的片名首字：改由 span 承载，评分条才能同时压在海报上 */
+.v2-pcard.is-noimg .v2-initial {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* 列数按断点固定（6 / 5 / 4 / 3）；从第二行起，末行不满一整行时整行收起，不留孤零零的一两张 */
+.v2-poster-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 28px 18px;
+}
+
+@media (min-width: 1101px) {
+    .v2-poster-grid > :nth-child(6n+7):nth-last-child(-n+5),
+    .v2-poster-grid > :nth-child(6n+7):nth-last-child(-n+5) ~ * {
+        display: none;
+    }
+}
+
+@media (min-width: 861px) and (max-width: 1100px) {
+    .v2-poster-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .v2-poster-grid > :nth-child(5n+6):nth-last-child(-n+4),
+    .v2-poster-grid > :nth-child(5n+6):nth-last-child(-n+4) ~ * {
+        display: none;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 860px) {
+    .v2-poster-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .v2-poster-grid > :nth-child(4n+5):nth-last-child(-n+3),
+    .v2-poster-grid > :nth-child(4n+5):nth-last-child(-n+3) ~ * {
+        display: none;
+    }
+}
+
+.v2-pcard {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* 悬停取色光晕：同一张海报模糊后垫在卡片后面 */
+.v2-pcard::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 16px;
+    left: 10%;
+    right: 10%;
+    aspect-ratio: 2 / 3;
+    background: var(--poster, none) center / cover;
+    filter: blur(26px) saturate(1.5);
+    opacity: 0;
+    transition: opacity 0.3s var(--v2-ease);
+}
+
+.v2-pcard:focus-visible::before {
+    opacity: 0.55;
+}
+
+@media (hover: hover) {
+    .v2-pcard:hover::before {
+        opacity: 0.55;
+    }
+
+    .v2-pcard:hover .v2-poster {
+        transform: translateY(-4px);
+    }
+}
+
+.v2-pcard .v2-poster {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--v2-r-s);
+    background: var(--v2-surface) var(--poster, none) center / cover no-repeat;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    transition: transform 0.3s var(--v2-ease);
+}
+
+.v2-pcard:focus-visible .v2-poster {
+    transform: translateY(-4px);
+}
+
+.v2-pcard.is-noimg .v2-poster {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(160deg, #2A1623 0%, #16121A 100%);
+    color: rgba(255, 228, 241, 0.55);
+    font-size: 40px;
+    font-weight: 700;
+}
+
+.v2-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #E6C47A;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+    background: rgba(10, 10, 12, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.v2-pcard h3 {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.v2-pcard p {
+    margin: -6px 0 0;
+    color: var(--v2-t3);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.v2-progress {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.v2-progress i {
+    display: block;
+    height: 100%;
+    background: var(--v2-accent);
+}
+
+.v2-pcard .v2-scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 42%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+}
+
+/* 骨架屏 */
+.v2-skel .v2-poster {
+    background: linear-gradient(100deg, var(--v2-surface) 30%, var(--v2-surface-2) 50%, var(--v2-surface) 70%) 0 0 / 300% 100%;
+    animation: v2Shimmer 1.4s linear infinite;
+}
+
+.v2-skel h3,
+.v2-skel p {
+    height: 12px;
+    border-radius: 4px;
+    background: var(--v2-surface);
+    color: transparent;
+}
+
+.v2-skel p {
+    width: 55%;
+}
+
+@keyframes v2Shimmer {
+    to { background-position: -150% 0; }
+}
+
+/* ============ 窄屏 ============ */
+/* 手机：顶栏只留品牌，五个入口改成底部标签栏 */
+@media (max-width: 720px) {
+    .v2-nav .nav-container {
+        height: 56px;
+    }
+
+    .v2-brand {
+        --lockup: 30px;
+    }
+
+    .v2-nav .nav-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: var(--v2-z-nav);
+        justify-content: space-around;
+        gap: 0;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+        background: rgba(12, 12, 14, 0.86);
+        -webkit-backdrop-filter: blur(20px) saturate(1.4);
+        backdrop-filter: blur(20px) saturate(1.4);
+        border-top: 1px solid var(--v2-line);
+    }
+
+    .v2-nav .nav-btn {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        height: 48px;
+        padding: 0;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .v2-nav .nav-btn svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .v2-nav .nav-btn.active {
+        background: transparent;
+    }
+
+    /* 搜索入口留在顶栏右侧，只留图标，点开的是手机搜索层 */
+    .nav-search-input {
+        display: none;
+    }
+
+    .v2-nav .nav-search-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+    }
+
+    /* 给底部标签栏让出位置 */
+    html body {
+        padding-bottom: calc(61px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #toast.v2-toast {
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (max-width: 640px) {
+    .home-layout.v2-home {
+        gap: var(--v2-s8);
+        padding-top: 32px;
+    }
+
+    .v2-hero {
+        gap: var(--v2-s4);
+    }
+
+    .v2-hero .v2-search-wrap {
+        margin-top: 10px;
+    }
+
+    .v2-hero-glassbox {
+        width: min(64vw, 260px);
+    }
+
+    .v2-hero-title {
+        font-size: 14px;
+        letter-spacing: 0.08em;
+    }
+
+    .home-search-bar.v2-search {
+        height: 52px;
+        padding: 0 6px 0 16px;
+        border-radius: 16px;
+    }
+
+    .v2-search #searchInput {
+        font-size: 16px;
+    }
+
+    .v2-search-btn {
+        height: 40px;
+        padding: 0 16px;
+        font-size: 14px;
+    }
+
+    /* 热门词改成单行横滑，右端渐隐提示还能滑 */
+    .v2-hot {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-right: 24px;
+        -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent);
+        mask-image: linear-gradient(90deg, #000 82%, transparent);
+    }
+
+    .v2-hot::-webkit-scrollbar {
+        display: none;
+    }
+
+    .v2-hot > * {
+        flex: none;
+    }
+
+
+
+    .v2-poster-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px 10px;
+    }
+
+    .v2-poster-grid > :nth-child(3n+4):nth-last-child(-n+2),
+    .v2-poster-grid > :nth-child(3n+4):nth-last-child(-n+2) ~ * {
+        display: none;
+    }
+
+    .v2-pcard h3 {
+        font-size: 13px;
+    }
+
+    .v2-pcard p {
+        font-size: 11.5px;
+    }
+
+    .v2-shelf-note {
+        display: none;
+    }
+}
+
+/* ============ 开着聚合动效时的第一屏 ============ */
+/* 标题 + 搜索框在第一屏正中；动效区的起点定在「视口底 − 320×缩放比」：
+   画布顶部到第一行卡片底边是 303 设计像素、第二行顶边是 335，取 320 正好只露第一行，第二行在折叠线下 */
+html:not([data-home-hub="off"]) .home-layout.v2-home {
+    padding-top: 0;
+}
+
+html:not([data-home-hub="off"]) .v2-hero {
+    min-height: calc(100vh - 64px - 320px * var(--hub-s, 1));
+    min-height: calc(100svh - 64px - 320px * var(--hub-s, 1));
+    align-content: center;
+}
+
+/* 标题区已经把到动效区之前的空间占满，网格间距在这里抵掉，动效区起点才落在算好的位置 */
+html:not([data-home-hub="off"]) .v2-hub {
+    margin-top: calc(var(--v2-s9) * -1);
+}
+
+@media (max-width: 720px) {
+    html:not([data-home-hub="off"]) .v2-hero {
+        min-height: calc(100vh - 56px - 61px - 320px * var(--hub-s, 1));
+        min-height: calc(100svh - 56px - 61px - 320px * var(--hub-s, 1));
+    }
+}
+
+@media (max-width: 640px) {
+    html:not([data-home-hub="off"]) .v2-hub {
+        margin-top: calc(var(--v2-s8) * -1);
+    }
+}
+
+/* ============ 简洁首页：设置里关掉聚合动效 / 内容板块，导航只留图标 ============ */
+html[data-home-hub="off"] .v2-hub {
+    display: none;
+}
+
+html[data-home-shelves="off"] #homeContinue,
+html[data-home-shelves="off"] #homeRecent {
+    display: none;
+}
+
+/* 两块都关掉：只剩标题和搜索框，整体在视口里居中 */
+html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
+    min-height: calc(100vh - 64px - 118px);
+    min-height: calc(100svh - 64px - 118px);
+    align-content: center;
+    padding-top: 0;
+    padding-bottom: 40px;
+}
+
+@media (max-width: 720px) {
+    html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
+        min-height: calc(100vh - 56px - 61px - 160px);
+        min-height: calc(100svh - 56px - 61px - 160px);
+    }
+}
+
+/* 导航只显示图标：文字只留给读屏器，悬停看 title；手机底栏仍带文字 */
+@media (min-width: 721px) {
+    html[data-nav="icons"] .v2-nav .nav-btn {
+        width: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    html[data-nav="icons"] .v2-nav .nav-btn > span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    html[data-nav="icons"] .v2-nav .nav-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+}

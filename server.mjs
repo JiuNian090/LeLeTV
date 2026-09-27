@@ -7,7 +7,8 @@ import { dirname, join } from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-dotenv.config();
+// .env.local 放密钥（不进 git、只有本人可读），.env 放普通配置；同名变量以 .env.local 为准
+dotenv.config({ path: ['.env.local', '.env'], quiet: true });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,6 +16,8 @@ const __dirname = dirname(__filename);
 // 配置对象
 const config = {
   port: parseInt(process.env.PORT || '8080'),
+  // 默认只监听本机；手机联调时设 HOST=0.0.0.0 开放到局域网
+  host: process.env.HOST || '127.0.0.1',
   hiddenKey: process.env.HIDDENKEY || '',
   tmdbApiKey: process.env.TMDB_API_KEY || '',
   tmdbWorkerUrl: process.env.TMDB_WORKER_URL || '',
@@ -384,8 +387,8 @@ app.use((req, res) => {
 });
 
 // 启动服务器
-app.listen(config.port, () => {
-  console.log(`服务器运行在 http://localhost:${config.port}`);
+app.listen(config.port, config.host, () => {
+  console.log(`服务器运行在 http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}（监听 ${config.host}）`);
   if (config.tmdbWorkerUrl) {
     console.log('邀请码验证：通过 Worker (' + config.tmdbWorkerUrl + ')');
     console.log('TMDB 代理：通过 Worker (' + config.tmdbWorkerUrl + ')');
@@ -396,6 +399,7 @@ app.listen(config.port, () => {
   }
   if (config.debug) {
     console.log('调试模式已启用');
-    console.log('配置:', { ...config, password: config.password ? '******' : '' });
+    const mask = v => (v ? '******' : '');
+    console.log('配置:', { ...config, password: mask(config.password), tmdbApiKey: mask(config.tmdbApiKey), hiddenKey: mask(config.hiddenKey) });
   }
 });

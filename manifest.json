@@ -1,39 +1,53 @@
 {
     "name": "LeLeTV",
     "short_name": "LeLeTV",
-    "description": "免费在线视频搜索与播放平台",
+    "description": "多源影视检索与播放",
     "start_url": "/index.html",
     "display": "standalone",
-    "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-    "background_color": "#000000",
-    "theme_color": "#000000",
-    "categories": ["entertainment", "movies", "video"],
+    "display_override": [
+        "window-controls-overlay",
+        "standalone",
+        "minimal-ui"
+    ],
+    "background_color": "#0A0A0B",
+    "theme_color": "#0A0A0B",
+    "categories": [
+        "entertainment",
+        "movies",
+        "video"
+    ],
     "lang": "zh",
     "orientation": "any",
     "icons": [
         {
-            "src": "/image/logo-black.png",
-            "sizes": "48x48",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/image/logo-black.png",
-            "sizes": "96x96",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/image/logo-black.png",
+            "src": "/image/brand/leletv-icon-192.png?v=le2",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
-            "src": "/image/logo-black.png",
+            "src": "/image/brand/leletv-icon-512.png?v=le2",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/image/brand/leletv-icon-maskable-192.png?v=le2",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/image/brand/leletv-icon-maskable-512.png?v=le2",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/image/brand/leletv-favicon.svg?v=le2",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
         }
     ],
     "screenshots": [],

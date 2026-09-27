@@ -352,13 +352,42 @@ const INVITE_AUTH = {
    * 检查是否已验证
    */
   isVerified() {
+    if (INVITE_AUTH.isLocalMode()) return INVITE_AUTH.isLocalPreviewPassed();
     return !!INVITE_AUTH.getAuth();
+  },
+
+  /**
+   * 本地模式：没有配置 Worker 地址时不存在邀请码后端，心跳不启用；
+   * 邀请码弹窗只保留视觉框架，点「进入」即放行（见 verify 开头），放行记录存在本机
+   */
+  isLocalMode() {
+    return !window.__ENV__?.TMDB_WORKER_URL;
+  },
+
+  LOCAL_PREVIEW_KEY: 'leletv_local_invite_passed',
+
+  isLocalPreviewPassed() {
+    try {
+      return localStorage.getItem(INVITE_AUTH.LOCAL_PREVIEW_KEY) === '1';
+    } catch (e) {
+      return true; // 存储不可用时直接放行，免得弹窗关不掉
+    }
+  },
+
+  _localEnter() {
+    try {
+      localStorage.setItem(INVITE_AUTH.LOCAL_PREVIEW_KEY, '1');
+    } catch (e) {
+      console.warn('[invite-auth] 记录本地放行状态失败:', e);
+    }
+    return { ok: true, local: true, message: '欢迎使用 LeLeTV' };
   },
   
   /**
    * 验证邀请码
    */
   async verify(code, deviceName) {
+    if (INVITE_AUTH.isLocalMode()) return INVITE_AUTH._localEnter();
     const deviceInfo = INVITE_AUTH.getOrCreateDeviceId();
     const deviceId = deviceInfo.id;
     // 软指纹随注册一并上报：本机 ID 丢失（清缓存/无痕）时服务端可据此找回原记录。
@@ -447,6 +476,7 @@ const INVITE_AUTH = {
    * 启动心跳定时器
    */
   startHeartbeat(fingerprint) {
+    if (INVITE_AUTH.isLocalMode()) return;
     // 防止重复创建定时器和 pagehide 监听
     if (INVITE_AUTH._heartbeatTimer) {
       clearInterval(INVITE_AUTH._heartbeatTimer);
@@ -475,6 +505,7 @@ const INVITE_AUTH = {
    * 反过来的话，被管理员删除的设备会因为"旧指纹迁移"静默重新注册，等于没删
    */
   async ensureHeartbeat() {
+    if (INVITE_AUTH.isLocalMode()) return;
     const auth = INVITE_AUTH.getAuth();
     if (!auth || !auth.device_fingerprint) return;
 
@@ -517,3 +548,17 @@ const INVITE_AUTH = {
 
 // 暴露到全局
 window.INVITE_AUTH = INVITE_AUTH;
+
+// 本地版预览：地址带 ?invite 时清掉放行记录，邀请码弹窗会重新出现
+(function () {
+  try {
+    if (!INVITE_AUTH.isLocalMode()) return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('invite')) return;
+    localStorage.removeItem(INVITE_AUTH.LOCAL_PREVIEW_KEY);
+    url.searchParams.delete('invite');
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+  } catch (e) {
+    console.warn('[invite-auth] 处理 ?invite 参数失败:', e);
+  }
+})();
