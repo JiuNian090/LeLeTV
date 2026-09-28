@@ -11,6 +11,81 @@
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="format-detection" content="telephone=no">
+
+    <!-- 启动首帧的两处修正（iOS PWA 冷启动时浏览器给的初始状态不可靠）：
+         1) 滚动位置：iOS 把「添加到主屏」的 PWA 当常驻 app，下一次启动会把上一次的滚动位置
+            一并带回来（等价于浏览器刷新时恢复滚动位置）。首页会因此直接停在聚合动效那一屏，
+            看不到 LeLeTV 大标题（开着聚合动效时），或在几乎不可滚动的简洁首页里落到文档之外
+            露出黑底，手指滑一下才被浏览器校正回来。
+         2) 视口高度：首帧的 100dvh / 100svh 可能偏大，body 于是比视口高、页脚上方露出一块黑，
+            同样要滚动一次才重算。这里量一次真实视口高度写进 --v2-app-h，样式里的 min-height
+            优先用它（见 css/v2/base.css、css/v2/home.css）。
+         滚动位置在首帧稳定前归零，用户一旦自己滚动过就不再干预。 -->
+    <script>
+        (function () {
+            'use strict';
+            try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { /* 忽略 */ }
+
+            var touched = false;   // 用户自己滚过屏幕了：交给用户，不再干预
+            function touch() { touched = true; }
+            // 只认滚动手势：pointerdown / keydown 只是"点了一下"（例如在邀请码弹窗里点进入），
+            // 不能算用户接管了滚动位置
+            ['touchmove', 'wheel'].forEach(function (type) {
+                window.addEventListener(type, touch, { once: true, passive: true });
+            });
+
+            function toTop() {
+                if (touched || !isHomeEntry()) return;
+                try { window.scrollTo(0, 0); } catch (e) { /* 忽略：不可滚动时无需处理 */ }
+            }
+
+            // 启动占位（#bootSplash）退场时再归零一次 —— 那是关键的一刻：
+            // 遮罩移除的同时 html:has(#bootSplash) 的 overflow:hidden 失效、文档重新可滚动，
+            // iOS 会在这之前被按住的滚动位置重新生效。由 index.html 的占位脚本调用。
+            window.__LELETV_SCROLL_RESET__ = toTop;
+
+            // 只在首页入口归零：其它 hash（分类 / 历史 / 设置…）各有自己的位置语义，
+            // 分类页还用 sessionStorage 记着离开时的位置，不要去动它
+            function isHomeEntry() {
+                var h = (location.hash || '').replace('#', '');
+                return !h || h === 'home';
+            }
+
+            // 只在独立窗口（装到主屏 / 装成桌面应用）里接管视口高度：浏览器标签页的 dvh 本来就是对的，
+            // 换成实测值反而会在地址栏收放、键盘弹出时抖动
+            var standalone = false;
+            try {
+                standalone = (window.navigator.standalone === true) ||
+                    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+            } catch (e) { /* 忽略：按非独立窗口处理 */ }
+
+            function measureAppHeight() {
+                if (!standalone) return;
+                var h = window.innerHeight;
+                if (!h || h < 200) return;   // 视口还没量出来时不要写坏变量
+                document.documentElement.style.setProperty('--v2-app-h', h + 'px');
+            }
+
+            measureAppHeight();
+            toTop();
+            requestAnimationFrame(function () {
+                measureAppHeight();
+                requestAnimationFrame(toTop);
+            });
+            document.addEventListener('DOMContentLoaded', toTop);
+            // 恢复动作发生在首帧之后、布局稳定前后，隔几拍再兜两次
+            window.addEventListener('load', function () {
+                measureAppHeight();
+                toTop();
+                setTimeout(function () { measureAppHeight(); toTop(); }, 120);
+                setTimeout(function () { measureAppHeight(); toTop(); }, 400);
+            });
+            // 从后台切回（bfcache 恢复）时也会带上原位置
+            window.addEventListener('pageshow', function () { measureAppHeight(); toTop(); });
+            window.addEventListener('resize', measureAppHeight);
+            window.addEventListener('orientationchange', function () { setTimeout(measureAppHeight, 120); });
+        })();
+    </script>
     <title>LeLeTV</title>
     <meta name="description" content="LeLeTV：多源影视检索与播放。">
     <meta name="keywords" content="在线视频,视频搜索,电影,电视剧,LeLeTV">
@@ -494,7 +569,17 @@
             splash.classList.add('boot-splash--done');
             setTimeout(function () {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);
+                // 遮罩移除的这一刻，head 里 `html:has(#bootSplash) { overflow: hidden }` 也同时失效，
+                // 文档重新可滚动 —— iOS 会在这里把启动时带回来的滚动位置重新生效，
+                // 首页于是跳到聚合动效那一屏（或在本就滚不动的简洁首页里露出黑底）。
+                // 整个启动阶段遮罩都盖着，用户不可能已经自己滚过，此刻归零最准，下一帧再兜一次。
+                resetScroll();
+                requestAnimationFrame(resetScroll);
             }, (typeof removeDelay === 'number') ? removeDelay : FADE_MS);
+        }
+
+        function resetScroll() {
+            if (typeof window.__LELETV_SCROLL_RESET__ === 'function') window.__LELETV_SCROLL_RESET__();
         }
 
         var ready = false;

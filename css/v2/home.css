@@ -17,13 +17,21 @@
 .top-nav-bar.v2-nav::before {
     content: "";
     position: absolute;
-    inset: 0;
+    /* 顶部安全区（背景延伸到刘海/灵动岛后方的那段）在未滚动时不铺底色：
+       iOS PWA 用 black-translucent 时状态栏显示的就是页面本身，铺上导航栏那层
+       rgba(10, 10, 11, 0.72) 会让状态栏跟导航栏一个颜色、比页面更暗；
+       留空后透出全站背景光，颜色更接近页面背景。
+       滚动后再铺满整条（见 .scrolled），否则内容会从状态栏后面穿出来 */
+    inset: env(safe-area-inset-top, 0px) 0 0;
     z-index: -1;
     background: rgba(10, 10, 11, 0.72);
+    /* 开始滚动时底色平滑地补到状态栏后面 */
+    transition: top 0.24s var(--v2-ease);
 }
 
-/* 滚动后才启用毛玻璃：内容穿过导航栏时模糊虚化 */
+/* 滚动后才启用毛玻璃：内容穿过导航栏时模糊虚化；此时底色铺满含状态栏的整条导航栏 */
 .top-nav-bar.v2-nav.scrolled::before {
+    inset: 0;
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
 }
@@ -1258,6 +1266,9 @@ html:not([data-home-hub="off"]) .home-layout.v2-home {
 html:not([data-home-hub="off"]) .v2-hero {
     min-height: calc(100vh - 64px - 320px * var(--hub-s, 1));
     min-height: calc(100svh - 64px - 320px * var(--hub-s, 1));
+    /* 独立窗口里用实测视口高度（--v2-app-h）：iOS PWA 冷启动首帧的 svh 偏大，
+       首屏留白会算多、标题被挤到聚合区上方之外，滚动一次才归位 */
+    min-height: calc(var(--v2-app-h, 100svh) - 64px - 320px * var(--hub-s, 1));
     align-content: center;
 }
 
@@ -1270,6 +1281,7 @@ html:not([data-home-hub="off"]) .v2-hub {
     html:not([data-home-hub="off"]) .v2-hero {
         min-height: calc(100vh - 56px - 320px * var(--hub-s, 1));
         min-height: calc(100svh - 56px - 320px * var(--hub-s, 1));
+        min-height: calc(var(--v2-app-h, 100svh) - 56px - 320px * var(--hub-s, 1));
     }
 }
 
@@ -1293,6 +1305,7 @@ html[data-home-shelves="off"] #homeRecent {
 html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
     min-height: calc(100vh - 64px - 118px);
     min-height: calc(100svh - 64px - 118px);
+    min-height: calc(var(--v2-app-h, 100svh) - 64px - 118px);
     align-content: center;
     padding-top: 0;
     padding-bottom: 40px;
@@ -1302,6 +1315,7 @@ html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
     html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
         min-height: calc(100vh - 56px - 160px);
         min-height: calc(100svh - 56px - 160px);
+        min-height: calc(var(--v2-app-h, 100svh) - 56px - 160px);
     }
 }
 
