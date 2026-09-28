@@ -88,10 +88,10 @@ function showImportBox(fun) {
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
                     </span>
                     <p class="v2-dropzone-title">将配置文件拖到这里</p>
-                    <p class="v2-dropzone-sub">支持由「导出配置」生成的 JSON 文件</p>
+                    <p class="v2-dropzone-sub">支持由「导出配置」生成的 ZIP 备份包</p>
                     <div class="v2-dropzone-actions">
                         <label class="v2-btn v2-btn--primary v2-btn--sm">
-                            <input type="file" id="ChooseFile" accept=".json,application/json" hidden>
+                            <input type="file" id="ChooseFile" accept=".zip,application/zip" hidden>
                             选择文件
                         </label>
                         <button type="button" data-action="import-config-from-url" class="v2-btn v2-btn--secondary v2-btn--sm">从链接导入</button>

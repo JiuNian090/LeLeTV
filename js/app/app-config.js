@@ -24,7 +24,7 @@ async function importConfigFromUrl() {
             body.innerHTML = `
                 <div class="v2-field">
                     <label class="v2-label" for="configUrl">配置文件地址</label>
-                    <input type="url" id="configUrl" class="v2-input" placeholder="https://example.com/leletv-config.json" autocomplete="off" spellcheck="false">
+                    <input type="url" id="configUrl" class="v2-input" placeholder="https://example.com/leletv-backup.zip" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="v2-dialog-foot is-end">
                     <button type="button" id="cancelUrlImport" class="v2-btn v2-btn--secondary">取消</button>
@@ -44,19 +44,10 @@ async function importConfigFromUrl() {
 
                 showLoading('正在从URL导入配置...');
                 try {
-                    const response = await fetch(url, { mode: 'cors', headers: { 'Accept': 'application/json' } });
+                    const response = await fetch(url, { mode: 'cors' });
                     if (!response.ok) throw '获取配置文件失败';
-                    const contentType = response.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) throw '响应不是有效的JSON格式';
-                    const config = await response.json();
-                    if (config.name !== 'LeLeTV-Settings') throw '配置文件格式不正确';
-                    const dataHash = await sha256(JSON.stringify(config.data));
-                    if (dataHash !== config.hash) throw '配置文件哈希值不匹配';
-                    // hiddenContentMode 不参与恢复：隐藏模式只能由开关 + 密码进入
-                    for (let item in config.data) {
-                        if (item === HIDDEN_MODE_KEY) continue;
-                        localStorage.setItem(itemStorageKey(item), config.data[item]);
-                    }
+                    const blob = await response.blob();
+                    await processBackupFile(blob);
                     showToast('配置文件导入成功，3 秒后自动刷新本页面。', 'success');
                     setTimeout(() => window.location.reload(), 3000);
                 } catch (error) {
@@ -75,109 +66,138 @@ async function importConfigFromUrl() {
 async function importConfig() {
     showImportBox(async (file) => {
         try {
-            // 检查文件类型
-            if (!(file.type === 'application/json' || file.name.endsWith('.json'))) throw '文件类型不正确';
-
-            // 检查文件大小
-            if (file.size > 1024 * 1024 * 10) throw new Error('文件大小超过 10MB');
-
-            // 读取文件内容
-            const content = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject('文件读取失败');
-                reader.readAsText(file);
-            });
-
-            // 解析并验证配置
-            const config = JSON.parse(content);
-            if (config.name !== 'LeLeTV-Settings') throw '配置文件格式不正确';
-
-            // 验证哈希
-            const dataHash = await sha256(JSON.stringify(config.data));
-            if (dataHash !== config.hash) throw '配置文件哈希值不匹配';
-
-            // 导入配置（hiddenContentMode 不参与恢复：隐藏模式只能由开关 + 密码进入）
-            for (let item in config.data) {
-                if (item === HIDDEN_MODE_KEY) continue;
-                localStorage.setItem(itemStorageKey(item), config.data[item]);
-            }
-
+            if (file.size > 1024 * 1024 * 20) throw new Error('文件大小超过 20MB');
+            showLoading('正在解析配置文件...');
+            await processBackupFile(file);
             showToast('配置文件导入成功，3 秒后自动刷新本页面。', 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
+            setTimeout(() => window.location.reload(), 3000);
         } catch (error) {
             const message = typeof error === 'string' ? error : '配置文件格式错误';
             showToast(`配置文件读取出错 (${message})`, 'error');
+        } finally {
+            hideLoading();
         }
     });
 }
 
-async function exportConfig() {
-    // 存储配置数据
-    const config = {};
-    const items = {};
+/**
+ * 解析备份文件（ZIP 或旧版 JSON），校验后写入 localStorage
+ */
+async function processBackupFile(file) {
+    const isZip = file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
 
+    let settingsData = null;
+    let userData = null;
+
+    if (isZip) {
+        // 新版：ZIP 包内含 settings.json + data.json
+        const zip = await JSZip.loadAsync(file);
+        const settingsFile = zip.file('settings.json');
+        const dataFile = zip.file('data.json');
+        if (!settingsFile) throw 'ZIP 包内缺少 settings.json';
+        settingsData = JSON.parse(await settingsFile.async('string'));
+        if (dataFile) {
+            userData = JSON.parse(await dataFile.async('string'));
+        }
+    } else {
+        // 兼容旧版：单个 JSON 文件
+        const content = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject('文件读取失败');
+            reader.readAsText(file);
+        });
+        const oldConfig = JSON.parse(content);
+        if (oldConfig.name !== 'LeLeTV-Settings') throw '配置文件格式不正确';
+        const dataHash = await sha256(JSON.stringify(oldConfig.data));
+        if (dataHash !== oldConfig.hash) throw '配置文件哈希值不匹配';
+        // 旧版全部当作 settings 恢复
+        settingsData = { data: oldConfig.data };
+    }
+
+    // 校验 settings
+    if (!settingsData || !settingsData.data) throw '设置文件格式不正确';
+
+    // 写入设置（hiddenContentMode 不参与恢复）
+    for (let item in settingsData.data) {
+        if (item === HIDDEN_MODE_KEY) continue;
+        localStorage.setItem(itemStorageKey(item), settingsData.data[item]);
+    }
+
+    // 写入用户数据（历史记录、搜索记录）
+    if (userData && userData.data) {
+        for (let item in userData.data) {
+            localStorage.setItem(scopedKey(item), userData.data[item]);
+        }
+    }
+}
+
+async function exportConfig() {
+    const times = Date.now().toString();
+
+    // ===== 设置数据：主题、数据源、开关等 =====
+    const settingsItems = {};
     const settingsToExport = [
         'selectedAPIs',
         'customAPIs',
         'hiddenContentMode',
         'adFilteringEnabled',
         'hasInitializedDefaults',
-        'tmdbFilters'   // 分类页标签选择（下次进入分类页沿用）
+        'tmdbFilters'
     ];
-
-    // 导出设置项（scoped 键按当前数据域读取，隐藏域导出的是 hidden:: 版本）
     settingsToExport.forEach(key => {
         const value = localStorage.getItem(scopedKey(key));
-        if (value !== null) {
-            items[key] = value;
-        }
+        if (value !== null) settingsItems[key] = value;
     });
-
-    // 导出主题色：两个数据域各存一套，键名自带模式，直接按原键名读取
+    // 主题色（键名自带模式，不套 scoped 前缀）
     themeStoreKeys().forEach(key => {
         const value = localStorage.getItem(key);
-        if (value !== null) {
-            items[key] = value;
-        }
+        if (value !== null) settingsItems[key] = value;
     });
 
-    // 导出历史记录
+    const settingsJson = {
+        name: 'LeLeTV-Settings',
+        version: '2.0',
+        time: times,
+        data: settingsItems
+    };
+    settingsJson.hash = await sha256(JSON.stringify(settingsItems));
+
+    // ===== 用户数据：历史记录、搜索记录等 =====
+    const dataItems = {};
     const viewingHistory = localStorage.getItem(scopedKey('viewingHistory'));
-    if (viewingHistory) {
-        items['viewingHistory'] = viewingHistory;
-    }
+    if (viewingHistory) dataItems['viewingHistory'] = viewingHistory;
 
     const searchHistory = localStorage.getItem(scopedKey(SEARCH_HISTORY_KEY));
-    if (searchHistory) {
-        items[SEARCH_HISTORY_KEY] = searchHistory;
-    }
+    if (searchHistory) dataItems[SEARCH_HISTORY_KEY] = searchHistory;
 
-    const times = Date.now().toString();
-    config['name'] = 'LeLeTV-Settings';  // 配置文件名，用于校验
-    config['time'] = times;               // 配置文件生成时间
-    config['cfgVer'] = '1.0.0';           // 配置文件版本
-    config['data'] = items;               // 配置文件数据
-    config['hash'] = await sha256(JSON.stringify(config['data']));  // 计算数据的哈希值，用于校验
+    const dataJson = {
+        name: 'LeLeTV-UserData',
+        version: '2.0',
+        time: times,
+        data: dataItems
+    };
 
-    // 将配置数据保存为 JSON 文件
-    saveStringAsFile(JSON.stringify(config), 'LeLeTV-Settings_' + times + '.json');
+    // ===== 打包 ZIP =====
+    const zip = new JSZip();
+    zip.file('settings.json', JSON.stringify(settingsJson, null, 2));
+    zip.file('data.json', JSON.stringify(dataJson, null, 2));
+    const blob = await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+    });
+
+    saveBlobAsFile(blob, 'LeLeTV-Backup_' + times + '.zip');
 }
 
-function saveStringAsFile(content, fileName) {
-    // 创建Blob对象并指定类型
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    // 生成临时URL
+function saveBlobAsFile(blob, fileName) {
     const url = window.URL.createObjectURL(blob);
-    // 创建<a>标签并触发下载
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
-    // 清理临时对象
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 }
