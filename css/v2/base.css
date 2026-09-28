@@ -1239,7 +1239,8 @@ html body {
     position: relative;
     z-index: 1;
     margin-top: auto;
-    padding: 16px 0;
+    /* 底部安全区：内容上移到 Home 指示条上方，背景区域延伸进安全区 */
+    padding: 16px 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
     transition: none;
 }
 
