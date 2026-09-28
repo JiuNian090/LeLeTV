@@ -1435,6 +1435,10 @@ html body {
 html body {
     display: flex;
     flex-direction: column;
+    /* iOS PWA 启动时 100dvh 可能偏小，导致页脚上方露出黑底；
+       逐层兜底：vh → -webkit-fill-available → dvh，最后生效的值覆盖前面 */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
     min-height: 100dvh;
 }
 
