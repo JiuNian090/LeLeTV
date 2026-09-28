@@ -491,7 +491,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.0.4`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.0.5`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -503,16 +503,15 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v4.0.5 (2026-09-28)
+- 🔧 修复 iPhone 添加到桌面后冷启动时，页脚上方出现黑底的问题
+
 ### v4.0.4 (2026-09-28)
 - 🎉 新增 导出/导入配置改为ZIP压缩包，设置与历史数据分开打包，兼容旧版JSON备份
 
 ### v4.0.3 (2026-09-28)
 - 🎨 样式 导航栏平时保持半透明底色不模糊，图标更清晰；滚动时内容穿过导航栏才启用毛玻璃
 - 🎨 样式 手机竖屏数据源勾选改为3列显示，一屏看更多采集源
-
-### v4.0.2 (2026-09-28)
-- ✨ 优化 iPhone 添加到桌面后，页面背景可延伸到刘海/灵动岛两侧，导航按钮不再被遮挡
-- 🎨 样式 导航栏底部改为渐变过渡，滚动内容自然淡出，去掉生硬的分隔线
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
