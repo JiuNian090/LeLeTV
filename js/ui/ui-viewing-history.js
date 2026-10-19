@@ -450,7 +450,12 @@ function confirmClearViewingHistory() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// 历史页事件绑定：片段按需插入后才可绑定（首屏没有 #historyList）
+function initViewingHistoryBindings() {
+    const page = document.getElementById('page-history');
+    if (!page || page.dataset.leleBound === '1') return;
+    page.dataset.leleBound = '1';
+
     document.getElementById('clearHistoryBtn')?.addEventListener('click', confirmClearViewingHistory);
     // 记录卡片是 role="button" 的 div，键盘回车 / 空格也要能打开
     document.getElementById('historyList')?.addEventListener('keydown', (e) => {
@@ -459,7 +464,15 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         e.target.click();
     });
-});
+}
+
+// 片段按需加载：DOM 就绪时先尝试一次；片段在之后插入时由路由再次调用
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initViewingHistoryBindings);
+} else {
+    initViewingHistoryBindings();
+}
+window.initViewingHistoryBindings = initViewingHistoryBindings;
 
 function clearViewingHistory() {
     try {

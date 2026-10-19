@@ -867,7 +867,13 @@ function moviesPageBack() {
 
 // ===================== 事件绑定 =====================
 
-document.addEventListener('DOMContentLoaded', function () {
+// 结果页事件绑定：片段按需插入后才可绑定，因此做成幂等函数。
+// 首屏时 #page-movies 还不存在，函数会直接返回；路由在片段插入后再次调用。
+function initMoviesPageBindings() {
+  var page = document.getElementById('page-movies');
+  if (!page || page.dataset.leleBound === '1') return;
+  page.dataset.leleBound = '1';
+
   // 顶栏搜索框：沿用首页的搜索流程（写入搜索历史、更新地址栏）
   var researchForm = document.getElementById('moviesResearchForm');
   var researchInput = document.getElementById('moviesResearchInput');
@@ -943,7 +949,15 @@ document.addEventListener('DOMContentLoaded', function () {
     renderMoviesSidebar();
     renderMoviesGrid();
   });
-});
+}
+
+// 片段按需加载：DOM 就绪时先尝试一次；片段在之后插入时由路由再次调用
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMoviesPageBindings);
+} else {
+  initMoviesPageBindings();
+}
+window.initMoviesPageBindings = initMoviesPageBindings;
 
 // ===================== 导出 =====================
 

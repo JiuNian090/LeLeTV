@@ -707,22 +707,31 @@ function renderTmdbPagination() {
 function tmdbSearchVideo(title, genres) {
   if (!title) return;
 
-  // 统一进入结果页：左侧源列表 + 右侧结果，携带类型信息用于「无关键词结果时的分类兜底」
-  if (typeof openMoviesPage === 'function') {
-    openMoviesPage(title, {
-      from: 'category',
-      fallbackGenres: genres ? String(genres).split(',').map(g => g.trim()).filter(Boolean) : []
-    });
-    return;
+  function open() {
+    // 统一进入结果页：左侧源列表 + 右侧结果，携带类型信息用于「无关键词结果时的分类兜底」
+    if (typeof openMoviesPage === 'function') {
+      openMoviesPage(title, {
+        from: 'category',
+        fallbackGenres: genres ? String(genres).split(',').map(g => g.trim()).filter(Boolean) : []
+      });
+      return;
+    }
+
+    // 旧逻辑兜底（结果页模块未加载时）
+    const safeTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    switchPage('home');
+    const input = document.getElementById('searchInput');
+    if (input) {
+      input.value = safeTitle;
+      setTimeout(() => search(), 300);
+    }
   }
 
-  // 旧逻辑兜底（结果页模块未加载时）
-  const safeTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  switchPage('home');
-  const input = document.getElementById('searchInput');
-  if (input) {
-    input.value = safeTitle;
-    setTimeout(() => search(), 300);
+  // 结果页片段按需加载：先补齐再进入，避免在空容器上渲染
+  if (window.LeLePages && typeof window.LeLePages.ensure === 'function' && !window.LeLePages.isLoaded('movies')) {
+    window.LeLePages.ensure('movies').then(open);
+  } else {
+    open();
   }
 }
 

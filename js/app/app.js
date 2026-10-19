@@ -48,24 +48,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 150);
     }
 
-    // 初始化API复选框
-    initAPICheckboxes();
+    // 数据源选择逻辑（含每日刷新/版本迁移）不依赖 DOM，仍需在首屏执行；
+    // 设置页的复选框渲染延后到片段加载后（见 initSettingsPage）
+    if (typeof applyNewDataSourceLogic === 'function') applyNewDataSourceLogic();
 
-    // 初始化自定义API列表
-    renderCustomAPIsList();
-
-    // 初始化显示选中的API数量
-    updateSelectedApiCount();
-
-    // 同步隐藏内容模式开关状态（统一由 checkHiddenAPIsSelected 处理）
-    checkHiddenAPIsSelected();
-
-    // 设置广告过滤开关初始状态
-    const adFilterToggle = document.getElementById('adFilterToggle');
-    if (adFilterToggle) {
-        // 默认打开分片广告过滤功能
-        adFilterToggle.checked = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false'; // 默认为true
-    }
+    // 首帧直达设置页时片段可能已就绪，这里先跑一次；否则由路由在片段插入后调用
+    initSettingsPage();
 
     // 设置事件监听器
     setupEventListeners();
@@ -321,4 +309,38 @@ function initSettingsPanels() {
 }
 
 window.__LELETV_INIT_SETTINGS_PANELS__ = initSettingsPanels;
-document.addEventListener('DOMContentLoaded', initSettingsPanels);
+
+// 设置页整体初始化：片段按需插入后由路由调用。
+// 首屏 DOM 里没有设置页标记，所以所有设置页渲染/绑定都必须集中在这里处理。
+function initSettingsPage() {
+    // 片段还没插入：什么都不做（路由会在插入后重新调用）
+    if (!document.getElementById('apiCheckboxes')) return;
+
+    initAPICheckboxes();
+    renderCustomAPIsList();
+    updateSelectedApiCount();
+    checkHiddenAPIsSelected();
+
+    const adFilterToggle = document.getElementById('adFilterToggle');
+    if (adFilterToggle) {
+        adFilterToggle.checked = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false';
+    }
+
+    // 私密模式 / 广告过滤开关的绑定在 app-search.js，首屏时片段不存在，这里补绑（函数内幂等）
+    if (typeof window.__LELETV_BIND_SETTINGS_PAGE__ === 'function') {
+        window.__LELETV_BIND_SETTINGS_PAGE__();
+    }
+
+    // 首页与导航布局开关：片段插入后同步勾选状态
+    if (window.LeLeLayout && typeof window.LeLeLayout.refresh === 'function') {
+        window.LeLeLayout.refresh();
+    }
+
+    // 主题配色盘由 theme-system.js 渲染；脚本与片段都就绪后补一次
+    if (window.LeLeThemeSystem && typeof window.LeLeThemeSystem.render === 'function') {
+        window.LeLeThemeSystem.render();
+    }
+
+    initSettingsPanels();
+}
+window.__LELETV_INIT_SETTINGS_PAGE__ = initSettingsPage;

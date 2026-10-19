@@ -824,6 +824,9 @@ function handleHashChange() {
   showPage(page);
 }
 
+// 当前显示的页面在片段加载完成后才落地，token 用于丢弃过期的加载回调
+var _pageShowToken = 0;
+
 function showPage(n) {
   // 私密模式下分类页不可达：hash 直达或重载落点落在分类页时回落首页（不加载 TMDB 分类数据）
   if (isCategoryPageBlocked(n)) {
@@ -838,6 +841,8 @@ function showPage(n) {
     saveCategoryFilterPrefs();
   }
   currentPage = n;
+  // 并发保护：片段按需加载是异步的，快速切页/连续返回时只允许最后一次目标页落地
+  var token = ++_pageShowToken;
   function _apply() {
     document.querySelectorAll('.page-content').forEach(function(e) { e.classList.remove('active'); });
     var t = document.getElementById('page-' + n);
@@ -857,16 +862,28 @@ function showPage(n) {
   }
   // 粒子过渡（数据域切换重载）时跳过视图过渡：首帧直达已把设置页显示出来，
   // 再叠一层 cross-fade 会与粒子汇聚打架
-  if (document.startViewTransition && !_particleIncoming) {
-    var transition = document.startViewTransition(_apply);
-    // 连着切页（或页面切到后台）时，上一次过渡会被浏览器中止，这几个 promise 会以 InvalidStateError 拒绝，
-    // 属于正常情况，不让它冒成「未处理的 Promise 错误」
-    ['ready', 'finished', 'updateCallbackDone'].forEach(function (key) {
-      if (transition && transition[key] && typeof transition[key].catch === 'function') transition[key].catch(function () {});
-    });
-  } else {
-    _apply();
+  function _show() {
+    // 片段加载期间用户已切到别的页面：丢弃这次迟到的显示
+    if (token !== _pageShowToken) return;
+    if (document.startViewTransition && !_particleIncoming) {
+      var transition = document.startViewTransition(_apply);
+      // 连着切页（或页面切到后台）时，上一次过渡会被浏览器中止，这几个 promise 会以 InvalidStateError 拒绝，
+      // 属于正常情况，不让它冒成「未处理的 Promise 错误」
+      ['ready', 'finished', 'updateCallbackDone'].forEach(function (key) {
+        if (transition && transition[key] && typeof transition[key].catch === 'function') transition[key].catch(function () {});
+      });
+    } else {
+      _apply();
+    }
   }
+
+  // 非首页页面按需加载：先补齐 HTML 片段、页面样式与页面脚本，再显示；
+  // hash 地址、前进/后退和导航按钮的调用方式都不变（失败时加载器会插入占位页）
+  if (window.LeLePages && typeof window.LeLePages.ensure === 'function' && !window.LeLePages.isLoaded(n)) {
+    window.LeLePages.ensure(n).then(_show);
+    return;
+  }
+  _show();
 }
 
 function updateNavButtons(a) {
@@ -890,8 +907,20 @@ function handlePageLoad(n) {
       seedCategoryFiltersFromPrefs();
       if (typeof initTmdbCategory === 'function') initTmdbCategory();
       break;
-    case 'history': if (typeof loadViewingHistory === 'function') loadViewingHistory(); break;
-    case 'movies': if (typeof initMoviesPage === 'function') initMoviesPage(); break;
+    case 'history':
+      // 片段在 showPage 里已按需插入，这里补事件绑定并加载数据
+      if (typeof window.initViewingHistoryBindings === 'function') window.initViewingHistoryBindings();
+      if (typeof loadViewingHistory === 'function') loadViewingHistory();
+      break;
+    case 'movies':
+      // 结果页的顶栏/筛选事件只在片段插入后才能绑定
+      if (typeof window.initMoviesPageBindings === 'function') window.initMoviesPageBindings();
+      if (typeof initMoviesPage === 'function') initMoviesPage();
+      break;
+    case 'settings':
+      // 设置页的开关、片源列表、主题盘与设备面板都在片段加载后初始化
+      if (typeof window.__LELETV_INIT_SETTINGS_PAGE__ === 'function') window.__LELETV_INIT_SETTINGS_PAGE__();
+      break;
     case 'about': loadAboutPageChangelog(); break;
     case 'readme': loadReadmePage(); break;
   }

@@ -1,0 +1,35 @@
+        <div id="page-movies" class="page-content">
+            <div class="movies-page-layout">
+                <!-- 顶栏：返回 + 常驻搜索框（关键词可直接改）+ 结果计数 -->
+                <header class="movies-topbar">
+                    <div class="v2-wrap movies-topbar-inner">
+                        <button type="button" class="movies-back-btn" data-action="movies-back" aria-label="返回">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+                        </button>
+                        <h1 id="moviesTitle" class="movies-sr"></h1>
+                        <form id="moviesResearchForm" class="movies-search" role="search">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                            <input type="search" id="moviesResearchInput" placeholder="搜索片名或 m3u8 直链" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="搜索影片">
+                            <button type="button" class="movies-search-clear" data-role="clear" aria-label="清空搜索词">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                            </button>
+                        </form>
+                        <p class="movies-bar-meta" aria-live="polite">
+                            <span class="movies-status-dot" id="moviesStatusDot"></span>
+                            <span id="moviesSubtitle" class="movies-subtitle"></span>
+                        </p>
+                    </div>
+                </header>
+                <div class="v2-wrap movies-body">
+                    <!-- 筛选一行：左边按类型分段（全部 / 正片 / 其他版本 / 衍生短剧 / 相关），右边来源与本次延迟 -->
+                    <div id="moviesFilters" class="movies-filters" hidden>
+                        <div id="moviesSegs" class="movies-seg" role="tablist" aria-label="按类型筛选"></div>
+                        <div id="moviesSourcesList" class="movies-sources" aria-label="按片源筛选"></div>
+                    </div>
+                    <!-- 最佳匹配：海报取色背景 + 季切换 + 播放 / 线路 -->
+                    <section id="moviesHero" class="movies-hero" aria-label="最佳匹配" hidden></section>
+                    <!-- 分组货架 / 单个片源的平铺列表 -->
+                    <div id="moviesResults" class="movies-shelves" aria-label="检索结果"></div>
+                </div>
+            </div>
+        </div>

@@ -145,6 +145,61 @@ function addCardRipple(el, e) {
     }
 }
 
+// 设置页开关绑定：幂等，可在片段插入前后重复调用。
+// 设置页标记已拆到 pages/settings.html，首屏 setupEventListeners 时元素还不存在，
+// 因此既在首屏尝试一次，也由 initSettingsPage 在片段插入后补一次。
+function bindSettingsPageEvents() {
+    const hiddenModeToggle = document.getElementById('hiddenContentModeToggle');
+    if (hiddenModeToggle && hiddenModeToggle.dataset.leleBound !== '1') {
+        hiddenModeToggle.dataset.leleBound = '1';
+        hiddenModeToggle.checked = isHiddenContentMode();
+        hiddenModeToggle.addEventListener('change', async function (e) {
+            const wantHidden = e.target.checked;
+
+            // 进入隐藏域需要私密密码；退出回正常域不需要
+            if (wantHidden) {
+                const isAdminVerified = await verifyAdminPassword();
+                if (!isAdminVerified) {
+                    e.target.checked = false;
+                    showToast('需要私密密码才能进入私密模式', 'warning');
+                    return;
+                }
+            }
+
+            try {
+                localStorage.setItem(HIDDEN_MODE_KEY, wantHidden ? 'true' : 'false');
+            } catch (err) {
+                console.error('切换私密模式失败:', err);
+                e.target.checked = !wantHidden;
+                return;
+            }
+
+            // 数据域已切换：源/历史/自定义API都要按新域重新读取，重载最可靠
+            // 重载后停留在设置页（开关所在页），避免回落到默认首页
+            rememberPageForReload('settings');
+            // 不沿用上次搜索：清掉搜索结果缓存（否则重载或返回时会恢复旧域的结果页）
+            try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (err) { /* 忽略 */ }
+            // 动效期间锁住开关，避免重复触发切换
+            e.target.disabled = true;
+            // 过渡动效：卡片粒子消散 → 重载后粒子汇聚生成新页面（期间不出现加载弹窗/闪屏）
+            if (typeof playParticleDissolve === 'function') {
+                playParticleDissolve(function () { window.location.reload(); });
+            } else {
+                window.location.reload();
+            }
+        });
+    }
+
+    const adFilterToggle = document.getElementById('adFilterToggle');
+    if (adFilterToggle && adFilterToggle.dataset.leleBound !== '1') {
+        adFilterToggle.dataset.leleBound = '1';
+        adFilterToggle.addEventListener('change', function (e) {
+            localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, e.target.checked);
+        });
+    }
+}
+window.__LELETV_BIND_SETTINGS_PAGE__ = bindSettingsPageEvents;
+
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
 
@@ -213,6 +268,10 @@ function setupEventListeners() {
 
     // focus 确保宽窗口下键盘正常弹出
     searchInput.addEventListener('focus', function () {
+        // 搜索会跳到结果页：聚焦时提前预取片段，首次搜索不必等待
+        if (window.LeLePages && typeof window.LeLePages.prefetch === 'function') {
+            window.LeLePages.prefetch('movies');
+        }
         if (!_searchReady) return;
         if (window.innerWidth > 639) {
             showSearchHistory(this.value);
@@ -451,54 +510,8 @@ function setupEventListeners() {
     // 初始化邮箱点击事件处理器
     setupEmailClickHandlers();
 
-    // 隐藏内容模式开关：切换数据域（正常 ⇄ 隐藏），进入隐藏域需私密密码
-    const hiddenModeToggle = document.getElementById('hiddenContentModeToggle');
-    if (hiddenModeToggle) {
-        hiddenModeToggle.checked = isHiddenContentMode();
-        hiddenModeToggle.addEventListener('change', async function (e) {
-            const wantHidden = e.target.checked;
-
-            // 进入隐藏域需要私密密码；退出回正常域不需要
-            if (wantHidden) {
-                const isAdminVerified = await verifyAdminPassword();
-                if (!isAdminVerified) {
-                    e.target.checked = false;
-                    showToast('需要私密密码才能进入私密模式', 'warning');
-                    return;
-                }
-            }
-
-            try {
-                localStorage.setItem(HIDDEN_MODE_KEY, wantHidden ? 'true' : 'false');
-            } catch (err) {
-                console.error('切换私密模式失败:', err);
-                e.target.checked = !wantHidden;
-                return;
-            }
-
-            // 数据域已切换：源/历史/自定义API都要按新域重新读取，重载最可靠
-            // 重载后停留在设置页（开关所在页），避免回落到默认首页
-            rememberPageForReload('settings');
-            // 不沿用上次搜索：清掉搜索结果缓存（否则重载或返回时会恢复旧域的结果页）
-            try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (err) { /* 忽略 */ }
-            // 动效期间锁住开关，避免重复触发切换
-            e.target.disabled = true;
-            // 过渡动效：卡片粒子消散 → 重载后粒子汇聚生成新页面（期间不出现加载弹窗/闪屏）
-            if (typeof playParticleDissolve === 'function') {
-                playParticleDissolve(function () { window.location.reload(); });
-            } else {
-                window.location.reload();
-            }
-        });
-    }
-
-    // 广告过滤开关事件绑定
-    const adFilterToggle = document.getElementById('adFilterToggle');
-    if (adFilterToggle) {
-        adFilterToggle.addEventListener('change', function (e) {
-            localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, e.target.checked);
-        });
-    }
+    // 设置页开关：首屏时片段还不存在，这里先尝试绑定；片段插入后由 initSettingsPage 补绑
+    bindSettingsPageEvents();
 
     // 搜索源过滤标签切换（事件委托）
     const sourceFilterTabs = document.getElementById('sourceFilterTabs');
@@ -805,6 +818,13 @@ async function search() {
     }
     _searchThrottled = true;
     const releaseThrottle = () => { _searchThrottled = false; };
+
+    // 结果页片段按需加载：首次搜索前先补齐，避免退回到已移除的首页结果区。
+    // ensure() 失败时会显示占位页并 resolve，搜索流程仍可继续。
+    if (window.LeLePages && typeof window.LeLePages.ensure === 'function' && !window.LeLePages.isLoaded('movies')) {
+        await window.LeLePages.ensure('movies');
+    }
+
     // 强化的密码保护校验 - 防止绕过
     // 已通过邀请码验证的用户跳过密码检查
     const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();

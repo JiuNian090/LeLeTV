@@ -1,0 +1,21 @@
+        <div id="page-readme" class="page-content">
+            <div class="v2-wrap v2-page">
+                <div class="readme-topbar">
+                    <button type="button" data-action="switch-page" data-page="about" class="movies-back-btn readme-back-btn" aria-label="返回关于">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg>
+                    </button>
+                    <h1 class="v2-page-title readme-title">项目说明</h1>
+                </div>
+                <div class="readme-body">
+                    <div id="readmeLoading" class="readme-state">
+                        <span class="v2-spinner" aria-hidden="true"></span>
+                        <span>正在加载</span>
+                    </div>
+                    <div id="readmeContent" class="markdown-body hidden"></div>
+                    <div id="readmeError" class="readme-state hidden">
+                        <span>加载失败，请检查网络后重试。</span>
+                        <button type="button" id="retryReadmeBtn" class="v2-btn v2-btn--secondary v2-btn--sm">重新加载</button>
+                    </div>
+                </div>
+            </div>
+        </div>

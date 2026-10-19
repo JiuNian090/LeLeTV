@@ -32,13 +32,29 @@ const APP = {
   files: [
     'js/api/api-config.js', 'js/api/loadBalancer.js',
     'js/ui/ui-search-history.js', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
-    'js/api/api.js', 'js/api/search.js', 'js/api/tmdb.js',
+    'js/api/api.js', 'js/api/search.js',
     'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
     'js/app/app-search.js', 'js/app/app-config.js', 'js/app/app.js',
-    'js/app/app-init.js', 'js/app/app-routing.js',
+    'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
     'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
+  ],
+};
+
+// 分类页（TMDB 浏览）：只在首次进入分类页时加载
+const CATEGORY = {
+  name: 'leletv-category',
+  files: [
+    'js/api/tmdb.js',
+  ],
+};
+
+// 设置页：主题配色、设备管理、邀请码管理；只在首次进入设置页时加载
+const SETTINGS = {
+  name: 'leletv-settings',
+  files: [
+    'js/ui/theme-system.js', 'js/auth/admin-panel.js', 'js/auth/user-devices.js',
   ],
 };
 
@@ -122,8 +138,9 @@ async function main() {
   }
   console.log('[build] building...\n');
 
-  const [coreFile, appFile, playerFile] = await Promise.all([
+  const [coreFile, appFile, playerFile, categoryFile, settingsFile] = await Promise.all([
     buildBundle(CORE), buildBundle(APP), buildBundle(PLAYER),
+    buildBundle(CATEGORY), buildBundle(SETTINGS),
   ]);
 
   console.log('\n[build] updating HTML...');
@@ -138,9 +155,16 @@ async function main() {
   idx = idx.replace(envMarker, idxBundle + idxEol + idxEol + envMarker);
   // 结果页预取播放页资源用的 bundle 名
   idx = idx.replace(/dist\/leletv-player\.[a-z0-9]+\.js/g, 'dist/' + playerFile);
+  // 页面按需 bundle 的映射（js/app/page-loader.js 读取）
+  const pageBundles = JSON.stringify({
+    category: 'dist/' + categoryFile,
+    settings: 'dist/' + settingsFile,
+  });
+  idx = idx.replace(/<meta name="leletv-page-bundles"[^>]*>/, '<meta name="leletv-page-bundles" content=\'' + pageBundles + '\'>');
   idx = collapseBlankLines(idx);
   fs.writeFileSync(path.join(ROOT, 'index.html'), idx, 'utf8');
   console.log('[index.html] -> dist/' + coreFile + ' + dist/' + appFile);
+  console.log('[page bundles] -> dist/' + categoryFile + ' + dist/' + settingsFile);
 
   // --- player.html ---
   let ply = fs.readFileSync(path.join(ROOT, 'player.html'), 'utf8');

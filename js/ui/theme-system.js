@@ -994,9 +994,14 @@
 
     // ===================== 全局事件 =====================
 
-    function bindGlobalEvents() {
+    var _globalBound = false;
+    var _gridBound = false;
+
+    /** 只绑定设置页片段内的元素（幂等）：片段插入后由 renderForSettings() 补一次 */
+    function bindGridEvents() {
         var grid = document.getElementById('themeDiscGrid');
-        if (grid) {
+        if (grid && !_gridBound) {
+            _gridBound = true;
             grid.addEventListener('click', function (e) {
                 var btn = e.target.closest ? e.target.closest('.theme-scheme') : null;
                 if (!btn) return;
@@ -1005,6 +1010,19 @@
                 openPicker(btn, preset);
             });
         }
+
+        // 恢复默认：清掉当前模式的存档，回到 css 的默认配色
+        var resetBtn = document.getElementById('themeResetBtn');
+        if (resetBtn && resetBtn.dataset.leleBound !== '1') {
+            resetBtn.dataset.leleBound = '1';
+            resetBtn.addEventListener('click', resetTheme);
+        }
+    }
+
+    function bindGlobalEvents() {
+        bindGridEvents();
+        if (_globalBound) return;
+        _globalBound = true;
 
         // 点击气泡外部关闭（方案卡片自身除外，否则会被立即关掉）
         document.addEventListener('pointerdown', function (e) {
@@ -1020,10 +1038,6 @@
             }
         });
 
-        // 恢复默认：清掉当前模式的存档，回到 css 的默认配色
-        var resetBtn = document.getElementById('themeResetBtn');
-        if (resetBtn) resetBtn.addEventListener('click', resetTheme);
-
         // 滚动 / 改变窗口尺寸后锚点会错位，直接收起更干净；刚打开 400ms 内的滚动事件是点击前那下滚动的余波，不算
         window.addEventListener('scroll', function () {
             if (!_picker || !_picker.el.classList.contains('is-open')) return;
@@ -1036,6 +1050,13 @@
     }
 
     // ===================== 初始化 =====================
+
+    /** 设置页片段插入后补渲染：页面脚本可能与片段并行加载，首次 init 时网格还不存在 */
+    function renderForSettings() {
+        renderCard();
+        bindGlobalEvents();
+    }
+    window.LeLeThemeSystem = { render: renderForSettings };
 
     function init() {
         // 已保存过配色才写覆盖；否则保持 css 默认（正常霓虹夜场 / 私密铜色）
