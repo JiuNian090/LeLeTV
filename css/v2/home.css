@@ -1327,3 +1327,82 @@ html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
         height: 20px;
     }
 }
+
+/* ============ 竖屏手机：搜索框 + 聚合动效刚好一屏 ============ */
+/* 只覆盖窄屏竖屏；横屏手机与桌面仍按上面的「只露第一行动效」布局。
+   动效高度 = 850 × --hub-s，标题区占「视口 − 导航 − 动效高度 − 间距」，
+   内容靠下对齐，搜索框与动效之间只留一个紧凑间距，动效底部正好落在首屏底。 */
+@media (max-width: 767px) and (orientation: portrait) {
+    .home-layout.v2-home {
+        --hub-s: 0.42;
+        gap: var(--v2-s5);
+        padding-top: 0;
+    }
+
+    /* 开启聚合动效：动效紧接搜索框，并完整显示在首屏内 */
+    html:not([data-home-hub="off"]) .v2-hero {
+        min-height: calc(100vh - 56px - 850px * var(--hub-s) - var(--v2-s5));
+        min-height: calc(100svh - 56px - 850px * var(--hub-s) - var(--v2-s5));
+        min-height: calc(100svh - 56px - 850px * var(--hub-s) - var(--v2-s5) - env(safe-area-inset-bottom, 0px));
+        align-content: end;
+        /* 搜索框不贴到动效上：底部留一点余量，LeLeTV 与搜索框整体上移 */
+        padding-bottom: clamp(28px, 7vh, 80px);
+    }
+
+    /* PWA 全屏时底部有 Home Indicator：给动效留出安全区，避免最后一行卡片被压住。
+       先显式清零，覆盖 .home-layout 原有的 72px 底边距；支持 env() 时再换成安全区高度 */
+    html:not([data-home-hub="off"]) .home-layout.v2-home {
+        padding-bottom: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html:not([data-home-hub="off"]) .v2-hub {
+        margin-top: 0;
+    }
+
+    /* 关闭聚合动效：LeLeTV 与搜索框整体在首屏垂直居中 */
+    html[data-home-hub="off"] .home-layout.v2-home,
+    html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
+        min-height: 0;
+        align-content: start;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    html[data-home-hub="off"] .v2-hero,
+    html[data-home-hub="off"][data-home-shelves="off"] .v2-hero {
+        min-height: calc(100vh - 56px);
+        min-height: calc(100svh - 56px);
+        align-content: center;
+        /* 居中但重心明显偏上：底部多留一段空白，内容中心随之上移，避免视觉上往下坠 */
+        padding-bottom: clamp(64px, 20vh, 180px);
+    }
+}
+
+/* 矮屏手机：按视口高度缩小动效，避免搜索框 + 完整动效超出一屏 */
+@media (max-width: 767px) and (orientation: portrait) and (max-height: 700px) {
+    .home-layout.v2-home {
+        --hub-s: 0.4;
+    }
+
+    /* 小屏垂直空间紧：收一点底部余量，给字标留出距导航的空隙 */
+    html:not([data-home-hub="off"]) .v2-hero {
+        padding-bottom: 36px;
+    }
+}
+
+@media (max-width: 767px) and (orientation: portrait) and (max-height: 640px) {
+    .home-layout.v2-home {
+        --hub-s: 0.36;
+    }
+}
+
+@media (max-width: 767px) and (orientation: portrait) and (max-height: 600px) {
+    .home-layout.v2-home {
+        --hub-s: 0.32;
+    }
+
+    html:not([data-home-hub="off"]) .v2-hero {
+        padding-bottom: 20px;
+    }
+}
