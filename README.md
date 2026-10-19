@@ -56,6 +56,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 ### 视频搜索
 - 聚合 21 个第三方采集站 API，多源并发搜索
+- **m3u8 直链播放**：搜索框可直接粘贴 m3u8 播放列表地址，自动识别标题并跳转播放页，跳过聚合搜索
 - 搜索结果内存缓存（5 分钟 TTL），减少重复请求
 - **搜索历史下拉菜单**：点击搜索框展开，输入实时过滤，支持逐条删除与清空
 - **搜索框一键清空**：快速清空关键词，兼顾输入法联想与键盘操作
@@ -102,7 +103,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 - 智能缓存管理：24 小时清理临时数据，保护用户设置与历史
 - **首页与导航偏好**：可关闭首页聚合动效、首页内容板块，导航可只显示图标（手机端始终只显示图标）；私密模式下聚合动效与内容板块默认关闭，仍可在设置里手动打开
 - PWA 可安装（`standalone` + `window-controls-overlay`），检测到可安装时弹出提示条（iOS / 局域网 http 给出手动步骤）
-- 启动体验：冷启动全程黑底无白屏，启动屏显示真实加载进度环；添加到主屏后（含 iPhone / iPad）启动画面同样为黑底 Logo
+- 启动体验：冷启动全程黑底无白屏，首帧即最终背景，随后播放星轨入场动画，字标下方显示真实加载进度；添加到主屏后由网页直接接管为同一套动画，不再依赖静态启动图
 - 版本更新自动检测，提示后重载生效
 
 ## 🔐 邀请码验证系统
@@ -247,7 +248,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 ```bash
 npm run build
 # ├─ node scripts/generate-version.mjs   # 读取 VERSION.txt，注入 {{LELETV_VERSION}} 与 ?v= 缓存参数
-# └─ node scripts/build-bundles.mjs      # 按 CORE / APP / PLAYER 三类拼接并用 esbuild 压缩 → dist/
+# └─ node scripts/build-bundles.mjs      # 按 CORE / APP / PLAYER 拼接，并生成分类页 / 设置页按需 bundle → dist/
 ```
 
 打包分组：
@@ -257,10 +258,14 @@ npm run build
 | `leletv-core.*.js` | `js/core`、`js/api/remote-sources.js`、`js/auth`、`js/ui/ui-core.js`、`js/ui/motion-pref.js`、`js/ui/line-probe.js` | `index.html` + `player.html` |
 | `leletv-app.*.js` | `js/api`、`js/ui`、`js/app`、`js/effects`、`js/utils` | `index.html` |
 | `leletv-player.*.js` | `js/player` + 播放页所需的 api/ui 模块 | `player.html` |
+| `leletv-category.*.js` | `js/api/tmdb.js` | 首次进入分类页时按需加载 |
+| `leletv-settings.*.js` | `js/ui/theme-system.js`、`js/auth/admin-panel.js`、`js/auth/user-devices.js` | 首次进入设置页时按需加载 |
 
-> `dist/` 内的文件名带内容哈希，由构建生成（`.gitignore` 已忽略）。未列入 bundle 的模块（如 `js/auth/user-devices.js`、`js/auth/admin-panel.js`、`js/ui/theme-system.js`）由 HTML 以 `<script defer>` 单独加载。
+> `dist/` 内的文件名带内容哈希，由构建生成（`.gitignore` 已忽略）。按需 bundle 的文件名由构建写入 `index.html` 的 `<meta name="leletv-page-bundles">`，供 `js/app/page-loader.js` 读取；内页片段（`pages/*.html`）与页面样式（`css/v2/views.css`、`css/v2/admin.css`）也在首次进入对应页面时再拉取。
 
 ### SPA 页面路由
+
+首页与共享外壳在 `index.html` 中；其余页面拆为 `pages/*.html` 片段，首次进入时由 `js/app/page-loader.js` 按需拉取片段、专属样式与脚本。
 
 | 页面 | 路由 | DOM 容器 |
 |------|------|----------|
@@ -298,9 +303,10 @@ LeLeTV/
 │   ├── auth/                   #   邀请码验证、管理员面板、设备管理
 │   ├── player/                 #   播放器核心与 UI、剧集、清晰度、详情、快捷键、自动换线、关灯
 │   ├── ui/                     #   搜索结果卡片、分类页、历史、首页板块、线路预检、主题系统、PWA 安装提示
-│   ├── app/                    #   入口、路由、搜索流程、配置管理
+│   ├── app/                    #   入口、路由、搜索流程、配置管理、页面按需加载
 │   ├── effects/                #   首页聚合动效
 │   └── utils/                  #   版本检测、首页脚本
+├── pages/                      # 内页 HTML 片段（结果 / 分类 / 历史 / 设置 / 关于 / 项目说明），首次进入时按需加载
 ├── dist/                       # esbuild 构建产物（构建生成，不提交）
 ├── libs/                       # 第三方库
 ├── functions/                  # Cloudflare Pages Functions
@@ -310,7 +316,7 @@ LeLeTV/
 │   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API + 数据源下发 + /admin 面板
 ├── migrations/                 # D1 迁移脚本（001 表结构 → 004 数据源表）
 ├── scripts/                    # 版本生成、打包、品牌图与启动图生成（scripts/brand）、钩子安装、技能索引同步脚本
-├── image/                      # 品牌 Logo 与图标、启动图（PWA / iOS 主屏）
+├── image/                      # 品牌 Logo 与图标、启动图（当前启动由页面首帧动画接管，启动图未启用）
 ├── .agents/                    # AI 技能与规则（技能正文、规则文档、注册表，跨 Agent 共用）
 └── .github/                    # Issue 模板与工作流
 ```
@@ -491,7 +497,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.0.7`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.1.0`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -503,15 +509,18 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v4.1.0 (2026-10-19)
+- 🎉 新增 搜索框支持粘贴 m3u8 直链，自动识别后直接进入播放页，省去聚合搜索
+- 🎉 新增 页面按需加载，分类、设置、历史、关于等页面首次进入时才加载，首页打开更轻快
+- ✨ 优化 启动屏改为首帧直达 + 星轨入场动画，去掉静态启动图，冷启动画面更连贯
+- ✨ 优化 竖屏手机首页布局，搜索框与聚合动效在首屏内完整显示
+- 🔧 修复 自定义资源站列表被超长地址撑破卡片布局的问题
+
 ### v4.0.7 (2026-09-29)
 - 🔧 回退到 v4.0.4 稳定状态，修复近期引入的显示异常
 
 ### v4.0.4 (2026-09-28)
 - 🎉 新增 导出/导入配置改为ZIP压缩包，设置与历史数据分开打包，兼容旧版JSON备份
-
-### v4.0.3 (2026-09-28)
-- 🎨 样式 导航栏平时保持半透明底色不模糊，图标更清晰；滚动时内容穿过导航栏才启用毛玻璃
-- 🎨 样式 手机竖屏数据源勾选改为3列显示，一屏看更多采集源
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
