@@ -727,9 +727,76 @@ function clearSearchInput() {
     if (!wasResetting) hideSearchHistory();
 }
 
+// m3u8 直链识别：搜索框允许直接粘贴播放列表地址（http/https，路径以 .m3u8 结尾）
+// 返回规范化后的 URL；不是直链时返回 null，继续走正常搜索
+function parseM3U8Input(input) {
+    const raw = String(input || '').trim();
+    if (!raw || /\s/.test(raw)) return null;
+    if (!/^https?:\/\//i.test(raw)) return null;
+    let url;
+    try { url = new URL(raw); } catch (e) { return null; }
+    if (!/^https?:$/.test(url.protocol)) return null;
+    if (!/\.m3u8$/i.test(url.pathname)) return null;
+    return url.href;
+}
+
+// 从 m3u8 地址推导可读标题：优先文件名；index/master 这类通用名回退到上一级目录
+function m3u8TitleFromUrl(url) {
+    try {
+        const parsed = new URL(url);
+        const segments = parsed.pathname.split('/').filter(Boolean);
+        const fileName = decodeURIComponent(segments.pop() || '').replace(/\.m3u8$/i, '');
+        if (fileName && !/^(index|master|playlist|stream|main|video|hls|chunklist)$/i.test(fileName)) {
+            return fileName;
+        }
+        const parent = decodeURIComponent(segments.pop() || '');
+        return parent || parsed.hostname || '在线视频';
+    } catch (e) {
+        return '在线视频';
+    }
+}
+
+// 直接把 m3u8 链接交给播放页：与点卡片播放走同一条链路，仅省去聚合搜索
+function playM3U8Direct(url) {
+    const title = m3u8TitleFromUrl(url);
+    try {
+        localStorage.setItem('currentVideoTitle', title);
+        localStorage.setItem('lastPlayTime', Date.now());
+        localStorage.setItem('lastSearchPage', window.location.href);
+        // 直链不继承上一部剧的剧集/详情，避免播放页渲染残留的集数按钮与封面
+        localStorage.removeItem('currentEpisodes');
+        localStorage.removeItem('currentEpisodeIndex');
+        localStorage.removeItem('currentVideoInfo');
+    } catch (e) {
+        console.warn('[LeLeTV] 保存播放状态失败:', e);
+    }
+
+    let playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+    if (typeof buildPlayerBackUrl === 'function') {
+        const backUrl = buildPlayerBackUrl();
+        if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;
+    }
+    if (typeof navigateToPlayer === 'function') navigateToPlayer(playerUrl);
+    else window.location.href = playerUrl;
+}
+
 async function search() {
     // 关闭移动端覆盖层（如果有）
     closeMobileSearch();
+    hideSearchHistory();
+
+    const query = document.getElementById('searchInput').value.trim();
+    if (!query) {
+        showToast('请输入搜索内容', 'info');
+        return;
+    }
+
+    // m3u8 直链：自动识别并直接用播放页打开，不进入聚合搜索
+    const directM3u8Url = parseM3U8Input(query);
+    if (directM3u8Url) {
+        playM3U8Direct(directM3u8Url);
+        return;
+    }
 
     // 防重复搜索节流
     if (_searchThrottled) {
@@ -737,20 +804,12 @@ async function search() {
         return;
     }
     _searchThrottled = true;
-    hideSearchHistory();
     const releaseThrottle = () => { _searchThrottled = false; };
     // 强化的密码保护校验 - 防止绕过
     // 已通过邀请码验证的用户跳过密码检查
     const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
     if (!_isInviteVerified) {
         // 未验证邀请码 - 搜索需要弹登录框，由角色逻辑控制
-    }
-    const query = document.getElementById('searchInput').value.trim();
-
-    if (!query) {
-        showToast('请输入搜索内容', 'info');
-        releaseThrottle();
-        return;
     }
 
     if (selectedAPIs.length === 0) {
