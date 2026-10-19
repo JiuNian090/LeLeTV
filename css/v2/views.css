@@ -1357,9 +1357,12 @@
 /* 自定义资源站 */
 .custom-apis-list {
     display: grid;
+    /* 显式收缩轨道：长 URL 是 nowrap，默认 auto 轨道会按 max-content 撑破卡片 */
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: 6px;
     flex: 1;
+    min-width: 0;
 }
 
 /* 一个都没有时，提示文字在卡片剩余空间里居中 */
@@ -1371,6 +1374,7 @@
 .v2-custom-api {
     display: flex;
     align-items: center;
+    min-width: 0;
     gap: 12px;
     padding: 10px 10px 10px 12px;
     border-radius: 12px;
@@ -1409,6 +1413,7 @@
 
 .v2-custom-api-actions {
     display: flex;
+    flex: none;
     gap: 2px;
 }
 
