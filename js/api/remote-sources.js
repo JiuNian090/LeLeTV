@@ -149,7 +149,8 @@ function syncRemoteApiSites() {
     if (!base) return Promise.resolve([]);
 
     const hiddenMode = (typeof isHiddenContentMode === 'function') && isHiddenContentMode();
-    // 私密源接口要求管理员 token；页面上公开的 HIDDENKEY hash 恰好就是它（读接口允许）
+    // 私密源接口要求隐私模式凭证；页面上公开的 HIDDENKEY hash 就是它
+    // （现在只能读 /api-sites/hidden，不再具备任何管理权限）
     const token = hiddenMode ? ((window.__ENV__ && window.__ENV__.HIDDENKEY) || '') : '';
 
     const controller = (typeof AbortController === 'function') ? new AbortController() : null;

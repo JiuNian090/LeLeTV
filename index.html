@@ -29,7 +29,7 @@
     <!-- 播放页 bundle 的文件名（打包脚本会更新），结果页出来后用它预取播放页资源 -->
     <meta name="leletv-player-bundle" content="dist/leletv-player.2bdmdj.js">
     <!-- 非首页页面的按需 bundle（构建脚本会更新文件名） -->
-    <meta name="leletv-page-bundles" content='{"category":"dist/leletv-category.2u4fy.js","settings":"dist/leletv-settings.yasp8l.js"}'>
+    <meta name="leletv-page-bundles" content='{"category":"dist/leletv-category.2u4fy.js","settings":"dist/leletv-settings.f6kyfj.js"}'>
 
     <!-- PWA：添加到主屏/桌面后以独立窗口运行（无浏览器 UI） -->
     <!-- mobile-web-app-capable 为标准化写法（Chrome 已废弃 apple-* 前缀）；apple-* 保留以兼容 iOS Safari -->
@@ -1421,8 +1421,8 @@
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.miuqd5.js?v=v4.1.0" defer></script>
-    <script src="dist/leletv-app.dgn63q.js?v=v4.1.0" defer></script>
+    <script src="dist/leletv-core.u1orfj.js?v=v4.1.0" defer></script>
+    <script src="dist/leletv-app.ls0iuk.js?v=v4.1.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -1430,6 +1430,16 @@
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
         window.__LELETV_VERSION__ = "v4.1.0";
+        // 鉴权与 TMDB 都走同一个 Worker：在首次请求前先建好 DNS/TLS，省掉登录时的一次握手
+        (function () {
+            var base = window.__ENV__.TMDB_WORKER_URL;
+            if (!base) return;
+            var link = document.createElement('link');
+            link.rel = 'preconnect';
+            link.href = base;
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+        })();
     </script>
 
     <!-- 导航栏滚动毛玻璃：未滚动时纯半透明底，滚动后才启用 backdrop-filter -->

@@ -12,7 +12,7 @@
 //
 // 视频源配置与管理面板（源列表已从 config.js 搬到 D1，表结构见 migrations/004_add_api_sites.sql）：
 // GET  /api-sites               公开只读，仅返回启用的普通源（边缘缓存 60s）
-// GET  /api-sites/hidden        需管理员鉴权，返回启用的私密源（18+）
+// GET  /api-sites/hidden        隐私模式读取（HIDDENKEY 或管理员 token），返回启用的私密源（18+）
 // GET  /admin                   管理面板页面（自带登录框，页面本身不鉴权）
 // POST /admin/login             账号（ADMINUSER）+ 密码（ADMINKEY）换取 Bearer token
 // GET  /admin/status            运行状态（TMDB 配置、D1 就绪、源数量），需管理员鉴权
@@ -21,7 +21,8 @@
 //
 // 环境变量：
 // - TMDB_API_KEY (secret)
-// - HIDDENKEY (secret) / ADMINUSER + ADMINKEY：管理员鉴权（Bearer = 其 SHA-256）
+// - ADMINUSER + ADMINKEY：管理员鉴权（Bearer = 其 SHA-256）；HIDDENKEY 不再具备管理员权限
+// - HIDDENKEY (secret)：隐私模式密码，只用于 /api-sites/hidden 读取私密源
 // - D1: INVITE_DB binding
 //
 // 缓存策略：
@@ -69,6 +70,7 @@ function jsonResponse(data, status) {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -105,19 +107,34 @@ async function adminToken(env) {
   return sha256Hex(adminCode + '::' + adminName);
 }
 
-async function verifyAdminPassword(request, env) {
-  const authHeader = request.headers.get('Authorization') || '';
-  const token = authHeader.replace('Bearer ', '').trim();
-  if (!token) return false;
-
-  // 检查原始 HIDDENKEY（兼容旧版 PASSWORD）
-  if (env.HIDDENKEY && token === await sha256Hex(env.HIDDENKEY)) return true;
-
-  // 检查管理员设备凭证（ADMINUSER + ADMINKEY）
+/**
+ * 管理员专属鉴权：只认 ADMINKEY::ADMINUSER 换来的 token。
+ * 绝不接受 HIDDENKEY —— 它的 hash 会被注入到每个访客页面，等同于公开值。
+ * 面板页面在地址栏打开时带不了 Authorization，因此额外允许 ?key=<同一个 token>。
+ */
+async function verifyAdminOnly(request, env, url) {
   const expectedToken = await adminToken(env);
-  if (expectedToken && token === expectedToken) return true;
+  if (!expectedToken) return false;
 
-  return false;
+  const authHeader = request.headers.get('Authorization') || '';
+  let token = authHeader.replace('Bearer ', '').trim();
+  if (!token && url) token = url.searchParams.get('key') || '';
+  return token === expectedToken;
+}
+
+/**
+ * 隐私模式读鉴权：只给 /api-sites/hidden 使用。
+ * 接受隐私模式密码（HIDDENKEY 的 SHA-256）或管理员 token；不具备任何管理写权限。
+ */
+async function verifyPrivateModeRead(request, env, url) {
+  if (await verifyAdminOnly(request, env, url)) return true;
+  if (!env.HIDDENKEY) return false;
+
+  const expected = await sha256Hex(env.HIDDENKEY);
+  const authHeader = request.headers.get('Authorization') || '';
+  let token = authHeader.replace('Bearer ', '').trim();
+  if (!token && url) token = url.searchParams.get('key') || '';
+  return token === expected;
 }
 
 function getClientIP(request) {
@@ -460,11 +477,14 @@ async function handleVerify(request, env) {
   
   if (existingDevice) {
     const renewArgs = [Date.now(), getClientIP(request), getBrowserSummary(request), device_name];
-    if (withSignature) renewArgs.push(signature);
+    // 普通续期客户端可能不再上传软指纹：只在本次确实带了签名时才更新，
+    // 否则会把之前用于「设备 ID 丢失找回」的签名覆盖成空串
+    const updateSignature = withSignature && signature;
+    if (updateSignature) renewArgs.push(signature);
     renewArgs.push(existingDevice.id);
     await env.INVITE_DB.prepare(
       'UPDATE devices SET last_active_at = ?, ip_address = ?, browser = ?, device_name = ?'
-      + (withSignature ? ', device_signature = ?' : '')
+      + (updateSignature ? ', device_signature = ?' : '')
       + ' WHERE id = ?'
     ).bind(...renewArgs).run();
     
@@ -514,11 +534,13 @@ async function handleVerify(request, env) {
   
   const now = Date.now();
   const insertArgs = [code, device_name, deviceId, getBrowserSummary(request), getClientIP(request), now, now];
-  if (withSignature) insertArgs.push(signature);
+  // 新设备才需要软指纹（供以后本机 ID 丢失时找回）；空签名不写库
+  const insertSignature = withSignature && signature;
+  if (insertSignature) insertArgs.push(signature);
   await env.INVITE_DB.prepare(
     'INSERT INTO devices (code, device_name, device_fingerprint, browser, ip_address, first_active_at, last_active_at'
-    + (withSignature ? ', device_signature' : '')
-    + ') VALUES (?, ?, ?, ?, ?, ?, ?' + (withSignature ? ', ?' : '') + ')'
+    + (insertSignature ? ', device_signature' : '')
+    + ') VALUES (?, ?, ?, ?, ?, ?, ?' + (insertSignature ? ', ?' : '') + ')'
   ).bind(...insertArgs).run();
   
   const action = deviceCount.count >= invite.max_devices ? 'evicted' : 'registered';
@@ -553,7 +575,7 @@ async function handleHeartbeat(request, env) {
 }
 
 async function handleGenerate(request, env) {
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
   }
@@ -583,7 +605,7 @@ async function handleGenerate(request, env) {
 }
 
 async function handleList(request, env) {
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
   }
@@ -614,7 +636,7 @@ async function handleList(request, env) {
 }
 
 async function handleToggle(request, env) {
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
   }
@@ -634,7 +656,7 @@ async function handleToggle(request, env) {
 }
 
 async function handleStats(request, env) {
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
   }
@@ -703,7 +725,7 @@ async function handleRemoveDevice(request, env) {
   }
   
   // 鉴权：管理员（Bearer token）或同邀请码下的用户
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     const device = await env.INVITE_DB.prepare(
       'SELECT id FROM devices WHERE code = ? AND device_fingerprint = ?'
@@ -722,7 +744,7 @@ async function handleRemoveDevice(request, env) {
 
 // POST /invite/set-remark - 设置邀请码备注（管理员）
 async function handleSetRemark(request, env) {
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
   }
@@ -798,7 +820,7 @@ async function handleRenameDevice(request, env) {
 
 // POST /invite/delete-code - 删除邀请码（管理员专属）
 async function handleDeleteCode(request, env) {
-  const isAdmin = await verifyAdminPassword(request, env);
+  const isAdmin = await verifyAdminOnly(request, env);
   if (!isAdmin) {
     return jsonResponse({ ok: false, error: '无权限' }, 403);
   }
@@ -826,7 +848,8 @@ async function handleDeleteCode(request, env) {
 // 把原先写死在 js/core/config.js 的内置采集源搬到 D1，由 /admin 面板维护，
 // 前端启动时拉取后合并（内置源仍是永久兜底，见 js/core/config.js 的 extendAPISites）。
 //
-// 鉴权复用邀请码那套 verifyAdminPassword（Bearer = HIDDENKEY 或 ADMINKEY::ADMINUSER 的 SHA-256）。
+// 鉴权：管理写/读接口只认 verifyAdminOnly（ADMINKEY::ADMINUSER 的 SHA-256）；
+// 隐私模式读取私密源走 /api-sites/hidden 的 verifyPrivateModeRead，HIDDENKEY 不参与任何管理操作。
 // 面板页面是在浏览器地址栏打开的，带不了 Authorization 头，因此额外允许 ?key=<同一个 token>。
 
 // 公开接口的边缘缓存时长（秒）。面板保存后会主动清除，这里主要是挡住刷新风暴
@@ -912,32 +935,12 @@ function buildApiSitesVersion(rows) {
 }
 
 /**
- * 写接口鉴权：只认「登录换来的 token」（ADMINKEY::ADMINUSER 的 SHA-256）。
+ * 管理接口鉴权：只认「登录换来的 token」（ADMINKEY::ADMINUSER 的 SHA-256）。
  *
- * 页面上公开的 window.__ENV__.HIDDENKEY（= sha256(HIDDENKEY)）虽然也能通过 verifyAdminPassword，
- * 但它被 functions/_middleware.js 注入到每个访客的 HTML 里，等同于公开值 —— 所以绝不允许用它改配置。
- * 读接口仍走 verifyAdminRequest（公开 hash 也要能拉取私密源）。
+ * 页面上公开的 window.__ENV__.HIDDENKEY 不再具备任何管理权限：
+ * 它被 functions/_middleware.js 注入到每个访客的 HTML 里，等同于公开值。
+ * HIDDENKEY 只保留给 /api-sites/hidden 的隐私模式读取（verifyPrivateModeRead）。
  */
-async function verifyAdminWrite(request, env, url) {
-  const expected = await adminToken(env);
-  if (!expected) return false;
-
-  const authHeader = request.headers.get('Authorization') || '';
-  let token = authHeader.replace('Bearer ', '').trim();
-  if (!token) token = url.searchParams.get('key') || '';
-  return token === expected;
-}
-
-/** 管理员鉴权：Authorization 头优先，其次 ?key=（面板页面用），两者都是同一个 token */
-async function verifyAdminRequest(request, env, url) {
-  if (await verifyAdminPassword(request, env)) return true;
-  const key = url.searchParams.get('key') || '';
-  if (!key) return false;
-  return verifyAdminPassword(
-    new Request(request.url, { headers: { Authorization: `Bearer ${key}` } }),
-    env
-  );
-}
 
 function apiSitesCacheKey(url, hidden) {
   const path = hidden ? '/api-sites/hidden' : '/api-sites';
@@ -1770,8 +1773,8 @@ async function handleApiSitesRequest(request, env, ctx, url) {
 
     // 私密源：与公开接口同一套读取逻辑，但必须先通过管理员鉴权
     if (path === '/api-sites/hidden' && request.method === 'GET') {
-      if (!await verifyAdminRequest(request, env, url)) {
-        return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
+      if (!await verifyPrivateModeRead(request, env, url)) {
+        return jsonResponse({ ok: false, error: '隐私模式验证失败' }, 401);
       }
       return await serveApiSites(env, ctx, url, true);
     }
@@ -1808,11 +1811,8 @@ async function handleApiSitesRequest(request, env, ctx, url) {
       if (request.method !== allowedMethod) {
         return jsonResponse({ ok: false, error: '不支持的请求方法' }, 405);
       }
-      // 读接口接受两种 token（页面上公开的 HIDDENKEY hash 也要能拉取私密源）；
-      // 写接口只认登录换来的 token，否则任何访客都能用页面里的公开 hash 改数据源配置
-      const authed = allowedMethod === 'POST'
-        ? await verifyAdminWrite(request, env, url)
-        : await verifyAdminRequest(request, env, url);
+      // 管理接口只认登录换来的 token；HIDDENKEY 只能读私密源，不能进管理接口
+      const authed = await verifyAdminOnly(request, env, url);
       if (!authed) {
         return jsonResponse({ ok: false, error: '管理员验证失败' }, 401);
       }

@@ -56,6 +56,19 @@ const INVITE_AUTH = {
     try { window[name].setItem(key, value); return true; } catch { return false; }
   },
 
+  /** 带超时的 fetch：鉴权网络挂起时不让登录按钮一直转（默认 8 秒） */
+  async _fetchWithTimeout(url, options, ms) {
+    const controller = (typeof AbortController === 'function') ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), ms || 8000) : null;
+    try {
+      return await fetch(url, controller
+        ? Object.assign({}, options, { signal: controller.signal })
+        : options);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  },
+
   /** 设备实例 ID 形态：d_ + 32 位十六进制 */
   _isDeviceId(value) {
     return typeof value === 'string' && /^d_[0-9a-f]{32}$/.test(value);
@@ -226,6 +239,7 @@ const INVITE_AUTH = {
       code: data.code,
       device_name: data.device_name,
       device_fingerprint: data.device_fingerprint,
+      device_signature: data.device_signature || '',
       verified_at: Date.now()
     }));
   },
@@ -241,10 +255,11 @@ const INVITE_AUTH = {
    * 仅更新本地保存的设备名（改名后同步，不重置 verified_at）。
    * 改名后本地 auth.device_name 需与服务端保持一致，否则旧指纹迁移等逻辑会用到旧名称。
    */
-  updateLocalDeviceName(name) {
+  updateLocalDeviceName(name, signature) {
     const auth = INVITE_AUTH.getAuth();
     if (!auth) return;
     auth.device_name = name;
+    if (signature) auth.device_signature = signature;
     try {
       localStorage.setItem(INVITE_AUTH.STORAGE_KEY, JSON.stringify(auth));
     } catch { /* 忽略 */ }
@@ -390,24 +405,30 @@ const INVITE_AUTH = {
     if (INVITE_AUTH.isLocalMode()) return INVITE_AUTH._localEnter();
     const deviceInfo = INVITE_AUTH.getOrCreateDeviceId();
     const deviceId = deviceInfo.id;
-    // 软指纹随注册一并上报：本机 ID 丢失（清缓存/无痕）时服务端可据此找回原记录。
-    // 签名叠加了设备名，同型号但不同昵称的设备可被区分开。
-    const signature = await INVITE_AUTH.computeDeviceSignature(deviceName);
+    const name = deviceName.trim();
+    // 普通续期复用上次保存的软指纹；只有首次登录 / 换设备名 / 本机 ID 新生成时才重算。
+    // 这样既省掉 canvas + WebGL + SHA-256 的开销，又不会让「设备 ID 丢失找回」用到过期签名。
+    const currentAuth = INVITE_AUTH.getAuth();
+    const needsSignature = deviceInfo.isNew
+      || !currentAuth
+      || currentAuth.device_name !== name
+      || !currentAuth.device_signature;
+    const signature = needsSignature ? await INVITE_AUTH.computeDeviceSignature(deviceName) : currentAuth.device_signature;
     
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/verify');
       
-      const response = await fetch(url, {
+      const response = await INVITE_AUTH._fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: code.trim().toUpperCase(),
-          device_name: deviceName.trim(),
+          device_name: name,
           device_fingerprint: deviceId,
           device_signature: signature,
           device_id_lost: deviceInfo.isNew
         })
-      });
+      }, 8000);
       
       const data = await response.json();
       
@@ -422,8 +443,9 @@ const INVITE_AUTH = {
           localStorage.setItem('leletv_is_admin', 'true');
           INVITE_AUTH.saveAuth({
             code: code.trim().toUpperCase(),
-            device_name: deviceName.trim(),
-            device_fingerprint: deviceId
+            device_name: name,
+            device_fingerprint: deviceId,
+            device_signature: signature
           });
           document.dispatchEvent(new CustomEvent('passwordVerified'));
           return { ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' };
@@ -431,12 +453,13 @@ const INVITE_AUTH = {
         
         INVITE_AUTH.saveAuth({
           code: code.trim().toUpperCase(),
-          device_name: deviceName.trim(),
-          device_fingerprint: deviceId
+          device_name: name,
+          device_fingerprint: deviceId,
+          device_signature: signature
         });
         
-        // 启动心跳
-        INVITE_AUTH.ensureHeartbeat();
+        // 启动心跳：延后一拍，让首页数据请求先发出去，避免登录后立刻抢占连接
+        setTimeout(function () { INVITE_AUTH.ensureHeartbeat(); }, 1200);
         
         return { ok: true, action: data.action, message: data.message };
       }
@@ -457,11 +480,11 @@ const INVITE_AUTH = {
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/heartbeat');
       
-      const response = await fetch(url, {
+      const response = await INVITE_AUTH._fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_fingerprint: fingerprint })
-      });
+      }, 8000);
       if (!response.ok) return null;
       const data = await response.json().catch(() => null);
       if (!data || data.ok !== true) return null;
@@ -506,29 +529,36 @@ const INVITE_AUTH = {
    */
   async ensureHeartbeat() {
     if (INVITE_AUTH.isLocalMode()) return;
+    // 已在运行或已启动定时器：启动流程与设置页可能先后调用，只保留一份网络请求与定时器
+    if (INVITE_AUTH._heartbeatTimer || INVITE_AUTH._ensureHeartbeatRunning) return;
     const auth = INVITE_AUTH.getAuth();
     if (!auth || !auth.device_fingerprint) return;
 
-    // 立即发送一次心跳：既记录本次访问，也顺带确认本机是否仍在册
-    const beat = await INVITE_AUTH.heartbeat(auth.device_fingerprint);
-    if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false
-        && await INVITE_AUTH._confirmDeviceRemoved(auth.device_fingerprint)) {
-      INVITE_AUTH.handleDeviceRemoved();
-      return;
-    }
+    INVITE_AUTH._ensureHeartbeatRunning = true;
+    try {
+      // 立即发送一次心跳：既记录本次访问，也顺带确认本机是否仍在册
+      const beat = await INVITE_AUTH.heartbeat(auth.device_fingerprint);
+      if (!INVITE_AUTH._isAdminSession() && beat && beat.updated === false
+          && await INVITE_AUTH._confirmDeviceRemoved(auth.device_fingerprint)) {
+        INVITE_AUTH.handleDeviceRemoved();
+        return;
+      }
 
-    // 旧版本遗留的软指纹（不是设备实例 ID）：重新登记为设备 ID，
-    // 否则同型号设备会继续共用同一条设备记录
-    if (!INVITE_AUTH._isDeviceId(auth.device_fingerprint)) {
-      if (INVITE_AUTH._legacyMigrationTried) return;
-      INVITE_AUTH._legacyMigrationTried = true;
-      const result = await INVITE_AUTH.verify(auth.code, auth.device_name);
-      if (result.ok) return; // verify 内部已写入新设备 ID，普通用户会自动启动心跳
-      INVITE_AUTH._legacyMigrationTried = false; // 失败（离线等）→ 按旧标识继续心跳，下次访问再试
+      // 旧版本遗留的软指纹（不是设备实例 ID）：重新登记为设备 ID，
+      // 否则同型号设备会继续共用同一条设备记录
+      if (!INVITE_AUTH._isDeviceId(auth.device_fingerprint)) {
+        if (INVITE_AUTH._legacyMigrationTried) return;
+        INVITE_AUTH._legacyMigrationTried = true;
+        const result = await INVITE_AUTH.verify(auth.code, auth.device_name);
+        if (result.ok) return; // verify 内部已写入新设备 ID，稍后会启动心跳
+        INVITE_AUTH._legacyMigrationTried = false; // 失败（离线等）→ 按旧标识继续心跳，下次访问再试
+      }
+
+      // 启动定时心跳
+      INVITE_AUTH.startHeartbeat(auth.device_fingerprint);
+    } finally {
+      INVITE_AUTH._ensureHeartbeatRunning = false;
     }
-    
-    // 启动定时心跳
-    INVITE_AUTH.startHeartbeat(auth.device_fingerprint);
   },
   
   /**

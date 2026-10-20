@@ -77,7 +77,7 @@ const USER_DEVICES_PANEL = {
       });
       const data = await res.json();
       if (data.ok) {
-        window.INVITE_AUTH.updateLocalDeviceName(newName);
+        window.INVITE_AUTH.updateLocalDeviceName(newName, newSignature);
         return true;
       }
       return false;

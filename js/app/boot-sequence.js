@@ -51,12 +51,6 @@ var LeLeBoot = (function () {
 
         if (auth.isVerified()) {
             authPassed();
-            // 已登录：心跳只做后台确认，不占用启动关键路径
-            try {
-                if (typeof auth.ensureHeartbeat === 'function') auth.ensureHeartbeat();
-            } catch (e) {
-                console.warn('[boot] 心跳启动失败:', e);
-            }
             return;
         }
 
@@ -141,6 +135,25 @@ var LeLeBoot = (function () {
         stage(0.95, '即将进入…');
         var api = ui();
         if (api && typeof api.homeReady === 'function') api.homeReady();
+        // 心跳放到首页就绪之后：既不阻塞进入首页，也不和首页数据请求抢连接
+        scheduleHeartbeat();
+    }
+
+    function scheduleHeartbeat() {
+        function run() {
+            try {
+                if (window.INVITE_AUTH && typeof window.INVITE_AUTH.ensureHeartbeat === 'function') {
+                    window.INVITE_AUTH.ensureHeartbeat();
+                }
+            } catch (e) {
+                console.warn('[boot] 心跳启动失败:', e);
+            }
+        }
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(run, { timeout: 3000 });
+        } else {
+            setTimeout(run, 800);
+        }
     }
 
     // ---------- 3. 进入首页后后台预加载 ----------
