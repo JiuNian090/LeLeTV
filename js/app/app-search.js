@@ -769,9 +769,58 @@ function m3u8TitleFromUrl(url) {
     }
 }
 
-// 直接把 m3u8 链接交给播放页：与点卡片播放走同一条链路，仅省去聚合搜索
+// m3u8 直链没有标题/简介元数据：先让用户确认标题（默认用 URL 推导值），
+// 播放页再用这个标题去 TMDB 补简介、海报与年份
 function playM3U8Direct(url) {
-    const title = m3u8TitleFromUrl(url);
+    const defaultTitle = m3u8TitleFromUrl(url);
+    const escapeAttr = (value) => String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    showModal({
+        title: '导入 m3u8 视频',
+        content: (body, overlay) => {
+            body.innerHTML = `
+                <div class="v2-field">
+                    <label class="v2-label" for="directM3u8Title">视频标题</label>
+                    <input type="text" id="directM3u8Title" class="v2-input" maxlength="80"
+                           autocomplete="off" spellcheck="false" value="${escapeAttr(defaultTitle)}">
+                </div>
+                <p class="v2-confirm-text">会用这个标题在 TMDB 搜索简介、海报和年份；匹配不到也可以在播放页手动编辑。</p>
+                <div class="v2-dialog-foot is-end">
+                    <button type="button" class="v2-btn v2-btn--secondary" data-role="cancel">取消</button>
+                    <button type="button" class="v2-btn v2-btn--primary" data-role="confirm">开始播放</button>
+                </div>
+            `;
+            const input = body.querySelector('#directM3u8Title');
+            const submit = () => {
+                const title = input.value.trim();
+                if (!title) {
+                    showToast('请填写视频标题', 'warning');
+                    input.focus();
+                    return;
+                }
+                overlay.remove();
+                openM3U8Player(url, title);
+            };
+            body.querySelector('[data-role="cancel"]').addEventListener('click', () => overlay.remove());
+            body.querySelector('[data-role="confirm"]').addEventListener('click', submit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submit();
+                }
+            });
+            input.focus();
+            input.select();
+        }
+    });
+}
+
+// 把 m3u8 链接交给播放页：与点卡片播放走同一条链路，仅省去聚合搜索
+function openM3U8Player(url, title) {
     try {
         localStorage.setItem('currentVideoTitle', title);
         localStorage.setItem('lastPlayTime', Date.now());

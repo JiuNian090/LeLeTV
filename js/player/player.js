@@ -355,18 +355,18 @@ function initializePageContent() {
                 StorageService.setCurrentVideoInfo(mergedInfo);
                 renderPlayerDetailInfo();
 
-                // 同步封面到观看历史记录
-                if (tmdbInfo.cover) {
-                    try {
-                        const history = StorageService.getViewingHistory();
-                        const idx = history.findIndex(item => item.title === currentVideoTitle);
-                        if (idx !== -1) {
-                            history[idx].cover = tmdbInfo.cover;
-                            StorageService.setViewingHistory(history);
-                        }
-                    } catch (e) {
-                        console.warn('[LeLeTV] 更新历史记录TMDB封面失败:', e);
+                // 同步 TMDB 元数据到观看历史：下次从历史进入可直接恢复简介/海报，不必等接口
+                try {
+                    const history = StorageService.getViewingHistory();
+                    const idx = history.findIndex(item => item.title === currentVideoTitle);
+                    if (idx !== -1) {
+                        ['cover', 'desc', 'type', 'year', 'area', 'director', 'actor'].forEach(key => {
+                            if (mergedInfo[key]) history[idx][key] = mergedInfo[key];
+                        });
+                        StorageService.setViewingHistory(history);
                     }
+                } catch (e) {
+                    console.warn('[LeLeTV] 更新历史记录TMDB信息失败:', e);
                 }
             }
         });
@@ -418,6 +418,7 @@ function initializePageContent() {
         switch (el.dataset.action) {
             case 'go-home': goHome(e); break;
             case 'toggle-detail': toggleDetailInfo(); break;
+            case 'edit-video-info': showEditVideoInfoModal(); break;
             case 'toggle-episodes': toggleEpisodeSection(); break;
             case 'toggle-episode-order': e.stopPropagation(); toggleEpisodeOrder(); break;
             case 'copy-links': copyLinks(); break;
@@ -690,15 +691,27 @@ function saveCurrentProgress() {
                     }
                 } else if (currentVideoTitle && currentVideoUrl) {
                     // 如果找不到匹配项，并且有足够信息，创建一个新的历史记录项
+                    // 注意：url 必须是播放页地址。m3u8 直链导入时没有 episodes，saveToHistory 不会写入，
+                    // 这里若直接存 currentVideoUrl，历史页点击会把 m3u8 交给系统播放器
+                    let currentInfo = null;
+                    try { currentInfo = StorageService.getCurrentVideoInfo(); } catch (e) { /* 忽略 */ }
                     addToViewingHistory({
                         title: currentVideoTitle,
-                        url: currentVideoUrl,
+                        url: `player.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName || '')}&source_code=${encodeURIComponent(sourceName || '')}&id=${encodeURIComponent(vod_id || '')}&index=${currentEpisodeIndex}&position=${Math.floor(currentTime)}`,
                         sourceName: sourceName || '',
                         vod_id: vod_id || '',
                         episodeIndex: currentEpisodeIndex,
                         playbackPosition: currentTime,
                         duration: duration,
-                        episodes: currentEpisodes || []
+                        episodes: currentEpisodes || [],
+                        // 把已经补全的详情一并写进历史，下次从历史进入可直接显示
+                        cover: (currentInfo && currentInfo.cover) || '',
+                        desc: (currentInfo && currentInfo.desc) || '',
+                        type: (currentInfo && currentInfo.type) || '',
+                        year: (currentInfo && currentInfo.year) || '',
+                        area: (currentInfo && currentInfo.area) || '',
+                        director: (currentInfo && currentInfo.director) || '',
+                        actor: (currentInfo && currentInfo.actor) || ''
                     });
                 }
             }

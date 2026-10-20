@@ -482,6 +482,31 @@ body.native-fs-active .player-back-btn {
     gap: 12px;
 }
 
+.detail-title-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.detail-edit-btn {
+    height: 30px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--v2-t3);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background-color var(--v2-dur) var(--v2-ease), color var(--v2-dur) var(--v2-ease);
+}
+
+.detail-edit-btn:hover {
+    color: var(--v2-t1);
+    background: rgba(255, 255, 255, 0.06);
+}
+
 .player-right-title {
     flex: 1;
     min-width: 0;

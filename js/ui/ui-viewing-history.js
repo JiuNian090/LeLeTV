@@ -212,14 +212,23 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
                 localStorage.removeItem('currentEpisodes');
             }
             localStorage.setItem('currentEpisodeIndex', String(episodeIndex || 0));
-            localStorage.removeItem('currentVideoInfo');
+
+            // 历史记录里存有手动编辑 / TMDB 补全过的详情时直接恢复；没有才清掉上一部剧的残留
+            const meta = {};
+            ['cover', 'desc', 'type', 'year', 'area', 'director', 'actor', 'remarks'].forEach(key => {
+                if (historyItem[key]) meta[key] = historyItem[key];
+            });
+            if (Object.keys(meta).length > 0) {
+                localStorage.setItem('currentVideoInfo', JSON.stringify(meta));
+            } else {
+                localStorage.removeItem('currentVideoInfo');
+            }
         }
 
         // 后台静默同步（异步刷新剧集列表，不阻塞导航）
+        // 注意：直链记录没有 vod_id/sourceName，不需要同步，也不能在这里清掉上面刚恢复的详情
         if (historyItem && historyItem.vod_id && historyItem.sourceName) {
             syncEpisodesInBackground(historyItem, url);
-        } else if (historyItem) {
-            localStorage.removeItem('currentVideoInfo');
         }
 
         // 保存当前页面URL作为返回地址（含 hash，保留历史记录/类别页状态）
@@ -278,17 +287,12 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
                 }
             }
         } else {
-             // This case should ideally not happen if 'url' is always a player.html link from history
-            const playUrl = new URL(url, window.location.origin);
-            if (!playUrl.searchParams.has('index') && episodeIndex > 0) {
-                playUrl.searchParams.set('index', episodeIndex);
-            }
-            playUrl.searchParams.set('position', Math.floor(playbackPosition || 0).toString());
-            playUrl.searchParams.set('back', encodeURIComponent(currentPath));
-            if (sourceNameForUrl) playUrl.searchParams.set('source', sourceNameForUrl);
-            if (sourceCodeForUrl) playUrl.searchParams.set('source_code', sourceCodeForUrl);
-            if (idForUrl) playUrl.searchParams.set('id', idForUrl);
-            playerUrl = playUrl.toString();
+            // 直链（如搜索框导入的 m3u8）也必须经过播放页：
+            // 直接 location.href 到 m3u8 会被浏览器/系统播放器接管，绕过 ArtPlayer
+            playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
+            if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
+            if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
+            if (idForUrl) playerUrl += `&id=${encodeURIComponent(idForUrl)}`;
         }
 
         // 站内同标签页导航标记：播放页返回时据此走 history.back()（见 js/player/player.js goHome）
@@ -297,7 +301,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
         } catch (e) { /* 忽略 */ }
         window.location.href = playerUrl;
     } catch (e) {
-        const simpleUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}`;
+        const simpleUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}`;
         try {
             sessionStorage.setItem('leletv_player_from_tab', '1');
         } catch (err) { /* 忽略 */ }

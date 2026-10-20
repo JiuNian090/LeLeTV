@@ -76,6 +76,105 @@ function escHtml(str) {
   return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// 表单值转义：连 & 一起转，避免标题/简介里的实体写法被浏览器二次解析
+function escTextField(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// 编辑标题与简介：m3u8 直链等没有元数据的视频，手动补全后写回详情与观看历史
+function showEditVideoInfoModal() {
+  var info = null;
+  try { info = StorageService.getCurrentVideoInfo(); } catch (e) { console.warn('[LeLeTV] 读取视频详情失败:', e); }
+  info = info || {};
+
+  var oldTitle = currentVideoTitle || '';
+  var descText = String(info.desc || '').replace(/<[^>]+>/g, '').trim();
+
+  showModal({
+    title: '编辑视频信息',
+    content: function (body, overlay) {
+      body.innerHTML = `
+        <div class="v2-field">
+          <label class="v2-label" for="editVideoTitle">标题</label>
+          <input type="text" id="editVideoTitle" class="v2-input" maxlength="80"
+                 autocomplete="off" spellcheck="false" value="${escTextField(oldTitle)}">
+        </div>
+        <div class="v2-field">
+          <label class="v2-label" for="editVideoDesc">简介</label>
+          <textarea id="editVideoDesc" class="v2-input" rows="5" maxlength="2000"
+                    placeholder="填写这部视频的简介">${escTextField(descText)}</textarea>
+        </div>
+        <div class="v2-dialog-foot is-end">
+          <button type="button" class="v2-btn v2-btn--secondary" data-role="cancel">取消</button>
+          <button type="button" class="v2-btn v2-btn--primary" data-role="save">保存</button>
+        </div>
+      `;
+
+      var titleInput = body.querySelector('#editVideoTitle');
+      var descInput = body.querySelector('#editVideoDesc');
+      titleInput.focus();
+      titleInput.select();
+
+      body.querySelector('[data-role="cancel"]').addEventListener('click', function () { overlay.remove(); });
+      body.querySelector('[data-role="save"]').addEventListener('click', function () {
+        var nextTitle = titleInput.value.trim();
+        if (!nextTitle) {
+          if (typeof showToast === 'function') showToast('标题不能为空', 'warning');
+          titleInput.focus();
+          return;
+        }
+        var nextDesc = descInput.value.trim();
+        overlay.remove();
+        saveVideoInfoEdits(oldTitle, nextTitle, nextDesc, info);
+      });
+    }
+  });
+}
+
+function saveVideoInfoEdits(oldTitle, nextTitle, nextDesc, info) {
+  currentVideoTitle = nextTitle;
+  try { localStorage.setItem('currentVideoTitle', nextTitle); } catch (e) { /* 忽略 */ }
+
+  document.title = nextTitle + ' - LeLeTV播放器';
+  var titleEl = document.getElementById('videoTitle');
+  var titleRightEl = document.getElementById('videoTitleRight');
+  if (titleEl) titleEl.textContent = nextTitle;
+  if (titleRightEl) titleRightEl.textContent = nextTitle;
+
+  var nextInfo = Object.assign({}, info || {}, { title: nextTitle, desc: nextDesc });
+  try { StorageService.setCurrentVideoInfo(nextInfo); } catch (e) { console.warn('[LeLeTV] 保存视频详情失败:', e); }
+
+  // 同步到观看历史：标题同时更新历史链接里的 title 参数，下次从历史进入仍是新标题
+  try {
+    var history = StorageService.getViewingHistory();
+    var encodedVideoUrl = currentVideoUrl ? encodeURIComponent(currentVideoUrl) : '';
+    var idx = history.findIndex(function (item) {
+      if (encodedVideoUrl && item.url && item.url.indexOf(encodedVideoUrl) !== -1) return true;
+      return item.title === oldTitle && (item.episodeIndex === undefined || item.episodeIndex === currentEpisodeIndex);
+    });
+    if (idx !== -1) {
+      var item = history[idx];
+      item.title = nextTitle;
+      item.desc = nextDesc;
+      if (nextInfo.cover) item.cover = nextInfo.cover;
+      if (item.url && item.url.indexOf('player.html') !== -1) {
+        item.url = item.url.replace(/([?&])title=[^&]*/, '$1title=' + encodeURIComponent(nextTitle));
+      }
+      StorageService.setViewingHistory(history);
+    }
+  } catch (e) {
+    console.warn('[LeLeTV] 同步历史记录信息失败:', e);
+  }
+
+  if (typeof updateMediaSession === 'function') updateMediaSession();
+  renderPlayerDetailInfo();
+  if (typeof showToast === 'function') showToast('视频信息已更新', 'success');
+}
+
 
 function _shareCurrentVideo() {
   var url = window.location.href;
