@@ -1032,6 +1032,34 @@ function renderResourceSourceGrid() {
     grid.innerHTML = html;
 }
 
+// 取续播位置：URL 的 position 参数优先，其次历史记录中同一部剧同一集的进度。
+// 用于起播前自动换线（此时 currentTime 还是 0，不能让它覆盖掉历史进度）。
+function getResumePosition(vodId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPosition = parseInt(urlParams.get('position') || '0', 10);
+    if (urlPosition > 1) return urlPosition;
+
+    try {
+        const history = StorageService.getViewingHistory();
+        const episodeIndex = typeof currentEpisodeIndex === 'number' ? currentEpisodeIndex : 0;
+        const sameEpisode = item => item.episodeIndex === undefined || item.episodeIndex === episodeIndex;
+        // 换线后 vod_id 会跟着新线路变，所以先按 id 精确匹配，匹配不到再按片名兜底
+        const byId = vodId
+            ? history.find(item => item.vod_id && String(item.vod_id) === String(vodId) && sameEpisode(item))
+            : null;
+        const matched = byId || history.find(item => item.title === currentVideoTitle && sameEpisode(item));
+        if (!matched) return 0;
+
+        const position = Number(matched.playbackPosition) || 0;
+        const duration = Number(matched.duration) || 0;
+        // 接近结尾的记录不再续播，与播放页的恢复判定保持一致
+        if (position > 1 && (!duration || position < duration - 2)) return position;
+    } catch (e) {
+        console.warn('[LeLeTV] 读取续播位置失败:', e);
+    }
+    return 0;
+}
+
 async function switchToResource(sourceKey, vodId) {
     showLoading();
     try {
@@ -1039,6 +1067,11 @@ async function switchToResource(sourceKey, vodId) {
         let currentPosition = 0;
         if (art && art.video) {
             currentPosition = art.video.currentTime;
+        }
+
+        // 起播前自动换线时视频还没播起来（currentTime 为 0），沿用 URL / 历史记录里的进度
+        if (!(currentPosition > 1)) {
+            currentPosition = getResumePosition(vodId) || 0;
         }
         
         // 构建API参数

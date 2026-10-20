@@ -363,22 +363,22 @@ function onVideoLoadedMetadata(art) {
 
     const urlParams = new URLSearchParams(window.location.search);
     const savedPosition = parseInt(urlParams.get('position') || '0');
+    // 部分源（事件型 m3u8 / 原生 HLS）在 loadedmetadata 阶段还拿不到时长（NaN / Infinity），
+    // 不能因此把恢复条件判死，否则历史进度会被忽略
+    const duration = Number(art.duration);
+    const durationKnown = Number.isFinite(duration) && duration > 0;
+    const canRestore = (position) => position > 10 && (!durationKnown || position < duration - 2);
 
-    if (savedPosition > 10 && savedPosition < art.duration - 2) {
+    if (canRestore(savedPosition)) {
         art.currentTime = savedPosition;
         showPositionRestoreHint(savedPosition);
     } else {
         try {
             const progressKey = 'videoProgress_' + getVideoId();
             const progressStr = localStorage.getItem(progressKey);
-            if (progressStr && art.duration > 0) {
+            if (progressStr) {
                 const progress = JSON.parse(progressStr);
-                if (
-                    progress &&
-                    typeof progress.position === 'number' &&
-                    progress.position > 10 &&
-                    progress.position < art.duration - 2
-                ) {
+                if (progress && typeof progress.position === 'number' && canRestore(progress.position)) {
                     art.currentTime = progress.position;
                     showPositionRestoreHint(progress.position);
                 }
