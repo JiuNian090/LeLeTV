@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LeLeTV · 播放</title>
     <meta name="theme-color" content="#0A0A0B">
     <meta name="description" content="LeLeTV 视频播放器">
@@ -107,6 +107,17 @@
                 }
             }
         } catch (e) { /* 读取失败时回落到 css 默认主题色 */ }
+    })();
+</script>
+<!-- iOS Safari 会忽略 viewport 里的 user-scalable=no：拦掉系统双指缩放，
+     否则播放页会被捏小，右侧和底部露出空白。只拦 gesture 事件，
+     页面滚动与播放器自己的触摸手势不受影响 -->
+<script>
+    (function () {
+        function blockZoom(event) { event.preventDefault(); }
+        document.addEventListener('gesturestart', blockZoom, { passive: false });
+        document.addEventListener('gesturechange', blockZoom, { passive: false });
+        document.addEventListener('gestureend', blockZoom, { passive: false });
     })();
 </script>
 </head>

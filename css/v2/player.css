@@ -2,34 +2,33 @@
    宽屏：左侧播放器、右侧信息栏，整页固定一屏；窄屏：播放器在上，信息面板依次往下排。
    ArtPlayer 相关的尺寸、全屏、iOS 手势修正沿用原实现，界面部分按新设计重写。 */
 
-html,
-body {
+html {
     height: 100%;
 }
 
 html body.player-page {
-    /* iOS 的 100% / 100dvh 会随地址栏与安全区变化：body 必须与 player-main 同高，
-       否则超出部分会被 overflow 裁掉，底部露出 html 的纯黑底 */
-    height: 100vh;
-    height: 100dvh;
-    min-height: 100%;
+    /* 窄屏按普通文档流滚动：高度只设下限，内容多就整页往下滚。
+       不再锁死 100dvh + overflow: hidden，否则窗口变矮时右侧栏会被压成一条，
+       页面底部还会露出 html 的纯黑底 */
     position: relative;
-    overflow: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
     padding-bottom: 0;
+    /* 背景光晕绝对定位铺满整页，这里裁掉横向溢出，避免右侧能拖出空白 */
+    overflow-x: clip;
 }
 
-/* 播放页背景层跟随页面高度：fixed 在 iOS 上可能盖不到动态视口底部 */
+/* 播放页背景层跟随整页高度。inset 必须是 0：绝对定位 + 负 inset 会把文档撑大 280px，
+   页面被缩小时就会在右侧和底部露出空白 / 黑底 */
 body.player-page .v2-glow {
     position: absolute;
-    inset: -140px;
+    inset: 0;
 }
 
 /* ============ 页面骨架 ============ */
 .player-main {
-    height: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    overflow: hidden;
 }
 
 .player-layout {
@@ -1024,17 +1023,32 @@ button.player-action:hover {
 
 /* ============ 宽屏：左右两栏 ============ */
 @media (min-width: 1024px) {
+    /* 宽屏恢复整屏两栏：右栏独立滚动，页面本身不滚 */
+    html body.player-page {
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .player-main {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
     .player-layout {
         flex-direction: row;
         gap: 16px;
         padding: 16px;
+        height: 100%;
         box-sizing: border-box;
     }
 
     .player-layout-left {
         display: flex;
-        flex-direction: column;
-        flex: 3;
+        align-items: center;
+        justify-content: center;
+        flex: 1 1 0;
         min-width: 0;
         height: 100%;
     }
@@ -1042,7 +1056,12 @@ button.player-action:hover {
     .player-layout-left #playerContainer {
         display: flex;
         flex-direction: column;
-        flex: 1;
+        flex: 0 1 auto;
+        width: 100%;
+        /* 播放器保持 16:9：高度随宽度走，max-width 再按可用高度兜底。
+           这样容器不会被拉成比 16:9 更高，视频上下不会出现大片黑底 */
+        max-width: calc((100dvh - 32px) * 16 / 9);
+        aspect-ratio: 16 / 9;
         min-height: 0;
         overflow: hidden;
         border-radius: 20px;
@@ -1065,9 +1084,7 @@ button.player-action:hover {
     }
 
     .player-layout-right {
-        flex: 1;
-        min-width: 340px;
-        max-width: 440px;
+        flex: 0 0 clamp(340px, 28vw, 440px);
         height: 100%;
         padding: 0 2px 0 0;
     }
