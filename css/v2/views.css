@@ -1597,16 +1597,18 @@
     opacity: 0.5;
 }
 
-/* 数据管理 */
+/* 数据管理：固定三列节奏，5 个按钮排成 3 + 2，末行自动伸缩填满，避免空出一格 */
 .dash-action-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
 .dash-action-grid .v2-btn {
+    flex: 1 1 calc((100% - 16px) / 3);
+    min-width: 96px;
     height: 42px;
-    padding: 0 10px;
+    padding: 0 12px;
     font-size: 14px;
 }
 

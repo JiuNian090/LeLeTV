@@ -34,7 +34,7 @@ const APP = {
     'js/ui/ui-search-history.js', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
     'js/api/api.js', 'js/api/search.js',
     'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
-    'js/app/app-search.js', 'js/app/app-config.js', 'js/app/app.js',
+    'js/app/app-search.js', 'js/app/app-config.js', 'js/api/source-port.js', 'js/app/app.js',
     'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',

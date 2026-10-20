@@ -358,8 +358,8 @@ function updateCustomApi(index) {
         return;
     }
     if (url.endsWith('/')) url = url.slice(0, -1);
-    // 隐藏标记由当前数据域决定，与复选框无关
-    customAPIs[index] = { name, url, detail, isHidden: isHiddenContentMode() };
+    // 隐藏标记由当前数据域决定，与复选框无关；isAdult 来自导入的 LibreTV 源，编辑后保留
+    customAPIs[index] = { name, url, detail, isHidden: isHiddenContentMode(), isAdult: customAPIs[index].isAdult === true };
     localStorage.setItem(scopedKey('customAPIs'), JSON.stringify(customAPIs));
     renderCustomAPIsList();
     checkHiddenAPIsSelected();

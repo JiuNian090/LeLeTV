@@ -77,6 +77,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 清除本地存储缓存并刷新页面
 
+// 显示视频源导入页面（LibreTV 源列表 JSON / 裸数组 / 旧版源配置）
+function showSourceImportBox(fun) {
+    showModal({
+        title: '导入视频源',
+        content: (body) => {
+            body.innerHTML = `
+                <div id="sourceDropZone" class="v2-dropzone">
+                    <span class="v2-dropzone-icon" aria-hidden="true">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
+                    </span>
+                    <p class="v2-dropzone-title">将源文件拖到这里</p>
+                    <p class="v2-dropzone-sub">支持 LibreTV 源列表 JSON，也兼容裸数组与旧版源配置</p>
+                    <div class="v2-dropzone-actions">
+                        <label class="v2-btn v2-btn--primary v2-btn--sm">
+                            <input type="file" id="sourceFileInput" accept=".json,application/json" hidden>
+                            选择文件
+                        </label>
+                    </div>
+                </div>
+            `;
+            const dropZone = document.getElementById('sourceDropZone');
+            const fileInput = document.getElementById('sourceFileInput');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('is-over'); });
+                dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('is-over'); });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('is-over');
+                    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                    if (file) fun(file);
+                });
+            }
+            if (fileInput) {
+                fileInput.addEventListener('change', () => {
+                    const file = fileInput.files && fileInput.files[0];
+                    if (file) fun(file);
+                    fileInput.value = '';
+                });
+            }
+        }
+    });
+}
+
 // 显示配置文件导入页面
 function showImportBox(fun) {
     const overlay = showModal({

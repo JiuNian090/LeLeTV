@@ -553,6 +553,8 @@ function setupEventListeners() {
             case 'show-add-custom-api': showAddCustomApiForm(); break;
             case 'add-custom-api': addCustomApi(); break;
             case 'cancel-add-custom-api': cancelAddCustomApi(); break;
+            case 'import-sources': importVideoSources(); break;
+            case 'export-sources': exportVideoSources(); break;
             case 'import-config': importConfig(); break;
             case 'export-config': exportConfig(); break;
             case 'clear-cache': clearLocalStorage(); break;
