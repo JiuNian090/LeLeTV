@@ -45,9 +45,9 @@
     <!-- 样式：变量与背景 → 通用组件 → 首页。
          views.css（内页）与 admin.css（设置页面板）改由 js/app/page-loader.js
          在首次进入对应页面时加载，不再占用首屏。 -->
-    <link rel="stylesheet" href="css/v2/tokens.css?v=v4.1.0">
-    <link rel="stylesheet" href="css/v2/base.css?v=v4.1.0">
-    <link rel="stylesheet" href="css/v2/home.css?v=v4.1.0">
+    <link rel="stylesheet" href="css/v2/tokens.css?v=v4.1.1">
+    <link rel="stylesheet" href="css/v2/base.css?v=v4.1.1">
+    <link rel="stylesheet" href="css/v2/home.css?v=v4.1.1">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -1414,22 +1414,22 @@
     <div id="searchHistoryDropdown" class="v2-dropdown hidden" role="listbox" aria-label="搜索历史"></div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v4.1.0"></script>
+    <script src="libs/sha256.min.js?v=v4.1.1"></script>
     <!-- JSZip：导入导出配置打包为 ZIP -->
-    <script src="libs/jszip.min.js?v=v4.1.0"></script>
+    <script src="libs/jszip.min.js?v=v4.1.1"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-    <script src="dist/leletv-core.u1orfj.js?v=v4.1.0" defer></script>
-    <script src="dist/leletv-app.h2rfts.js?v=v4.1.0" defer></script>
+    <script src="dist/leletv-core.u1orfj.js?v=v4.1.1" defer></script>
+    <script src="dist/leletv-app.h2rfts.js?v=v4.1.1" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v4.1.0";
+        window.__LELETV_VERSION__ = "v4.1.1";
         // 鉴权与 TMDB 都走同一个 Worker：在首次请求前先建好 DNS/TLS，省掉登录时的一次握手
         (function () {
             var base = window.__ENV__.TMDB_WORKER_URL;
