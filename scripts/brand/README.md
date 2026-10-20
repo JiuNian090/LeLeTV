@@ -32,9 +32,9 @@ node scripts/brand/make-brand.mjs --color '#FFFFFF' --bump le3
 | 文件 | 尺寸 | 背景 |
 |---|---|---|
 | `favicon-32.png` | 32×32 | 透明（四角留空） |
-| `apple-touch-icon-180.png` | 180×180 | 透明 |
-| `leletv-icon-192.png` / `leletv-icon-512.png` | 192 / 512 | 透明 |
-| `leletv-icon-maskable-192.png` / `-512.png` | 192 / 512 | 满幅 |
+| `apple-touch-icon-180.png` | 180×180 | 透明（四角留空，真彩） |
+| `leletv-icon-192.png` / `leletv-icon-512.png` | 192 / 512 | 透明（四角留空，真彩） |
+| `leletv-icon-maskable-192.png` / `-512.png` | 192 / 512 | 满幅（真彩） |
 | `image/splash/*.png` | 27 种（iPhone 11 + iPad 16） | 纯黑底 + 居中 logo |
 
 ## 单独用某个脚本
@@ -60,10 +60,12 @@ Chrome 不在默认路径时用 `CHROME_PATH` 指定。
 
 ## 几个必须知道的点
 
-1. **图标一定要量化**。Chrome 渲染出的是真彩，同一张 512 图标真彩 110KB、调色板 15KB。
+1. **favicon 要量化，PWA/iOS 图标不要**。Chrome 渲染出的是真彩，同一张 512 图标真彩 110KB、调色板 15KB。
    启动图是纯黑底，deflate 已经足够小，反而真彩比量化版更小。
+   除 `favicon-32.png` 外，`apple-touch-icon` 与 manifest 的 192/512 都保持真彩：
+   iOS 对 PNG-8（调色板）解码兼容性差，失败会让主屏图标回退成应用名首字母。
 2. **四角必须透明**。应用图标 SVG 是圆角矩形，渲染时背景给 `transparent`；
-   给成 `#ffffff` 会在深色壁纸上留下一圈白角。
+   给成 `#ffffff` 会在深色壁纸上留下一圈白角。maskable 图标本身是满幅底，不受影响。
 3. **换图必须升版本号**。服务器给图片缓存一天，不动 `?v=leN` 浏览器会继续用旧图：
    `node scripts/brand/bump-version.mjs le3`。已装 PWA 的桌面图标还需删掉重新「添加到主屏」。
 4. **启动图尺寸不能猜**。`gen-splash.mjs` 里的 27 组宽高是从 `image/splash/` 实测来的

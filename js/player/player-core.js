@@ -363,11 +363,11 @@ function onVideoLoadedMetadata(art) {
 
     const urlParams = new URLSearchParams(window.location.search);
     const savedPosition = parseInt(urlParams.get('position') || '0');
-    // 部分源（事件型 m3u8 / 原生 HLS）在 loadedmetadata 阶段还拿不到时长（NaN / Infinity），
-    // 不能因此把恢复条件判死，否则历史进度会被忽略
+    // 时长未知时不能 seek：iOS 原生 HLS / 事件型 m3u8 在 loadedmetadata 阶段还拿不到时长
+    // （NaN / 0 / Infinity），此时设置 currentTime 会让播放器卡在加载中
     const duration = Number(art.duration);
     const durationKnown = Number.isFinite(duration) && duration > 0;
-    const canRestore = (position) => position > 10 && (!durationKnown || position < duration - 2);
+    const canRestore = (position) => durationKnown && position > 10 && position < duration - 2;
 
     if (canRestore(savedPosition)) {
         art.currentTime = savedPosition;

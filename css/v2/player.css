@@ -8,13 +8,27 @@ body {
 }
 
 html body.player-page {
+    /* iOS 的 100% / 100dvh 会随地址栏与安全区变化：body 必须与 player-main 同高，
+       否则超出部分会被 overflow 裁掉，底部露出 html 的纯黑底 */
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100%;
+    position: relative;
     overflow: hidden;
     padding-bottom: 0;
 }
 
+/* 播放页背景层跟随页面高度：fixed 在 iOS 上可能盖不到动态视口底部 */
+body.player-page .v2-glow {
+    position: absolute;
+    inset: -140px;
+}
+
 /* ============ 页面骨架 ============ */
 .player-main {
-    height: 100dvh;
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
 }
 

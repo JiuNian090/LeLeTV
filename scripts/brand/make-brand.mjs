@@ -25,16 +25,17 @@ const SPLASH = path.join(ROOT, 'image', 'splash');
 // 会被改色的源 SVG（Le 路径所在）
 const SVG_SOURCES = ['leletv-favicon.svg', 'leletv-app-icon.svg', 'leletv-app-icon-maskable.svg'];
 
-// 图标产物：源 SVG、输出名、像素尺寸。
-// 背景一律 transparent——应用图标 SVG 是圆角矩形，四角必须是透明，
-// 若渲染成不透明背景会在深色壁纸上留出一圈白角。
+// 图标产物：源 SVG、输出名、像素尺寸、背景、是否量化。
+// 四角保持透明（SVG 是圆角矩形），保留设计上的圆角。
+// iOS/PWA 图标不要再量化成 PNG-8：iOS 对 256 色调色板的解码兼容性差，
+// 解码失败会让主屏图标回退成应用名首字母；真彩 + 透明四角即可。
 const ICONS = [
-  { svg: 'leletv-favicon.svg', out: 'favicon-32.png', w: 32, h: 32 },
-  { svg: 'leletv-app-icon.svg', out: 'apple-touch-icon-180.png', w: 180, h: 180 },
-  { svg: 'leletv-app-icon.svg', out: 'leletv-icon-192.png', w: 192, h: 192 },
-  { svg: 'leletv-app-icon.svg', out: 'leletv-icon-512.png', w: 512, h: 512 },
-  { svg: 'leletv-app-icon-maskable.svg', out: 'leletv-icon-maskable-192.png', w: 192, h: 192 },
-  { svg: 'leletv-app-icon-maskable.svg', out: 'leletv-icon-maskable-512.png', w: 512, h: 512 },
+  { svg: 'leletv-favicon.svg', out: 'favicon-32.png', w: 32, h: 32, bg: 'transparent', quantize: true },
+  { svg: 'leletv-app-icon.svg', out: 'apple-touch-icon-180.png', w: 180, h: 180, bg: 'transparent', quantize: false },
+  { svg: 'leletv-app-icon.svg', out: 'leletv-icon-192.png', w: 192, h: 192, bg: 'transparent', quantize: false },
+  { svg: 'leletv-app-icon.svg', out: 'leletv-icon-512.png', w: 512, h: 512, bg: 'transparent', quantize: false },
+  { svg: 'leletv-app-icon-maskable.svg', out: 'leletv-icon-maskable-192.png', w: 192, h: 192, bg: 'transparent', quantize: false },
+  { svg: 'leletv-app-icon-maskable.svg', out: 'leletv-icon-maskable-512.png', w: 512, h: 512, bg: 'transparent', quantize: false },
 ];
 
 const SPLASH_LOGO_PX = 1024; // 启动图 logo 源的分辨率（缩放到设备短边的 0.2197）
@@ -79,12 +80,15 @@ try {
   const rawIcons = [];
   for (const ic of ICONS) {
     const raw = path.join(tmp, 'raw-' + ic.out);
-    run('render-svg.mjs', [path.join(IMG, ic.svg), raw, String(ic.w), String(ic.h), 'transparent']);
-    rawIcons.push({ raw, out: path.join(IMG, ic.out) });
+    run('render-svg.mjs', [path.join(IMG, ic.svg), raw, String(ic.w), String(ic.h), ic.bg]);
+    rawIcons.push({ raw, out: path.join(IMG, ic.out), quantize: ic.quantize });
   }
 
-  console.log('[3/4] 量化到 256 色调色板并落地 image/brand/');
-  for (const { raw, out } of rawIcons) run('quantize.mjs', [raw, out]);
+  console.log('[3/4] 量化到 256 色调色板并落地 image/brand/（iOS/PWA 图标保持真彩）');
+  for (const { raw, out, quantize } of rawIcons) {
+    if (quantize) run('quantize.mjs', [raw, out]);
+    else fs.copyFileSync(raw, out);
+  }
 
   // ---------- 3. 启动图 ----------
   const logo = path.join(tmp, 'logo-app-icon.png');
