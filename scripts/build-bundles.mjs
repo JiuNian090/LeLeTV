@@ -39,6 +39,8 @@ const APP = {
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
     'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
+    // 启动编排必须最后执行：它要等所有首页模块与路由注册完成后再开始鉴权 / 首页加载
+    'js/app/boot-sequence.js',
   ],
 };
 

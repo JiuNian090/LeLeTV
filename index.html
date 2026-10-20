@@ -230,6 +230,10 @@
             visibility: hidden;
             pointer-events: none;
         }
+        /* 鉴权阶段：登录框要盖在启动层（z-index 9999）之上，用户才能直接输入邀请码 */
+        #inviteLoginModal.is-boot {
+            z-index: 10000;
+        }
         /* 退场时先用应用真实背景色铺满启动层，再让字标与遮罩一起离开；
            避免“启动页淡出 → 黑底一帧 → 首页”的跳变 */
         #bootSplash::after {
@@ -587,12 +591,15 @@
         }
         function svgEl(name) { return document.createElementNS(svgNS, name); }
 
-        // ---------- 加载进度（外部契约不变） ----------
-        // 关键样式就绪 45% → DOM interactive 65% → DOMContentLoaded 90% → 业务就绪 100%
+        // ---------- 加载进度 ----------
+        // 阶段由 js/app/boot-sequence.js 推进，这里只负责画：
+        //   启动层出现 → 关键样式 12% → DOM 20% → 鉴权 22~35% → 首页 40~95% → 进入 100%
         var CRITICAL_STYLES = ['v2/tokens.css', 'v2/base.css', 'v2/home.css'];
         var progress = 0;
         var lastProgressAt = now();
         var stall = 0;               // 停滞兜底：缓慢缓推，避免进度条看起来卡死
+        var stallPaused = false;     // 等待登录时暂停缓推，进度停在「等待登录」
+        var stageText = '';          // 启动编排给出的阶段文案（优先于默认阈值文案）
         var STALL_AFTER_MS = 2500;
         var STALL_RATE = 0.09;
         var SLOW_HINT_MS = 6000;
@@ -602,6 +609,12 @@
             if (value <= progress) return;
             progress = value;
             lastProgressAt = now();
+        }
+
+        /** 供启动编排调用：推进进度并同步阶段提示 */
+        function setStage(value, text) {
+            if (typeof value === 'number') mark(clamp01(value));
+            if (typeof text === 'string') stageText = text;
         }
 
         function criticalStylesReady() {
@@ -621,21 +634,22 @@
 
         var stylePolls = 0;
         (function pollStyles() {
-            if (criticalStylesReady() || ++stylePolls > 100) { mark(0.45); return; }
+            if (criticalStylesReady() || ++stylePolls > 100) { mark(0.12); return; }
             setTimeout(pollStyles, 50);
         })();
 
         document.addEventListener('readystatechange', function () {
-            if (document.readyState === 'interactive') mark(0.65);
+            if (document.readyState === 'interactive') mark(0.2);
         });
         document.addEventListener('DOMContentLoaded', function () {
-            mark(0.9);
-            // 兜底：业务侧没有广播就绪（bundle 失败等）时，8 秒后也要把窗口交出去
+            mark(0.2);
+            // 兜底：业务侧没有广播交互就绪（bundle 失败等）时，8 秒后也要把窗口交出去
             setTimeout(function () {
                 if (!appReady && !released) forceArrive();
             }, 8000);
         });
-        window.addEventListener('load', function () { mark(1); });
+        // 资源 load 不再推进进度：首页数据可能仍在加载，
+        // 进度只由启动编排的「鉴权 → 首页 → 进入」阶段决定（见 boot-sequence.js）。
 
         // ---------- 进度条 ----------
         var shown = 0;
@@ -645,10 +659,10 @@
             shown += (target - shown) * 0.12;
             if (Math.abs(target - shown) < 0.002) shown = target;
             if (loadingBar) loadingBar.style.width = (shown * 100).toFixed(1) + '%';
-            var text = shown < 0.45 ? '正在准备…'
-                : shown < 0.65 ? '正在加载界面…'
-                : shown < 0.9 ? '正在连接片源…'
-                : '即将完成…';
+            var text = stageText || (shown < 0.2 ? '正在准备…'
+                : shown < 0.36 ? '正在验证身份…'
+                : shown < 0.92 ? '正在加载首页…'
+                : '即将进入…');
             if (text !== lastText && loadingText) {
                 loadingText.textContent = text;
                 lastText = text;
@@ -682,6 +696,9 @@
 
         var introHeld = false;
         var appReady = false;
+        var authReady = false;    // 鉴权通过（启动编排通知）
+        var homeReady = false;    // 首页数据就绪（启动编排通知）
+        var waitingAuth = false;  // 正停在登录门禁：资源 load 不得把进度推走
         var released = false;
         var forced = false;
         var startTime = 0;
@@ -866,27 +883,67 @@
             setTimeout(function () { splash.classList.add('boot-splash--done'); }, 420);
             setTimeout(function () {
                 if (splash.parentNode) splash.parentNode.removeChild(splash);
+                // 启动屏完全退场、首页已可见：这时才开始后台预加载其他页面
+                if (window.LeLeBoot && typeof window.LeLeBoot.onEntered === 'function') {
+                    window.LeLeBoot.onEntered();
+                }
             }, 1000);
         }
 
-        // 双闸门：动画完整落地 + 应用真正就绪；谁慢等谁
+        // 三闸门：入场动画完整落地 + 交互就绪 + 鉴权通过 + 首页就绪；谁慢等谁
         function checkArrive() {
             if (released) return;
             if (!introHeld) return;
-            if (!appReady && !forced) return;
+            if (!forced && !(appReady && authReady && homeReady)) return;
             burstAndLeave();
         }
 
         function markAppReady() {
             if (appReady || released) return;
             appReady = true;
-            mark(1);
+            // 交互就绪只说明页面点得动；进度仍由鉴权 / 首页阶段推进
+            mark(0.2);
             checkArrive();
         }
         // 业务侧（js/app/app.js）在 setupEventListeners 之后调用此函数
         window.__LELETV_BOOT_READY__ = markAppReady;
         // 通知首页跳过 playHomeIntro：本启动屏已接管入场视觉，不要播第二遍
         window.__LELETV_BOOT_INTRO__ = true;
+
+        // ---------- 启动编排接口 ----------
+        // 顺序由 js/app/boot-sequence.js 驱动：先鉴权，鉴权通过才 loadHome，
+        // 首页就绪后再 homeReady()，三个信号齐了 checkArrive() 才撤启动屏。
+        window.__LELETV_BOOT_UI__ = {
+            setStage: setStage,
+            // 等待登录：进度停在当前阶段，不再自动缓推
+            waitAuth: function () {
+                waitingAuth = true;
+                stallPaused = true;
+                if (loadingEl) loadingEl.classList.add('is-visible');
+            },
+            // 登录成功、开始加载首页：恢复缓推
+            resumeProgress: function () {
+                waitingAuth = false;
+                stallPaused = false;
+                lastProgressAt = now();
+            },
+            authReady: function () {
+                if (authReady) return;
+                authReady = true;
+                waitingAuth = false;
+                stallPaused = false;
+                lastProgressAt = now();
+                mark(0.35);
+                checkArrive();
+            },
+            homeReady: function () {
+                if (homeReady) return;
+                homeReady = true;
+                mark(1);
+                checkArrive();
+            },
+            isReleased: function () { return released; }
+        };
 
         function skipIntro() {
             if (released) return;
@@ -897,6 +954,10 @@
             if (released) return;
             forced = true;
             appReady = true;
+            authReady = true;
+            homeReady = true;
+            waitingAuth = false;
+            stageText = '即将进入…';
             completeReveal();
             mark(1);
             checkArrive();
@@ -929,6 +990,14 @@
             }, 300);
         }
 
+        // 动画时长兜底：后台标签页会暂停 rAF，不能让「入场完成」这一信号一直等不到
+        setTimeout(function () {
+            if (!introHeld && !released) {
+                completeReveal();
+                checkArrive();
+            }
+        }, TOTAL_MS + 80);
+
         // ---------- 主循环：动画 + 进度 + 停滞兜底 ----------
         function tick(nowTs) {
             if (released) return;
@@ -937,7 +1006,9 @@
             var dt = Math.min(40, Math.max(0, nowTs - lastT));
             lastT = nowTs;
 
-            if (nowTs - lastProgressAt > STALL_AFTER_MS) {
+            if (!stallPaused && nowTs - lastProgressAt > STALL_AFTER_MS) {
+                // 从当前阶段接着往前缓推：否则进度条会在「加载首页」这一段长时间停住
+                if (stall < progress) stall = progress;
                 stall = clamp01(stall + (dt / 1000) * STALL_RATE);
             }
             renderProgress();
@@ -1351,7 +1422,7 @@
     </script>
 
     <script src="dist/leletv-core.miuqd5.js?v=v4.1.0" defer></script>
-    <script src="dist/leletv-app.szatel.js?v=v4.1.0" defer></script>
+    <script src="dist/leletv-app.dgn63q.js?v=v4.1.0" defer></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
@@ -1410,6 +1481,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (auth && auth.isVerified()) {
         if (loginModal) loginModal.style.display = 'none';
     } else if (loginModal) {
+        // 启动屏还在时，登录框要盖在启动层之上（与 boot-sequence.js 的 is-boot 一致）
+        if (document.getElementById('bootSplash')) loginModal.classList.add('is-boot');
         loginModal.style.display = 'flex';
     }
 
@@ -1493,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loginModal.classList.add('is-leaving');
         setTimeout(function () {
             loginModal.style.display = 'none';
-            loginModal.classList.remove('is-leaving');
+            loginModal.classList.remove('is-leaving', 'is-boot');
         }, 220);
     }
 

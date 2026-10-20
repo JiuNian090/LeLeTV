@@ -167,16 +167,22 @@
   }
 
   let started = false;
+  let readyPromise = null;
 
   function shelvesEnabled() {
     return document.documentElement.getAttribute('data-home-shelves') !== 'off';   // 设置 › 首页与导航 关掉了内容板块
   }
 
+  /**
+   * 首次进入首页时加载「最近更新」。
+   * 由 js/app/boot-sequence.js 在鉴权通过后调用；返回的 Promise 在四条内容行渲染完成后 resolve。
+   */
   function init() {
-    if (started || !shelvesEnabled()) return;
+    if (started) return readyPromise;
     const section = document.getElementById('homeRecent');
-    if (!section || isPrivateMode()) return;   // 私密模式不展示 TMDB 内容
+    if (!section || isPrivateMode() || !shelvesEnabled()) return Promise.resolve();   // 私密模式/板块关闭时不发请求
     started = true;
+    readyPromise = Promise.resolve();
     const rows = {};
     TYPES.forEach(type => {
       const row = section.querySelector('[data-recent="' + type + '"]');
@@ -193,7 +199,7 @@
       ? Promise.resolve(cached[type])
       : loadType(type));
 
-    Promise.all(pending).then(lists => {
+    readyPromise = Promise.all(pending).then(lists => {
       const data = {};
       let shown = 0;
       TYPES.forEach((type, i) => {
@@ -203,12 +209,15 @@
       section.hidden = shown === 0;
       if (!cached) writeCache(data);
     });
+    return readyPromise;
   }
 
+  // 启动流程缺席（脚本被拦截 / 异常）时的兜底：8 秒后自己开始，避免首页一直空着。
+  // 正常路径下 boot-sequence.js 会先调用 init()，这里的重复调用是幂等的。
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 8000); }, { once: true });
   } else {
-    init();
+    setTimeout(init, 8000);
   }
   // 设置里刚把内容板块打开：这时再拉数据
   window.addEventListener('leletv:layoutchange', init);

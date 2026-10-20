@@ -203,12 +203,21 @@
     });
   }
 
+  var started = false;
+  var ready = null;
+
   function init() {
+    if (started) return ready;
+    started = true;
     if (shelvesEnabled()) renderContinue();
     // 打包脚本是 defer 执行的，这时 DOMContentLoaded 还没派发；首访的默认片源由 app.js 在那之后写入
     if (document.readyState === 'complete') renderSourceCount();
     else document.addEventListener('DOMContentLoaded', () => setTimeout(renderSourceCount, 0), { once: true });
     ensureHub();
+    // 首页内容主体是「最近更新」；聚合动效的 trending 海报只做装饰，
+    // ensure() 不等它，避免慢请求把进入首页的时间一起拖住。
+    ready = Promise.resolve();
+    return ready;
   }
 
   // 从播放页返回、或切回首页时刷新「继续观看」；设置里刚打开的板块这时补建
@@ -219,11 +228,20 @@
   });
   window.addEventListener('leletv:layoutchange', () => { ensureHub(); if (shelvesEnabled()) renderContinue(); });
 
+  // 启动流程缺席（脚本被拦截 / 异常）时的兜底：8 秒后自己开始。
+  // 正常路径下 boot-sequence.js 在鉴权通过后调用 ensure()，这里的重复调用是幂等的。
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 8000); }, { once: true });
   } else {
-    init();
+    setTimeout(init, 8000);
   }
 
-  window.HomeShelves = { refresh: renderContinue, loadTrending, posterCard, skeletons, tmdbImage };
+  window.HomeShelves = {
+    ensure: init,
+    refresh: renderContinue,
+    loadTrending,
+    posterCard,
+    skeletons,
+    tmdbImage
+  };
 })();
