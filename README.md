@@ -34,7 +34,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | 构建产物 | 3 个 esbuild bundle（core / app / player，带内容哈希） |
 | 主题配色 | 11 套预设方案 + 自定义配色 |
 | 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
-| 页面 | `index.html`（SPA，1421 行）+ `player.html`（独立播放页，292 行） |
+| 页面 | `index.html`（SPA，1524 行）+ `player.html`（独立播放页，310 行） |
 | 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
 | 代码图谱 | CodeGraph 172 文件 / 4,917 节点 / 19,152 边 |
 
@@ -497,7 +497,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.1.1`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.1.2`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -508,6 +508,10 @@ npm run dev
 ## 📝 更新日志
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
+
+### v4.1.2 (2026-10-20)
+- 🔧 修复 iOS Safari 上播放页双指捏合缩放导致页面错乱的问题
+- 🔧 修复 播放页在部分屏幕下底部或右侧露出空白的问题
 
 ### v4.1.1 (2026-10-20)
 - 🎉 新增 视频源导入导出功能，支持拖拽上传，兼容 LibreTV、TVBOX 等格式，导入自动去重合并
@@ -526,9 +530,6 @@ npm run dev
 - ✨ 优化 启动屏改为首帧直达 + 星轨入场动画，去掉静态启动图，冷启动画面更连贯
 - ✨ 优化 竖屏手机首页布局，搜索框与聚合动效在首屏内完整显示
 - 🔧 修复 自定义资源站列表被超长地址撑破卡片布局的问题
-
-### v4.0.7 (2026-09-29)
-- 🔧 回退到 v4.0.4 稳定状态，修复近期引入的显示异常
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
