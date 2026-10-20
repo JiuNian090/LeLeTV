@@ -68,6 +68,36 @@
     });
   }
 
+  // 简洁首页（关闭聚合动效与内容板块）在竖屏手机上：
+  // 把页脚的实际高度写成 CSS 变量，标题区据此扣掉页脚，整页正好落在一屏内，
+  // 页脚不需要下滑就能看到。其他页面/布局不受影响。
+  var _compactRaf = 0;
+
+  function syncCompactFooter() {
+    var layout = document.querySelector('.home-layout.v2-home');
+    if (!layout) return;
+    var d = document.documentElement;
+    var compact = d.getAttribute('data-home-hub') === 'off'
+      && d.getAttribute('data-home-shelves') === 'off'
+      && window.matchMedia('(max-width: 767px) and (orientation: portrait)').matches;
+    if (!compact) {
+      layout.style.removeProperty('--home-footer-h');
+      return;
+    }
+    var footer = document.querySelector('.footer');
+    if (!footer) return;
+    var h = Math.ceil(footer.getBoundingClientRect().height);
+    if (h > 0) layout.style.setProperty('--home-footer-h', h + 'px');
+  }
+
+  function queueCompactFooter() {
+    if (_compactRaf) return;
+    _compactRaf = requestAnimationFrame(function () {
+      _compactRaf = 0;
+      syncCompactFooter();
+    });
+  }
+
   function set(key, value) {
     var prefs = read();
     if (!(key in prefs)) return;
@@ -75,6 +105,7 @@
     write(prefs);
     apply(prefs);
     syncControls(prefs);
+    queueCompactFooter();
     try {
       window.dispatchEvent(new CustomEvent('leletv:layoutchange', { detail: prefs }));
     } catch (e) { /* 忽略 */ }
@@ -85,6 +116,7 @@
     var prefs = read();
     apply(prefs);
     syncControls(prefs);
+    queueCompactFooter();
     try {
       window.dispatchEvent(new CustomEvent('leletv:layoutchange', { detail: prefs }));
     } catch (e) { /* 忽略 */ }
@@ -99,6 +131,14 @@
       if (!input || !input.getAttribute || !input.getAttribute('data-layout-pref')) return;
       set(input.getAttribute('data-layout-pref'), input.checked);
     });
+
+    // 简洁首页的首屏高度依赖页脚实际高度：尺寸变化、字体就绪或版本信息更新后重新测量
+    window.addEventListener('resize', queueCompactFooter);
+    window.addEventListener('load', queueCompactFooter);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(queueCompactFooter).catch(function () { /* 忽略 */ });
+    }
+    queueCompactFooter();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

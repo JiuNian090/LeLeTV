@@ -233,6 +233,9 @@
 
 .v2-hero {
     display: grid;
+    /* 显式单列：自动列会被搜索框的 max-content 撑宽，极窄屏下会溢出到右侧 */
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
     justify-items: center;
     gap: var(--v2-s5);
     text-align: center;
@@ -360,7 +363,9 @@ html[data-motion="off"] .v2-hero-glass {
 .v2-search-wrap {
     display: grid;
     gap: 14px;
-    width: min(680px, 100%);
+    width: 100%;
+    max-width: 680px;
+    min-width: 0;
     margin-top: var(--v2-s2);
 }
 
@@ -369,6 +374,7 @@ html[data-motion="off"] .v2-hero-glass {
     align-items: center;
     gap: 10px;
     height: 60px;
+    min-width: 0;
     padding: 0 8px 0 20px;
     border-radius: 18px;
     /* 薄片清玻璃：一层轻微折射、0.5px 发丝边、顶边一条更细的高光；不带阴影、不发光 */
@@ -1377,6 +1383,15 @@ html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
         /* 居中但重心明显偏上：底部多留一段空白，内容中心随之上移，避免视觉上往下坠 */
         padding-bottom: clamp(64px, 20vh, 180px);
     }
+
+    /* 简洁首页（没有聚合动效与内容板块）：把页脚高度算进首屏。
+       标题区缩短到「视口 − 导航 − 页脚」，页脚正好落在屏幕底部；
+       padding 同步减去页脚高度，内容重心保持在原来的偏上位置。 */
+    html[data-home-hub="off"][data-home-shelves="off"] .v2-hero {
+        min-height: calc(100vh - 56px - var(--home-footer-h, 92px));
+        min-height: calc(100svh - 56px - var(--home-footer-h, 92px));
+        padding-bottom: max(16px, calc(20vh - var(--home-footer-h, 92px)));
+    }
 }
 
 /* 矮屏手机：按视口高度缩小动效，避免搜索框 + 完整动效超出一屏 */
@@ -1404,5 +1419,167 @@ html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
 
     html:not([data-home-hub="off"]) .v2-hero {
         padding-bottom: 20px;
+    }
+}
+
+/* ============ 极窄屏：搜索框与首页元素整体缩小 ============ */
+/* 折叠屏外屏、小屏手机等 360px 以下视口：字标、标题、搜索框与按钮按比例收小，
+   输入框保持 16px（iOS 聚焦时小于 16px 会自动放大页面）。 */
+@media (max-width: 360px) {
+    /* 导航同样收紧：品牌标缩小，六个入口的点击区仍保留 34px */
+    .v2-nav .nav-container {
+        gap: 4px;
+        padding-left: calc(8px + env(safe-area-inset-left, 0px));
+        padding-right: calc(8px + env(safe-area-inset-right, 0px));
+    }
+
+    .v2-nav .v2-brand {
+        --lockup: 24px;
+    }
+
+    .v2-nav .nav-btn {
+        width: 34px;
+        height: 36px;
+    }
+
+    .v2-nav .nav-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .v2-nav .nav-search-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* 首页标题区整体收一档 */
+    .v2-hero {
+        gap: 12px;
+    }
+
+    .v2-hero .v2-search-wrap {
+        margin-top: 8px;
+    }
+
+    .v2-hero-glassbox {
+        width: min(58vw, 210px);
+    }
+
+    .v2-hero-title {
+        font-size: 13px;
+        letter-spacing: 0.06em;
+    }
+
+    .v2-search-wrap {
+        gap: 10px;
+    }
+
+    .home-search-bar.v2-search {
+        height: 48px;
+        gap: 8px;
+        padding: 0 4px 0 12px;
+        border-radius: 14px;
+    }
+
+    .v2-search-icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .v2-search #searchInput {
+        font-size: 16px;
+    }
+
+    /* 占位提示单独收小，保证窄屏下完整显示；输入文字仍保持 16px */
+    .v2-search #searchInput::placeholder {
+        font-size: 13px;
+    }
+
+    .v2-search .search-input-clear {
+        width: 24px;
+        height: 24px;
+    }
+
+    .v2-search-btn {
+        height: 36px;
+        padding: 0 12px;
+        font-size: 13px;
+        border-radius: 11px;
+    }
+}
+
+/* 300px 以下再收一档，避免导航入口把页面撑出横向滚动 */
+@media (max-width: 300px) {
+    .v2-nav .nav-container {
+        gap: 3px;
+        padding-left: calc(6px + env(safe-area-inset-left, 0px));
+        padding-right: calc(6px + env(safe-area-inset-right, 0px));
+    }
+
+    .v2-nav .v2-brand {
+        --lockup: 22px;
+    }
+
+    .v2-nav .nav-btn {
+        width: 30px;
+        height: 34px;
+    }
+
+    .v2-nav .nav-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .v2-nav .nav-search-btn {
+        width: 32px;
+        height: 34px;
+    }
+
+    .v2-hero {
+        gap: 10px;
+    }
+
+    .v2-hero .v2-search-wrap {
+        margin-top: 6px;
+    }
+
+    .v2-hero-glassbox {
+        width: min(56vw, 180px);
+    }
+
+    .v2-hero-title {
+        font-size: 12px;
+    }
+
+    .v2-search-wrap {
+        gap: 8px;
+    }
+
+    .home-search-bar.v2-search {
+        height: 44px;
+        padding: 0 3px 0 10px;
+        border-radius: 13px;
+    }
+
+    .v2-search-icon {
+        width: 17px;
+        height: 17px;
+    }
+
+    .v2-search #searchInput::placeholder {
+        /* 240px 左右的折叠屏外屏：字号随宽度继续微收，保证整句提示完整 */
+        font-size: clamp(10px, 4vw, 11px);
+    }
+
+    .v2-search .search-input-clear {
+        width: 22px;
+        height: 22px;
+    }
+
+    .v2-search-btn {
+        height: 32px;
+        padding: 0 10px;
+        font-size: 12px;
+        border-radius: 10px;
     }
 }
