@@ -55,7 +55,7 @@ export const BUNDLES = [
     name: 'leletv-category',
     firstScreen: false,
     files: [
-      'js/api/tmdb.js',
+      'src/services/tmdb.ts',
     ],
   },
   {

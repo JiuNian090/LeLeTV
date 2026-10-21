@@ -1,4 +1,79 @@
-const TMDB_STATE = {
+interface TmdbState {
+  type: string;
+  page: number;
+  totalPages: number;
+  selectedGenre: number | null;
+  selectedYear: string;
+  selectedSort: string;
+  voteRating: string;
+  originalLanguage: string;
+  originCountry: string;
+  tvStatus: string;
+  isLoaded: boolean;
+  isLoading: boolean;
+  _genreExpanded: boolean;
+  _yearExpanded?: boolean;
+  _filtersCollapsed: boolean | null;
+  [key: string]: unknown;
+}
+
+interface TmdbConfig {
+  imageBase: string;
+  posterSize: string;
+  backdropSize: string;
+  language: string;
+}
+
+interface GenreItem {
+  id: number;
+  name: string;
+}
+
+interface SortOption {
+  value: string;
+  label: string;
+}
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface TmdbResultItem {
+  [key: string]: unknown;
+  title?: string;
+  name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average?: number;
+  vote_count?: number;
+  poster_path?: string;
+  overview?: string;
+  original_language?: string;
+  genre_ids?: number[];
+}
+
+interface TmdbResponse {
+  results?: TmdbResultItem[];
+  total_pages?: number;
+}
+
+interface TmdbWindow extends Window {
+  saveTmdbScroll?: () => void;
+  LeLePages?: {
+    ensure: (name: string) => Promise<void>;
+    isLoaded: (name: string) => boolean;
+  };
+}
+
+declare function generateSkeletonCards(count: number): string;
+declare function openMoviesPage(title: string, options: { from: string; fallbackGenres: string[] }): void;
+declare function switchPage(page: string): void;
+declare function search(): void;
+
+const tmdbWindow = window as TmdbWindow;
+
+const TMDB_STATE: TmdbState = {
   type: 'movie',
   page: 1,
   totalPages: 1,
@@ -19,18 +94,18 @@ const TMDB_STATE = {
 const TMDB_STATE_KEY = 'leletv_tmdb_state';
 const TMDB_SCROLL_KEY = 'leletv_tmdb_scroll';
 
-function saveTmdbState() {
+function saveTmdbState(): void {
   try {
     const { isLoaded, isLoading, _genreExpanded, ...rest } = TMDB_STATE;
     sessionStorage.setItem(TMDB_STATE_KEY, JSON.stringify(rest));
   } catch (e) { /* 忽略 sessionStorage 不可用 */ }
 }
 
-function restoreTmdbState() {
+function restoreTmdbState(): boolean {
   try {
     const raw = sessionStorage.getItem(TMDB_STATE_KEY);
     if (!raw) return false;
-    const saved = JSON.parse(raw);
+    const saved = JSON.parse(raw) as Record<string, unknown>;
     if (!saved || typeof saved !== 'object') return false;
     let restored = false;
     Object.keys(saved).forEach(k => {
@@ -44,14 +119,14 @@ function restoreTmdbState() {
   return false;
 }
 
-function saveTmdbScroll() {
+function saveTmdbScroll(): void {
   try {
     const y = window.scrollY;
     if (y > 0) sessionStorage.setItem(TMDB_SCROLL_KEY, String(y));
   } catch (e) { /* 忽略 */ }
 }
 
-function restoreTmdbScroll() {
+function restoreTmdbScroll(): void {
   try {
     const raw = sessionStorage.getItem(TMDB_SCROLL_KEY);
     if (!raw) return;
@@ -64,16 +139,16 @@ function restoreTmdbScroll() {
   } catch (e) { /* 忽略 */ }
 }
 
-window.saveTmdbScroll = saveTmdbScroll;
+tmdbWindow.saveTmdbScroll = saveTmdbScroll;
 
-const TMDB_CONFIG = {
+const TMDB_CONFIG: TmdbConfig = {
   imageBase: 'https://image.tmdb.org/t/p',
   posterSize: 'w342',
   backdropSize: 'w780',
   language: 'zh-CN'
 };
 
-const GENRE_MAP = {
+const GENRE_MAP: Record<string, GenreItem[]> = {
   movie: [
     { id: 28, name: '动作' },
     { id: 12, name: '冒险' },
@@ -115,7 +190,7 @@ const GENRE_MAP = {
   ]
 };
 
-const SORT_OPTIONS = {
+const SORT_OPTIONS: Record<string, SortOption[]> = {
   movie: [
     { value: 'primary_release_date.desc', label: '最近上映' },
     { value: 'popularity.desc', label: '最热门' },
@@ -152,7 +227,7 @@ const SORT_OPTIONS = {
   ]
 };
 
-const LANGUAGES = [
+const LANGUAGES: SelectOption[] = [
   { value: '', label: '全部语言' },
   { value: 'zh', label: '中文' },
   { value: 'en', label: '英语' },
@@ -166,7 +241,7 @@ const LANGUAGES = [
   { value: 'ru', label: '俄语' }
 ];
 
-const COUNTRIES = [
+const COUNTRIES: SelectOption[] = [
   { value: '', label: '全部地区' },
   { value: 'CN', label: '中国大陆' },
   { value: 'US', label: '美国' },
@@ -181,7 +256,7 @@ const COUNTRIES = [
   { value: 'TH', label: '泰国' }
 ];
 
-const TV_STATUSES = [
+const TV_STATUSES: SelectOption[] = [
   { value: '', label: '全部状态' },
   { value: '0', label: '已播完' },
   { value: '1', label: '拍摄中' },
@@ -191,9 +266,9 @@ const TV_STATUSES = [
   { value: '5', label: '暂停播出' }
 ];
 
-function getYears() {
+function getYears(): SelectOption[] {
   const current = new Date().getFullYear();
-  const years = [{ value: '', label: '全部年份' }];
+  const years: SelectOption[] = [{ value: '', label: '全部年份' }];
   for (let y = current; y >= 1990; y--) {
     years.push({ value: String(y), label: String(y) });
   }
@@ -203,33 +278,33 @@ function getYears() {
   return years;
 }
 
-function isMovieLike(type) {
+function isMovieLike(type: string): boolean {
   return type === 'movie';
 }
 
-function getEffectiveType(type) {
+function getEffectiveType(type: string): string {
   if (type === 'anime') return 'tv';
   if (type === 'variety') return 'tv';
   return type;
 }
 
-function getTmdbBaseUrl() {
+function getTmdbBaseUrl(): string {
   if (typeof TMDB_WORKER_URL !== 'undefined' && TMDB_WORKER_URL) {
     return TMDB_WORKER_URL;
   }
   return '/api/tmdb';
 }
 
-async function tmdbFetch(endpoint, params = {}) {
+async function tmdbFetch(endpoint: string, params: Record<string, string> = {}): Promise<TmdbResponse> {
   params.endpoint = endpoint;
   const query = new URLSearchParams(params).toString();
   const url = `${getTmdbBaseUrl()}?${query}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TMDB 请求失败: ${res.status}`);
-  return res.json();
+  return res.json() as Promise<TmdbResponse>;
 }
 
-function initTmdbCategory() {
+function initTmdbCategory(): void {
   // 恢复本会话保存的筛选/页码状态（若有），返回播放页或刷新后自动保持浏览状态
   const hadSavedState = restoreTmdbState();
 
@@ -248,7 +323,7 @@ function initTmdbCategory() {
 }
 
 // 判断是否为手机横屏（窄高横向视口）
-function isMobileLandscape() {
+function isMobileLandscape(): boolean {
   try {
     return window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
   } catch (e) {
@@ -256,7 +331,7 @@ function isMobileLandscape() {
   }
 }
 
-function resetTmdbFilters() {
+function resetTmdbFilters(): void {
   TMDB_STATE.page = 1;
   TMDB_STATE.selectedGenre = null;
   TMDB_STATE.selectedYear = '';
@@ -274,7 +349,7 @@ function resetTmdbFilters() {
   }
 }
 
-function renderYearFilter() {
+function renderYearFilter(): string {
   const MAX_VISIBLE = 7;
   const years = getYears();
   const selectedIdx = years.findIndex(y => y.value === TMDB_STATE.selectedYear);
@@ -295,7 +370,7 @@ function renderYearFilter() {
   `;
 }
 
-function renderTmdbFilters() {
+function renderTmdbFilters(): void {
   const container = document.getElementById('tmdb-filters');
   if (!container) return;
 
@@ -392,8 +467,8 @@ function renderTmdbFilters() {
   bindFilterTags();
 }
 
-function bindTypeSwitch() {
-  document.querySelectorAll('.tmdb-type-btn').forEach(btn => {
+function bindTypeSwitch(): void {
+  document.querySelectorAll<HTMLElement>('.tmdb-type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.type;
       if (type !== TMDB_STATE.type) {
@@ -410,7 +485,7 @@ function bindTypeSwitch() {
 // 筛选区整体折叠按钮（漏斗图标）：独立绑定在按钮自身上，
 // 只切换 _filtersCollapsed（隐藏/显示整块标签行），与下面各标签行的
 // 「更多类型…/收起类型」「更多年份…/收起年份」互不干涉。
-function bindFilterToggle() {
+function bindFilterToggle(): void {
   const btn = document.querySelector('.tmdb-filter-collapse-btn');
   if (!btn) return;
 
@@ -421,12 +496,12 @@ function bindFilterToggle() {
   });
 }
 
-function bindFilterTags() {
+function bindFilterTags(): void {
   const section = document.querySelector('.tmdb-filter-section');
   if (!section) return;
 
   section.addEventListener('click', (e) => {
-    const btn = e.target.closest('.tmdb-genre-btn');
+    const btn = (e.target as HTMLElement).closest('.tmdb-genre-btn') as HTMLElement | null;
     if (!btn) return;
 
     if (btn.hasAttribute('data-type')) return;
@@ -472,7 +547,7 @@ function bindFilterTags() {
   });
 }
 
-async function loadTmdbResults() {
+async function loadTmdbResults(): Promise<void> {
   if (TMDB_STATE.isLoading) return;
   TMDB_STATE.isLoading = true;
 
@@ -487,15 +562,15 @@ async function loadTmdbResults() {
   try {
     const type = TMDB_STATE.type;
     const isMovie = isMovieLike(type);
-    const params = {
+    const params: Record<string, string> = {
       language: 'zh-CN',
-      page: TMDB_STATE.page,
+      page: String(TMDB_STATE.page),
       sort_by: TMDB_STATE.selectedSort,
-      'vote_count.gte': 10
+      'vote_count.gte': '10'
     };
 
     if (TMDB_STATE.selectedGenre) {
-      params.with_genres = TMDB_STATE.selectedGenre;
+      params.with_genres = String(TMDB_STATE.selectedGenre);
     }
 
     if (TMDB_STATE.selectedYear) {
@@ -543,10 +618,10 @@ async function loadTmdbResults() {
     const offset = startIdx % 20;
 
     const [data, data2] = await Promise.all([
-      tmdbFetch(endpoint, { ...params, page: tmdbPage1 }),
+      tmdbFetch(endpoint, { ...params, page: String(tmdbPage1) }),
       tmdbPage1 + 1 <= 500
-        ? tmdbFetch(endpoint, { ...params, page: tmdbPage1 + 1 })
-        : { results: [] }
+        ? tmdbFetch(endpoint, { ...params, page: String(tmdbPage1 + 1) })
+        : Promise.resolve({ results: [] as TmdbResultItem[] })
     ]);
 
     let results = [...(data.results || []), ...(data2.results || [])];
@@ -574,7 +649,7 @@ async function loadTmdbResults() {
   }
 }
 
-function renderTmdbCards(items) {
+function renderTmdbCards(items: TmdbResultItem[]): void {
   const container = document.getElementById('tmdb-results');
   if (!container) return;
 
@@ -592,7 +667,7 @@ function renderTmdbCards(items) {
   const fragment = document.createDocumentFragment();
 
   items.forEach(item => {
-    const title = isMovieLike(TMDB_STATE.type) ? item.title : item.name;
+    const title = (isMovieLike(TMDB_STATE.type) ? item.title : item.name) as string;
     const date = isMovieLike(TMDB_STATE.type) ? item.release_date : item.first_air_date;
     const year = date ? date.split('-')[0] : '';
     const voteAverage = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
@@ -639,7 +714,7 @@ function renderTmdbCards(items) {
   container.appendChild(fragment);
 }
 
-function renderTmdbPagination() {
+function renderTmdbPagination(): void {
   const container = document.getElementById('tmdb-pagination');
   if (!container) return;
 
@@ -651,9 +726,9 @@ function renderTmdbPagination() {
   const current = TMDB_STATE.page;
   const total = TMDB_STATE.totalPages;
 
-  const getPageButtons = () => {
-    const pages = [];
-    const addPage = (n) => { if (!pages.includes(n) && n >= 1 && n <= total) pages.push(n); };
+  const getPageButtons = (): (number | string)[] => {
+    const pages: number[] = [];
+    const addPage = (n: number) => { if (!pages.includes(n) && n >= 1 && n <= total) pages.push(n); };
 
     addPage(1);
     addPage(current - 1);
@@ -663,7 +738,7 @@ function renderTmdbPagination() {
 
     pages.sort((a, b) => a - b);
 
-    const result = [];
+    const result: (number | string)[] = [];
     for (let i = 0; i < pages.length; i++) {
       if (i > 0 && pages[i] - pages[i - 1] > 1) {
         result.push('ellipsis');
@@ -688,7 +763,7 @@ function renderTmdbPagination() {
     </div>
   `;
 
-  container.querySelectorAll('.tmdb-page-btn:not(.disabled)').forEach(btn => {
+  container.querySelectorAll<HTMLElement>('.tmdb-page-btn:not(.disabled)').forEach(btn => {
     btn.addEventListener('click', () => {
       const page = Number(btn.dataset.page);
       if (page >= 1 && page <= total && page !== current) {
@@ -704,10 +779,10 @@ function renderTmdbPagination() {
   });
 }
 
-function tmdbSearchVideo(title, genres) {
+function tmdbSearchVideo(title: string, genres: string): void {
   if (!title) return;
 
-  function open() {
+  function open(): void {
     // 统一进入结果页：左侧源列表 + 右侧结果，携带类型信息用于「无关键词结果时的分类兜底」
     if (typeof openMoviesPage === 'function') {
       openMoviesPage(title, {
@@ -720,7 +795,7 @@ function tmdbSearchVideo(title, genres) {
     // 旧逻辑兜底（结果页模块未加载时）
     const safeTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     switchPage('home');
-    const input = document.getElementById('searchInput');
+    const input = document.getElementById('searchInput') as HTMLInputElement | null;
     if (input) {
       input.value = safeTitle;
       setTimeout(() => search(), 300);
@@ -728,15 +803,15 @@ function tmdbSearchVideo(title, genres) {
   }
 
   // 结果页片段按需加载：先补齐再进入，避免在空容器上渲染
-  if (window.LeLePages && typeof window.LeLePages.ensure === 'function' && !window.LeLePages.isLoaded('movies')) {
-    window.LeLePages.ensure('movies').then(open);
+  if (tmdbWindow.LeLePages && typeof tmdbWindow.LeLePages.ensure === 'function' && !tmdbWindow.LeLePages.isLoaded('movies')) {
+    tmdbWindow.LeLePages.ensure('movies').then(open);
   } else {
     open();
   }
 }
 
 /** 首页「更多」入口：切到分类页并预置类型（电影 / 电视剧 / 动漫 / 综艺），筛选按该类型的默认值重置 */
-function openTmdbCategory(type) {
+function openTmdbCategory(type: string): void {
   if (!SORT_OPTIONS[type]) type = 'movie';
   TMDB_STATE.type = type;
   resetTmdbFilters();
@@ -746,7 +821,7 @@ function openTmdbCategory(type) {
   if (typeof switchPage === 'function') switchPage('category');
 }
 
-function resetTmdbCategory() {
+function resetTmdbCategory(): void {
   TMDB_STATE.type = 'movie';
   TMDB_STATE.page = 1;
   TMDB_STATE.totalPages = 1;

@@ -346,7 +346,7 @@
 | 272 | `js/api/remote-sources.js` | 远端数据源同步与合并 | migrated | `src/services/sources/remote.ts` | — | — | verified | 两个 window 入口名保持不变 |
 | 273 | `js/api/search.js` | 跨源聚合搜索与结果缓存 | migrated | `src/services/search.ts` | — | — | verified | 两个搜索入口名保持不变 |
 | 274 | `js/api/source-port.js` | 视频源导入/导出（LibreTV 互操作） | migrated | `src/services/sources/port.ts` | — | — | verified | 全局脚本迁移，export/import 入口名保持不变 |
-| 275 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | pending | — |
+| 275 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | verified | 公开函数与 TMDB_STATE / TMDB_CONFIG / GENRE_MAP 保持不变 |
 | 276 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | verified | 已迁移至 `src/services/config.ts`；类型检查通过 |
 | 277 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
 | 278 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | pending | — |
@@ -487,6 +487,7 @@
 | 390 | `src/services/viewing-history.ts` | 观看历史读写与历史页渲染（迁移自 `js/ui/ui-viewing-history.js`） | keep | — | — | — | done | 阶段 4 第 21 条迁移目标 |
 | 391 | `src/services/theme.ts` | 主题配色、色盘与换色过渡（迁移自 `js/ui/theme-system.js`） | keep | — | — | — | done | 阶段 4 第 22 条迁移目标 |
 | 392 | `src/services/version-updater.ts` | 版本检测与更新提示（迁移自 `js/utils/version-updater.js`） | keep | — | — | — | done | 阶段 4 第 23 条迁移目标 |
+| 393 | `src/services/tmdb.ts` | TMDB 分类 / 详情接口封装（迁移自 `js/api/tmdb.js`） | keep | — | — | — | done | 阶段 4 第 24 条迁移目标 |
 
 ## workers/（红区）
 
