@@ -5,17 +5,80 @@
 // 类别入口采用混合策略：先按影片名关键词搜索，全部无结果时按分类拉取兜底
 
 // 页面状态（app-search.js 也会读取）
-let _moviesState = {
+interface MovieItem {
+  source_code?: string;
+  source_name?: string;
+  vod_id?: string | number;
+  vod_name?: string;
+  vod_remarks?: string;
+  source_latency?: number;
+  api_url?: string;
+  [key: string]: unknown;
+}
+
+interface MovieGroup {
+  kind: string;
+  items: MovieItem[];
+  lead?: MovieItem;
+  name?: string;
+  pic?: string;
+  remarks?: string;
+  season?: number;
+}
+
+interface MoviesGroupsData {
+  all: MovieGroup[];
+  main: MovieGroup[];
+  version: MovieGroup[];
+  short: MovieGroup[];
+  related: MovieGroup[];
+  hero?: { groups: MovieGroup[]; exact: boolean };
+  [key: string]: MovieGroup[] | { groups: MovieGroup[]; exact: boolean } | undefined;
+}
+
+interface MoviesState {
+  keyword: string;
+  results: MovieItem[];
+  activeSource: string;
+  segment: string;          // all | main | version | short | related —— 按类型分段
+  season: number;           // 最佳匹配里选中的季
+  seasonPicked: boolean;    // 用户手选过季 / 版本（没选过时默认显示线路最多的版本）
+  linesOpen: boolean;       // 最佳匹配的线路列表是否展开
+  from: string;             // home | category —— 决定返回按钮去向
+  fallbackGenres: string[]; // 类别入口携带的 TMDB 类型（用于分类兜底）
+  mode: string;             // loading | search | fallback | empty
+  loading: boolean;
+  epoch?: number;
+  _groups?: { results: MovieItem[]; keyword: string; data: MoviesGroupsData };
+  _animated?: boolean;
+}
+
+interface LoadBalancerLike {
+  apiStats: Map<string, { averageResponseTime?: number }>;
+  isApiOverloaded?: (apiId: string) => boolean;
+}
+
+interface CategoryWindow extends Window {
+  loadBalancer?: LoadBalancerLike;
+  LeLeLineProbe?: {
+    check: (source: string, vodId: string, index?: number) => Promise<boolean>;
+    cached: (source: string, vodId: string, index?: number) => boolean | undefined;
+  };
+}
+
+const categoryWindow = window as CategoryWindow;
+
+let _moviesState: MoviesState = {
   keyword: '',
   results: [],
   activeSource: 'all',
-  segment: 'all',          // all | main | version | short | related —— 按类型分段
-  season: 0,               // 最佳匹配里选中的季
-  seasonPicked: false,     // 用户手选过季 / 版本（没选过时默认显示线路最多的版本）
-  linesOpen: false,        // 最佳匹配的线路列表是否展开
-  from: 'home',            // home | category —— 决定返回按钮去向
-  fallbackGenres: [],      // 类别入口携带的 TMDB 类型（用于分类兜底）
-  mode: 'empty',           // loading | search | fallback | empty
+  segment: 'all',
+  season: 0,
+  seasonPicked: false,
+  linesOpen: false,
+  from: 'home',
+  fallbackGenres: [],
+  mode: 'empty',
   loading: false
 };
 
@@ -97,7 +160,7 @@ function _isValidSource(id) {
 
 // 源排序规则：与搜索页一致 —— 负载均衡平均响应时间短的（快源）在前
 function _orderSourcesByLoad(ids) {
-  var stats = window.loadBalancer ? window.loadBalancer.apiStats : null;
+  var stats = categoryWindow.loadBalancer ? categoryWindow.loadBalancer.apiStats : null;
   return ids.slice().sort(function (a, b) {
     var sa = stats && stats.get(a) ? (stats.get(a).averageResponseTime || 9999) : 9999;
     var sb = stats && stats.get(b) ? (stats.get(b).averageResponseTime || 9999) : 9999;
@@ -254,7 +317,7 @@ function renderMoviesPageHeader() {
   var t = document.getElementById('moviesTitle');
   if (t) t.textContent = keyword ? '「' + keyword + '」的检索结果' : '检索结果';
   var form = document.getElementById('moviesResearchForm');
-  var input = document.getElementById('moviesResearchInput');
+  var input = document.getElementById('moviesResearchInput') as HTMLInputElement | null;
   // 搜索框常驻关键词，用户正在改词时不打断
   if (input && document.activeElement !== input) {
     input.value = keyword;
@@ -299,7 +362,7 @@ function renderMoviesSegments(data) {
 }
 
 // 片源筛选条目：状态点 + 名称 + 本次响应（没有延迟数据时显示条目数）
-function _moviesSourceItem(code, label, count, latency) {
+function _moviesSourceItem(code: string, label: string, count: number, latency?: number) {
   var active = _moviesState.activeSource === code;
   var lvl = typeof _latencyLevel === 'function' ? _latencyLevel(latency) : '';
   var latText = lvl ? _latencyText(latency) : '';
@@ -340,10 +403,10 @@ function _playAttrs(item) {
 
 /** 预检判死的线路挪到最后（其余顺序不变）：播放按钮永远指向第一条没判死的 */
 function _sortDeadLast(items) {
-  if (!window.LeLeLineProbe || !items || items.length < 2) return items;
+  if (!categoryWindow.LeLeLineProbe || !items || items.length < 2) return items;
   var alive = [], dead = [];
   items.forEach(function (it) {
-    (LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false ? dead : alive).push(it);
+    (categoryWindow.LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false ? dead : alive).push(it);
   });
   return dead.length ? alive.concat(dead) : items;
 }
@@ -351,16 +414,16 @@ function _sortDeadLast(items) {
 /** 起播前预检：最佳匹配一渲染就并行探前 3 条线路；判死的正好是播放按钮指向的那条，就重绘换到下一条（重绘会接着探新的前 3 条）。
  *  只有一条线路也探：判死的结论进缓存，播放页一进来就直接换线，不用等清单超时 */
 function _probeHeroLine(g) {
-  if (!window.LeLeLineProbe || !g || !g.items || !g.items.length) return;
+  if (!categoryWindow.LeLeLineProbe || !g || !g.items || !g.items.length) return;
   var keyword = _moviesState.keyword;
   g.items.slice(0, 3).forEach(function (it) {
     if (!it.vod_id || !it.source_code) return;
     var source = String(it.source_code), vodId = String(it.vod_id);
-    if (LeLeLineProbe.cached(source, vodId, 0) !== undefined) return;
-    LeLeLineProbe.check(source, vodId, 0).then(function (ok) {
+    if (categoryWindow.LeLeLineProbe.cached(source, vodId, 0) !== undefined) return;
+    categoryWindow.LeLeLineProbe.check(source, vodId, 0).then(function (ok) {
       if (ok || _moviesState.keyword !== keyword) return;
       var hero = document.getElementById('moviesHero');
-      var btn = hero && !hero.hidden ? hero.querySelector('.movies-play') : null;
+      var btn = hero && !hero.hidden ? hero.querySelector('.movies-play') as HTMLElement | null : null;
       if (btn && btn.dataset.source === source && btn.dataset.id === vodId.replace(/[^\w-]/g, '')) renderMoviesHero(_moviesGroups());
     });
   });
@@ -434,7 +497,7 @@ function renderMoviesHero(data) {
   h += '</div>';
   h += '<div class="movies-lines"' + (st.linesOpen ? '' : ' hidden') + '>';
   g.items.forEach(function (it) {
-    var dead = !!window.LeLeLineProbe && LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false;
+    var dead = !!categoryWindow.LeLeLineProbe && categoryWindow.LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false;
     var lvl = dead ? 'bad' : (typeof _latencyLevel === 'function' ? _latencyLevel(it.source_latency) : '');
     var lat = dead ? '不可用' : (lvl ? _latencyText(it.source_latency) : '');
     var note = _plainText(it.vod_remarks);
@@ -513,9 +576,9 @@ var _prefetchedPlayer = false;
 function _prefetchPlayerAssets() {
   if (_prefetchedPlayer) return;
   _prefetchedPlayer = true;
-  var meta = document.querySelector('meta[name="leletv-player-bundle"]');
+  var meta = document.querySelector('meta[name="leletv-player-bundle"]') as HTMLMetaElement | null;
   var version = '';
-  try { version = (document.querySelector('script[src*="dist/leletv-core"]') || {}).src.split('?v=')[1] || ''; } catch (e) { /* 忽略 */ }
+  try { version = (document.querySelector('script[src*="dist/leletv-core"]') as HTMLScriptElement | null)?.src.split('?v=')[1] || ''; } catch (e) { /* 忽略 */ }
   var v = version ? '?v=' + version : '';
   var list = ['player.html', 'libs/hls.min.js' + v, 'libs/artplayer.min.js' + v];
   if (meta && meta.content) list.push(meta.content + v);
@@ -705,7 +768,7 @@ async function loadMoviesResults() {
   var tasks = ordered.map(function (apiId) {
     return (async function () {
       try {
-        if (window.loadBalancer && typeof window.loadBalancer.isApiOverloaded === 'function' && window.loadBalancer.isApiOverloaded(apiId)) return;
+        if (categoryWindow.loadBalancer && typeof categoryWindow.loadBalancer.isApiOverloaded === 'function' && categoryWindow.loadBalancer.isApiOverloaded(apiId)) return;
         var results = await searchByAPIAndKeyWord(apiId, keyword);
         if (epoch !== _moviesEpoch || Date.now() - startedAt > DEADLINE_MS) return;
         if (hiddenFilterEnabled) results = await applyFilter(results);
@@ -876,14 +939,14 @@ function initMoviesPageBindings() {
 
   // 顶栏搜索框：沿用首页的搜索流程（写入搜索历史、更新地址栏）
   var researchForm = document.getElementById('moviesResearchForm');
-  var researchInput = document.getElementById('moviesResearchInput');
+  var researchInput = document.getElementById('moviesResearchInput') as HTMLInputElement | null;
   if (researchForm && researchInput) {
     researchForm.addEventListener('submit', function (e) {
       e.preventDefault();
       var q = researchInput.value.trim();
       if (!q) return;
       if (q === _moviesState.keyword && _moviesState.results.length) { researchInput.blur(); return; }
-      var main = document.getElementById('searchInput');
+      var main = document.getElementById('searchInput') as HTMLInputElement | null;
       if (main) main.value = q;
       researchInput.blur();
       search();
@@ -905,7 +968,7 @@ function initMoviesPageBindings() {
   var segs = document.getElementById('moviesSegs');
   if (segs) {
     segs.addEventListener('click', function (e) {
-      var btn = e.target.closest('[data-segment]');
+      var btn = (e.target as HTMLElement).closest('[data-segment]') as HTMLElement | null;
       if (!btn) return;
       var key = btn.dataset.segment;
       if (key === _moviesState.segment) return;
@@ -918,7 +981,7 @@ function initMoviesPageBindings() {
   var hero = document.getElementById('moviesHero');
   if (hero) {
     hero.addEventListener('click', function (e) {
-      var season = e.target.closest('[data-season]');
+      var season = (e.target as HTMLElement).closest('[data-season]') as HTMLElement | null;
       if (season) {
         var i = parseInt(season.dataset.season, 10) || 0;
         if (i === _moviesState.season) return;
@@ -927,10 +990,10 @@ function initMoviesPageBindings() {
         renderMoviesHero(_moviesGroups());
         return;
       }
-      var toggle = e.target.closest('[data-role="toggle-lines"]');
+      var toggle = (e.target as HTMLElement).closest('[data-role="toggle-lines"]') as HTMLElement | null;
       if (toggle) {
         _moviesState.linesOpen = !_moviesState.linesOpen;
-        var lines = hero.querySelector('.movies-lines');
+        var lines = hero.querySelector('.movies-lines') as HTMLElement | null;
         if (lines) lines.hidden = !_moviesState.linesOpen;
         toggle.setAttribute('aria-expanded', String(_moviesState.linesOpen));
       }
@@ -941,7 +1004,7 @@ function initMoviesPageBindings() {
   var panel = document.getElementById('moviesSourcesList');
   if (!panel) return;
   panel.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-source]');
+    var btn = (e.target as HTMLElement).closest('[data-source]') as HTMLElement | null;
     if (!btn) return;
     var code = btn.dataset.source;
     if (code === _moviesState.activeSource) return;

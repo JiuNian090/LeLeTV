@@ -36,7 +36,7 @@ export const BUNDLES = [
       'src/services/sources/config.ts', 'src/services/balancer.ts',
       'src/services/search-history.ts', 'src/services/viewing-history.ts', 'src/ui/index.ts',
       'src/services/api.ts', 'src/services/search.ts',
-      'src/ui/player/bridge.ts', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
+      'src/ui/player/bridge.ts', 'js/ui/search-cards.js', 'src/pages/category/index.ts',
       'js/app/app-search.js', 'src/services/config.ts', 'src/services/sources/port.ts', 'js/app/app.js',
       'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
       'src/services/version-updater.ts', 'src/core/cache.ts',
