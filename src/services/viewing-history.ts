@@ -290,7 +290,7 @@ async function playFromHistory(url: string, title: string, episodeIndex: number,
 
         // 保存当前页面URL作为返回地址（含 hash，保留历史记录/类别页状态）
         let currentPath: string;
-        if (window.location.pathname.startsWith('/player.html')) {
+        if (window.location.pathname.startsWith('/src/pages/player/index.html')) {
             currentPath = localStorage.getItem('lastPageUrl') || '/';
         } else {
             currentPath = window.location.origin + window.location.pathname + window.location.search + window.location.hash;
@@ -304,7 +304,7 @@ async function playFromHistory(url: string, title: string, episodeIndex: number,
         const idForUrl = historyItem ? historyItem.vod_id : '';
 
 
-        if (url.includes('player.html')) {
+        if (url.includes('src/pages/player/index.html')) {
             // 检测到嵌套播放链接，解析真实URL
             try {
                 const nestedUrl = new URL(url, window.location.origin);
@@ -317,12 +317,12 @@ async function playFromHistory(url: string, title: string, episodeIndex: number,
                     // 新格式：搜索直达，用 id+source 重建URL
                     const vodId = idForUrl || nestedParams.get('id') || '';
                     const sourceForUrl = sourceNameForUrl || nestedParams.get('source') || '';
-                    playerUrl = `player.html?id=${encodeURIComponent(vodId)}&title=${encodeURIComponent(title)}&source=${encodeURIComponent(sourceForUrl)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
+                    playerUrl = `src/pages/player/index.html?id=${encodeURIComponent(vodId)}&title=${encodeURIComponent(title)}&source=${encodeURIComponent(sourceForUrl)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
                     if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
                 } else {
                     // 旧格式：有直链视频URL
                     const realVideoUrl = nestedParams.get('url') || url;
-                    playerUrl = `player.html?url=${encodeURIComponent(realVideoUrl)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
+                    playerUrl = `src/pages/player/index.html?url=${encodeURIComponent(realVideoUrl)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
                     if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
                     if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
                     if (idForUrl) playerUrl += `&id=${encodeURIComponent(String(idForUrl))}`;
@@ -333,11 +333,11 @@ async function playFromHistory(url: string, title: string, episodeIndex: number,
                 const fallbackId = idForUrl || '';
                 if (fallbackId) {
                     // 新格式兜底
-                    playerUrl = `player.html?id=${encodeURIComponent(fallbackId)}&title=${encodeURIComponent(title)}&source=${encodeURIComponent(sourceNameForUrl || '')}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
+                    playerUrl = `src/pages/player/index.html?id=${encodeURIComponent(fallbackId)}&title=${encodeURIComponent(title)}&source=${encodeURIComponent(sourceNameForUrl || '')}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
                     if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
                 } else {
                     // 旧格式兜底
-                    playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
+                    playerUrl = `src/pages/player/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
                     if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
                     if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
                     if (idForUrl) playerUrl += `&id=${encodeURIComponent(String(idForUrl))}`;
@@ -346,7 +346,7 @@ async function playFromHistory(url: string, title: string, episodeIndex: number,
         } else {
             // 直链（如搜索框导入的 m3u8）也必须经过播放页：
             // 直接 location.href 到 m3u8 会被浏览器/系统播放器接管，绕过 ArtPlayer
-            playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
+            playerUrl = `src/pages/player/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
             if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
             if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
             if (idForUrl) playerUrl += `&id=${encodeURIComponent(String(idForUrl))}`;
@@ -358,7 +358,7 @@ async function playFromHistory(url: string, title: string, episodeIndex: number,
         } catch (e) { /* 忽略 */ }
         window.location.href = playerUrl;
     } catch (e) {
-        const simpleUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}`;
+        const simpleUrl = `src/pages/player/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}`;
         try {
             sessionStorage.setItem('leletv_player_from_tab', '1');
         } catch (err) { /* 忽略 */ }

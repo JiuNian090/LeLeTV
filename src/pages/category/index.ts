@@ -580,7 +580,7 @@ function _prefetchPlayerAssets() {
   var version = '';
   try { version = (document.querySelector('script[src*="dist/leletv-core"]') as HTMLScriptElement | null)?.src.split('?v=')[1] || ''; } catch (e) { /* 忽略 */ }
   var v = version ? '?v=' + version : '';
-  var list = ['player.html', 'libs/hls.min.js' + v, 'libs/artplayer.min.js' + v];
+  var list = ['src/pages/player/index.html', 'libs/hls.min.js' + v, 'libs/artplayer.min.js' + v];
   if (meta && meta.content) list.push(meta.content + v);
   var run = function () {
     list.forEach(function (href) {

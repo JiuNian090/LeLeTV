@@ -60,7 +60,7 @@ try {
       warn(\`generate-version.mjs 不存在: \${syncScript}\`);
     } else {
       execSync(\`node "\${syncScript}"\`, { cwd: ROOT, stdio: 'inherit' });
-      const filesToStage = ['index.html', 'player.html', 'service-worker.js']
+      const filesToStage = ['index.html', 'src/pages/player/index.html', 'service-worker.js']
         .filter(f => fs.existsSync(path.join(ROOT, f)));
       if (filesToStage.length > 0) {
         run(\`git add \${filesToStage.join(' ')}\`);
@@ -77,7 +77,7 @@ try {
     info('检测到 js/ 变更但 dist/ 未暂存，自动构建 bundle...');
     try {
       execSync('node scripts/build-bundles.mjs', { cwd: ROOT, stdio: 'inherit' });
-      // build-bundles.mjs 内部已自动 git add dist/ index.html player.html
+      // build-bundles.mjs 内部已自动 git add dist/ index.html src/pages/player/index.html
       ok('已自动构建 bundle 并暂存 dist/ 与 HTML 引用');
     } catch (e) {
       err('bundle 构建失败，请手动运行 npm run build 排查错误');

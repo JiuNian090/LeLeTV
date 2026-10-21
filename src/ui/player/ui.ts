@@ -1167,7 +1167,7 @@ async function switchToResource(sourceKey: string, vodId: string): Promise<void>
         const backSuffix = currentBack ? `&back=${encodeURIComponent(currentBack)}` : '';
 
         // 构建播放页面URL，包含当前播放进度
-        const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}${backSuffix}`;
+        const watchUrl = `src/pages/player/index.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}${backSuffix}`;
 
         // 保存当前状态到localStorage
         try {

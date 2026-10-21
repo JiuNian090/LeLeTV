@@ -78,7 +78,7 @@
 | 50 | pages | `js/ui/home-shelves.js` | `src/pages/home/shelves.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 51 | pages | `css/v2/home.css` | `src/pages/home/style.css` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成；`url(../../image/*)` 已改为 `../../../image/*` |
 | 52 | pages | `pages/movies.html` | `src/pages/movies/template.html` | verified | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单；2026-10-21 迁移完成 |
-| 53 | pages | `player.html` | `src/pages/player/index.html` | pending | 第 8 节 页面导航 | — |
+| 53 | pages | `player.html` | `src/pages/player/index.html` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成；页面内资源改绝对路径，构建 / 版本 / server 路由已同步 |
 | 54 | pages | `css/v2/player.css` | `src/pages/player/style.css` | pending | 第 8 节 页面导航 | — |
 | 55 | pages | `pages/readme.html` | `src/pages/readme/template.html` | pending | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 56 | pages | `js/ui/search-cards.js` | `src/pages/search/cards.ts` | pending | 第 8 节 页面导航 | — |

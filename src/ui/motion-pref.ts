@@ -2,7 +2,7 @@
  * 动态效果偏好：跟随系统 / 开启 / 关闭
  * 系统开着「减少动态效果」（Windows 关掉了「动画效果」、macOS 开了「减弱动态效果」）时，浏览器会报
  * prefers-reduced-motion，站里的聚合动效、背景光晕、换色过渡都会静止；这里允许在设置里强制开启或关闭。
- *   - 首帧由 index.html / player.html 的 head 脚本把 data-motion 打到 <html> 上，css 据此放行或停掉动画
+ *   - 首帧由 index.html / src/pages/player/index.html 的 head 脚本把 data-motion 打到 <html> 上，css 据此放行或停掉动画
  *   - 脚本里的判断统一走 LeLeMotion.reduced()；改了偏好会派发 leletv:motionchange
  */
 

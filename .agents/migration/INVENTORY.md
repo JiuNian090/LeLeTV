@@ -46,7 +46,7 @@
 | 13 | `manifest.json` | PWA 清单 | migrated | `public/manifest.json` | — | — | pending | — |
 | 14 | `nodemon.json` | nodemon 开发配置 | keep | — | — | — | done | — |
 | 15 | `package.json` | 依赖与 scripts | keep | — | — | — | done | — |
-| 16 | `player.html` | 独立播放页文档入口 | migrated | `src/pages/player/index.html` | — | — | pending | — |
+| 16 | `player.html` | 独立播放页文档入口 | migrated | `src/pages/player/index.html` | — | — | verified | 页面内资源引用改为绝对路径；构建 / 版本 / server 路由已同步 |
 | 17 | `server.mjs` | 本地开发/生产 Express 服务器与代理 | keep | — | — | — | done | — |
 | 18 | `service-worker.js` | Service Worker 退役 kill-switch（静态零引用） | suspected-unused | — | — | — | pending | 仅服务残留旧 SW；注释写明老访客清理后可删。阶段 4.5 人工确认，禁止迁移期删除 |
 | 19 | `tsconfig.json` | TypeScript 编译配置（阶段 1 新增） | keep | — | — | — | done | — |
@@ -516,6 +516,8 @@
 | 419 | `src/pages/home/shelves.ts` | 首页继续观看/片源货架（迁移自 `js/ui/home-shelves.js`） | keep | — | — | — | done | 阶段 4 第 50 条迁移目标 |
 | 420 | `src/pages/home/style.css` | 首页样式（迁移自 `css/v2/home.css`） | keep | — | — | — | done | 阶段 4 第 51 条迁移目标 |
 | 421 | `src/pages/movies/template.html` | 影片结果页片段（迁移自 `pages/movies.html`） | keep | — | — | — | done | 阶段 4 第 52 条迁移目标 |
+| 422 | `src/pages/player/index.html` | 独立播放页文档入口（迁移自 `player.html`） | keep | — | — | — | done | 阶段 4 第 53 条迁移目标 |
+| 423 | `src/services/migrate-player-url.ts` | 旧播放页地址迁移（观看记录 player.html → 新路径） | keep | — | — | — | done | 第 53 条配套；启动时改写并写回存储 |
 
 ## workers/（红区）
 

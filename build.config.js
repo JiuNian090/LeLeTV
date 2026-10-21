@@ -24,6 +24,8 @@ export const BUNDLES = [
       // 且要在 app.js 与 player.js 之前（两个页面启动时都会调用它）
       'src/core/config.ts', 'src/services/sources/remote.ts',
       'src/core/global.ts', 'src/core/storage.ts',
+      // 旧播放页地址迁移必须在页面启动前跑：把观看记录里的 player.html 前缀改写为新路径
+      'src/services/migrate-player-url.ts',
       'src/core/listener-tracker.ts', 'src/core/timing.ts',
       'src/core/http.ts', 'src/core/crypto.ts', 'src/services/invitation.ts',
       'src/ui/toast.ts', 'src/ui/motion-pref.ts', 'src/services/line-probe.ts',

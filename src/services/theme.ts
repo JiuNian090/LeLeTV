@@ -13,7 +13,7 @@
  *
  * 落点：主色写 --color-primary 一组变量（其余派生色 rgba(var(--color-primary-rgb), …) 自动跟随），
  * 辅助色等派生值写 --v2-* 变量，算好后连同存档一起保存。
- * 刷新时的首帧由 index.html / player.html 的 head 内联脚本先行应用：主色按同一套算法现算，
+ * 刷新时的首帧由 index.html / src/pages/player/index.html 的 head 内联脚本先行应用：主色按同一套算法现算，
  * 派生变量直接读存档（避免先闪默认色再切到目标色），改动主色派生算法时三处需同步。
  */
 

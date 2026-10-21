@@ -265,9 +265,9 @@ function initializePageContent(): void {
     let index = parseInt(urlParams.get('index') || '0');
     const episodesList = urlParams.get('episodes'); // 从URL获取集数信息
     const savedPosition = parseInt(urlParams.get('position') || '0'); // 获取保存的播放位置
-    // 解决历史记录问题：检查URL是否是player.html开头的链接
+    // 解决历史记录问题：检查URL是否是src/pages/player/index.html开头的链接
     // 如果是，说明这是历史记录重定向，需要解析真实的视频URL
-    if (videoUrl && videoUrl.includes('player.html')) {
+    if (videoUrl && videoUrl.includes('src/pages/player/index.html')) {
         try {
             // 尝试从嵌套URL中提取真实的视频链接
             const nestedUrlParams = new URLSearchParams(videoUrl.split('?')[1]);
@@ -475,7 +475,7 @@ function initializePageContent(): void {
         }
     }, 200);
 
-    // 全局 data-action 事件委托（替代 player.html onclick）
+    // 全局 data-action 事件委托（替代 src/pages/player/index.html onclick）
     document.addEventListener('click', function (e) {
         const target = e.target as HTMLElement;
         const el = target.closest('[data-action]') as HTMLElement | null;
@@ -597,7 +597,7 @@ function saveToHistory(): void {
     const videoInfo: ViewingHistoryItem = {
         title: currentVideoTitle,
         directVideoUrl: currentVideoUrl, // Current episode's direct URL
-        url: `player.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(id_from_params || '')}&index=${currentEpisodeIndex}&position=${Math.floor(currentPosition || 0)}`,
+        url: `src/pages/player/index.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(id_from_params || '')}&index=${currentEpisodeIndex}&position=${Math.floor(currentPosition || 0)}`,
         episodeIndex: currentEpisodeIndex,
         sourceName: sourceName,
         vod_id: id_from_params || '', // Store the ID from params as vod_id in history item
@@ -759,7 +759,7 @@ function saveCurrentProgress(): void {
                     try { currentInfo = StorageService.getCurrentVideoInfo(); } catch (e) { /* 忽略 */ }
                     addToViewingHistory({
                         title: currentVideoTitle,
-                        url: `player.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName || '')}&source_code=${encodeURIComponent(sourceName || '')}&id=${encodeURIComponent(vod_id || '')}&index=${currentEpisodeIndex}&position=${Math.floor(currentTime)}`,
+                        url: `src/pages/player/index.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName || '')}&source_code=${encodeURIComponent(sourceName || '')}&id=${encodeURIComponent(vod_id || '')}&index=${currentEpisodeIndex}&position=${Math.floor(currentTime)}`,
                         sourceName: sourceName || '',
                         vod_id: vod_id || '',
                         episodeIndex: currentEpisodeIndex,

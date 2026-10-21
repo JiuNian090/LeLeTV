@@ -71,7 +71,7 @@ async function buildBundle(config) {
 }
 
 function stripJsScripts(html) {
-  return html.replace(/    <script src="(js|dist)\/.*?"[^>]*><\/script>\r?\n/g, '');
+  return html.replace(/    <script src="(\/)?(js|dist)\/.*?"[^>]*><\/script>\r?\n/g, '');
 }
 
 /** 文件行尾：HTML 用 CRLF，写回时保持原样，避免把 LF 混进 CRLF 文件 */
@@ -123,18 +123,19 @@ async function main() {
   console.log('[index.html] -> dist/' + coreFile + ' + dist/' + appFile);
   console.log('[page bundles] -> dist/' + categoryFile + ' + dist/' + settingsFile);
 
-  // --- player.html ---
-  let ply = fs.readFileSync(path.join(ROOT, 'player.html'), 'utf8');
+  // --- src/pages/player/index.html ---
+  const PLAYER_PAGE = path.join(ROOT, 'src/pages/player/index.html');
+  let ply = fs.readFileSync(PLAYER_PAGE, 'utf8');
   const plyEol = detectEol(ply);
   ply = stripJsScripts(ply);
   // Insert after artplayer script (outside any <script> block)
-  const plyAnchor = '    <script src="libs/artplayer.min.js?v=' + version + '" defer crossorigin="anonymous"></script>';
-  const plyBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>' + plyEol
-    + '    <script src="dist/' + playerFile + '?v=' + version + '" defer></script>';
+  const plyAnchor = '    <script src="/libs/artplayer.min.js?v=' + version + '" defer crossorigin="anonymous"></script>';
+  const plyBundle = '    <script src="/dist/' + coreFile + '?v=' + version + '" defer></script>' + plyEol
+    + '    <script src="/dist/' + playerFile + '?v=' + version + '" defer></script>';
   ply = ply.replace(plyAnchor, plyAnchor + plyEol + plyBundle);
   ply = collapseBlankLines(ply);
-  fs.writeFileSync(path.join(ROOT, 'player.html'), ply, 'utf8');
-  console.log('[player.html] -> dist/' + coreFile + ' + dist/' + playerFile);
+  fs.writeFileSync(PLAYER_PAGE, ply, 'utf8');
+  console.log('[src/pages/player/index.html] -> /dist/' + coreFile + ' + /dist/' + playerFile);
 
   console.log('\n[build] all done');
 }

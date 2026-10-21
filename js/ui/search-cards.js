@@ -120,7 +120,7 @@ function _buildResultCard(item, sameTitle) {
   h += '</div>';
   h += '<h3 title="' + sn + '">' + sn + '</h3>';
   h += '<p>' + (meta || '&nbsp;') + '</p>';
-  var shareUrl = item.vod_id ? window.location.origin + '/player.html?id=' + encodeURIComponent(item.vod_id) + '&source=' + encodeURIComponent(item.source_code || '') + '&title=' + encodeURIComponent(nameRaw) : '';
+  var shareUrl = item.vod_id ? window.location.origin + '/src/pages/player/index.html?id=' + encodeURIComponent(item.vod_id) + '&source=' + encodeURIComponent(item.source_code || '') + '&title=' + encodeURIComponent(nameRaw) : '';
   h += '<button type="button" class="v2-rcard-share card-share-btn" data-title="' + sn + '" data-url="' + _escAttr(shareUrl) + '" onclick="event.stopPropagation();_shareVideo(this.dataset.title, this.dataset.url)" aria-label="分享 ' + sn + '">';
   h += '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></button>';
   h += '</article>';

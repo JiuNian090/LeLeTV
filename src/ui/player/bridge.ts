@@ -112,7 +112,7 @@ async function playDirectly(id: string, vod_name: string, sourceCode: string): P
 
     // 立即跳转播放页，不等待API响应
     // player.js 会从URL参数中获取 id + source，异步加载剧集信息
-    let playerUrl = `player.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(vod_name || '未知视频')}&source=${encodeURIComponent(sourceCode)}`;
+    let playerUrl = `src/pages/player/index.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(vod_name || '未知视频')}&source=${encodeURIComponent(sourceCode)}`;
     if (typeof cacheSearchContext === 'function') cacheSearchContext();
     const backUrl = buildPlayerBackUrl();
     if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;
@@ -235,7 +235,7 @@ async function showDetails(id: string, vod_name: string, sourceCode: string): Pr
 
 function playVideo(url: string, vod_name: string, sourceCode: string, episodeIndex = 0, vodId = ''): void {
 
-    let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
+    let playerUrl = `src/pages/player/index.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
     if (typeof cacheSearchContext === 'function') cacheSearchContext();
     const backUrl = buildPlayerBackUrl();

@@ -835,7 +835,7 @@ function openM3U8Player(url, title) {
         console.warn('[LeLeTV] 保存播放状态失败:', e);
     }
 
-    let playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+    let playerUrl = `src/pages/player/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
     if (typeof buildPlayerBackUrl === 'function') {
         const backUrl = buildPlayerBackUrl();
         if (backUrl) playerUrl += `&back=${encodeURIComponent(backUrl)}`;

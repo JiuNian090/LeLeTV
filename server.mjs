@@ -102,12 +102,12 @@ async function renderPage(filePath, hiddenKey) {
   }
 }
 
-app.get(['/', '/index.html', '/player.html'], async (req, res) => {
+app.get(['/', '/index.html', '/src/pages/player/index.html'], async (req, res) => {
   try {
     let filePath;
     switch (req.path) {
-      case '/player.html':
-        filePath = join(__dirname, 'player.html');
+      case '/src/pages/player/index.html':
+        filePath = join(__dirname, 'src', 'pages', 'player', 'index.html');
         break;
       default: // '/' 和 '/index.html'
         filePath = join(__dirname, 'index.html');

@@ -161,7 +161,7 @@ function saveVideoInfoEdits(oldTitle: string, nextTitle: string, nextDesc: strin
       item.title = nextTitle;
       item.desc = nextDesc;
       if (typeof nextInfo.cover === 'string') item.cover = nextInfo.cover;
-      if (item.url && item.url.indexOf('player.html') !== -1) {
+      if (item.url && item.url.indexOf('src/pages/player/index.html') !== -1) {
         item.url = item.url.replace(/([?&])title=[^&]*/, '$1title=' + encodeURIComponent(nextTitle));
       }
       StorageService.setViewingHistory(history);
