@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`fa8ff88 refactor: 迁移应用壳到 src/index.html`
+> 最新提交：`788e5c4 refactor: 清零 js/（app-init 并入 main.ts，boot-sequence 迁为 src/boot.ts）`
 
 ---
 
