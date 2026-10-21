@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：历史记录迁移覆盖私密域并补单测（见 git log）
+> 最新提交：启动屏慢速提示修复（见 git log）
 
 ---
 
@@ -40,6 +40,7 @@
 | 完整 strict 模式 8 | **完成（4 个 commit）**：补齐 `this` 注解（main / admin / user-devices 8 处）、catch `unknown` 收窄（10 处）、settings 面板空值与字段类型（11 处）、fetch 透传 / Path2D / 定时器（4 处）；首页、搜索、设置数据源与邀请码统计、播放起播/切集、关于页回归通过。**`tsconfig.json` 已改为 `"strict": true`**，`npx tsc --noEmit` 全绿，剩余 **0** 处 |
 | 自动化测试 1 | **完成（2 个 commit）**：新增 `scripts/run-tests.mjs`（esbuild 打包 → `node --test`，产物写系统临时目录）与最小 DOM 桩；首批 13 个测试覆盖 `pages/search/cards` 的转义、标题合并、季序解析、延迟分档与排序，以及 `pages/settings/user-devices` 的相对时间与设备图标。测试同时发现并修复 `\d` / `\s` 正则转义丢失（`第2季` / `S2` / 纯数字季序此前解析失效）。`npm test` 全绿 |
 | 历史记录迁移补强 | **完成（2 个 commit）**：`services/migrate-player-url.ts` 在每次启动时同时迁移正常域与私密域（`viewingHistory` / `hidden::viewingHistory`），继续支持相对/绝对 `player.html` 地址，直链与新地址保持不变；导出 `migrateLegacyPlayerUrls` 并新增 2 个单测（双域改写、幂等）。`npm test` 15 项全绿 |
+| 启动屏慢速提示修复 | **完成**：慢速提示由固定 6s 改为 8s，且仅在「非等待登录」且「进度停滞 ≥ 2.5s」时显示；等待登录 9s 实测不再误报，已登录正常进入与未登录登录框展示均验证通过 |
 
 ---
 
