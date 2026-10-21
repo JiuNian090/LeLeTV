@@ -120,10 +120,13 @@ ui/player/episodes.ts     <-> ui/player/ui.ts
 
 ### 5A-2. 垂直试点（category bundle，1 文件）
 
-- `src/services/tmdb.ts` 加 `export` + `window` 兼容桥；新增 `src/entries/category.ts` 作为入口。
-- `build-bundles.mjs` 对该 bundle 改用 `esbuild.build({ bundle: true, format: 'iife' })`，其余 bundle 暂留 concat。
-- 验证：category 页 reload；`window.TMDB_STATE` / `TMDB_CONFIG` / `GENRE_MAP` 仍可被 app bundle 访问。
-- 通过后，5A-3 起的文件改造沿用同一模式（export + window 桥 + 入口 import）。
+- **状态：已完成（commit `7d02171`）**。category bundle 21.2 → 19.1 KB；
+  `export + declare global + window 桥` 模式验证通过（裸名与 `window.*` 均可访问）。
+- 实际入口为 `src/pages/category/entry.ts`（`src/entries/` 属新建层，违反硬规则 6）。
+- `src/services/tmdb.ts` 加 `export` + `declare global` + `window` 兼容桥。
+- `build-bundles.mjs` 对被标记 `entry` 的 bundle 改用 `esbuild.build({ bundle: true, format: 'iife' })`，其余仍走 concat。
+- 验证：category 页 reload；`window.TMDB_STATE` / `TMDB_CONFIG` / `GENRE_MAP` 与裸名访问均正常。
+- 后续文件改造沿用同一模式（export + declare global + window 桥 + 入口 import）。
 
 ### 5A-3. core 层 ESM 化（9 文件）
 
