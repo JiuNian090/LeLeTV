@@ -56,6 +56,8 @@ export const BUNDLES = [
   {
     name: 'leletv-category',
     firstScreen: false,
+    // 阶段 5A-2 垂直试点：ESM 入口 + esbuild.build（其余 bundle 仍走 concat）
+    entry: 'src/pages/category/entry.ts',
     files: [
       'src/services/tmdb.ts',
     ],

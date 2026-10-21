@@ -535,6 +535,7 @@
 | 437 | `src/styles/views.css` | 内页共享视图样式（迁移自 `css/v2/views.css`） | keep | — | — | — | done | 阶段 4 第 68 条迁移目标 |
 | 438 | `src/index.html` | 应用壳 + 首页骨架 + 启动动画（迁移自 `index.html`） | keep | — | — | — | done | 阶段 4 第 64 条迁移目标；根 `index.html` 由 `build-bundles.mjs` 装配生成 |
 | 439 | `src/boot.ts` | 启动编排（迁移自 `js/app/boot-sequence.js`） | keep | — | — | — | done | 阶段 4.5 迁移目标；保持 bundle 末尾位置 |
+| 441 | `src/pages/category/entry.ts` | category 按需 bundle 的 ESM 入口 | keep | — | — | — | done | 阶段 5A-2 垂直试点；import `src/services/tmdb.ts` |
 
 ## workers/（红区）
 

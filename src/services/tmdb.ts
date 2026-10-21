@@ -73,7 +73,23 @@ declare function search(): void;
 
 const tmdbWindow = window as TmdbWindow;
 
-const TMDB_STATE: TmdbState = {
+// 阶段 5A-2 过渡期类型桥：tmdb.ts 已成为 ESM 模块，但未改造的全局脚本
+// 仍以裸名访问这些符号（运行时由文件末尾的 window 兼容桥提供）。
+declare global {
+  const TMDB_STATE: TmdbState;
+  const TMDB_CONFIG: TmdbConfig;
+  const GENRE_MAP: Record<string, GenreItem[]>;
+  const TMDB_STATE_KEY: string;
+  function initTmdbCategory(): void;
+  function saveTmdbScroll(): void;
+  function restoreTmdbState(): boolean;
+  function tmdbSearchVideo(title: string, genres: string): void;
+  function openTmdbCategory(type: string): void;
+  function loadTmdbResults(): Promise<void>;
+  function tmdbFetch(endpoint: string, params?: Record<string, string>): Promise<TmdbResponse>;
+}
+
+export const TMDB_STATE: TmdbState = {
   type: 'movie',
   page: 1,
   totalPages: 1,
@@ -91,7 +107,7 @@ const TMDB_STATE: TmdbState = {
 };
 
 // 类别页状态持久化（sessionStorage）：从播放页返回时恢复筛选/页码/滚动位置
-const TMDB_STATE_KEY = 'leletv_tmdb_state';
+export const TMDB_STATE_KEY = 'leletv_tmdb_state';
 const TMDB_SCROLL_KEY = 'leletv_tmdb_scroll';
 
 function saveTmdbState(): void {
@@ -101,7 +117,7 @@ function saveTmdbState(): void {
   } catch (e) { /* 忽略 sessionStorage 不可用 */ }
 }
 
-function restoreTmdbState(): boolean {
+export function restoreTmdbState(): boolean {
   try {
     const raw = sessionStorage.getItem(TMDB_STATE_KEY);
     if (!raw) return false;
@@ -119,7 +135,7 @@ function restoreTmdbState(): boolean {
   return false;
 }
 
-function saveTmdbScroll(): void {
+export function saveTmdbScroll(): void {
   try {
     const y = window.scrollY;
     if (y > 0) sessionStorage.setItem(TMDB_SCROLL_KEY, String(y));
@@ -141,14 +157,14 @@ function restoreTmdbScroll(): void {
 
 tmdbWindow.saveTmdbScroll = saveTmdbScroll;
 
-const TMDB_CONFIG: TmdbConfig = {
+export const TMDB_CONFIG: TmdbConfig = {
   imageBase: 'https://image.tmdb.org/t/p',
   posterSize: 'w342',
   backdropSize: 'w780',
   language: 'zh-CN'
 };
 
-const GENRE_MAP: Record<string, GenreItem[]> = {
+export const GENRE_MAP: Record<string, GenreItem[]> = {
   movie: [
     { id: 28, name: '动作' },
     { id: 12, name: '冒险' },
@@ -295,7 +311,7 @@ function getTmdbBaseUrl(): string {
   return '/api/tmdb';
 }
 
-async function tmdbFetch(endpoint: string, params: Record<string, string> = {}): Promise<TmdbResponse> {
+export async function tmdbFetch(endpoint: string, params: Record<string, string> = {}): Promise<TmdbResponse> {
   params.endpoint = endpoint;
   const query = new URLSearchParams(params).toString();
   const url = `${getTmdbBaseUrl()}?${query}`;
@@ -304,7 +320,7 @@ async function tmdbFetch(endpoint: string, params: Record<string, string> = {}):
   return res.json() as Promise<TmdbResponse>;
 }
 
-function initTmdbCategory(): void {
+export function initTmdbCategory(): void {
   // 恢复本会话保存的筛选/页码状态（若有），返回播放页或刷新后自动保持浏览状态
   const hadSavedState = restoreTmdbState();
 
@@ -547,7 +563,7 @@ function bindFilterTags(): void {
   });
 }
 
-async function loadTmdbResults(): Promise<void> {
+export async function loadTmdbResults(): Promise<void> {
   if (TMDB_STATE.isLoading) return;
   TMDB_STATE.isLoading = true;
 
@@ -779,7 +795,7 @@ function renderTmdbPagination(): void {
   });
 }
 
-function tmdbSearchVideo(title: string, genres: string): void {
+export function tmdbSearchVideo(title: string, genres: string): void {
   if (!title) return;
 
   function open(): void {
@@ -811,7 +827,7 @@ function tmdbSearchVideo(title: string, genres: string): void {
 }
 
 /** 首页「更多」入口：切到分类页并预置类型（电影 / 电视剧 / 动漫 / 综艺），筛选按该类型的默认值重置 */
-function openTmdbCategory(type: string): void {
+export function openTmdbCategory(type: string): void {
   if (!SORT_OPTIONS[type]) type = 'movie';
   TMDB_STATE.type = type;
   resetTmdbFilters();
@@ -829,3 +845,19 @@ function resetTmdbCategory(): void {
   TMDB_STATE.isLoading = false;
   resetTmdbFilters();
 }
+
+// 阶段 5A-2 过渡期兼容桥：未改造的全局脚本仍通过裸名 / window 访问这些符号。
+// 5B 将所有引用方改为 import 后删除本段。
+Object.assign(window, {
+  TMDB_STATE,
+  TMDB_CONFIG,
+  GENRE_MAP,
+  TMDB_STATE_KEY,
+  initTmdbCategory,
+  saveTmdbScroll,
+  restoreTmdbState,
+  tmdbSearchVideo,
+  openTmdbCategory,
+  loadTmdbResults,
+  tmdbFetch,
+});

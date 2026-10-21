@@ -44,7 +44,40 @@ function hashContent(content) {
   return Math.abs(h).toString(36).substring(0, 8);
 }
 
+async function buildEntryBundle(config) {
+  // 阶段 5A：带 entry 的 bundle 走 esbuild.build（bundle 模式）；其余仍走 concat + transform。
+  // 本阶段 format 固定 iife，暂不启用 splitting。
+  const result = await esbuild.build({
+    entryPoints: [path.join(ROOT, config.entry)],
+    bundle: true,
+    format: 'iife',
+    minify: true,
+    sourcemap: true,
+    target: ['es2020'],
+    write: false,
+    outfile: path.join(DIST, config.name + '.js'),
+    logLevel: 'silent',
+  });
+
+  const jsFile = result.outputFiles.find(f => f.path.endsWith('.js'));
+  const mapFile = result.outputFiles.find(f => f.path.endsWith('.map'));
+  if (!jsFile) throw new Error('esbuild 未产出 JS：' + config.name);
+
+  const outName = config.name + '.' + hashContent(jsFile.text) + '.js';
+  // esbuild 的 sourceMappingURL 注释指向临时 outfile，改名后同步
+  const code = jsFile.text.replace(/\/\/# sourceMappingURL=.*$/m, '//# sourceMappingURL=' + outName + '.map');
+  fs.writeFileSync(path.join(DIST, outName), code);
+  if (mapFile) {
+    const map = JSON.parse(mapFile.text);
+    map.file = outName;
+    fs.writeFileSync(path.join(DIST, outName + '.map'), JSON.stringify(map));
+  }
+  console.log('[build] ' + outName + ' (' + (code.length / 1024).toFixed(1) + 'KB, entry)');
+  return outName;
+}
+
 async function buildBundle(config) {
+  if (config.entry) return buildEntryBundle(config);
   const content = concatFiles(config.files);
   const h = hashContent(content);
   const outName = config.name + '.' + h + '.js';
