@@ -366,7 +366,7 @@
 | 292 | `js/core/listener-tracker.js` | 事件监听追踪与批量解绑 | migrated | `src/core/listener-tracker.ts` | — | — | verified | 已迁移至 `src/core/listener-tracker.ts`；类型检查通过 |
 | 293 | `js/core/storage-service.js` | 统一存储服务（localStorage 封装） | migrated | `src/core/storage.ts` | — | — | verified | 已迁移至 `src/core/storage.ts`；类型检查通过 |
 | 294 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | verified | 已迁移至 `src/core/timing.ts`；类型检查通过 |
-| 295 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | pending | — |
+| 295 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | verified | `window.HubFlow` 接口不变 |
 | 296 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | verified | fetch 路径已同步为 `/src/services/adfilter-config.json` |
 | 297 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | verified | 公开函数与全局播放状态变量保持不变 |
 | 298 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | verified | 公开函数保持不变，HLS/ArtPlayer 使用最小本地接口声明 |
@@ -510,6 +510,7 @@
 | 413 | `src/pages/category/template.html` | 分类页片段（迁移自 `pages/category.html`） | keep | — | — | — | done | 阶段 4 第 44 条迁移目标 |
 | 414 | `src/pages/history/template.html` | 历史页片段（迁移自 `pages/history.html`） | keep | — | — | — | done | 阶段 4 第 45 条迁移目标 |
 | 415 | `src/pages/home/hero-glass.ts` | 首页主视觉光效（迁移自 `js/ui/hero-glass.js`） | keep | — | — | — | done | 阶段 4 第 46 条迁移目标 |
+| 416 | `src/pages/home/hub-flow.ts` | 首页聚合动效（迁移自 `js/effects/hub-flow.js`） | keep | — | — | — | done | 阶段 4 第 47 条迁移目标 |
 
 ## workers/（红区）
 

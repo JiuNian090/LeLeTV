@@ -9,8 +9,56 @@
  *   所以过线时左边的卡片和右边的海报位置、尺寸完全重合，拼成一张完整的卡片
  * - 只改 transform；离开视口、页面隐藏时暂停；系统开启「减少动态效果」时静止展示
  */
+
+interface HubPoster {
+  img: string;
+  title?: string;
+}
+
+interface HubRow {
+  y: number;
+  bend: number;
+}
+
+interface HubItem {
+  card: HTMLElement;
+  poster: HTMLElement;
+  row: HubRow;
+  base: number;
+}
+
+interface HubGeo {
+  w: number;
+  portal: number;
+  uMin: number;
+  count: number;
+  span: number;
+}
+
+interface HubPose {
+  cx: number;
+  dy: number;
+  rot: number;
+}
+
+interface HubFlowApi {
+  setPosters(list: HubPoster[]): void;
+  usePlaceholders(): void;
+}
+
+interface HubStage extends HTMLElement {
+  __hubFlow?: HubFlowApi;
+}
+
+interface HubWindow extends Window {
+  LeLeMotion?: { reduced: () => boolean };
+  HubFlow?: { init: (stage: HubStage | null) => HubFlowApi | null | undefined };
+}
+
 (function () {
   'use strict';
+
+  const hubWindow = window as HubWindow;
 
   const BASE_W = 1920;                      // flux 的设计宽度，画布不会比它窄
   const H = 850;
@@ -57,14 +105,14 @@
     return FALLBACK_SOURCES;
   }
 
-  function el(tag, className, text) {
+  function el(tag: string, className: string | null, text?: string | null): HTMLElement {
     const node = document.createElement(tag);
     if (className) node.className = className;
     if (text) node.textContent = text;
     return node;
   }
 
-  function icon(d) {
+  function icon(d: string): SVGElement {
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('fill', 'none');
@@ -78,19 +126,21 @@
     return svg;
   }
 
-  function makeCard(name, index) {
+  function makeCard(name: string, index: number): HTMLElement {
     const card = el('div', 'hub-item hub-card');
     const ic = el('span', 'hub-ic');
     ic.appendChild(icon(ICON_PATHS[index % ICON_PATHS.length]));
-    card.append(ic, el('b', null, name.replace(/资源$/, '')), el('i', 'hub-dot' + (index % 5 === 3 ? ' is-warn' : '')));
+    card.appendChild(ic);
+    card.appendChild(el('b', null, name.replace(/资源$/, '')));
+    card.appendChild(el('i', 'hub-dot' + (index % 5 === 3 ? ' is-warn' : '')));
     return card;
   }
 
-  function isSafeImageUrl(url) {
+  function isSafeImageUrl(url: unknown): boolean {
     return typeof url === 'string' && /^https:\/\//.test(url);
   }
 
-  function makePoster(poster) {
+  function makePoster(poster: HubPoster | null): HTMLElement {
     const card = el('div', 'hub-item hub-poster');
     if (poster && isSafeImageUrl(poster.img)) {
       card.style.backgroundImage = 'url("' + poster.img.replace(/["\\\n]/g, '') + '")';
@@ -101,21 +151,21 @@
     return card;
   }
 
-  function prefersReducedMotion() {
-    if (window.LeLeMotion) return window.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
+  function prefersReducedMotion(): boolean {
+    if (hubWindow.LeLeMotion) return hubWindow.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
   }
 
   /** 当前缩放比：CSS 按断点给 --hub-s，画布宽度 = 舞台宽度 / 缩放比 */
-  function readScale(stage) {
+  function readScale(stage: HTMLElement): number {
     const raw = parseFloat(getComputedStyle(stage).getPropertyValue('--hub-s'));
     return raw > 0 ? raw : 1;
   }
 
-  function createHubFlow(stage) {
+  function createHubFlow(stage: HTMLElement): HubFlowApi {
     const sources = getSourceNames();
-    let posters = [];
-    let items = [];
+    let posters: HubPoster[] = [];
+    let items: HubItem[] = [];
     let running = false;
     let visible = false;
     let rafId = 0;
@@ -123,7 +173,7 @@
     let clock = 0;
 
     // 画布几何：宽度随舞台变化，其余量都由宽度推出
-    const geo = { w: BASE_W, portal: BASE_W / 2, uMin: 0, count: 0, span: 0 };
+    const geo: HubGeo = { w: BASE_W, portal: BASE_W / 2, uMin: 0, count: 0, span: 0 };
 
     const canvas = el('div', 'hub-canvas');
     const leftLayer = el('div', 'hub-layer is-left');
@@ -135,11 +185,13 @@
     // 分割线：2px 光线 + 只在左侧的光幕
     const beam = el('div', 'hub-beam');
     beam.appendChild(el('div', 'hub-curtain'));
-    canvas.append(leftLayer, rightLayer, beam);
+    canvas.appendChild(leftLayer);
+    canvas.appendChild(rightLayer);
+    canvas.appendChild(beam);
     stage.replaceChildren(canvas);
 
     /** 按舞台宽度定画布宽度；返回是否需要重建条目（每排张数变了） */
-    function layout() {
+    function layout(): boolean {
       const stageW = stage.clientWidth || BASE_W;
       const w = Math.max(BASE_W, Math.ceil(stageW / readScale(stage)));
       const count = Math.ceil((w + CARD_W * 2 + 200) / PITCH);
@@ -154,7 +206,7 @@
     }
 
     /** 左半边卡片的位姿：离光线 STRAIGHT 以内走直线，再往左沿半径 RADIUS 的圆弧抬起或落下 */
-    function cardPose(u, bend) {
+    function cardPose(u: number, bend: number): HubPose {
       if (!bend || u <= STRAIGHT) return { cx: geo.portal - u, dy: 0, rot: 0 };
       const a = (u - STRAIGHT) / RADIUS;
       return {
@@ -164,7 +216,7 @@
       };
     }
 
-    function build() {
+    function build(): void {
       leftLayer.replaceChildren();
       rightLayer.replaceChildren();
       items = [];
@@ -181,7 +233,7 @@
       render(clock);
     }
 
-    function render(t) {
+    function render(t: number): void {
       const shift = t * SPEED;
       for (const item of items) {
         // 同一个 u 同时决定左边卡片和右边海报的位置：u 越小越靠右
@@ -193,7 +245,7 @@
       }
     }
 
-    function frame(now) {
+    function frame(now: number): void {
       if (!running) return;
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
@@ -202,19 +254,19 @@
       rafId = requestAnimationFrame(frame);
     }
 
-    function start() {
+    function start(): void {
       if (running || prefersReducedMotion()) return;
       running = true;
       last = 0;
       rafId = requestAnimationFrame(frame);
     }
 
-    function stop() {
+    function stop(): void {
       running = false;
       cancelAnimationFrame(rafId);
     }
 
-    function syncRunning() {
+    function syncRunning(): void {
       if (visible && !document.hidden && !prefersReducedMotion()) start(); else stop();
     }
 
@@ -229,7 +281,7 @@
 
     // 窗口宽度或缩放断点变了：重新定画布宽度，张数变了才重建，否则只重画一帧
     let resizeRaf = 0;
-    function onResize() {
+    function onResize(): void {
       cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(() => {
         if (layout()) build(); else render(clock);
@@ -245,16 +297,16 @@
 
     return {
       /** 海报图先预加载，加载成功的才换上去，避免出现空框；最多等 4 秒 */
-      setPosters(list) {
+      setPosters(list: HubPoster[]): void {
         const candidates = Array.isArray(list) ? list.filter(p => p && isSafeImageUrl(p.img)) : [];
-        const loadOne = poster => new Promise(resolve => {
+        const loadOne = (poster: HubPoster) => new Promise<HubPoster | null>(resolve => {
           const img = new Image();
           img.onload = () => resolve(poster);
           img.onerror = () => resolve(null);
           img.src = poster.img;
         });
-        const timeout = new Promise(resolve => setTimeout(() => resolve('timeout'), 4000));
-        const settled = [];
+        const timeout = new Promise<string>(resolve => setTimeout(() => resolve('timeout'), 4000));
+        const settled: HubPoster[] = [];
         const all = Promise.all(candidates.map(p => loadOne(p).then(r => { if (r) settled.push(r); return r; })));
         Promise.race([all, timeout]).then(() => {
           if (settled.length) {
@@ -267,15 +319,15 @@
       },
 
       /** 不会有海报了（私密模式）：直接显示占位海报 */
-      usePlaceholders() {
+      usePlaceholders(): void {
         clearTimeout(revealTimer);
         revealRight();
       }
     };
   }
 
-  window.HubFlow = {
-    init(stage) {
+  hubWindow.HubFlow = {
+    init(stage: HubStage | null): HubFlowApi | null | undefined {
       if (!stage || stage.__hubFlow) return stage && stage.__hubFlow;
       stage.__hubFlow = createHubFlow(stage);
       return stage.__hubFlow;
