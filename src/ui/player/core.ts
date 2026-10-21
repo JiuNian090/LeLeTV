@@ -281,7 +281,7 @@ function createArtPlayerInstance(videoUrl: string, hlsConfig: Record<string, unk
         autoplay: true,
         pip: true,
         autoSize: false,
-        autoMini: true,
+        autoMini: false,
         screenshot: true,
         setting: true,
         loop: false,
