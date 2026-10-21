@@ -542,6 +542,10 @@
 | 445 | `src/ui/player/session.ts` | 播放器会话辅助（getVideoId） | keep | — | — | — | done | 阶段 5B-2b 新增；后续迁入进度/历史函数 |
 | 446 | `src/ui/player/utils.ts` | 播放器纯工具（escHtml） | keep | — | — | — | done | 阶段 5B-2c 新增；拆 detail ↔ ui |
 | 447 | `src/ui/player/navigation.ts` | 播放器返回导航（goHome） | keep | — | — | — | done | 阶段 5B-2d 新增；拆 index ↔ ui |
+| 448 | `src/core-entry.ts` | `leletv-core` 的持久 ESM 入口（替代 `files` 清单） | keep | — | — | — | done | 阶段 5B-5 新增 |
+| 449 | `src/player-entry.ts` | `leletv-player` 的持久 ESM 入口 | keep | — | — | — | done | 阶段 5B-5 新增；放在 src 根是因为同时引用 services / ui |
+| 450 | `src/pages/settings/entry.ts` | `leletv-settings` 的持久 ESM 入口 | keep | — | — | — | done | 阶段 5B-5 新增 |
+| 451 | `docs/GLOBAL-BRIDGES.md` | 全局桥白名单与跨层契约清单 | keep | — | — | — | done | 阶段 5B-5 新增 |
 
 ## workers/（红区）
 

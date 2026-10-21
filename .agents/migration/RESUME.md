@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`e1ab73f refactor: 阶段 5B-3s player index/quality 改 import 各模块`
+> 最新提交：阶段 5B 完成（5B-5 清理 commit + 文档 commit，见 git log）
 
 ---
 
@@ -26,7 +26,9 @@
 | 5A-7 | **已达成**：5 个 bundle 全部走 esbuild.build；concat 分支暂留作回退 |
 | 5B-1 | **完成（3 个 commit）**：新增 `src/core/state.ts`，收敛 `API_SITES` / 数据域函数 / `selectedAPIs` / `customAPIs` / 搜索状态；旧位置保留 re-export 与 window getter/setter 代理。首屏 238.3 KB |
 | 5B-2 | **完成（6 个 commit）**：新增 `ui/player/state.ts`（15 个状态 + 选集 hook）、`session.ts`、`utils.ts`、`navigation.ts`；`core.ts` 改为 import state 并用 `advanceEpisode()` 断开 core→episodes；播放页起播/选集/自动连播/关灯/返回回归通过。player 94.4 KB |
-| 5B-3 | **进行中（core + services + player 已完成）**：core/config、crypto、timing、http、storage、global、listener-tracker；services/search-history、invitation、balancer、api、search、config、viewing-history、remote、port、tmdb；ui/player 的 toast、state、session、utils、navigation、manager、episodes、shortcuts、detail、ui、index、quality 均已显式 import。剩余 ui 其他模块（layout-pref / motion-pref / nav-scroll / brand-canvas / pwa-install / invite-login / index / modals）与 pages / router / main。首屏 244.4 KB |
+| 5B-3 | **完成（25 个 commit）**：core / services / ui（含 player 与剩余 8 个 ui 模块）/ pages（home 5 个、search/cards、search/index、category、settings 2 个）/ router（page-loader、prefetch、index）/ main / boot 全部改为显式 import。跨页与跨层反向依赖保留 window 契约；`MergeGroup` 等共享类型下沉 `core/state`。首屏 248.5 KB |
+| 5B-4 | **完成**：`build-bundles.mjs` 改为多入口 `esbuild.build({ splitting: true, format: 'esm', metafile: true })`；入口 / 共享 chunk 带 hash；HTML 入口改 `type="module"` 并按 metafile 注入 `modulepreload`；动态页面脚本改 module。首屏闭包 253.8 KB |
+| 5B-5 | **完成**：删除 `files` / `esm` / concat / 临时入口，5 个 bundle 使用持久入口（`core-entry.ts`、`main.ts`、`category/entry.ts`、`settings/entry.ts`、`player-entry.ts`）；`check-deps` 改为真实 import 图（179 边 / 0 运行时环）并跳过 type-only；`check-budget` 按 metafile 闭包统计；全局桥收敛为 `docs/GLOBAL-BRIDGES.md`。首屏 253.3 KB |
 
 ---
 
@@ -120,11 +122,13 @@
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-阶段 5A 已完成：5 个 bundle 全部走 esbuild.build，首屏 238.4 KB。
+阶段 5A 已完成：5 个 bundle 全部走 esbuild.build。
 阶段 5B-2 已完成：`ui/player/state.ts` 等叶子模块落地，core 用 hook 断开 episodes。
-阶段 5B-3 进行中：core、services、ui/player 已完成显式 import；剩余 ui 其他模块、pages、router/main。
-下一步：继续 5B-3 的 ui（layout-pref / motion-pref / nav-scroll / brand-canvas / pwa-install / invite-login / index / modals）→ pages（home/search/category/settings）→ router/page-loader/router/index/prefetch → main/boot，然后 5B-4（splitting）/ 5B-5（清理）。
-新会话开场：读本文件与 `PHASE-5-PLAN.md` / `PHASE-5-GRAPH.md` → 从 5B-3 的 ui 剩余模块继续 → `npm start` 启动一次服务器。
+阶段 5B-3 / 5B-4 / 5B-5 已完成：全部模块显式 import、多入口 ESM splitting、files/concat 清理。
+下一步：阶段 6（待规划）。当前基线为 5B-5 构建；新会话开场读本文件与
+`PHASE-5-GRAPH.md`、`docs/GLOBAL-BRIDGES.md` → `npm start` 启动一次服务器。
+回归重点：启动屏 / 邀请码 / 主题首帧（module 入口默认 defer，不能再假设脚本同步执行）；
+跨页 `window.*` 函数必须在调用时读取，不能在模块顶层解构。
 
 ---
 
@@ -149,7 +153,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **244.4 KB**（预算 275 KB）；core **47.6 KB**；app **196.9 KB**；category **24.0 KB**；settings **40.5 KB**；player **107.1 KB**；`js/` 剩余 `.js` **0**；tracked 378 / inventory 447。
+基线（5B-5）：首屏 core+app 依赖闭包 **253.3 KB**（预算 275 KB）；入口体积 core **29.7 KB** / app **151.8 KB** / category **0.2 KB** / settings **40.4 KB** / player **60.9 KB**；闭包 core 48.4 / app 219.7 / category 24.8 / settings 40.6 / player 111.8；共享 chunk 7 个（最大 33.9 KB）；`src/` 67 文件 / 182 条 import 边 / 0 运行时环；`js/` 剩余 `.js` **0**。
 
 ---
 
