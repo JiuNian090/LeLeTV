@@ -6,13 +6,13 @@ function goHome(event?: Event): void {
 
     if (art && art.fullscreen) {
         art.fullscreen = false;
-        autoFullscreened = false;
+        setAutoFullscreened(false);
         return;
     }
 
     if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
-        autoFullscreened = false;
+        setAutoFullscreened(false);
         return;
     }
 
@@ -92,29 +92,43 @@ window.addEventListener('pageshow', function (event: PageTransitionEvent) {
 // ============== PLAYER ==========
 // =================================
 // 全局变量
-interface PlayerArtInstance extends ArtplayerInstance {
-    video?: HTMLVideoElement;
-    url?: string;
-    play?: () => void;
-    pause?: () => void;
-    template?: { $player?: HTMLElement; $controlsLeft?: HTMLElement };
-    isLock?: boolean;
-    seek?: number;
-}
-let currentVideoTitle = '';
-let currentEpisodeIndex = 0;
-let art: PlayerArtInstance | null = null; // 用于 ArtPlayer 实例
-let currentHls: unknown = null; // 跟踪当前HLS实例
-let currentEpisodes: string[] = [];
-let episodesReversed = false;
-let autoplayEnabled = true; // 默认开启自动连播
-let videoHasEnded = false; // 跟踪视频是否已经自然结束
-let userClickedPosition: number | null = null; // 记录用户点击的位置
-let shortcutHintTimeout: ReturnType<typeof setTimeout> | null = null; // 用于控制快捷键提示显示时间
-let autoFullscreened = false; // 标记是否由自动全屏进入
-let progressSaveInterval: ReturnType<typeof setInterval> | null = null; // 定期保存进度的计时器
-let currentVideoUrl = ''; // 记录当前实际的视频URL
-let episodeSwitchTimeout: ReturnType<typeof setTimeout> | null = null; // 集数切换超时定时器（用于兜底重建）
+// 阶段 5B-2：播放器状态已迁至 src/ui/player/state.ts。
+// 读方沿用变量名（ESM live binding），写方改为 setXxx()。
+import {
+    art,
+    currentEpisodeIndex,
+    currentEpisodes,
+    currentHls,
+    currentVideoTitle,
+    currentVideoUrl,
+    episodesReversed,
+    autoplayEnabled,
+    videoHasEnded,
+    userClickedPosition,
+    shortcutHintTimeout,
+    autoFullscreened,
+    progressSaveInterval,
+    episodeSwitchTimeout,
+    controlsLocked,
+    setArt,
+    setCurrentEpisodeIndex,
+    setCurrentEpisodes,
+    setCurrentHls,
+    setCurrentVideoTitle,
+    setCurrentVideoUrl,
+    setEpisodesReversed,
+    setAutoplayEnabled,
+    setVideoHasEnded,
+    setUserClickedPosition,
+    setShortcutHintTimeout,
+    setAutoFullscreened,
+    setProgressSaveInterval,
+    setEpisodeSwitchTimeout,
+    setControlsLocked,
+} from './state';
+import type { PlayerArtInstance } from './state';
+
+export type { PlayerArtInstance };
 
 interface ArtplayerStaticExt extends ArtplayerStatic {
     FULLSCREEN_WEB_IN_BODY: boolean;
@@ -301,20 +315,20 @@ function initializePageContent(): void {
             console.warn('[LeLeTV] 解析嵌套URL参数失败:', e);
         }
     }
-    currentVideoUrl = videoUrl || '';
+    setCurrentVideoUrl(videoUrl || '');
 
     // 从localStorage获取数据
-    currentVideoTitle = title || localStorage.getItem('currentVideoTitle') || '未知视频';
-    currentEpisodeIndex = index;
+    setCurrentVideoTitle(title || localStorage.getItem('currentVideoTitle') || '未知视频');
+    setCurrentEpisodeIndex(index);
 
     // 设置自动连播开关状态
-    autoplayEnabled = localStorage.getItem('autoplayEnabled') !== 'false'; // 默认为true
+    setAutoplayEnabled(localStorage.getItem('autoplayEnabled') !== 'false'); // 默认为true
     const autoplayToggle = document.getElementById('autoplayToggle') as HTMLInputElement;
     autoplayToggle.checked = autoplayEnabled;
 
     // 监听自动连播开关变化
     autoplayToggle.addEventListener('change', function (e) {
-        autoplayEnabled = (e.target as HTMLInputElement).checked;
+        setAutoplayEnabled((e.target as HTMLInputElement).checked);
         localStorage.setItem('autoplayEnabled', String(autoplayEnabled));
     });
 
@@ -322,11 +336,11 @@ function initializePageContent(): void {
     try {
         if (episodesList) {
             // 如果URL中有集数数据，优先使用它
-            currentEpisodes = JSON.parse(decodeURIComponent(episodesList)) as string[];
+            setCurrentEpisodes(JSON.parse(decodeURIComponent(episodesList)) as string[]);
 
         } else {
             // 否则从localStorage获取
-            currentEpisodes = JSON.parse(localStorage.getItem('currentEpisodes') || '[]') as string[];
+            setCurrentEpisodes(JSON.parse(localStorage.getItem('currentEpisodes') || '[]') as string[]);
 
         }
 
@@ -346,14 +360,14 @@ function initializePageContent(): void {
         }
 
         // 更新当前索引为验证过的值
-        currentEpisodeIndex = index;
+        setCurrentEpisodeIndex(index);
 
-        episodesReversed = localStorage.getItem('episodesReversed') === 'true';
+        setEpisodesReversed(localStorage.getItem('episodesReversed') === 'true');
     } catch (e) {
         console.warn('[LeLeTV] 解析剧集列表失败，使用默认值:', e);
-        currentEpisodes = [];
-        currentEpisodeIndex = 0;
-        episodesReversed = false;
+        setCurrentEpisodes([]);
+        setCurrentEpisodeIndex(0);
+        setEpisodesReversed(false);
     }
 
     // 设置页面标题
@@ -683,7 +697,7 @@ function startProgressSaveInterval(): void {
     }
 
     // 每30秒保存一次播放进度
-    progressSaveInterval = setInterval(saveCurrentProgress, TIMING.PROGRESS_SAVE_INTERVAL);
+    setProgressSaveInterval(setInterval(saveCurrentProgress, TIMING.PROGRESS_SAVE_INTERVAL));
 }
 
 // 保存当前播放进度
@@ -880,9 +894,9 @@ async function fetchDetailAndInit(vodId: string, sourceCode: string, title: stri
         }
 
         const episodes = data.episodes;
-        currentVideoTitle = title || localStorage.getItem('currentVideoTitle') || '未知视频';
-        currentEpisodeIndex = episodeIndex;
-        currentEpisodes = episodes;
+        setCurrentVideoTitle(title || localStorage.getItem('currentVideoTitle') || '未知视频');
+        setCurrentEpisodeIndex(episodeIndex);
+        setCurrentEpisodes(episodes);
 
         // 保存到localStorage
         try {
@@ -916,8 +930,8 @@ async function fetchDetailAndInit(vodId: string, sourceCode: string, title: stri
         const targetIndex = episodeIndex < episodes.length ? episodeIndex : 0;
         const episodeUrl = episodes[targetIndex];
         if (episodeUrl) {
-            currentVideoUrl = episodeUrl;
-            currentEpisodeIndex = targetIndex;
+            setCurrentVideoUrl(episodeUrl);
+            setCurrentEpisodeIndex(targetIndex);
             initPlayer(episodeUrl);
         } else {
             showError('没有可播放的视频资源');
@@ -959,7 +973,7 @@ async function fetchDetailInfo(vodId: string, sourceCode: string): Promise<void>
 
         // 如果历史记录的剧集列表为空，但API有返回，则补充
         if (data.episodes && data.episodes.length > 0 && (!currentEpisodes || currentEpisodes.length === 0)) {
-            currentEpisodes = data.episodes;
+            setCurrentEpisodes(data.episodes);
             localStorage.setItem('currentEpisodes', JSON.stringify(data.episodes));
             renderEpisodes();
             updateEpisodeInfo();
@@ -972,7 +986,7 @@ async function fetchDetailInfo(vodId: string, sourceCode: string): Promise<void>
 
 // ========== 下一集按钮（直接 DOM 注入） ==========
 
-let controlsLocked = false;
+// controlsLocked 已迁至 src/ui/player/state.ts
 
 // ========== 播放器浮动锁定按钮（右侧居中） ==========
 
@@ -1005,90 +1019,101 @@ Object.assign(window, {
 
 Object.defineProperty(window, 'currentVideoTitle', {
   get: () => currentVideoTitle,
-  set: (v) => { currentVideoTitle = v; },
+  set: (v) => { setCurrentVideoTitle(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'currentEpisodeIndex', {
   get: () => currentEpisodeIndex,
-  set: (v) => { currentEpisodeIndex = v; },
+  set: (v) => { setCurrentEpisodeIndex(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'art', {
   get: () => art,
-  set: (v) => { art = v; },
+  set: (v) => { setArt(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'currentHls', {
   get: () => currentHls,
-  set: (v) => { currentHls = v; },
+  set: (v) => { setCurrentHls(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'currentEpisodes', {
   get: () => currentEpisodes,
-  set: (v) => { currentEpisodes = v; },
+  set: (v) => { setCurrentEpisodes(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'episodesReversed', {
   get: () => episodesReversed,
-  set: (v) => { episodesReversed = v; },
+  set: (v) => { setEpisodesReversed(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'autoplayEnabled', {
   get: () => autoplayEnabled,
-  set: (v) => { autoplayEnabled = v; },
+  set: (v) => { setAutoplayEnabled(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'videoHasEnded', {
   get: () => videoHasEnded,
-  set: (v) => { videoHasEnded = v; },
+  set: (v) => { setVideoHasEnded(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'userClickedPosition', {
   get: () => userClickedPosition,
-  set: (v) => { userClickedPosition = v; },
+  set: (v) => { setUserClickedPosition(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'shortcutHintTimeout', {
   get: () => shortcutHintTimeout,
-  set: (v) => { shortcutHintTimeout = v; },
+  set: (v) => { setShortcutHintTimeout(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'autoFullscreened', {
   get: () => autoFullscreened,
-  set: (v) => { autoFullscreened = v; },
+  set: (v) => { setAutoFullscreened(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'progressSaveInterval', {
   get: () => progressSaveInterval,
-  set: (v) => { progressSaveInterval = v; },
+  set: (v) => { setProgressSaveInterval(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'currentVideoUrl', {
   get: () => currentVideoUrl,
-  set: (v) => { currentVideoUrl = v; },
+  set: (v) => { setCurrentVideoUrl(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'episodeSwitchTimeout', {
   get: () => episodeSwitchTimeout,
-  set: (v) => { episodeSwitchTimeout = v; },
+  set: (v) => { setEpisodeSwitchTimeout(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'controlsLocked', {
   get: () => controlsLocked,
-  set: (v) => { controlsLocked = v; },
+  set: (v) => { setControlsLocked(v); },
   configurable: true,
 });
+
+// 阶段 5B-2 过渡期类型桥：index.ts 已成为 ESM 模块，其他 player 模块仍以裸名
+// 访问这些入口函数（运行时由上方 window 兼容桥提供）。5B-2d 改为 import 后删除。
+declare global {
+  function goHome(event?: Event): void;
+  function saveToHistory(): void;
+  function startProgressSaveInterval(): void;
+  function saveCurrentProgress(): void;
+  function getVideoId(): string;
+  function updateMediaSession(): void;
+}

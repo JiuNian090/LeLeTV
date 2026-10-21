@@ -538,6 +538,7 @@
 | 441 | `src/pages/category/entry.ts` | category 按需 bundle 的 ESM 入口 | keep | — | — | — | done | 阶段 5A-2 垂直试点；import `src/services/tmdb.ts` |
 | 442 | `src/core/state.ts` | 跨模块共享配置与状态（API_SITES / 数据域 / 数据源选择） | keep | — | — | — | done | 阶段 5B-1 新增；旧位置保留 re-export / window 代理 |
 | 443 | `.agents/migration/PHASE-5-GRAPH.md` | 阶段 5B 依赖复核与拆环方案 | keep | — | — | — | done | 阶段 5B-1 只读复核产物 |
+| 444 | `src/ui/player/state.ts` | 播放器共享状态（15 个可变状态 + 选集推进 hook） | keep | — | — | — | done | 阶段 5B-2 新增；index.ts 保留 window 代理 |
 
 ## workers/（红区）
 
