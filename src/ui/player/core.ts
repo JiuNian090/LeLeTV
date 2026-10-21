@@ -424,6 +424,57 @@ function onPlayerRestart(art: ArtplayerInstance): void {
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
 }
 
+let pendingRestorePosition: number | null = null;
+let restorePositionTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelPendingRestore(): void {
+    pendingRestorePosition = null;
+    if (restorePositionTimer) {
+        clearTimeout(restorePositionTimer);
+        restorePositionTimer = null;
+    }
+}
+
+/**
+ * 恢复播放进度。
+ *
+ * 华为浏览器 / 部分 Chromium 的 MSE 实现在 loadedmetadata 阶段拿不到 duration
+ * （NaN / 0 / Infinity），此时直接设置 currentTime 会被忽略，表现为“从头开始”。
+ * 这里先记下目标位置，等 duration 可读后再 seek；最多重试约 3 秒。
+ */
+function schedulePositionRestore(art: ArtplayerInstance, position: number): void {
+    if (!Number.isFinite(position) || position <= 10) return;
+    cancelPendingRestore();
+    pendingRestorePosition = position;
+    let attempts = 0;
+
+    const trySeek = (): void => {
+        if (pendingRestorePosition === null) return;
+        const duration = Number(art.duration);
+        const durationKnown = Number.isFinite(duration) && duration > 0;
+        const target = pendingRestorePosition;
+        if (durationKnown && target < duration - 2) {
+            pendingRestorePosition = null;
+            if (restorePositionTimer) {
+                clearTimeout(restorePositionTimer);
+                restorePositionTimer = null;
+            }
+            try {
+                art.currentTime = target;
+                showPositionRestoreHint(target);
+            } catch (e) {
+                console.warn('[LeLeTV] 恢复播放进度失败:', e);
+            }
+            return;
+        }
+        if (attempts++ < 12) {
+            restorePositionTimer = setTimeout(trySeek, 250);
+        }
+    };
+
+    trySeek();
+}
+
 function onVideoLoadedMetadata(art: ArtplayerInstance): void {
 
     if (episodeSwitchTimeout) {
@@ -434,26 +485,21 @@ function onVideoLoadedMetadata(art: ArtplayerInstance): void {
 
     setVideoHasEnded(false);
 
+    // 新一次 loadedmetadata：先取消上一集尚未完成的恢复任务
+    cancelPendingRestore();
+
     const urlParams = new URLSearchParams(window.location.search);
     const savedPosition = parseInt(urlParams.get('position') || '0');
-    // 时长未知时不能 seek：iOS 原生 HLS / 事件型 m3u8 在 loadedmetadata 阶段还拿不到时长
-    // （NaN / 0 / Infinity），此时设置 currentTime 会让播放器卡在加载中
-    const duration = Number(art.duration);
-    const durationKnown = Number.isFinite(duration) && duration > 0;
-    const canRestore = (position: number) => durationKnown && position > 10 && position < duration - 2;
-
-    if (canRestore(savedPosition)) {
-        art.currentTime = savedPosition;
-        showPositionRestoreHint(savedPosition);
+    if (Number.isFinite(savedPosition) && savedPosition > 10) {
+        schedulePositionRestore(art, savedPosition);
     } else {
         try {
             const progressKey = 'videoProgress_' + getVideoId();
             const progressStr = localStorage.getItem(progressKey);
             if (progressStr) {
                 const progress = JSON.parse(progressStr) as { position?: unknown };
-                if (progress && typeof progress.position === 'number' && canRestore(progress.position)) {
-                    art.currentTime = progress.position;
-                    showPositionRestoreHint(progress.position);
+                if (progress && typeof progress.position === 'number') {
+                    schedulePositionRestore(art, progress.position);
                 }
             }
         } catch (e) {
@@ -519,6 +565,11 @@ function setupPlayerEventListeners(art: ArtplayerInstance, fullScreenController:
 
     art.on('video:loadedmetadata', function () {
         onVideoLoadedMetadata(art);
+    });
+
+    // 用户手动拖动进度条时，取消尚未完成的续播恢复，避免被拉回历史位置
+    art.on('video:seeking', function () {
+        if (pendingRestorePosition !== null) cancelPendingRestore();
     });
 
     art.on('video:error', function (error: { message?: string }) {
