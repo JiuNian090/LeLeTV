@@ -29,6 +29,7 @@
 | 5B-3 | **完成（25 个 commit）**：core / services / ui（含 player 与剩余 8 个 ui 模块）/ pages（home 5 个、search/cards、search/index、category、settings 2 个）/ router（page-loader、prefetch、index）/ main / boot 全部改为显式 import。跨页与跨层反向依赖保留 window 契约；`MergeGroup` 等共享类型下沉 `core/state`。首屏 248.5 KB |
 | 5B-4 | **完成**：`build-bundles.mjs` 改为多入口 `esbuild.build({ splitting: true, format: 'esm', metafile: true })`；入口 / 共享 chunk 带 hash；HTML 入口改 `type="module"` 并按 metafile 注入 `modulepreload`；动态页面脚本改 module。首屏闭包 253.8 KB |
 | 5B-5 | **完成**：删除 `files` / `esm` / concat / 临时入口，5 个 bundle 使用持久入口（`core-entry.ts`、`main.ts`、`category/entry.ts`、`settings/entry.ts`、`player-entry.ts`）；`check-deps` 改为真实 import 图（179 边 / 0 运行时环）并跳过 type-only；`check-budget` 按 metafile 闭包统计；全局桥收敛为 `docs/GLOBAL-BRIDGES.md`。首屏 253.3 KB |
+| 类型收紧 1 | **完成**：`tsconfig.json` 开启 `noImplicitAny`；修复 294 处隐式 any（category 94、services 85、router 120、pages/settings 34、search 25、ui 3、home 2）。`npm run typecheck` 全绿，页面回归通过。下一步可评估 `strictNullChecks` |
 
 ---
 
