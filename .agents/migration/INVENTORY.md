@@ -393,7 +393,7 @@
 | 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | pending | — |
 | 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
 | 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
-| 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | pending | — |
+| 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | verified | 公开函数名保持不变，历史分组与播放跳转逻辑原样迁移 |
 | 323 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | pending | — |
 | 324 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | pending | — |
 
@@ -484,6 +484,7 @@
 | 387 | `src/services/line-probe.ts` | 线路可用性探测（迁移自 `js/ui/line-probe.js`） | keep | — | — | — | done | 阶段 4 第 18 条迁移目标 |
 | 388 | `src/services/search-history.ts` | 搜索历史读写与下拉渲染（迁移自 `js/ui/ui-search-history.js`） | keep | — | — | — | done | 阶段 4 第 19 条迁移目标 |
 | 389 | `src/services/search.ts` | 跨源聚合搜索与结果缓存（迁移自 `js/api/search.js`） | keep | — | — | — | done | 阶段 4 第 20 条迁移目标 |
+| 390 | `src/services/viewing-history.ts` | 观看历史读写与历史页渲染（迁移自 `js/ui/ui-viewing-history.js`） | keep | — | — | — | done | 阶段 4 第 21 条迁移目标 |
 
 ## workers/（红区）
 

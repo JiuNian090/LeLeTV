@@ -34,7 +34,7 @@ export const BUNDLES = [
     firstScreen: true,
     files: [
       'src/services/sources/config.ts', 'src/services/balancer.ts',
-      'src/services/search-history.ts', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
+      'src/services/search-history.ts', 'src/services/viewing-history.ts', 'js/ui/ui.js',
       'src/services/api.ts', 'src/services/search.ts',
       'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
       'js/app/app-search.js', 'src/services/config.ts', 'src/services/sources/port.ts', 'js/app/app.js',
@@ -70,7 +70,7 @@ export const BUNDLES = [
     firstScreen: false,
     files: [
       'src/services/api.ts', 'src/services/search.ts',
-      'js/ui/ui-viewing-history.js',
+      'src/services/viewing-history.ts',
       'js/player/player-manager.js', 'js/player/player-shortcuts.js',
       'js/player/player-core.js', 'js/player/player-episodes.js',
       'js/player/player-ui.js', 'js/player/player-failover.js', 'js/player/player-lights.js',

@@ -49,7 +49,7 @@
 | 21 | services | `js/ui/theme-system.js` | `src/services/theme.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 22 | services | `js/api/tmdb.js` | `src/services/tmdb.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 23 | services | `js/utils/version-updater.js` | `src/services/version-updater.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
-| 24 | services | `js/ui/ui-viewing-history.js` | `src/services/viewing-history.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
+| 24 | services | `js/ui/ui-viewing-history.js` | `src/services/viewing-history.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
 | 25 | ui | `js/ui/brand-canvas.js` | `src/ui/brand-canvas.ts` | pending | 第 0 节通用前置 | — |
 | 26 | ui | `js/ui/ui.js` | `src/ui/index.ts` | pending | 第 0 节通用前置 | — |
 | 27 | ui | `js/ui/layout-pref.js` | `src/ui/layout-pref.ts` | pending | 第 0 节通用前置 | — |

@@ -1,14 +1,71 @@
-function getViewingHistory() {
+interface ViewingHistoryItem {
+    [key: string]: unknown;
+    title: string;
+    url: string;
+    timestamp: number;
+    episodeIndex?: number;
+    sourceName?: string;
+    sourceCode?: string;
+    vod_id?: string | number;
+    episodes?: string[];
+    playbackPosition?: number;
+    duration?: number;
+    cover?: string;
+    desc?: string;
+    type?: string;
+    year?: string;
+    area?: string;
+    director?: string;
+    actor?: string;
+    remarks?: string;
+    showIdentifier?: string;
+    directVideoUrl?: string;
+    lastSyncTime?: number;
+}
+
+interface ViewingHistoryInput {
+    [key: string]: unknown;
+    title: string;
+    url: string;
+    episodeIndex?: number;
+    sourceName?: string;
+    sourceCode?: string;
+    vod_id?: string | number;
+    episodes?: string[];
+    playbackPosition?: number;
+    duration?: number;
+    showIdentifier?: string;
+    directVideoUrl?: string;
+}
+
+interface VideoDetailsResponse {
+    episodes?: string[];
+    videoInfo?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
+interface ViewingHistoryWindow extends Window {
+    API_SITES?: Record<string, ApiSite>;
+    initViewingHistoryBindings?: () => void;
+}
+
+declare function formatTimestamp(timestamp: number | string): string;
+declare function formatPlaybackTime(seconds: number): string;
+declare function dissolveThenRemove(el: Element, action: () => void): void;
+
+const viewingHistoryWindow = window as ViewingHistoryWindow;
+
+function getViewingHistory(): ViewingHistoryItem[] {
     try {
         const data = localStorage.getItem(scopedKey('viewingHistory'));
-        return data ? JSON.parse(data) : [];
+        return data ? JSON.parse(data) as ViewingHistoryItem[] : [];
     } catch (e) {
         console.error('获取观看历史失败:', e);
         return [];
     }
 }
 
-function loadViewingHistory() {
+function loadViewingHistory(): void {
     const historyList = document.getElementById('historyList');
     if (!historyList) return;
 
@@ -40,7 +97,7 @@ function loadViewingHistory() {
     const weekAgoStart = new Date(todayStart);
     weekAgoStart.setDate(weekAgoStart.getDate() - 7);
 
-    const groups = { '今天': [], '昨天': [], '本周': [], '更早': [] };
+    const groups: Record<'今天' | '昨天' | '本周' | '更早', ViewingHistoryItem[]> = { '今天': [], '昨天': [], '本周': [], '更早': [] };
 
     history.forEach(item => {
         const itemDate = new Date(item.timestamp);
@@ -74,7 +131,7 @@ function loadViewingHistory() {
     historyList.innerHTML = html;
 }
 
-function renderHistoryCard(item) {
+function renderHistoryCard(item: ViewingHistoryItem): string {
     const safeTitle = item.title
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -82,8 +139,8 @@ function renderHistoryCard(item) {
         .replace(/'/g, "\\'");
 
     // 将源代码名称映射为显示名称（如 wujin → 无尽资源）
-    const sourceDisplayName = item.sourceName && window.API_SITES && window.API_SITES[item.sourceName]
-        ? window.API_SITES[item.sourceName].name
+    const sourceDisplayName = item.sourceName && viewingHistoryWindow.API_SITES && viewingHistoryWindow.API_SITES[item.sourceName]
+        ? viewingHistoryWindow.API_SITES[item.sourceName].name
         : item.sourceName;
     const safeSource = sourceDisplayName ?
         sourceDisplayName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') :
@@ -152,7 +209,7 @@ function renderHistoryCard(item) {
     `;
 }
 
-function deleteHistoryItem(encodedUrl, title, cardEl) {
+function deleteHistoryItem(encodedUrl: string, title: string, cardEl: Element | null): void {
     // 真正的删除：数据落盘 + 重渲染列表
     const removeRecord = () => {
         try {
@@ -187,15 +244,15 @@ function deleteHistoryItem(encodedUrl, title, cardEl) {
     }
 }
 
-async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
+async function playFromHistory(url: string, title: string, episodeIndex: number, playbackPosition = 0): Promise<void> {
     try {
-        let episodesList = [];
-        let historyItem = null;
+        let episodesList: string[] = [];
+        let historyItem: ViewingHistoryItem | null = null;
 
         // 获取历史记录（localStorage，快速）
         const historyRaw = localStorage.getItem(scopedKey('viewingHistory'));
         if (historyRaw) {
-            const history = JSON.parse(historyRaw);
+            const history = JSON.parse(historyRaw) as ViewingHistoryItem[];
             historyItem = history.find(item => item.url === url);
 
             if (historyItem && historyItem.episodes && Array.isArray(historyItem.episodes)) {
@@ -214,7 +271,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
             localStorage.setItem('currentEpisodeIndex', String(episodeIndex || 0));
 
             // 历史记录里存有手动编辑 / TMDB 补全过的详情时直接恢复；没有才清掉上一部剧的残留
-            const meta = {};
+            const meta: Record<string, unknown> = {};
             ['cover', 'desc', 'type', 'year', 'area', 'director', 'actor', 'remarks'].forEach(key => {
                 if (historyItem[key]) meta[key] = historyItem[key];
             });
@@ -232,7 +289,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
         }
 
         // 保存当前页面URL作为返回地址（含 hash，保留历史记录/类别页状态）
-        let currentPath;
+        let currentPath: string;
         if (window.location.pathname.startsWith('/player.html')) {
             currentPath = localStorage.getItem('lastPageUrl') || '/';
         } else {
@@ -241,7 +298,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
         localStorage.setItem('lastPageUrl', currentPath);
 
         // 构造播放器URL
-        let playerUrl;
+        let playerUrl: string;
         const sourceNameForUrl = historyItem ? historyItem.sourceName : (new URLSearchParams(new URL(url, window.location.origin).search)).get('source');
         const sourceCodeForUrl = historyItem ? historyItem.sourceCode || historyItem.sourceName : (new URLSearchParams(new URL(url, window.location.origin).search)).get('source_code');
         const idForUrl = historyItem ? historyItem.vod_id : '';
@@ -268,7 +325,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
                     playerUrl = `player.html?url=${encodeURIComponent(realVideoUrl)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
                     if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
                     if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
-                    if (idForUrl) playerUrl += `&id=${encodeURIComponent(idForUrl)}`;
+                    if (idForUrl) playerUrl += `&id=${encodeURIComponent(String(idForUrl))}`;
                 }
 
             } catch (e) {
@@ -283,7 +340,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
                     playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
                     if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
                     if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
-                    if (idForUrl) playerUrl += `&id=${encodeURIComponent(idForUrl)}`;
+                    if (idForUrl) playerUrl += `&id=${encodeURIComponent(String(idForUrl))}`;
                 }
             }
         } else {
@@ -292,7 +349,7 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
             playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}&position=${Math.floor(playbackPosition || 0)}&back=${encodeURIComponent(currentPath)}`;
             if (sourceNameForUrl) playerUrl += `&source=${encodeURIComponent(sourceNameForUrl)}`;
             if (sourceCodeForUrl) playerUrl += `&source_code=${encodeURIComponent(sourceCodeForUrl)}`;
-            if (idForUrl) playerUrl += `&id=${encodeURIComponent(idForUrl)}`;
+            if (idForUrl) playerUrl += `&id=${encodeURIComponent(String(idForUrl))}`;
         }
 
         // 站内同标签页导航标记：播放页返回时据此走 history.back()（见 js/player/player.js goHome）
@@ -310,10 +367,10 @@ async function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
 }
 
 // 后台静默同步剧集列表（不阻塞导航）
-async function syncEpisodesInBackground(historyItem, url) {
+async function syncEpisodesInBackground(historyItem: ViewingHistoryItem, url: string): Promise<void> {
     try {
         const timestamp = new Date().getTime();
-        const apiUrl = `/api/detail?id=${encodeURIComponent(historyItem.vod_id)}&source=${encodeURIComponent(historyItem.sourceName)}&_t=${timestamp}`;
+        const apiUrl = `/api/detail?id=${encodeURIComponent(String(historyItem.vod_id))}&source=${encodeURIComponent(String(historyItem.sourceName))}&_t=${timestamp}`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -321,7 +378,7 @@ async function syncEpisodesInBackground(historyItem, url) {
         clearTimeout(timeoutId);
 
         if (!response.ok) return;
-        const videoDetails = await response.json();
+        const videoDetails = await response.json() as VideoDetailsResponse;
 
         if (videoDetails && videoDetails.episodes && videoDetails.episodes.length > 0) {
             // 更新localStorage中的剧集列表（播放页已读取时下次生效）
@@ -333,7 +390,7 @@ async function syncEpisodesInBackground(historyItem, url) {
             // 更新历史记录中的剧集列表
             const raw = localStorage.getItem(scopedKey('viewingHistory'));
             if (raw) {
-                const history = JSON.parse(raw);
+                const history = JSON.parse(raw) as ViewingHistoryItem[];
                 const idx = history.findIndex(item => item.url === url);
                 if (idx !== -1) {
                     history[idx].episodes = [...videoDetails.episodes];
@@ -347,7 +404,7 @@ async function syncEpisodesInBackground(historyItem, url) {
     }
 }
 
-function addToViewingHistory(videoInfo) {
+function addToViewingHistory(videoInfo: ViewingHistoryInput): void {
     try {
         const history = getViewingHistory();
 
@@ -372,7 +429,7 @@ function addToViewingHistory(videoInfo) {
         if (existingIndex !== -1) {
             // 找到相同标题的剧集：更新为最新播放源的信息
             const existingItem = history[existingIndex];
-            
+
             // 检测剧集是否已切换（用于重置播放进度，防止换集后保留旧集数的位置）
             const episodeChanged = existingItem.episodeIndex !== videoInfo.episodeIndex;
 
@@ -386,7 +443,7 @@ function addToViewingHistory(videoInfo) {
             existingItem.url = videoInfo.url; // 强制更新为最新播放源
             existingItem.playbackPosition = (episodeChanged || videoInfo.playbackPosition > 10) ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
-            
+
             // 更新showIdentifier为最新播放源的标识符
             if (videoInfo.sourceName && videoInfo.vod_id) {
                 existingItem.showIdentifier = `${videoInfo.sourceName}_${videoInfo.vod_id}`;
@@ -406,7 +463,7 @@ function addToViewingHistory(videoInfo) {
             history.unshift(existingItem);
         } else {
             // 没有找到相同标题：添加为新记录
-            const newItem = {
+            const newItem: ViewingHistoryItem = {
                 ...videoInfo,
                 timestamp: Date.now()
             };
@@ -434,7 +491,7 @@ function addToViewingHistory(videoInfo) {
 }
 
 // 页头「清空记录」：先确认再清空
-function confirmClearViewingHistory() {
+function confirmClearViewingHistory(): void {
     const overlay = showModal({
         title: '清空观看记录',
         content: (body) => {
@@ -455,7 +512,7 @@ function confirmClearViewingHistory() {
 }
 
 // 历史页事件绑定：片段按需插入后才可绑定（首屏没有 #historyList）
-function initViewingHistoryBindings() {
+function initViewingHistoryBindings(): void {
     const page = document.getElementById('page-history');
     if (!page || page.dataset.leleBound === '1') return;
     page.dataset.leleBound = '1';
@@ -464,9 +521,10 @@ function initViewingHistoryBindings() {
     // 记录卡片是 role="button" 的 div，键盘回车 / 空格也要能打开
     document.getElementById('historyList')?.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
-        if (!e.target.classList || !e.target.classList.contains('history-item')) return;
+        const target = e.target as HTMLElement;
+        if (!target.classList || !target.classList.contains('history-item')) return;
         e.preventDefault();
-        e.target.click();
+        target.click();
     });
 }
 
@@ -476,9 +534,9 @@ if (document.readyState === 'loading') {
 } else {
     initViewingHistoryBindings();
 }
-window.initViewingHistoryBindings = initViewingHistoryBindings;
+viewingHistoryWindow.initViewingHistoryBindings = initViewingHistoryBindings;
 
-function clearViewingHistory() {
+function clearViewingHistory(): void {
     try {
         localStorage.removeItem(scopedKey('viewingHistory'));
         loadViewingHistory(); // 重新加载空的历史记录
