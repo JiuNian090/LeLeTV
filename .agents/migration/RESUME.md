@@ -30,6 +30,7 @@
 | 5B-4 | **完成**：`build-bundles.mjs` 改为多入口 `esbuild.build({ splitting: true, format: 'esm', metafile: true })`；入口 / 共享 chunk 带 hash；HTML 入口改 `type="module"` 并按 metafile 注入 `modulepreload`；动态页面脚本改 module。首屏闭包 253.8 KB |
 | 5B-5 | **完成**：删除 `files` / `esm` / concat / 临时入口，5 个 bundle 使用持久入口（`core-entry.ts`、`main.ts`、`category/entry.ts`、`settings/entry.ts`、`player-entry.ts`）；`check-deps` 改为真实 import 图（179 边 / 0 运行时环）并跳过 type-only；`check-budget` 按 metafile 闭包统计；全局桥收敛为 `docs/GLOBAL-BRIDGES.md`。首屏 253.3 KB |
 | 类型收紧 1 | **完成**：`tsconfig.json` 开启 `noImplicitAny`；修复 294 处隐式 any（category 94、services 85、router 120、pages/settings 34、search 25、ui 3、home 2）。`npm run typecheck` 全绿，页面回归通过。下一步可评估 `strictNullChecks` |
+| strictNullChecks 分批 1 | **完成**：给 `src/services/theme.ts`（66 处）与 `src/ui/player/ui.ts`（58 处）补齐 null 收窄；主题取色器、播放器进度条拖动、长按倍速/快捷键提示回归通过。剩余 305 处，继续按 search/router/player bridge 分批 |
 
 ---
 
