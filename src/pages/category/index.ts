@@ -196,8 +196,10 @@ function _isValidSource(id: string): boolean {
 function _orderSourcesByLoad(ids: string[]): string[] {
   var stats = categoryWindow.loadBalancer ? categoryWindow.loadBalancer.apiStats : null;
   return ids.slice().sort(function (a: string, b: string) {
-    var sa = stats && stats.get(a) ? (stats.get(a).averageResponseTime || 9999) : 9999;
-    var sb = stats && stats.get(b) ? (stats.get(b).averageResponseTime || 9999) : 9999;
+    var ea = stats ? stats.get(a) : undefined;
+    var eb = stats ? stats.get(b) : undefined;
+    var sa = ea && ea.averageResponseTime ? ea.averageResponseTime : 9999;
+    var sb = eb && eb.averageResponseTime ? eb.averageResponseTime : 9999;
     return sa - sb;
   });
 }
@@ -208,7 +210,8 @@ function _orderSourcesByLoad(ids: string[]): string[] {
 function _getSourceCounts(results: MovieItem[]): Record<string, number> {
   var counts: Record<string, number> = {};
   results.forEach(function (r: MovieItem) {
-    counts[r.source_code] = (counts[r.source_code] || 0) + 1;
+    var code = r.source_code || '';
+    counts[code] = (counts[code] || 0) + 1;
   });
   return counts;
 }
@@ -285,8 +288,8 @@ function _firstPic(items: MovieItem[]): string {
 }
 
 function _bySeason(a: MovieGroup, b: MovieGroup): number {
-  var sa = a.season === null ? 0 : a.season;
-  var sb = b.season === null ? 0 : b.season;
+  var sa = a.season == null ? 0 : a.season;
+  var sb = b.season == null ? 0 : b.season;
   if (sa !== sb) return sa - sb;
   return String(a.year || '').localeCompare(String(b.year || ''));
 }
@@ -329,7 +332,8 @@ function _groupMoviesResults(results: MovieItem[], keyword: string): MoviesGroup
     var best = groups.slice().sort(function (a, b) { return b.items.length - a.items.length; })[0];
     out.hero = { groups: [best], exact: false };
     // 顶上来的这组从货架里挪走，不重复出现
-    out[best.kind] = (out[best.kind] as MovieGroup[]).filter(function (g: MovieGroup) { return g !== best; });
+    var bestKind = best.kind || 'related';
+    out[bestKind] = (out[bestKind] as MovieGroup[]).filter(function (g: MovieGroup) { return g !== best; });
   }
   return out;
 }
@@ -437,10 +441,11 @@ function _playAttrs(item: MovieItem): string {
 
 /** 预检判死的线路挪到最后（其余顺序不变）：播放按钮永远指向第一条没判死的 */
 function _sortDeadLast(items: MovieItem[]): MovieItem[] {
-  if (!categoryWindow.LeLeLineProbe || !items || items.length < 2) return items;
+  const probe = categoryWindow.LeLeLineProbe;
+  if (!probe || !items || items.length < 2) return items;
   var alive: MovieItem[] = [], dead: MovieItem[] = [];
   items.forEach(function (it: MovieItem) {
-    (categoryWindow.LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false ? dead : alive).push(it);
+    (probe.cached(String(it.source_code), String(it.vod_id), 0) === false ? dead : alive).push(it);
   });
   return dead.length ? alive.concat(dead) : items;
 }
@@ -448,13 +453,14 @@ function _sortDeadLast(items: MovieItem[]): MovieItem[] {
 /** 起播前预检：最佳匹配一渲染就并行探前 3 条线路；判死的正好是播放按钮指向的那条，就重绘换到下一条（重绘会接着探新的前 3 条）。
  *  只有一条线路也探：判死的结论进缓存，播放页一进来就直接换线，不用等清单超时 */
 function _probeHeroLine(g: MovieGroup): void {
-  if (!categoryWindow.LeLeLineProbe || !g || !g.items || !g.items.length) return;
+  const probe = categoryWindow.LeLeLineProbe;
+  if (!probe || !g || !g.items || !g.items.length) return;
   var keyword = _moviesState.keyword;
   g.items.slice(0, 3).forEach(function (it: MovieItem) {
     if (!it.vod_id || !it.source_code) return;
     var source = String(it.source_code), vodId = String(it.vod_id);
-    if (categoryWindow.LeLeLineProbe.cached(source, vodId, 0) !== undefined) return;
-    categoryWindow.LeLeLineProbe.check(source, vodId, 0).then(function (ok) {
+    if (probe.cached(source, vodId, 0) !== undefined) return;
+    probe.check(source, vodId, 0).then(function (ok) {
       if (ok || _moviesState.keyword !== keyword) return;
       var hero = document.getElementById('moviesHero');
       var btn = hero && !hero.hidden ? hero.querySelector('.movies-play') as HTMLElement | null : null;
@@ -495,7 +501,7 @@ function renderMoviesHero(data: MoviesGroupsData): void {
   groups.forEach(function (x: MovieGroup) { x.items.forEach(function (it: MovieItem) { seen[it.source_code || ''] = 1; }); });
   var srcCount = Object.keys(seen).length;
   var multiNull = groups.filter(function (x: MovieGroup) { return x.season === null; }).length > 1;
-  var title = hero.exact ? (groups[0].base || g.name) : g.name;
+  var title = (hero.exact ? (groups[0].base || g.name) : g.name) || '';
   var meta = [_plainText(lead.type_name), yearText, groups.length > 1 ? groups.length + ' 季' : '', srcCount + ' 个片源'].filter(Boolean).join(' · ');
   var desc = _plainText(lead.vod_content || lead.vod_blurb || '');
 
@@ -513,7 +519,7 @@ function renderMoviesHero(data: MoviesGroupsData): void {
   if (groups.length > 1) {
     h += '<div class="movies-seasons" role="tablist" aria-label="选季">';
     groups.forEach(function (x: MovieGroup, i: number) {
-      var label = x.season !== null ? _seasonLabel(x.season) : (multiNull ? (x.year ? x.year + ' 版' : x.name) : '正片');
+      var label = x.season != null ? _seasonLabel(x.season) : (multiNull ? (x.year ? x.year + ' 版' : x.name) : '正片');
       var sub = [x.year, x.remarks, x.items.length + ' 条线路'].filter(Boolean).join(' · ');
       h += '<button type="button" class="movies-season' + (i === idx ? ' is-active' : '') + '" role="tab" aria-selected="' + (i === idx) + '" data-season="' + i + '">' +
         '<b>' + _escapeHtml(label) + '</b><span>' + _escapeHtml(sub) + '</span></button>';
@@ -975,25 +981,27 @@ function initMoviesPageBindings() {
   var researchForm = document.getElementById('moviesResearchForm');
   var researchInput = document.getElementById('moviesResearchInput') as HTMLInputElement | null;
   if (researchForm && researchInput) {
-    researchForm.addEventListener('submit', function (e) {
+    const form = researchForm;
+    const input = researchInput;
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var q = researchInput.value.trim();
+      var q = input.value.trim();
       if (!q) return;
-      if (q === _moviesState.keyword && _moviesState.results.length) { researchInput.blur(); return; }
+      if (q === _moviesState.keyword && _moviesState.results.length) { input.blur(); return; }
       var main = document.getElementById('searchInput') as HTMLInputElement | null;
       if (main) main.value = q;
-      researchInput.blur();
+      input.blur();
       search();
     });
-    researchInput.addEventListener('input', function () {
-      researchForm.classList.toggle('has-text', !!researchInput.value);
+    input.addEventListener('input', function () {
+      form.classList.toggle('has-text', !!input.value);
     });
-    var clearBtn = researchForm.querySelector('[data-role="clear"]');
+    var clearBtn = form.querySelector('[data-role="clear"]');
     if (clearBtn) {
       clearBtn.addEventListener('click', function () {
-        researchInput.value = '';
-        researchForm.classList.remove('has-text');
-        researchInput.focus();
+        input.value = '';
+        form.classList.remove('has-text');
+        input.focus();
       });
     }
   }
@@ -1005,7 +1013,7 @@ function initMoviesPageBindings() {
       var btn = (e.target as HTMLElement).closest('[data-segment]') as HTMLElement | null;
       if (!btn) return;
       var key = btn.dataset.segment;
-      if (key === _moviesState.segment) return;
+      if (!key || key === _moviesState.segment) return;
       _moviesState.segment = key;
       renderMoviesGrid();
     });
@@ -1014,10 +1022,11 @@ function initMoviesPageBindings() {
   // 最佳匹配：选季、展开线路
   var hero = document.getElementById('moviesHero');
   if (hero) {
-    hero.addEventListener('click', function (e) {
+    const heroEl = hero;
+    heroEl.addEventListener('click', function (e) {
       var season = (e.target as HTMLElement).closest('[data-season]') as HTMLElement | null;
       if (season) {
-        var i = parseInt(season.dataset.season, 10) || 0;
+        var i = parseInt(season.dataset.season || '0', 10) || 0;
         if (i === _moviesState.season) return;
         _moviesState.season = i;
         _moviesState.seasonPicked = true;
@@ -1027,7 +1036,7 @@ function initMoviesPageBindings() {
       var toggle = (e.target as HTMLElement).closest('[data-role="toggle-lines"]') as HTMLElement | null;
       if (toggle) {
         _moviesState.linesOpen = !_moviesState.linesOpen;
-        var lines = hero.querySelector('.movies-lines') as HTMLElement | null;
+        var lines = heroEl.querySelector('.movies-lines') as HTMLElement | null;
         if (lines) lines.hidden = !_moviesState.linesOpen;
         toggle.setAttribute('aria-expanded', String(_moviesState.linesOpen));
       }
@@ -1041,7 +1050,7 @@ function initMoviesPageBindings() {
     var btn = (e.target as HTMLElement).closest('[data-source]') as HTMLElement | null;
     if (!btn) return;
     var code = btn.dataset.source;
-    if (code === _moviesState.activeSource) return;
+    if (!code || code === _moviesState.activeSource) return;
     _moviesState.activeSource = code;
     renderMoviesSidebar();
     renderMoviesGrid();
