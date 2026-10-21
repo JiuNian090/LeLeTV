@@ -127,6 +127,7 @@ import {
     setControlsLocked,
 } from './state';
 import type { PlayerArtInstance } from './state';
+import { getVideoId } from './session';
 
 export type { PlayerArtInstance };
 
@@ -807,15 +808,7 @@ function saveCurrentProgress(): void {
 
 // 清除视频进度记录
 
-// 获取视频唯一标识
-function getVideoId(): string {
-    // 使用视频标题和集数索引作为唯一标识
-    // If currentVideoUrl is available and more unique, prefer it. Otherwise, fallback.
-    if (currentVideoUrl) {
-        return `${encodeURIComponent(currentVideoUrl)}`;
-    }
-    return `${encodeURIComponent(currentVideoTitle)}_${currentEpisodeIndex}`;
-}
+// 获取视频唯一标识（阶段 5B-2b：已迁至 src/ui/player/session.ts）
 
 // ========== Media Session API ==========
 
@@ -1114,6 +1107,5 @@ declare global {
   function saveToHistory(): void;
   function startProgressSaveInterval(): void;
   function saveCurrentProgress(): void;
-  function getVideoId(): string;
   function updateMediaSession(): void;
 }
