@@ -1,15 +1,33 @@
 // LeLeTV — HLS 清晰度切换模块
 // 依赖 player-core.js 中的 Hls 全局变量
 
-var _hlsLevels = [];
+interface QualityLevel {
+  height?: number;
+  bitrate?: number;
+}
 
-function setupQualitySwitcher(hls) {
+interface QualityHls extends HlsInstance {
+  levels?: QualityLevel[];
+  currentLevel?: number;
+}
+
+interface QualityArt {
+  template?: { $controlsLeft?: HTMLElement };
+}
+
+interface QualityWindow extends Window {
+  art?: QualityArt;
+}
+
+var _hlsLevels: { index: number; label: string; height: number }[] = [];
+
+function setupQualitySwitcher(hls: QualityHls): void {
   hls.on(Hls.Events.MANIFEST_PARSED, function() {
     if (!hls.levels || hls.levels.length <= 1) {
       _hlsLevels = [];
       return;
     }
-    _hlsLevels = hls.levels.map(function(level, idx) {
+    _hlsLevels = hls.levels.map(function(level: QualityLevel, idx: number) {
       var h = level.height || 0;
       var b = level.bitrate || 0;
       var label = h >= 2160 ? '4K' : h >= 1440 ? '2K' : h >= 1080 ? '1080P' :
@@ -21,8 +39,8 @@ function setupQualitySwitcher(hls) {
   });
 }
 
-function addQualityButton(hls) {
-  var art = window.art;
+function addQualityButton(hls: QualityHls): void {
+  var art = (window as QualityWindow).art;
   if (!art || _hlsLevels.length <= 1) return;
 
   var btn = document.createElement('div');
@@ -36,11 +54,11 @@ function addQualityButton(hls) {
     toggleQualityMenu(art, hls, btn);
   };
 
-  var controlsLeft = art.template.$controlsLeft;
+  var controlsLeft = art.template?.$controlsLeft;
   if (controlsLeft) controlsLeft.appendChild(btn);
 }
 
-function toggleQualityMenu(art, hls, btn) {
+function toggleQualityMenu(art: QualityArt, hls: QualityHls, btn: HTMLElement): void {
   var old = document.querySelector('.hls-quality-menu');
   if (old) { old.remove(); return; }
 
@@ -48,12 +66,12 @@ function toggleQualityMenu(art, hls, btn) {
   menu.className = 'hls-quality-menu';
   menu.style.cssText = 'position:absolute;bottom:100%;left:0;background:rgba(0,0,0,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 0;z-index:9999;min-width:110px;';
 
-  function makeItem(text, isActive, onClick) {
+  function makeItem(text: string, isActive: boolean, onClick: () => void): HTMLElement {
     var el = document.createElement('div');
     el.textContent = text;
     el.style.cssText = 'padding:8px 16px;cursor:pointer;color:' + (isActive ? ((typeof themeColor === 'function') ? themeColor() : '#ec4899') : 'rgba(255,255,255,0.85)') + ';font-size:13px;transition:background 0.15s;';
-    el.onmouseenter = function() { this.style.background = 'rgba(255,255,255,0.1)'; };
-    el.onmouseleave = function() { this.style.background = 'none'; };
+    el.onmouseenter = function() { el.style.background = 'rgba(255,255,255,0.1)'; };
+    el.onmouseleave = function() { el.style.background = 'none'; };
     el.onclick = function(e) { e.stopPropagation(); onClick(); menu.remove(); };
     return el;
   }
@@ -74,8 +92,8 @@ function toggleQualityMenu(art, hls, btn) {
   btn.appendChild(menu);
 
   setTimeout(function() {
-    function close(e) {
-      if (!menu.contains(e.target) && e.target !== btn) {
+    function close(e: MouseEvent) {
+      if (!menu.contains(e.target as Node) && e.target !== btn) {
         menu.remove();
         document.removeEventListener('click', close);
       }
@@ -84,7 +102,7 @@ function toggleQualityMenu(art, hls, btn) {
   }, 0);
 }
 
-function updateQLabel(btn, label) {
+function updateQLabel(btn: HTMLElement, label: string): void {
   var s = btn.querySelector('.qlabel');
   if (s) s.textContent = label;
 }

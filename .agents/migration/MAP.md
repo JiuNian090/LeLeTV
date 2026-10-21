@@ -62,7 +62,7 @@
 | 34 | ui | `js/player/player.js` | `src/ui/player/index.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 35 | ui | `js/player/player-lights.js` | `src/ui/player/lights.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 36 | ui | `js/player/player-manager.js` | `src/ui/player/manager.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
-| 37 | ui | `js/player/player-quality.js` | `src/ui/player/quality.ts` | pending | 第 7 节 播放器 | — |
+| 37 | ui | `js/player/player-quality.js` | `src/ui/player/quality.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 38 | ui | `js/player/player-shortcuts.js` | `src/ui/player/shortcuts.ts` | pending | 第 7 节 播放器 | — |
 | 39 | ui | `js/player/player-ui.js` | `src/ui/player/ui.ts` | pending | 第 7 节 播放器 | — |
 | 40 | ui | `js/ui/pwa-install.js` | `src/ui/pwa-install.ts` | pending | 第 0 节通用前置 | — |
