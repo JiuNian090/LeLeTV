@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：31 / 85 条已验证** |
+| 4 | **进行中：32 / 85 条已验证** |
 
 ---
 
@@ -55,14 +55,15 @@
 | 29 | `js/player/player-bridge.js` | `src/ui/player/bridge.ts` | 公开函数与全局播放状态不变 |
 | 30 | `js/player/player-core.js` | `src/ui/player/core.ts` | 公开函数不变，libs 接口本地声明 |
 | 31 | `js/player/player-detail.js` | `src/ui/player/detail.ts` | 公开函数不变 |
+| 32 | `js/player/player-episodes.js` | `src/ui/player/episodes.ts` | 公开函数不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 32 条**：`js/player/player-episodes.js → src/ui/player/episodes.ts`
+**MAP 第 33 条**：`js/player/player-failover.js → src/ui/player/failover.ts`
 
-ui 层剩余 10 条。
+ui 层剩余 9 条。
 - `js/ui/line-probe.js → src/services/line-probe.ts`
 - `js/ui/ui-search-history.js → src/services/search-history.ts`
 - `js/api/search.js → src/services/search.ts`

@@ -1,6 +1,12 @@
 // LeLeTV — 选集管理模块
 
-function updateEpisodeInfo() {
+interface EpisodesWindow extends Window {
+    isSwitchingVideo?: boolean;
+}
+
+const episodesWindow = window as EpisodesWindow;
+
+function updateEpisodeInfo(): void {
     const el = document.getElementById('episodeInfo');
     if (!el) return;
     if (currentEpisodes.length > 0) {
@@ -10,7 +16,7 @@ function updateEpisodeInfo() {
     }
 }
 
-function updateButtonStates() {
+function updateButtonStates(): void {
     const prevButton = document.getElementById('prevButton');
     const nextButton = document.getElementById('nextButton');
     if (!prevButton && !nextButton) return;
@@ -40,7 +46,7 @@ function updateButtonStates() {
     }
 }
 
-function renderEpisodes() {
+function renderEpisodes(): void {
     const episodesList = document.getElementById('episodesList');
     if (!episodesList) return;
 
@@ -66,16 +72,16 @@ function renderEpisodes() {
     episodesList.innerHTML = html;
 }
 
-function playEpisode(index) {
+function playEpisode(index: number): void {
     // 切换状态锁：防止快速点击集数造成并发切换
-    if (window.isSwitchingVideo) {
+    if (episodesWindow.isSwitchingVideo) {
         return;
     }
-    window.isSwitchingVideo = true;
+    episodesWindow.isSwitchingVideo = true;
 
     // 确保index在有效范围内
     if (index < 0 || index >= currentEpisodes.length) {
-        window.isSwitchingVideo = false;
+        episodesWindow.isSwitchingVideo = false;
         return;
     }
 
@@ -109,7 +115,7 @@ function playEpisode(index) {
 
     // 更新URL参数（不刷新页面）
     const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('index', index);
+    currentUrl.searchParams.set('index', String(index));
     currentUrl.searchParams.set('url', url);
     currentUrl.searchParams.delete('position');
     window.history.replaceState({}, '', currentUrl.toString());
@@ -131,7 +137,7 @@ function playEpisode(index) {
         // 设置切换超时：12秒后如果视频仍未开始播放，说明切换可能失败
         episodeSwitchTimeout = setTimeout(function () {
             episodeSwitchTimeout = null;
-            window.isSwitchingVideo = false;
+            episodesWindow.isSwitchingVideo = false;
 
             // 兜底：销毁现有播放器，重新初始化
             if (art) {
@@ -148,37 +154,37 @@ function playEpisode(index) {
             console.warn('[LeLeTV] 剧集无缝切换失败，回退重建播放器:', e);
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
-            window.isSwitchingVideo = false;
+            episodesWindow.isSwitchingVideo = false;
             PlayerManager.destroy();
             initPlayer(url);
         }
     } else {
         // art 为空，直接初始化播放器
         initPlayer(url);
-        window.isSwitchingVideo = false;
+        episodesWindow.isSwitchingVideo = false;
     }
 
     // 三秒后保存到历史记录
     setTimeout(function () { saveToHistory(); }, 3000);
 }
 
-function playPreviousEpisode() {
+function playPreviousEpisode(): void {
     if (currentEpisodeIndex > 0) {
         playEpisode(currentEpisodeIndex - 1);
     }
 }
 
-function playNextEpisode() {
+function playNextEpisode(): void {
     if (currentEpisodeIndex < currentEpisodes.length - 1) {
         playEpisode(currentEpisodeIndex + 1);
     }
 }
 
-function toggleEpisodeOrder() {
+function toggleEpisodeOrder(): void {
     episodesReversed = !episodesReversed;
 
     // 保存到localStorage
-    localStorage.setItem('episodesReversed', episodesReversed);
+    localStorage.setItem('episodesReversed', String(episodesReversed));
 
     // 重新渲染集数列表
     renderEpisodes();
@@ -187,8 +193,8 @@ function toggleEpisodeOrder() {
     updateOrderButton();
 }
 
-function updateOrderButton() {
-    const orderIcon = document.getElementById('orderIcon');
+function updateOrderButton(): void {
+    const orderIcon = document.getElementById('orderIcon') as HTMLElement | null;
 
     if (orderIcon) {
         orderIcon.style.transform = episodesReversed ? 'rotate(180deg)' : '';
