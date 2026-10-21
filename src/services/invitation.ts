@@ -8,6 +8,8 @@
  * 4. 登录状态管理
  */
 
+import { sha256 } from '../core/crypto';
+
 type InviteWindow = Window & {
   __ENV__?: { TMDB_WORKER_URL?: string };
 };
@@ -21,7 +23,7 @@ interface InviteVerifyResponse {
   updated?: boolean;
 }
 
-const INVITE_AUTH = {
+export const INVITE_AUTH = {
   // localStorage key
   STORAGE_KEY: 'leletv_invite_auth',
   // 本机设备实例 ID 的存储键
@@ -618,3 +620,10 @@ const INVITE_AUTH = {
 Object.assign(window, {
   INVITE_AUTH
 });
+
+// 阶段 5B-3 过渡期类型桥：invitation.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问。
+type InviteAuthApi = typeof INVITE_AUTH;
+declare global {
+  const INVITE_AUTH: InviteAuthApi;
+}
