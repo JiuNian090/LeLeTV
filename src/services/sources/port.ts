@@ -1,3 +1,9 @@
+import { API_SITES, isHiddenContentMode, scopedKey } from '../../core/config';
+import { selectedAPIs, customAPIs } from '../../core/state';
+import type { CustomApiEntry } from '../../core/state';
+import { renderCustomAPIsList, initAPICheckboxes, updateSelectedApiCount } from './config';
+import { saveBlobAsFile } from '../config';
+
 /**
  * 视频源导入 / 导出（LibreTV 互操作层）
  *
@@ -151,7 +157,7 @@ function collectCurrentDomainSources(): SourceEntry[] {
  * 导出当前数据域的全部源为 LibreTV 兼容的 SourceList JSON 文件。
  * 文件托管到任意可访问 URL 后，即可在 LibreTV 的「数据源订阅」中导入。
  */
-function exportVideoSources(): void {
+export function exportVideoSources(): void {
     const sources = collectCurrentDomainSources();
     if (!sources.length) {
         showToast('当前数据域没有可导出的源', 'warning');
@@ -370,7 +376,7 @@ function applyImportedSources(imported: SourceEntry[]): { added: number; enabled
 }
 
 /** 打开源导入弹窗（文件选择 / 拖拽） */
-function importVideoSources(): void {
+export function importVideoSources(): void {
     if (typeof showSourceImportBox !== 'function') {
         showToast('当前页面不支持导入视频源', 'error');
         return;
@@ -450,3 +456,10 @@ Object.assign(window, {
   exportVideoSources,
   importVideoSources
 });
+
+// 阶段 5B-3 过渡期类型桥：port.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问。
+declare global {
+  function exportVideoSources(): void;
+  function importVideoSources(): void;
+}

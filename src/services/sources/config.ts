@@ -138,7 +138,7 @@ function resetDataSourceLogic(): void {
 }
 
 // 初始化API复选框
-function initAPICheckboxes(): void {
+export function initAPICheckboxes(): void {
     const container = document.getElementById('apiCheckboxes');
 
     // 强制重新创建所有UI元素，确保每次刷新都能更新
@@ -296,7 +296,7 @@ function checkHiddenAPIsSelected(): void {
 }
 
 // 渲染自定义API列表（只列出当前数据域的条目，另一个域完全不出现）
-function renderCustomAPIsList(): void {
+export function renderCustomAPIsList(): void {
     const container = document.getElementById('customApisList');
     if (!container) return;
 
@@ -451,7 +451,7 @@ function updateSelectedAPIs(): void {
 }
 
 // 更新选中的API数量显示
-function updateSelectedApiCount(): void {
+export function updateSelectedApiCount(): void {
     const countEl = document.getElementById('selectedApiCount');
     if (countEl) {
         countEl.textContent = String(selectedAPIs.length);
