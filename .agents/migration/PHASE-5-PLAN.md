@@ -130,9 +130,10 @@ ui/player/episodes.ts     <-> ui/player/ui.ts
 
 ### 5A-3. core 层 ESM 化（9 文件）
 
-- 顺序：`timing` → `listener-tracker` → `cache` → `crypto` → `http` → `storage` → `global` → `config` → `sources/config`。
-- 每文件：加 `export` + `window` 兼容桥，入口补 `import`，引用方保持全局访问。
-- 每 1–2 个文件一个 commit；`typecheck` / `build` / `check` + 页面 reload。
+- **状态：已完成（commit `986a8ca`）**。core bundle 实际含 14 个文件（core / services / ui 混合），已整体切 entry。
+- `export` 推迟到 5B（引用方改 import 时再加）；本阶段只加 `window` 兼容桥。
+- 结果：core 51.4 → 47.8 KB，首屏 core+app 267.2 → 263.5 KB；首页 / 分类 / 设置 / 播放页回归通过。
+- 教训：`declare function`（仅类型声明）不是本文件实现，不能进兼容桥。
 
 ### 5A-4. services 层 ESM 化（15 文件）
 

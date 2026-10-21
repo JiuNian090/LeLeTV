@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`7d02171 refactor: 阶段 5A-2 试点 category bundle 改为 ESM 入口`
+> 最新提交：`986a8ca refactor: 阶段 5A-3 core bundle 切换 ESM 入口`
 
 ---
 
@@ -19,6 +19,7 @@
 | 4 | **完成：68 / 85 条已验证，69–85 条标 keep**（C-1：不引入 `public/`） |
 | 4.5 | **收尾完成**：`js/` 清零（app-init 并入 main.ts，boot-sequence → `src/boot.ts`）；3 个零引用品牌 SVG 保留不删 |
 | 5A-2 | **试点完成**：category bundle 改 ESM 入口（`src/pages/category/entry.ts`），21.2 → 19.1 KB；`export + declare global + window` 桥模式验证通过 |
+| 5A-3 | **完成**：core bundle（14 文件）切 ESM 入口 + 10 个文件补 window 桥；core 47.8 KB，首屏 263.5 KB |
 
 ---
 
@@ -112,9 +113,9 @@
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-阶段 5A-2 已完成：category bundle 改 ESM 入口，验证了 `export + declare global + window` 桥模式。
-下一步：阶段 5A-3（core 层 9 文件 ESM 化），按 `PHASE-5-PLAN.md` 的顺序推进。
-新会话开场：读本文件与 `PHASE-5-PLAN.md` → 从 5A-3 继续 → `npm start` 启动一次服务器。
+阶段 5A-3 已完成：core bundle 切 ESM 入口，首屏 263.5 KB。
+下一步：阶段 5A-4（services 层，app bundle 切 entry）；同法先扫描对外符号再补桥。
+新会话开场：读本文件与 `PHASE-5-PLAN.md` → 从 5A-4 继续 → `npm start` 启动一次服务器。
 
 ---
 
@@ -139,7 +140,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **267.2 KB**（预算 275 KB）；category **19.1 KB**（预算 30 KB）；`js/` 剩余 `.js` **0**；tracked 372 / inventory 441。
+基线：首屏 core+app **263.5 KB**（预算 275 KB）；core **47.8 KB**；category **19.1 KB**（预算 30 KB）；`js/` 剩余 `.js` **0**；tracked 372 / inventory 441。
 
 ---
 
