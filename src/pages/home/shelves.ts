@@ -5,6 +5,8 @@
  *   - data-action="play-from-history" + data-url/title/index/position → 续播
  */
 
+import { API_SITES, isHiddenContentMode, scopedKey, selectedAPIs } from '../../core/state';
+import { HubFlow } from './hub-flow';
 import type { HubFlowApi, HubStage } from './hub-flow';
 
 interface TrendPoster {
@@ -49,15 +51,11 @@ export interface HomeShelvesApi {
 }
 
 interface HomeShelvesWindow extends Window {
-  selectedAPIs?: string[];
-  HubFlow?: { init: (stage: HubStage | null) => HubFlowApi | null | undefined };
   HomeShelves?: HomeShelvesApi;
 }
 
-(function () {
+export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
   'use strict';
-
-  const shelvesWindow = window as HomeShelvesWindow;
 
   const CONTINUE_LIMIT = 6;
   let trendingPromise: Promise<TrendPoster[]> | null = null;
@@ -70,7 +68,7 @@ interface HomeShelvesWindow extends Window {
   }
 
   function isPrivateMode(): boolean {
-    return typeof isHiddenContentMode === 'function' && isHiddenContentMode();
+    return isHiddenContentMode();
   }
 
   function isSafeImageUrl(url: unknown): boolean {
@@ -195,7 +193,7 @@ interface HomeShelvesWindow extends Window {
     if (!isPrivateMode()) {
       try {
         const stored = localStorage.getItem(scopedKey('selectedAPIs'));
-        const keys: unknown[] = stored ? JSON.parse(stored) : (Array.isArray(shelvesWindow.selectedAPIs) ? shelvesWindow.selectedAPIs : []);
+        const keys: unknown[] = stored ? JSON.parse(stored) : selectedAPIs;
         const customs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
         count = keys.filter(key => {
           if (typeof key !== 'string') return false;
@@ -250,8 +248,8 @@ interface HomeShelvesWindow extends Window {
 
   /** 聚合动效按需初始化：关着时不建那一百多个节点，打开时再建并喂海报（只建一次） */
   function ensureHub(): void {
-    if (hub || !hubEnabled() || !shelvesWindow.HubFlow) return;
-    hub = shelvesWindow.HubFlow.init(document.getElementById('hubFlow') as HubStage | null);
+    if (hub || !hubEnabled()) return;
+    hub = HubFlow.init(document.getElementById('hubFlow') as HubStage | null);
     if (!hub) return;
     if (isPrivateMode()) { hub.usePlaceholders(); return; }   // 私密模式不展示 TMDB 内容，动效改用占位海报
     loadTrending().then(list => {
@@ -293,7 +291,7 @@ interface HomeShelvesWindow extends Window {
     setTimeout(init, 8000);
   }
 
-  shelvesWindow.HomeShelves = {
+  return {
     ensure: init,
     refresh: renderContinue,
     loadTrending: loadTrending,
@@ -302,3 +300,6 @@ interface HomeShelvesWindow extends Window {
     tmdbImage: tmdbImage
   };
 })();
+
+// recent 同页直接 import；boot 与 HTML 内联脚本仍按全局名访问
+(window as HomeShelvesWindow).HomeShelves = HomeShelves;
