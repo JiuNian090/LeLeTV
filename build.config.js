@@ -17,6 +17,8 @@ export const BUNDLES = [
   {
     name: 'leletv-core',
     firstScreen: true,
+    // 阶段 5A-3：由 files 顺序生成 ESM 入口，走 esbuild.build；对外符号由各文件的 window 兼容桥承接
+    esm: true,
     files: [
       // 全局模态框 / Toast 必须在 src/ui/toast.ts 之前注入：toast 模块在初始化时就查找 #toast / #modal
       'src/ui/modals.ts',

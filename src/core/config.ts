@@ -358,3 +358,29 @@ function themeRgb(): number[] {
     } catch (e) { /* 忽略 */ }
     return (isHiddenThemeMode() ? THEME_RGB_HIDDEN : THEME_RGB_NORMAL).slice();
 }
+
+// 阶段 5A-3 过渡期兼容桥：core bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  PROXY_URL,
+  SEARCH_HISTORY_KEY,
+  MAX_HISTORY_ITEMS,
+  HIDDEN_MODE_KEY,
+  isHiddenContentMode,
+  scopedKey,
+  TMDB_WORKER_URL,
+  API_SITES,
+  extendAPISites,
+  AGGREGATED_SEARCH_CONFIG,
+  SOURCE_LATENCY_FAST_MS,
+  SOURCE_LATENCY_SLOW_MS,
+  SEARCH_EARLY_EXIT_CUTOFF_MS,
+  SEARCH_EARLY_EXIT_MIN_SOURCES,
+  API_CONFIG,
+  M3U8_PATTERN,
+  PLAYER_CONFIG,
+  CACHE_CONFIG,
+  CUSTOM_API_CONFIG,
+  LOAD_BALANCER_CONFIG,
+  themeColor
+});

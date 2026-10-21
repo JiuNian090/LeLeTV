@@ -45,10 +45,22 @@ function hashContent(content) {
 }
 
 async function buildEntryBundle(config) {
-  // 阶段 5A：带 entry 的 bundle 走 esbuild.build（bundle 模式）；其余仍走 concat + transform。
+  // 阶段 5A：带 entry（或 esm 标志）的 bundle 走 esbuild.build；其余仍走 concat + transform。
   // 本阶段 format 固定 iife，暂不启用 splitting。
+  let entryPath;
+  if (config.entry) {
+    entryPath = path.join(ROOT, config.entry);
+  } else {
+    // 无显式 entry：按 files 顺序生成临时 ESM 入口，保持与原 concat 相同的求值顺序
+    entryPath = path.join(DIST, '.entry-' + config.name + '.ts');
+    const imports = config.files
+      .map(f => "import '../" + f.replace(/\\/g, '/') + "';")
+      .join('\n');
+    fs.writeFileSync(entryPath, imports + '\n', 'utf8');
+  }
+
   const result = await esbuild.build({
-    entryPoints: [path.join(ROOT, config.entry)],
+    entryPoints: [entryPath],
     bundle: true,
     format: 'iife',
     minify: true,
@@ -72,12 +84,14 @@ async function buildEntryBundle(config) {
     map.file = outName;
     fs.writeFileSync(path.join(DIST, outName + '.map'), JSON.stringify(map));
   }
+  // 临时入口只在构建期使用，产物落盘后删除，避免污染 git 状态
+  if (!config.entry) fs.unlinkSync(entryPath);
   console.log('[build] ' + outName + ' (' + (code.length / 1024).toFixed(1) + 'KB, entry)');
   return outName;
 }
 
 async function buildBundle(config) {
-  if (config.entry) return buildEntryBundle(config);
+  if (config.entry || config.esm) return buildEntryBundle(config);
   const content = concatFiles(config.files);
   const h = hashContent(content);
   const outName = config.name + '.' + h + '.js';
@@ -122,7 +136,7 @@ function collapseBlankLines(html) {
 async function main() {
   if (!fs.existsSync(DIST)) fs.mkdirSync(DIST, { recursive: true });
   for (const f of fs.readdirSync(DIST)) {
-    if (f.endsWith('.js') || f.endsWith('.js.map')) {
+    if (f.endsWith('.js') || f.endsWith('.js.map') || f.startsWith('.entry-')) {
       fs.unlinkSync(path.join(DIST, f));
     }
   }

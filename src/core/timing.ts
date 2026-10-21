@@ -134,3 +134,9 @@ const timingHost = (window as TimingWindow).LeLeTV;
 if (typeof timingHost !== 'undefined') {
     timingHost.TIMING = TIMING;
 }
+
+// 阶段 5A-3 过渡期兼容桥：core bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  TIMING
+});
