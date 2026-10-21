@@ -20,7 +20,7 @@ export function renderPlayerDetailInfo(): void {
   var hasMeta = videoInfo && (videoInfo.type || videoInfo.year || videoInfo.area || videoInfo.director || videoInfo.remarks);
   var hasActorOrDesc = videoInfo && (videoInfo.actor || descText);
   ct.style.display = 'block';
-  if (metaCt && hasMeta) {
+  if (metaCt && videoInfo && hasMeta) {
     var h = '<div class="detail-meta">';
     if (videoInfo.type) h += '<div class="detail-meta-item"><span class="detail-meta-label">\u7c7b\u578b:</span><span class="detail-meta-value">' + escHtml(videoInfo.type) + '</span></div>';
     if (videoInfo.year) h += '<div class="detail-meta-item"><span class="detail-meta-label">\u5e74\u4efd:</span><span class="detail-meta-value">' + escHtml(videoInfo.year) + '</span></div>';
@@ -122,8 +122,8 @@ export function showEditVideoInfoModal(): void {
       titleInput.focus();
       titleInput.select();
 
-      body.querySelector('[data-role="cancel"]').addEventListener('click', function () { overlay.remove(); });
-      body.querySelector('[data-role="save"]').addEventListener('click', function () {
+      body.querySelector('[data-role="cancel"]')?.addEventListener('click', function () { overlay.remove(); });
+      body.querySelector('[data-role="save"]')?.addEventListener('click', function () {
         var nextTitle = titleInput.value.trim();
         if (!nextTitle) {
           if (typeof showToast === 'function') showToast('标题不能为空', 'warning');
