@@ -1,4 +1,37 @@
 import { goHome } from './navigation';
+import { initPlayer } from './core';
+import { PlayerManager } from './manager';
+import { setupQualitySwitcher } from './quality';
+import { handleKeyboardShortcuts } from './shortcuts';
+import {
+    updateEpisodeInfo,
+    renderEpisodes,
+    updateButtonStates,
+    updateOrderButton,
+    toggleEpisodeOrder,
+    playEpisode,
+    playPreviousEpisode,
+    playNextEpisode,
+} from './episodes';
+import {
+    showError,
+    setupProgressBarPreciseClicks,
+    copyLinks,
+    toggleResourceList,
+    switchToResource,
+} from './ui';
+import {
+    renderPlayerDetailInfo,
+    renderResourceInfoBar,
+    updateEpisodeCollapseState,
+    toggleDetailInfo,
+    showEditVideoInfoModal,
+    toggleEpisodeSection,
+    getVideoCover,
+} from './detail';
+import { TIMING } from '../../core/timing';
+import { StorageService } from '../../core/storage';
+import { TMDB_WORKER_URL } from '../../core/config';
 
 // 返回导航已迁至 src/ui/player/navigation.ts（阶段 5B-2d）
 

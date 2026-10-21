@@ -21,7 +21,7 @@ interface QualityWindow extends Window {
 
 var _hlsLevels: { index: number; label: string; height: number }[] = [];
 
-function setupQualitySwitcher(hls: QualityHls): void {
+export function setupQualitySwitcher(hls: QualityHls): void {
   hls.on(Hls.Events.MANIFEST_PARSED, function() {
     if (!hls.levels || hls.levels.length <= 1) {
       _hlsLevels = [];
@@ -112,3 +112,8 @@ function updateQLabel(btn: HTMLElement, label: string): void {
 Object.assign(window, {
   setupQualitySwitcher
 });
+
+// 阶段 5B-3 过渡期类型桥：quality.ts 已成为 ESM 模块，core 仍以裸名调用。
+declare global {
+  function setupQualitySwitcher(hls: unknown): void;
+}
