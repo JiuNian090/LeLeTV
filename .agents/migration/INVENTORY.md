@@ -61,8 +61,8 @@
 | 23 | `.agents/migration/CLEANUP.md` | 清理检测与处理记录（本阶段新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
 | 24 | `.agents/migration/INVENTORY.md` | 阶段 -1 全量文件登记表（本阶段新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
 | 25 | `.agents/migration/MAP.md` | 迁移任务队列（阶段 1 新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
-| 26 | `.agents/migration/PHASE-1-REPORT.md` | 阶段 -1 勘察报告（本阶段新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
-| 440 | `.agents/migration/PHASE-5-PLAN.md` | 阶段 5（ESM splitting）分步方案 | keep | — | — | — | done | 阶段 4.5 后新增；仅方案文档，未改运行时代码 |
+| 26 | `.agents/migration/archive/PHASE-1-REPORT.md` | 阶段 -1 勘察报告（本阶段新增） | keep | — | — | — | done | 阶段 -1 新增资产；迁移完成后归档 |
+| 440 | `.agents/migration/archive/PHASE-5-PLAN.md` | 阶段 5（ESM splitting）分步方案 | keep | — | — | — | done | 阶段 4.5 后新增；迁移完成后归档 |
 | 383 | `.agents/migration/RESUME.md` | 重构续接状态（分支 / 进度 / 下一步 / 验证命令） | keep | — | — | — | done | 阶段 4 续接文件，压缩上下文或重开会话时先读它 |
 | 27 | `.agents/rules/01-layering.md` | 架构规则：分层与依赖 | keep | — | — | — | done | 阶段 1 新增架构规则，长期保留 |
 | 28 | `.agents/rules/02-page-structure.md` | 架构规则：页面结构 | keep | — | — | — | done | 阶段 1 新增架构规则，长期保留 |
@@ -303,12 +303,12 @@
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 246 | `docs/BASELINE-stage3.md` | 项目文档：BASELINE-stage3.md | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
+| 246 | `docs/archive/BASELINE-stage3.md` | 项目文档：BASELINE-stage3.md | keep | — | — | — | done | 阶段 0 新增文档；迁移完成后归档 |
 | 247 | `docs/BASELINE.md` | 阶段 0 构建体积基线 | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
-| 248 | `docs/MIGRATION.md` | 阶段 -1 勘察报告（与 .agents/migration/PHASE-1-REPORT.md 同步） | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
+| 248 | `docs/archive/MIGRATION.md` | 阶段 -1 勘察报告（与 .agents/migration/archive/PHASE-1-REPORT.md 同步） | keep | — | — | — | done | 阶段 0 新增文档；迁移完成后归档 |
 | 249 | `docs/REGRESSION.md` | 回归清单 | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
-| 250 | `docs/STAGE2.md` | 项目文档：STAGE2.md | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
-| 251 | `docs/STAGE3.md` | 项目文档：STAGE3.md | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
+| 250 | `docs/archive/STAGE2.md` | 项目文档：STAGE2.md | keep | — | — | — | done | 阶段 0 新增文档；迁移完成后归档 |
+| 251 | `docs/archive/STAGE3.md` | 项目文档：STAGE3.md | keep | — | — | — | done | 阶段 0 新增文档；迁移完成后归档 |
 
 ## functions/（红区）
 
@@ -542,7 +542,7 @@
 | 439 | `src/boot.ts` | 启动编排（迁移自 `js/app/boot-sequence.js`） | keep | — | — | — | done | 阶段 4.5 迁移目标；保持 bundle 末尾位置 |
 | 441 | `src/pages/category/entry.ts` | category 按需 bundle 的 ESM 入口 | keep | — | — | — | done | 阶段 5A-2 垂直试点；import `src/services/tmdb.ts` |
 | 442 | `src/core/state.ts` | 跨模块共享配置与状态（API_SITES / 数据域 / 数据源选择） | keep | — | — | — | done | 阶段 5B-1 新增；旧位置保留 re-export / window 代理 |
-| 443 | `.agents/migration/PHASE-5-GRAPH.md` | 阶段 5B 依赖复核与拆环方案 | keep | — | — | — | done | 阶段 5B-1 只读复核产物 |
+| 443 | `.agents/migration/archive/PHASE-5-GRAPH.md` | 阶段 5B 依赖复核与拆环方案 | keep | — | — | — | done | 阶段 5B-1 只读复核产物；迁移完成后归档 |
 | 444 | `src/ui/player/state.ts` | 播放器共享状态（15 个可变状态 + 选集推进 hook） | keep | — | — | — | done | 阶段 5B-2 新增；index.ts 保留 window 代理 |
 | 445 | `src/ui/player/session.ts` | 播放器会话辅助（getVideoId） | keep | — | — | — | done | 阶段 5B-2b 新增；后续迁入进度/历史函数 |
 | 446 | `src/ui/player/utils.ts` | 播放器纯工具（escHtml） | keep | — | — | — | done | 阶段 5B-2c 新增；拆 detail ↔ ui |

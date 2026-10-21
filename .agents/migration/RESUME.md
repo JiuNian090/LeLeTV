@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：首页布局调整（仅开内容板块时上移标题与内容，见 git log）
+> 最新提交：迁移阶段报告归档（见 git log）
 
 ---
 
@@ -43,6 +43,7 @@
 | 启动屏慢速提示修复 | **完成**：慢速提示由固定 6s 改为 8s，且仅在「非等待登录」且「进度停滞 ≥ 2.5s」时显示；等待登录 9s 实测不再误报，已登录正常进入与未登录登录框展示均验证通过 |
 | 项目说明排版修复 | **完成**：`renderReadme` 在渲染前统一 `ensureMarked()`，缓存命中时也会加载 marked；修复早前缓存把 Markdown 当纯文本塞进 `.markdown-body` 导致「完全没有排版」。实测缓存命中仍渲染 49 个标题 / 17 个列表，截图排版正常 |
 | 首页布局调整 | **完成**：仅关闭聚合动效、保留内容板块时，移动端 `.v2-hero` 不再占满整屏；标题区由 815px 收到 278px，LeLeTV/搜索框位于页面中上，继续观看从首屏 354px 开始。两块都关的居中简洁首页保持原样 |
+| 迁移文档归档 | **完成**：`PHASE-1-REPORT` / `PHASE-5-GRAPH` / `PHASE-5-PLAN` 移入 `.agents/migration/archive/`；`BASELINE-stage3` / `MIGRATION` / `STAGE2` / `STAGE3` 移入 `docs/archive/`；INVENTORY 路径同步，校验脚本依赖的 4 个根文件保持不变 |
 
 ---
 
@@ -140,7 +141,7 @@
 阶段 5B-2 已完成：`ui/player/state.ts` 等叶子模块落地，core 用 hook 断开 episodes。
 阶段 5B-3 / 5B-4 / 5B-5 已完成：全部模块显式 import、多入口 ESM splitting、files/concat 清理。
 下一步：阶段 6（待规划）。当前基线为 5B-5 构建；新会话开场读本文件与
-`PHASE-5-GRAPH.md`、`docs/GLOBAL-BRIDGES.md` → `npm start` 启动一次服务器。
+`archive/PHASE-5-GRAPH.md`、`docs/GLOBAL-BRIDGES.md` → `npm start` 启动一次服务器。
 回归重点：启动屏 / 邀请码 / 主题首帧（module 入口默认 defer，不能再假设脚本同步执行）；
 跨页 `window.*` 函数必须在调用时读取，不能在模块顶层解构。
 
@@ -163,7 +164,7 @@
 npm run typecheck      # tsc --noEmit
 npm run check          # deps + budget + agents + coverage + tsc
 npm run build          # 构建 5 个 bundle
-node scripts/analyze.js --out docs/BASELINE-stage3.md
+node scripts/analyze.js --out docs/archive/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
@@ -171,7 +172,7 @@ npm run check:orphans  # 只报告，不删除
 
 ---
 
-## 关键决策（C-1～C-6 已在 PHASE-1-REPORT 12.1 落档）
+## 关键决策（C-1～C-6 已在 archive/PHASE-1-REPORT 12.1 落档）
 
 - 保持 Cloudflare Pages 构建输出目录 `/`，不引入 `public/`，不改 `wrangler.toml`。
 - 接受重写构建链路；阶段 3 已建立 `build.config.js` 单一清单，但仍是字符串拼接 + `esbuild.transform`，真正的 ESM splitting 留到全部 `js/` 迁移完成后。
