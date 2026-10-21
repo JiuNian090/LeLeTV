@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`ea7cc50 refactor: 迁移 player-ui 到 src/ui/player/ui.ts`
+> 最新提交：`e6d8eff refactor: 迁移 pwa-install 到 src/ui/pwa-install.ts`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：39 / 85 条已验证** |
+| 4 | **进行中：40 / 85 条已验证** |
 
 ---
 
-## 阶段 4 已完成（MAP 1–14）
+## 阶段 4 已完成（MAP 1–40）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -63,19 +63,19 @@
 | 37 | `js/player/player-quality.js` | `src/ui/player/quality.ts` | 清晰度切换接口不变 |
 | 38 | `js/player/player-shortcuts.js` | `src/ui/player/shortcuts.ts` | 快捷键行为不变 |
 | 39 | `js/player/player-ui.js` | `src/ui/player/ui.ts` | 覆盖层与切源行为不变 |
+| 40 | `js/ui/pwa-install.js` | `src/ui/pwa-install.ts` | `window.LeLePwa` 接口不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 40 条**：`js/ui/pwa-install.js → src/ui/pwa-install.ts`
+**MAP 第 41 条**：`js/ui/ui-core.js → src/ui/toast.ts`（ui 层收尾）
 
 之后：
 
-- 第 41 条 `js/ui/ui-core.js → src/ui/toast.ts`（ui 层收尾）
 - 第 42 条起进入 pages 层（20 条），再 router（2）、entry（2）、styles（3）、public（17）
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 40 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 41 条继续。
 
 ---
 
@@ -100,7 +100,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **265.2 KB**（预算 275 KB）；`js/` 剩余 `.js` **17**；tracked 369 / inventory 408。
+基线：首屏 core+app **265.2 KB**（预算 275 KB）；`js/` 剩余 `.js` **16**；tracked 369 / inventory 409。
 
 ---
 
