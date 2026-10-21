@@ -50,7 +50,7 @@
 | 22 | services | `js/api/tmdb.js` | `src/services/tmdb.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，services 层收尾 |
 | 23 | services | `js/utils/version-updater.js` | `src/services/version-updater.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，window 入口不变 |
 | 24 | services | `js/ui/ui-viewing-history.js` | `src/services/viewing-history.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
-| 25 | ui | `js/ui/brand-canvas.js` | `src/ui/brand-canvas.ts` | pending | 第 0 节通用前置 | — |
+| 25 | ui | `js/ui/brand-canvas.js` | `src/ui/brand-canvas.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 26 | ui | `js/ui/ui.js` | `src/ui/index.ts` | pending | 第 0 节通用前置 | — |
 | 27 | ui | `js/ui/layout-pref.js` | `src/ui/layout-pref.ts` | pending | 第 0 节通用前置 | — |
 | 28 | ui | `js/ui/motion-pref.js` | `src/ui/motion-pref.ts` | pending | 第 0 节通用前置 | — |

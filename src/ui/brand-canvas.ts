@@ -3,22 +3,51 @@
  * 路径取自 index.html 里的品牌 sprite（#lele-mark / #lele-word），只解析一次。
  * 尺寸以方块边长 tile 计：字标高 0.4 tile、间距 0.3 tile，与导航栏的 .v2-lockup 同比例。
  */
+
+interface BrandBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+interface BrandPaths {
+  mark: Path2D[];
+  word: Path2D[];
+}
+
+interface BrandCanvasWindow extends Window {
+  LeLeBrandCanvas?: {
+    draw: (
+      ctx: CanvasRenderingContext2D,
+      cx: number,
+      cy: number,
+      tile: number,
+      rgb: number[],
+      alpha: number,
+      scale: number
+    ) => boolean;
+  };
+}
+
 (function () {
   'use strict';
 
-  // 两个 symbol 的 viewBox：起点与宽高
-  var MARK_BOX = { x: 170.6, y: 154.9, w: 432.4, h: 326.3 };
-  var WORD_BOX = { x: 646.6, y: 235.6, w: 756.5, h: 204.5 };
-  var paths = null;   // { mark: Path2D[], word: Path2D[] }；解析失败记为 false
+  const brandWindow = window as BrandCanvasWindow;
 
-  function load() {
+  // 两个 symbol 的 viewBox：起点与宽高
+  var MARK_BOX: BrandBox = { x: 170.6, y: 154.9, w: 432.4, h: 326.3 };
+  var WORD_BOX: BrandBox = { x: 646.6, y: 235.6, w: 756.5, h: 204.5 };
+  var paths: BrandPaths | false | null = null;   // { mark: Path2D[], word: Path2D[] }；解析失败记为 false
+
+  function load(): BrandPaths | false {
     if (paths !== null) return paths;
     try {
       var mark = document.getElementById('lele-mark');
       var word = document.getElementById('lele-word');
       if (!mark || !word || typeof Path2D !== 'function') { paths = false; return paths; }
-      var toPaths = function (root) {
-        return Array.prototype.map.call(root.querySelectorAll('path'), function (p) { return new Path2D(p.getAttribute('d')); });
+      var toPaths = function (root: Element): Path2D[] {
+        return Array.prototype.map.call(root.querySelectorAll('path'), function (p: Element) { return new Path2D(p.getAttribute('d') || ''); });
       };
       var m = toPaths(mark);
       var w = toPaths(word);
@@ -29,7 +58,7 @@
     return paths;
   }
 
-  function roundRect(ctx, x, y, w, h, r) {
+  function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -49,14 +78,14 @@
    * @param {number} scale 整体缩放
    * @returns {boolean} 画成功返回 true；页面里没有 sprite 时返回 false，调用方自行退回文字
    */
-  function draw(ctx, cx, cy, tile, rgb, alpha, scale) {
+  function draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, tile: number, rgb: number[], alpha: number, scale: number): boolean {
     var p = load();
     if (!p) return false;
     var gap = tile * 0.3;
     var wordH = tile * 0.4;
     var wordW = wordH * WORD_BOX.w / WORD_BOX.h;
     var total = tile + gap + wordW;
-    var color = function (a) { return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')'; };
+    var color = function (a: number) { return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')'; };
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -103,5 +132,5 @@
     return true;
   }
 
-  window.LeLeBrandCanvas = { draw: draw };
+  brandWindow.LeLeBrandCanvas = { draw: draw };
 })();

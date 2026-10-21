@@ -379,7 +379,7 @@
 | 305 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | pending | — |
 | 306 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | pending | — |
 | 307 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | pending | — |
-| 308 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | pending | — |
+| 308 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | verified | IIFE 原样迁移，LeLeBrandCanvas.draw 接口不变 |
 | 309 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | pending | — |
 | 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
 | 311 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
@@ -488,6 +488,7 @@
 | 391 | `src/services/theme.ts` | 主题配色、色盘与换色过渡（迁移自 `js/ui/theme-system.js`） | keep | — | — | — | done | 阶段 4 第 22 条迁移目标 |
 | 392 | `src/services/version-updater.ts` | 版本检测与更新提示（迁移自 `js/utils/version-updater.js`） | keep | — | — | — | done | 阶段 4 第 23 条迁移目标 |
 | 393 | `src/services/tmdb.ts` | TMDB 分类 / 详情接口封装（迁移自 `js/api/tmdb.js`） | keep | — | — | — | done | 阶段 4 第 24 条迁移目标 |
+| 394 | `src/ui/brand-canvas.ts` | 品牌组合 canvas 绘制（迁移自 `js/ui/brand-canvas.js`） | keep | — | — | — | done | 阶段 4 第 25 条迁移目标 |
 
 ## workers/（红区）
 

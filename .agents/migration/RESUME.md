@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：24 / 85 条已验证** |
+| 4 | **进行中：25 / 85 条已验证** |
 
 ---
 
@@ -48,14 +48,15 @@
 | 22 | `js/ui/theme-system.js` | `src/services/theme.ts` | 主题接口不变 |
 | 23 | `js/utils/version-updater.js` | `src/services/version-updater.ts` | window 入口不变 |
 | 24 | `js/api/tmdb.js` | `src/services/tmdb.ts` | TMDB 全局状态与配置不变 |
+| 25 | `js/ui/brand-canvas.js` | `src/ui/brand-canvas.ts` | LeLeBrandCanvas.draw 接口不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 25 条**：`js/ui/brand-canvas.js → src/ui/brand-canvas.ts`
+**MAP 第 26 条**：`js/ui/ui.js → src/ui/index.ts`
 
-services 层已完成，进入 ui 层（17 条）。
+ui 层剩余 16 条。
 - `js/ui/line-probe.js → src/services/line-probe.ts`
 - `js/ui/ui-search-history.js → src/services/search-history.ts`
 - `js/api/search.js → src/services/search.ts`
