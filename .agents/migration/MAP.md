@@ -81,7 +81,7 @@
 | 53 | pages | `player.html` | `src/pages/player/index.html` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成；页面内资源改绝对路径，构建 / 版本 / server 路由已同步 |
 | 54 | pages | `css/v2/player.css` | `src/pages/player/style.css` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成；HTML link 已同步 |
 | 55 | pages | `pages/readme.html` | `src/pages/readme/template.html` | verified | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单；2026-10-21 迁移完成 |
-| 56 | pages | `js/ui/search-cards.js` | `src/pages/search/cards.ts` | pending | 第 8 节 页面导航 | — |
+| 56 | pages | `js/ui/search-cards.js` | `src/pages/search/cards.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 57 | pages | `js/app/app-search.js` | `src/pages/search/index.ts` | pending | 第 8 节 页面导航 | — |
 | 58 | pages | `js/auth/admin-panel.js` | `src/pages/settings/admin-panel.ts` | pending | 第 8 节 页面导航 | — |
 | 59 | pages | `css/v2/admin.css` | `src/pages/settings/style.css` | pending | 第 8 节 页面导航 | page-loader.js 运行时插入 <link>，属动态引用白名单 |

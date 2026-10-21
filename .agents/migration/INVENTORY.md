@@ -389,7 +389,7 @@
 | 315 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | verified | 全局入口与 `_moviesState` 读取方式不变 |
 | 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | verified | 交互与 search() 入口不变 |
 | 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | verified | `window.LeLePwa` 接口不变 |
-| 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
+| 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | verified | 卡片渲染与排序函数不变 |
 | 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | verified | IIFE 原样迁移，LeLeThemeStore / LeLeThemeSystem 接口不变 |
 | 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | verified | 全局函数名不变 |
 | 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
@@ -520,6 +520,7 @@
 | 423 | `src/services/migrate-player-url.ts` | 旧播放页地址迁移（观看记录 player.html → 新路径） | keep | — | — | — | done | 第 53 条配套；启动时改写并写回存储 |
 | 424 | `src/pages/player/style.css` | 播放页样式（迁移自 `css/v2/player.css`） | keep | — | — | — | done | 阶段 4 第 54 条迁移目标 |
 | 425 | `src/pages/readme/template.html` | README/说明页片段（迁移自 `pages/readme.html`） | keep | — | — | — | done | 阶段 4 第 55 条迁移目标 |
+| 426 | `src/pages/search/cards.ts` | 搜索结果卡片渲染（迁移自 `js/ui/search-cards.js`） | keep | — | — | — | done | 阶段 4 第 56 条迁移目标 |
 
 ## workers/（红区）
 

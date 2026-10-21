@@ -16,15 +16,7 @@ interface MovieItem {
   [key: string]: unknown;
 }
 
-interface MovieGroup {
-  kind: string;
-  items: MovieItem[];
-  lead?: MovieItem;
-  name?: string;
-  pic?: string;
-  remarks?: string;
-  season?: number;
-}
+type MovieGroup = MergeGroup;
 
 interface MoviesGroupsData {
   all: MovieGroup[];
