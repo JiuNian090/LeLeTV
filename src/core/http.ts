@@ -3,6 +3,9 @@
  * 为代理请求添加基于 PASSWORD 的鉴权机制
  */
 
+// 阶段 5B-3：sha256 改为显式 import。
+import { sha256 } from './crypto';
+
 type ProxyAuthWindow = Window & {
     __ENV__?: { HIDDENKEY?: string };
     ProxyAuth?: {
@@ -71,7 +74,7 @@ async function getPasswordHash(): Promise<string | null> {
 /**
  * 为代理请求URL添加鉴权参数
  */
-async function addAuthToProxyUrl(url: string): Promise<string> {
+export async function addAuthToProxyUrl(url: string): Promise<string> {
     try {
         const hash = await getPasswordHash();
         if (!hash) {
@@ -149,3 +152,9 @@ window.addEventListener('storage', (e: StorageEvent) => {
 Object.assign(window, {
   addAuthToProxyUrl
 });
+
+// 阶段 5B-3 过渡期类型桥：http.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问（运行时由上方 window 兼容桥提供）。
+declare global {
+  function addAuthToProxyUrl(url: string): Promise<string>;
+}
