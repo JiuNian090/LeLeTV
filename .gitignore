@@ -87,7 +87,7 @@ Thumbs.db
 ehthumbs.db
 
 # Package manager files
-package-lock.json
+# package-lock.json 纳入版本控制：Pages 构建需要可复现的依赖树
 yarn.lock
 pnpm-lock.yaml
 .npm

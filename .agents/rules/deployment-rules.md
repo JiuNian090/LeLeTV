@@ -32,3 +32,36 @@
 - `_headers` 是响应头缓存策略的唯一来源；`/css/*`、`/js/*`、`/image/*`、`/libs/*` 缓存 7 天，`/dist/*` 一年，配合 `?v=` 参数失效
 - HTML、`/service-worker.js`、`/manifest.json`、`/CHANGELOG.md`、`/VERSION.txt` 一律 `no-cache`
 - 版本号注入与 `?v=` 刷新由 `scripts/generate-version.mjs` 在所有 `npm run build` 时完成
+
+## Cloudflare Pages 构建设置
+
+| 设置 | 值 |
+|---|---|
+| 根目录 | 留空（仓库根即项目根） |
+| 构建命令 | `npm run build` |
+| 构建输出目录 | `/` |
+| Node 版本 | 环境变量 `NODE_VERSION=20` |
+
+说明：
+
+- 根 `index.html` 与 `dist/` 都由 `scripts/build-bundles.mjs` 生成，输出目录必须是仓库根 `/`。
+- `src/index.html`、`src/pages/player/index.html` 在构建时会被版本号与 bundle hash 改写，构建容器需要可写。
+- Pages 项目只使用 `TMDB_WORKER_URL`、`HIDDENKEY` 与代理相关变量；**不需要 D1 绑定**。
+- `package-lock.json` 已纳入版本控制，Pages 构建会按锁文件安装依赖。
+
+## D1 绑定排查
+
+- Worker 的 D1 绑定来自 `wrangler.toml` 的 `[[d1_databases]]`，当前绑定名为 `INVITE_DB`。
+- Pages 的 D1 绑定在 **Pages 项目 → Settings → Functions → D1 database bindings**，Production 与 Preview 分开配置。
+- Pages Functions 当前不使用 D1；如果部署报 `D1 binding 'DB' references database ... not found`，删除 Pages 项目里的 `DB` 绑定即可，不要改 `wrangler.toml`。
+- 跨账户的 D1 不能直接绑定到 Pages；需要数据库时通过 Worker API 访问。
+
+## D1 备份
+
+```bash
+npx wrangler d1 export leletv-invite-db --remote --output "backup-$(date +%F).sql"
+```
+
+- 在 `wrangler.toml` 所在目录执行，确认当前登录的是 Worker 所属账户。
+- 备份文件不要提交到仓库；建议保存到本机或私有对象存储。
+- 恢复前先在测试库验证 `migrations/001`–`004` 的表结构与备份一致。

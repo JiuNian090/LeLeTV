@@ -546,6 +546,7 @@
 | 449 | `src/player-entry.ts` | `leletv-player` 的持久 ESM 入口 | keep | — | — | — | done | 阶段 5B-5 新增；放在 src 根是因为同时引用 services / ui |
 | 450 | `src/pages/settings/entry.ts` | `leletv-settings` 的持久 ESM 入口 | keep | — | — | — | done | 阶段 5B-5 新增 |
 | 451 | `docs/GLOBAL-BRIDGES.md` | 全局桥白名单与跨层契约清单 | keep | — | — | — | done | 阶段 5B-5 新增 |
+| 452 | `package-lock.json` | npm 依赖锁定（Pages 构建可复现） | keep | — | — | — | done | 纳入版本控制；Pages 构建按锁文件安装 |
 
 ## workers/（红区）
 
