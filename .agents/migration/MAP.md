@@ -67,7 +67,7 @@
 | 39 | ui | `js/player/player-ui.js` | `src/ui/player/ui.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 40 | ui | `js/ui/pwa-install.js` | `src/ui/pwa-install.ts` | verified | 第 3 节 PWA 安装 | 2026-10-21 迁移完成 |
 | 41 | ui | `js/ui/ui-core.js` | `src/ui/toast.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
-| 42 | pages | `pages/about.html` | `src/pages/about/template.html` | pending | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 42 | pages | `pages/about.html` | `src/pages/about/template.html` | verified | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单；2026-10-21 迁移完成 |
 | 43 | pages | `js/ui/movies-page.js` | `src/pages/category/index.ts` | pending | 第 8 节 页面导航 | — |
 | 44 | pages | `pages/category.html` | `src/pages/category/template.html` | pending | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 45 | pages | `pages/history.html` | `src/pages/history/template.html` | pending | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |

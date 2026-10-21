@@ -424,7 +424,7 @@
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 338 | `pages/about.html` | 关于页片段（page-loader 拉取） | migrated | `src/pages/about/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 338 | `pages/about.html` | 关于页片段（page-loader 拉取） | migrated | `src/pages/about/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 339 | `pages/category.html` | 分类页片段 | migrated | `src/pages/category/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 340 | `pages/history.html` | 历史页片段 | migrated | `src/pages/history/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 341 | `pages/movies.html` | 影片结果页片段 | migrated | `src/pages/movies/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
@@ -505,6 +505,7 @@
 | 408 | `src/ui/player/ui.ts` | 播放器覆盖层/进度条/资源切换（迁移自 `js/player/player-ui.js`） | keep | — | — | — | done | 阶段 4 第 39 条迁移目标 |
 | 409 | `src/ui/pwa-install.ts` | PWA 安装提示（迁移自 `js/ui/pwa-install.js`） | keep | — | — | — | done | 阶段 4 第 40 条迁移目标 |
 | 410 | `src/ui/toast.ts` | Toast / 加载遮罩 / 模态框 / 时间格式化（迁移自 `js/ui/ui-core.js`） | keep | — | — | — | done | 阶段 4 第 41 条迁移目标 |
+| 411 | `src/pages/about/template.html` | 关于页片段（迁移自 `pages/about.html`） | keep | — | — | — | done | 阶段 4 第 42 条迁移目标 |
 
 ## workers/（红区）
 

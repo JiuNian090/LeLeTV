@@ -21,7 +21,7 @@ var LeLePages = (function () {
         category: 'pages/category.html',
         history: 'pages/history.html',
         settings: 'pages/settings.html',
-        about: 'pages/about.html',
+        about: 'src/pages/about/template.html',
         readme: 'pages/readme.html'
     };
 

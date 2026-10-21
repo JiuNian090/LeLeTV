@@ -14,7 +14,8 @@ export default {
     'src/router/**',             // 路由动态 import 页面
     'css/v2/views.css',          // page-loader 运行时插入 <link>
     'css/v2/admin.css',          // page-loader 运行时插入 <link>
-    'pages/**',                  // page-loader 运行时 fetch
+    'pages/**',                  // page-loader 运行时 fetch（尚未迁移的页面）
+    'src/pages/**',              // page-loader 运行时 fetch（已迁移的页面模板）
     'js/filter-config.json',     // app-search 运行时 fetch
     'js/auth/sha256.js',         // proxy-auth 动态 import
     'libs/marked.min.js',        // app-routing 动态插入 <script>
