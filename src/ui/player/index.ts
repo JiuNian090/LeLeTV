@@ -373,7 +373,7 @@ function initializePageContent(): void {
         // 注意：不要在这里调用 renderPlayerDetailInfo 等渲染函数
         // fetchDetailAndInit 会处理所有渲染
         const vodId = urlParams.get('id');
-        fetchDetailAndInit(vodId, sourceCode, title, index);
+        if (vodId) fetchDetailAndInit(vodId, sourceCode, title, index);
     } else {
         showError('无效的视频链接');
     }
@@ -482,18 +482,18 @@ function initializePageContent(): void {
             case 'toggle-episode-order': e.stopPropagation(); toggleEpisodeOrder(); break;
             case 'copy-links': copyLinks(); break;
             // ---- onclick→data-action 迁移新增 ----
-            case 'play-episode': playEpisode(parseInt(el.dataset.index)); break;
+            case 'play-episode': playEpisode(parseInt(el.dataset.index || '', 10)); break;
             case 'play-video': {
                 const url = el.dataset.url;
                 const name = el.dataset.name;
                 const source = el.dataset.source;
-                const index = parseInt(el.dataset.index);
+                const index = parseInt(el.dataset.index || '', 10);
                 const vodId = el.dataset.vodId;
-                if (url && name) playVideo(url, name, source, index, vodId);
+                if (url && name) playVideo(url, name, source || '', index, vodId);
                 break;
             }
             case 'toggle-resource-list': toggleResourceList(); break;
-            case 'switch-to-resource': switchToResource(el.dataset.key, el.dataset.vodId); break;
+            case 'switch-to-resource': switchToResource(el.dataset.key || '', el.dataset.vodId || ''); break;
         }
     });
 }
@@ -632,7 +632,8 @@ function saveToHistory(): void {
 
             // 更新播放进度信息
             // 剧集切换时，直接使用新位置（即使为0）；同集时用 >10 守卫避免覆盖
-            existingItem.playbackPosition = (episodeChanged || videoInfo.playbackPosition > 10) ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
+            const nextPosition = videoInfo.playbackPosition ?? 0;
+            existingItem.playbackPosition = (episodeChanged || nextPosition > 10) ? nextPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
 
             // 更新showIdentifier为最新播放源的标识符
@@ -816,13 +817,13 @@ function updateMediaSession(): void {
     playerIndexWindow._mediaSessionHandlersSet = true;
 
     const handlers: Record<string, MediaHandler> = {
-        play() { if (art) art.play(); },
-        pause() { if (art) art.pause(); },
+        play() { if (art && art.play) art.play(); },
+        pause() { if (art && art.pause) art.pause(); },
         previoustrack() { playPreviousEpisode(); },
         nexttrack() { playNextEpisode(); },
         seekforward() { if (art) art.currentTime = Math.min(art.duration, art.currentTime + 30); },
         seekbackward() { if (art) art.currentTime = Math.max(0, art.currentTime - 10); },
-        seekto(details) { if (art && details.seekTime != null) art.currentTime = details.seekTime; },
+        seekto(details) { if (art && details && details.seekTime != null) art.currentTime = details.seekTime; },
     };
 
     for (const [action, handler] of Object.entries(handlers)) {
