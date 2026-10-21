@@ -1009,18 +1009,20 @@ function loadReadmePage() {
 
   // 命中未过期缓存：直接渲染，不再发起任何请求（README 是文档，24h 内不追求实时）
   if (freshEnough) {
-    renderReadme(content, cached.md);
-    loading.classList.add('hidden');
-    content.classList.remove('hidden');
+    renderReadme(content, cached.md).then(function() {
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    });
     return;
   }
 
   // 缓存已过期：先把旧内容顶上去（stale-while-revalidate），
   // 免得用户为了几个字的新内容再白等一次跨境往返
   if (cached) {
-    renderReadme(content, cached.md);
-    loading.classList.add('hidden');
-    content.classList.remove('hidden');
+    renderReadme(content, cached.md).then(function() {
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    });
   }
 
   // marked 与正文并行取：无论 marked 是否到位都不阻断，拿不到就用纯文本渲染
@@ -1028,9 +1030,10 @@ function loadReadmePage() {
     .then(function(results) {
       var md = results[1];
       writeReadmeCache(md);
-      renderReadme(content, md);
-      loading.classList.add('hidden');
-      content.classList.remove('hidden');
+      return renderReadme(content, md).then(function() {
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+      });
     })
     .catch(function() {
       // 拉取失败但已有旧内容：保持旧内容，不弹错误（总比空白好）
@@ -1044,12 +1047,16 @@ function loadReadmePage() {
 var README_CACHE_KEY = 'leletv_readme_cache';
 var README_CACHE_TTL = 24 * 60 * 60 * 1000;   // 24h
 
-function renderReadme(content: HTMLElement, md: string): void {
-  if (typeof marked !== 'undefined') {
-    content.innerHTML = marked.parse(md);
-  } else {
-    content.textContent = md;
-  }
+function renderReadme(content: HTMLElement, md: string): Promise<void> {
+  // 缓存命中时也必须先确保 marked 就绪：否则会把 Markdown 当纯文本塞进 .markdown-body，
+  // 看起来就是「完全没有排版」
+  return ensureMarked().then(function() {
+    if (typeof marked !== 'undefined') {
+      content.innerHTML = marked.parse(md);
+    } else {
+      content.textContent = md;
+    }
+  });
 }
 
 // 缓存只信结构完整的记录；损坏、被清、隐私模式下读不到都当作没有缓存
