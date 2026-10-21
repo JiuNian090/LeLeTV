@@ -112,7 +112,10 @@ export function _buildResultCard(item: ResultItem, sameTitle?: ResultItem[] | nu
   var others = (sameTitle || []).slice(1);
   var lvl = _latencyLevel(item.source_latency);
   var latText = _latencyText(item.source_latency);
-  var srcTitle = [item.source_name + (latText ? '（' + latText + '）' : '')].concat(others.map(function(o) { return o.source_name; })).filter(Boolean).join('、');
+  var srcNames: string[] = [];
+  if (item.source_name) srcNames.push(item.source_name + (latText ? '（' + latText + '）' : ''));
+  others.forEach(function(o) { if (o.source_name) srcNames.push(o.source_name); });
+  var srcTitle = srcNames.join('、');
 
   var h = '<article class="v2-pcard v2-rcard search-result-card card-hover" role="button" tabindex="0" data-action="play-directly" data-id="' + sid + '" data-name="' + sn + '" data-source="' + sc + '"' + au + ' aria-label="播放 ' + sn + '">';
   // 片名首字占位垫在最下层：资源站的图床普遍偏慢，图片到之前卡片也不是一块黑
@@ -191,10 +194,11 @@ export function _sourceFastestLatency(results?: ResultItem[]): Record<string, nu
 /** 源顺序：本次延迟升序；无本次延迟数据的源交给 fallbackSort 兜底（缺省保持原序） */
 export function _orderSourcesByLatency(codes?: string[], fastest?: Record<string, number>, fallbackSort?: (ids: string[]) => string[]): string[] {
   var known: string[] = [], unknown: string[] = [];
+  var fastestMap = fastest || {};
   (codes || []).forEach(function(c) {
-    if (fastest && typeof fastest[c] === 'number') known.push(c); else unknown.push(c);
+    if (typeof fastestMap[c] === 'number') known.push(c); else unknown.push(c);
   });
-  known.sort(function(a, b) { return fastest[a] - fastest[b]; });
+  known.sort(function(a, b) { return (fastestMap[a] || 0) - (fastestMap[b] || 0); });
   return known.concat(fallbackSort ? fallbackSort(unknown) : unknown);
 }
 
@@ -207,8 +211,8 @@ export function _sortResultsByLatencyThenName(list?: ResultItem[]): ResultItem[]
   var arr = (list || []).slice();
   var fastest = _sourceFastestLatency(arr);
   return arr.sort(function(a, b) {
-    var la = fastest[a.source_code];
-    var lb = fastest[b.source_code];
+    var la = fastest[a.source_code || ''];
+    var lb = fastest[b.source_code || ''];
     var hasA = typeof la === 'number';
     var hasB = typeof lb === 'number';
     if (hasA && hasB) {
@@ -278,6 +282,7 @@ export function _updateAllTabCount(count: number): void {
   ct.querySelectorAll('.source-filter-tab:not([data-source="all"])').forEach(function(tab) {
     var el = tab as HTMLElement;
     var code = el.dataset.source;
+    if (!code) return;
     var cnt = lastAllResults.filter(function(r: ResultItem) { return r.source_code === code; }).length;
     el.textContent = _getSourceLabel(code, lastAllResults) + ' (' + cnt + ')';
   });

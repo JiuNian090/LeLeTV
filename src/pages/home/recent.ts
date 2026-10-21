@@ -146,7 +146,8 @@ export const HomeRecent: HomeRecentApi = (function (): HomeRecentApi {
     for (const code of countries) {
       if (REGION[code]) return REGION[code];
     }
-    return LANG_REGION[item.original_language] || '';
+    const lang = item.original_language;
+    return (lang && LANG_REGION[lang]) || '';
   }
 
   function formatVotes(n: number): string {
@@ -159,13 +160,14 @@ export const HomeRecent: HomeRecentApi = (function (): HomeRecentApi {
     const title = String(item.title || item.name || '').trim();
     const date = String(item.release_date || item.first_air_date || '');
     const shelves = HomeShelves;
+    const votes = item.vote_count ?? 0;
     return {
       title,
       year: date.slice(0, 4),
       region: regionOf(item),
       genres: genreNames(type, item.genre_ids),
-      rating: item.vote_count >= 10 && item.vote_average ? Number(item.vote_average).toFixed(1) : '',
-      votes: item.vote_count >= 10 ? formatVotes(item.vote_count) : '',
+      rating: votes >= 10 && item.vote_average ? Number(item.vote_average).toFixed(1) : '',
+      votes: votes >= 10 ? formatVotes(votes) : '',
       img: shelves ? shelves.tmdbImage(item.poster_path) : ''
     };
   }

@@ -15,6 +15,7 @@ import { prefersReducedMotion } from '../../ui/motion-pref';
         var box = document.querySelector('.v2-hero-glassbox');
         if (!hero || !lightsA.length || !lightsB.length || !box) return;
         if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+        var glassBox = box;
 
         var target = REST, current = REST, raf = 0;
         function reduced(): boolean {
@@ -35,7 +36,7 @@ import { prefersReducedMotion } from '../../ui/motion-pref';
         }
         hero.addEventListener('pointermove', function (e) {
             if (reduced() || (e as PointerEvent).pointerType === 'touch') return;
-            var r = box.getBoundingClientRect();
+            var r = glassBox.getBoundingClientRect();
             var ev = e as PointerEvent;
             // SVG 的方位角：x 轴起、顺时针为正（y 朝下）；光源在指针那一侧
             aim(Math.atan2(ev.clientY - (r.top + r.height / 2), ev.clientX - (r.left + r.width / 2)) * 180 / Math.PI);
