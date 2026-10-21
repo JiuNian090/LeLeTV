@@ -27,7 +27,7 @@
 | # | 层 | 原路径 | 目标路径 | 状态 | 回归项 | 备注 |
 |---|---|---|---|---|---|---|
 | 1 | core | `js/core/cache-manager.js` | `src/core/cache.ts` | verified | 第 0 节通用前置 | — |
-| 2 | core | `js/core/config.js` | `src/core/config.ts` | pending | 第 0 节通用前置 | — |
+| 2 | core | `js/core/config.js` | `src/core/config.ts` | verified | 第 0 节通用前置 | — |
 | 3 | core | `js/auth/password.js` | `src/core/crypto.ts` | pending | 第 0 节通用前置 | — |
 | 4 | core | `js/core/leletv-global.js` | `src/core/global.ts` | pending | 第 0 节通用前置 | — |
 | 5 | core | `js/auth/proxy-auth.js` | `src/core/http.ts` | pending | 第 0 节通用前置 | — |

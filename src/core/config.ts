@@ -1,3 +1,16 @@
+interface ApiSite {
+    api: string;
+    name: string;
+    hidden?: boolean;
+}
+
+type LeLeWindow = Window & {
+    API_SITES?: Record<string, ApiSite>;
+    extendAPISites?: (sites: Record<string, ApiSite>) => void;
+    _sha256Available?: boolean;
+    __ENV__?: { TMDB_WORKER_URL?: string };
+};
+
 // 全局常量配置
 const PROXY_URL = '/proxy/';    // 适用于 Cloudflare, Netlify (带重写), Vercel (带重写)
 const SEARCH_HISTORY_KEY = 'videoSearchHistory';
@@ -11,7 +24,7 @@ const HIDDEN_KEY_PREFIX = 'hidden::';
 const SCOPED_STORAGE_KEYS = ['selectedAPIs', 'customAPIs', 'viewingHistory', 'videoSearchHistory'];
 
 /** 当前是否处于隐藏内容模式 */
-function isHiddenContentMode() {
+function isHiddenContentMode(): boolean {
     try {
         return localStorage.getItem(HIDDEN_MODE_KEY) === 'true';
     } catch (e) {
@@ -20,7 +33,7 @@ function isHiddenContentMode() {
 }
 
 /** 按当前数据域解析存储键名；非 scoped 键原样返回 */
-function scopedKey(key) {
+function scopedKey(key: string): string {
     if (SCOPED_STORAGE_KEYS.indexOf(key) === -1) return key;
     return isHiddenContentMode() ? HIDDEN_KEY_PREFIX + key : key;
 }
@@ -28,10 +41,10 @@ function scopedKey(key) {
 // TMDB Worker URL
 // 部署 Cloudflare Worker (workers/tmdb-worker.js) 后填入自定义域名
 // 留空则使用本地 Node.js 代理 /api/tmdb
-const TMDB_WORKER_URL = (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.TMDB_WORKER_URL) || '';
+const TMDB_WORKER_URL = (window as LeLeWindow).__ENV__?.TMDB_WORKER_URL || '';
 
 // SHA-256 兼容性检查（用于 invite-auth 管理员 token 计算）
-window._sha256Available = typeof window.crypto?.subtle?.digest === 'function' || typeof window._jsSha256 === 'function';
+(window as LeLeWindow)._sha256Available = typeof window.crypto?.subtle?.digest === 'function' || typeof (window as Window & { _jsSha256?: unknown })._jsSha256 === 'function';
 
 // 网站信息配置
 const SITE_CONFIG = {
@@ -43,7 +56,7 @@ const SITE_CONFIG = {
 };
 
 // API站点配置
-const API_SITES = {
+const API_SITES: Record<string, ApiSite> = {
     bdzy: {
         api: 'https://api.apibdzy.com/api.php/provide/vod/',
         name: '百度资源', 
@@ -154,13 +167,13 @@ const API_SITES = {
 
 
 // 定义合并方法
-function extendAPISites(newSites) {
+function extendAPISites(newSites: Record<string, ApiSite>): void {
     Object.assign(API_SITES, newSites);
 }
 
 // 暴露到全局
-window.API_SITES = API_SITES;
-window.extendAPISites = extendAPISites;
+(window as LeLeWindow).API_SITES = API_SITES;
+(window as LeLeWindow).extendAPISites = extendAPISites;
 
 
 // 添加聚合搜索的配置选项
@@ -322,12 +335,12 @@ const THEME_RGB_NORMAL = [236, 72, 153];
 const THEME_RGB_HIDDEN = [184, 115, 51];
 
 /** 是否处于私密（隐藏内容）模式 —— 该属性由页面的 head 内联脚本在首帧前设置 */
-function isHiddenThemeMode() {
+function isHiddenThemeMode(): boolean {
     try { return document.documentElement.hasAttribute('data-hidden-mode'); } catch (e) { return false; }
 }
 
 /** 当前主题主色：优先取 CSS 变量的真实值，取不到时按模式回退到常量 */
-function themeColor() {
+function themeColor(): string {
     try {
         var v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
         if (v) return v;
@@ -336,7 +349,7 @@ function themeColor() {
 }
 
 /** 当前主题主色的 RGB 分量（供 canvas 粒子/渐变使用） */
-function themeRgb() {
+function themeRgb(): number[] {
     try {
         var v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary-rgb').trim();
         var parts = v.split(',').map(function (n) { return parseInt(n, 10); });
