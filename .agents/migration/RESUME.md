@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：67 / 85 条已验证**（第 64 条 index.html 暂缓） |
+| 4 | **进行中：67 / 85 条已验证**（第 64、69–85 条经用户确认暂缓） |
 
 ---
 
@@ -96,21 +96,23 @@
 
 ## 下一步
 
-**MAP 第 69 条起**：public 层（17 条：Geist 字体、品牌图标、logo、manifest.json）
+**阶段 4 队列已无可自动执行项。** 以下经用户确认**暂缓**，恢复时必须先重新确认：
 
-> 与 C-1「保持 Cloudflare Pages 构建输出目录 `/`，不引入 `public/`」存在字面冲突：
-> 迁移会新建 `public/` 并改变字体 / 图标 / manifest 的公开 URL。
-> 恢复会话后先向用户确认 public 层策略。
+| 条目 | 内容 | 暂缓原因 |
+|---|---|---|
+| 64 | `index.html → src/index.html` | 根 `index.html` 是 Cloudflare Pages 默认入口，与 C-1 冲突 |
+| 69–85 | public 层（字体 / 图标 / logo / manifest.json） | 会新建 `public/` 并改变公开资源 URL，与 C-1 冲突 |
 
-> 第 64 条 `index.html → src/index.html` 已与用户确认**暂缓**：根 `index.html` 是
-> Cloudflare Pages 默认入口，迁移会与 C-1 冲突。
+> 恢复会话后若用户同意继续：先做第 64 条需定部署策略（构建复制 / 改 wrangler），
+> public 层需同步 HTML、CSS、`manifest.json` 内部路径与 PWA 缓存。
 
 > `pages/` 目录已清空；`js/` 仅剩 2 个 `.js`（app-init / boot-sequence，未在 MAP 队列）。
+> styles 层已全部迁入 `src/styles/`。
 
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 69 条继续。
+新会话开场：读本文件 → 按上表向用户确认暂缓项是否解禁 → `npm start` 启动一次服务器。
 
 ---
 
