@@ -99,9 +99,11 @@ export async function searchByAPIAndKeyWord(apiId: string, query: string): Promi
         const timeoutId = setTimeout(() => controller.abort(), AGGREGATED_SEARCH_CONFIG?.timeout || 8000);
 
         // 添加鉴权参数到代理URL
-        const proxiedUrl = await searchWindow.ProxyAuth?.addAuthToProxyUrl ?
-            await searchWindow.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl)) :
-            PROXY_URL + encodeURIComponent(apiUrl);
+        const proxyAuth = searchWindow.ProxyAuth;
+        let proxiedUrl = PROXY_URL + encodeURIComponent(apiUrl);
+        if (proxyAuth && proxyAuth.addAuthToProxyUrl) {
+            proxiedUrl = await proxyAuth.addAuthToProxyUrl(proxiedUrl);
+        }
 
         const response = await fetch(proxiedUrl, {
             headers: API_CONFIG.search.headers,
@@ -155,9 +157,11 @@ export async function searchByAPIAndKeyWord(apiId: string, query: string): Promi
                         const pageTimeoutId = setTimeout(() => pageController.abort(), AGGREGATED_SEARCH_CONFIG?.timeout || 8000);
 
                         // 添加鉴权参数到代理URL
-                        const proxiedPageUrl = await searchWindow.ProxyAuth?.addAuthToProxyUrl ?
-                            await searchWindow.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(pageUrl)) :
-                            PROXY_URL + encodeURIComponent(pageUrl);
+                        const pageProxyAuth = searchWindow.ProxyAuth;
+                        let proxiedPageUrl = PROXY_URL + encodeURIComponent(pageUrl);
+                        if (pageProxyAuth && pageProxyAuth.addAuthToProxyUrl) {
+                            proxiedPageUrl = await pageProxyAuth.addAuthToProxyUrl(proxiedPageUrl);
+                        }
 
                         const pageResponse = await fetch(proxiedPageUrl, {
                             headers: API_CONFIG.search.headers,
@@ -253,9 +257,11 @@ export async function searchByCategory(apiId: string, className: string, page = 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), AGGREGATED_SEARCH_CONFIG?.timeout || 8000);
 
-        const proxiedUrl = await searchWindow.ProxyAuth?.addAuthToProxyUrl ?
-            await searchWindow.ProxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl)) :
-            PROXY_URL + encodeURIComponent(apiUrl);
+        const proxyAuth = searchWindow.ProxyAuth;
+        let proxiedUrl = PROXY_URL + encodeURIComponent(apiUrl);
+        if (proxyAuth && proxyAuth.addAuthToProxyUrl) {
+            proxiedUrl = await proxyAuth.addAuthToProxyUrl(proxiedUrl);
+        }
 
         const response = await fetch(proxiedUrl, {
             headers: API_CONFIG.search.headers,

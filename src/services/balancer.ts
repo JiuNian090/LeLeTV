@@ -176,7 +176,7 @@ export class LoadBalancer {
     selectBestFromCandidates(candidates: string[]): string {
         // 计算每个API的权重分数
         const scoredApis = candidates.map((apiKey: string) => {
-            const stat = this.apiStats.get(apiKey);
+            const stat = this.apiStats.get(apiKey) || this.createApiStat(apiKey);
             const score = this.calculateApiScore(stat);
             return { apiKey, score, stat };
         });

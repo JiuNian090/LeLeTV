@@ -36,7 +36,7 @@ declare function shouldUseNativeHls(): boolean;
     const TTL_MS = 10 * 60 * 1000;
     const DETAIL_TIMEOUT_MS = 4000;
     const M3U8_TIMEOUT_MS = 5000;   // 清单 5 秒都拿不到的线路，起播也快不了
-    const pending: Record<string, Promise<boolean>> = {};
+    const pending: Record<string, Promise<boolean> | undefined> = {};
 
     function readCache(): LineProbeCache {
         try {
@@ -107,13 +107,15 @@ declare function shouldUseNativeHls(): boolean;
         const known = cached(source, vodId, index);
         if (known !== undefined) return Promise.resolve(known);
         const k = keyOf(source, vodId, index);
-        if (pending[k]) return pending[k];
-        pending[k] = probe(source, vodId, index).catch(() => false).then(ok => {
+        const existing = pending[k];
+        if (existing) return existing;
+        const task = probe(source, vodId, index).catch(() => false).then(ok => {
             remember(source, vodId, index, ok);
             delete pending[k];
             return ok;
         });
-        return pending[k];
+        pending[k] = task;
+        return task;
     }
 
     (window as LineProbeWindow).LeLeLineProbe = { check, cached, remember };

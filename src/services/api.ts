@@ -357,14 +357,16 @@ async function handleCustomApiSpecialDetail(id: string, customApi: string): Prom
 
 // 通用特殊源详情处理函数（重构后）
 async function handleSpecialSourceDetail(id: string, sourceCode: string): Promise<string> {
+    const site = API_SITES[sourceCode];
+    if (!site || !site.detail) return '';
     const config: {
-        detailUrl: string | undefined;
+        detailUrl: string;
         sourceName: string;
         sourceCode: string;
         customPattern?: RegExp;
     } = {
-        detailUrl: API_SITES[sourceCode].detail,
-        sourceName: API_SITES[sourceCode].name,
+        detailUrl: site.detail,
+        sourceName: site.name,
         sourceCode: sourceCode
     };
 
@@ -648,7 +650,7 @@ async function testSiteAvailability(apiUrl: string): Promise<boolean> {
         const data = await response.json() as { list?: Array<Record<string, unknown>>; code?: number } | null;
 
         // 检查API响应的有效性
-        return data && data.code !== 400 && Array.isArray(data.list);
+        return !!data && data.code !== 400 && Array.isArray(data.list);
     } catch (error) {
         console.error('站点可用性测试失败:', error);
         return false;
