@@ -1,14 +1,24 @@
 // LeLeTV — 播放页关灯：整页压黑只留播放器。偏好记在 localStorage（leletv_lights），点黑色区域或按 Esc 开灯
+
+interface LightsWindow extends Window {
+    LeLeLights?: {
+        set: (off: boolean) => void;
+        isOff: () => boolean;
+    };
+}
+
 (function () {
     'use strict';
 
+    const lightsWindow = window as LightsWindow;
+
     const KEY = 'leletv_lights';
 
-    function isOff() {
+    function isOff(): boolean {
         return document.body.classList.contains('lights-off');
     }
 
-    function apply(off, save) {
+    function apply(off: boolean, save: boolean): void {
         document.body.classList.toggle('lights-off', off);
         const btn = document.getElementById('lightsToggle');
         if (btn) {
@@ -21,7 +31,7 @@
         }
     }
 
-    function init() {
+    function init(): void {
         const overlay = document.getElementById('lightsOverlay');
         const btn = document.getElementById('lightsToggle');
         if (!overlay || !btn) return;
@@ -38,5 +48,5 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 
-    window.LeLeLights = { set(off) { apply(!!off, true); }, isOff };
+    lightsWindow.LeLeLights = { set(off: boolean) { apply(!!off, true); }, isOff };
 })();
