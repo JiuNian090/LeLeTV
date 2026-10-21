@@ -475,21 +475,21 @@ interface ThemeWindow extends Window {
 
     /** 色盘显示的主色：自定义且没存过自定义色时用彩虹占位 */
     function discColorOf(preset: ThemePreset): string {
-        if (preset.key !== 'custom') return preset.main.hex;
+        if (preset.key !== 'custom' && preset.main) return preset.main.hex;
         var saved = loadState();
         return (saved && saved.key === 'custom') ? saved.hex : CUSTOM_PLACEHOLDER;
     }
 
     /** 色盘显示的辅助色：自定义且没存过时留空，让主色占满整圆 */
     function auxColorOf(preset: ThemePreset): string {
-        if (preset.key !== 'custom') return preset.aux.hex;
+        if (preset.key !== 'custom' && preset.aux) return preset.aux.hex;
         var saved = loadState();
         return (saved && saved.key === 'custom' && saved.aux) ? saved.aux : 'transparent';
     }
 
     /** 方案卡片第二行：预设写主色名与辅助色名；自定义写已存的色值，没存过就提示可自选 */
     function subtitleOf(preset: ThemePreset): string {
-        if (preset.main) return preset.main.name + ' · ' + preset.aux.name;
+        if (preset.main && preset.aux) return preset.main.name + ' · ' + preset.aux.name;
         var saved = loadState();
         if (saved && saved.key === 'custom') return saved.hex.toUpperCase() + (saved.aux ? ' · ' + saved.aux.toUpperCase() : '');
         return '自选主色与辅助色';
@@ -515,7 +515,7 @@ interface ThemeWindow extends Window {
             btn.type = 'button';
             btn.className = 'theme-scheme';
             btn.setAttribute('data-theme-key', preset.key);
-            btn.title = preset.main ? '主色 ' + preset.main.name + ' ' + preset.main.hex + '　辅助色 ' + preset.aux.name + ' ' + preset.aux.hex : '自定义主色与辅助色';
+            btn.title = (preset.main && preset.aux) ? '主色 ' + preset.main.name + ' ' + preset.main.hex + '　辅助色 ' + preset.aux.name + ' ' + preset.aux.hex : '自定义主色与辅助色';
 
             var swatch = document.createElement('span');
             swatch.className = 'theme-swatch';
@@ -592,10 +592,11 @@ interface ThemeWindow extends Window {
         cv.height = Math.max(1, Math.floor(h * dpr));
         cv.style.width = w + 'px';
         cv.style.height = h + 'px';
-        var ctx = cv.getContext('2d');
+        const ctx = cv.getContext('2d');
         if (!ctx) { switchTheme(); done(); return; }
+        const ctx2d: CanvasRenderingContext2D = ctx;
         document.body.appendChild(cv);
-        ctx.scale(dpr, dpr);
+        ctx2d.scale(dpr, dpr);
 
         var cx = w / 2, cy = h / 2;
         var maxR = Math.sqrt(cx * cx + cy * cy);
@@ -624,7 +625,7 @@ interface ThemeWindow extends Window {
         function frame(now: number): void {
             if (!start) start = now;
             var t = now - start;
-            ctx.clearRect(0, 0, w, h);
+            ctx2d.clearRect(0, 0, w, h);
 
             // 颜色直到爆开那一帧才切换；此前粒子与字样一律旧色，页面也保持旧色
             if (t >= burstAt && !switched) {
@@ -632,7 +633,7 @@ interface ThemeWindow extends Window {
                 switchTheme();
             }
             useRgb = switched ? newRgb : oldRgb;
-            ctx.fillStyle = 'rgb(' + useRgb[0] + ',' + useRgb[1] + ',' + useRgb[2] + ')';
+            ctx2d.fillStyle = 'rgb(' + useRgb[0] + ',' + useRgb[1] + ',' + useRgb[2] + ')';
 
             var inGather = t < PHASE_GATHER_MS;
             var inBrand = !inGather && t < burstAt;
@@ -668,12 +669,12 @@ interface ThemeWindow extends Window {
                     alpha = 0.85 * (1 - lp);
                     a = q.a0 + swirl + spin + le * 0.5;
                 }
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, q.size, 0, 6.2832);
-                ctx.fill();
+                ctx2d.globalAlpha = alpha;
+                ctx2d.beginPath();
+                ctx2d.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, q.size, 0, 6.2832);
+                ctx2d.fill();
             }
-            ctx.globalAlpha = 1;
+            ctx2d.globalAlpha = 1;
 
             // 中心字样：凝聚尾段浮现 → 停留（旧色）→ 随爆开淡出，颜色取当前 useRgb
             var brandIn = clamp((t - brandFrom) / (PHASE_GATHER_MS - brandFrom), 0, 1);
@@ -695,30 +696,30 @@ interface ThemeWindow extends Window {
         /** 中心 logo：圆角方块里的乐字 + 字标（brand-canvas.js，路径取自页面的品牌 sprite）；取不到 sprite 时退回文字 */
         function drawBrand(alpha: number, scale: number): void {
             var brand = themeWindow.LeLeBrandCanvas;
-            if (brand && brand.draw(ctx, cx, cy, brandSize * 1.1, useRgb, alpha, scale)) return;
+            if (brand && brand.draw(ctx2d, cx, cy, brandSize * 1.1, useRgb, alpha, scale)) return;
             var rgba = function (v: number) { return 'rgba(' + useRgb[0] + ',' + useRgb[1] + ',' + useRgb[2] + ',' + v + ')'; };
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            ctx.translate(cx, cy);
-            ctx.scale(scale, scale);
-            ctx.font = '900 ' + brandSize + 'px "MapleMono", monospace';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = rgba(0.55);
-            ctx.shadowBlur = 28;
-            ctx.fillStyle = rgba(0.5);
-            ctx.fillText(BRAND_TEXT, 0, 0);
-            ctx.shadowBlur = 0;
-            var grad = ctx.createLinearGradient(0, -brandSize * 0.6, 0, brandSize * 0.6);
+            ctx2d.save();
+            ctx2d.globalAlpha = alpha;
+            ctx2d.translate(cx, cy);
+            ctx2d.scale(scale, scale);
+            ctx2d.font = '900 ' + brandSize + 'px "MapleMono", monospace';
+            ctx2d.textAlign = 'center';
+            ctx2d.textBaseline = 'middle';
+            ctx2d.shadowColor = rgba(0.55);
+            ctx2d.shadowBlur = 28;
+            ctx2d.fillStyle = rgba(0.5);
+            ctx2d.fillText(BRAND_TEXT, 0, 0);
+            ctx2d.shadowBlur = 0;
+            var grad = ctx2d.createLinearGradient(0, -brandSize * 0.6, 0, brandSize * 0.6);
             grad.addColorStop(0, rgba(0.95));
             grad.addColorStop(0.45, rgba(0.45));
             grad.addColorStop(1, rgba(0.18));
-            ctx.fillStyle = grad;
-            ctx.fillText(BRAND_TEXT, 0, 0);
-            ctx.strokeStyle = rgba(0.25);
-            ctx.lineWidth = 1;
-            ctx.strokeText(BRAND_TEXT, 0, 0);
-            ctx.restore();
+            ctx2d.fillStyle = grad;
+            ctx2d.fillText(BRAND_TEXT, 0, 0);
+            ctx2d.strokeStyle = rgba(0.25);
+            ctx2d.lineWidth = 1;
+            ctx2d.strokeText(BRAND_TEXT, 0, 0);
+            ctx2d.restore();
         }
 
         requestAnimationFrame(frame);
@@ -737,7 +738,10 @@ interface ThemeWindow extends Window {
     var _busy = false; // 过渡动画进行中：忽略重复提交
     var _openedAt = 0; // 气泡打开的时刻：滚动事件是异步派发的，点击前那下滚动可能在打开之后才到，得放过
 
-    function currentPickerRgb(): number[] { return hsvToRgb(_picker.h, _picker.s, _picker.v); }
+    function currentPickerRgb(): number[] {
+        if (!_picker) return [0, 0, 0];
+        return hsvToRgb(_picker.h, _picker.s, _picker.v);
+    }
     function currentPickerHex(): string { return rgbToHex(currentPickerRgb()); }
 
     function ensurePicker(): PickerState {
@@ -836,13 +840,13 @@ interface ThemeWindow extends Window {
             var target = e.target as HTMLElement;
             var swatch = target.closest ? target.closest('[data-ramp-index]') : null;
             if (!swatch) return;
-            var idx = parseInt(swatch.getAttribute('data-ramp-index'), 10);
-            var rgb = buildPalette(_picker.presetHex).ramp[idx];
+            var idx = parseInt(swatch.getAttribute('data-ramp-index') || '', 10);
+            var rgb = buildPalette(p.presetHex || '').ramp[idx];
             if (!rgb) return;
             var hsv = rgbToHsv(rgb);
-            _picker.h = hsv[0];
-            _picker.s = hsv[1];
-            _picker.v = hsv[2];
+            p.h = hsv[0];
+            p.s = hsv[1];
+            p.v = hsv[2];
             paintPicker(true);
         });
 
@@ -850,23 +854,23 @@ interface ThemeWindow extends Window {
             var target = e.target as HTMLElement;
             var swatch = target.closest ? target.closest('[data-ramp-index]') : null;
             if (!swatch) return;
-            var idx = parseInt(swatch.getAttribute('data-ramp-index'), 10);
-            var rgb = buildPalette(_picker.auxBaseHex).ramp[idx];
+            var idx = parseInt(swatch.getAttribute('data-ramp-index') || '', 10);
+            var rgb = buildPalette(p.auxBaseHex || '').ramp[idx];
             if (!rgb) return;
-            _picker.auxHex = rgbToHex(rgb);
+            p.auxHex = rgbToHex(rgb);
             paintAuxRamp();
         });
 
         // --- RGB 输入：手动快速填写 ---
         function onRgbInput() {
-            if (!_picker.custom) return;
-            var rr = clamp(parseInt(_picker.r.value, 10) || 0, 0, 255);
-            var gg = clamp(parseInt(_picker.g.value, 10) || 0, 0, 255);
-            var bb = clamp(parseInt(_picker.b.value, 10) || 0, 0, 255);
+            if (!p.custom) return;
+            var rr = clamp(parseInt(p.r.value, 10) || 0, 0, 255);
+            var gg = clamp(parseInt(p.g.value, 10) || 0, 0, 255);
+            var bb = clamp(parseInt(p.b.value, 10) || 0, 0, 255);
             var hsv = rgbToHsv([rr, gg, bb]);
-            _picker.h = hsv[0];
-            _picker.s = hsv[1];
-            _picker.v = hsv[2];
+            p.h = hsv[0];
+            p.s = hsv[1];
+            p.v = hsv[2];
             // 回写输入框（会同步 HEX；正在编辑的那一格由 paintPicker 自行跳过）
             paintPicker(true);
         }
@@ -877,14 +881,14 @@ interface ThemeWindow extends Window {
 
         // --- HEX 输入：与 RGB 等价的手动填写方式（#RGB / #RRGGBB，可省略 #）---
         function onHexInput() {
-            if (!_picker.custom) return;
-            var rgb = hexToRgb(_picker.hexInput.value);
+            if (!p.custom) return;
+            var rgb = hexToRgb(p.hexInput.value);
             // 输入中途（如刚敲到 "33"）解析不通过就保持现状，不打断输入
             if (!rgb) return;
             var hsv = rgbToHsv(rgb);
-            _picker.h = hsv[0];
-            _picker.s = hsv[1];
-            _picker.v = hsv[2];
+            p.h = hsv[0];
+            p.s = hsv[1];
+            p.v = hsv[2];
             // 回写输入框（会同步 RGB；HEX 自己正在编辑，由 paintPicker 跳过）
             paintPicker(true);
         }
@@ -899,8 +903,8 @@ interface ThemeWindow extends Window {
         q('cancel').addEventListener('click', closePicker);
         q('apply').addEventListener('click', function () {
             var mainHex = currentPickerHex();
-            var key = _picker.custom ? 'custom' : _picker.presetKey;
-            var auxHex = _picker.auxHex;
+            var key = p.custom ? 'custom' : p.presetKey;
+            var auxHex = p.auxHex;
             closePicker();
             commitTheme(key, mainHex, auxHex);
         });
@@ -959,7 +963,7 @@ interface ThemeWindow extends Window {
     function paintAuxRamp(): void {
         var p = _picker;
         if (!p) return;
-        var ramp = buildPalette(p.auxBaseHex).ramp;
+        var ramp = buildPalette(p.auxBaseHex || '').ramp;
         var target = hexToRgb(p.auxHex) || [0, 0, 0];
         var best = -1, bestD = Infinity;
         ramp.forEach(function (rgb, i) {
@@ -977,6 +981,7 @@ interface ThemeWindow extends Window {
 
     function buildRamp(presetHex: string): void {
         var p = _picker;
+        if (!p) return;
         var ramp = buildPalette(presetHex).ramp;
         p.ramp.textContent = '';
         var frag = document.createDocumentFragment();
@@ -994,6 +999,7 @@ interface ThemeWindow extends Window {
 
     function positionPicker(anchorEl: HTMLElement): void {
         var p = _picker;
+        if (!p) return;
         var el = p.el;
         var rect = anchorEl.getBoundingClientRect();
         var w = el.offsetWidth || 248;
@@ -1016,7 +1022,7 @@ interface ThemeWindow extends Window {
         if (preset.key === 'custom') {
             baseHex = (saved && saved.key === 'custom' && saved.hex) ? saved.hex : rgbToHex(readPrimaryRgb());
         } else {
-            baseHex = preset.main.hex;
+            baseHex = preset.main ? preset.main.hex : rgbToHex(readPrimaryRgb());
         }
 
         p.custom = preset.key === 'custom';
@@ -1033,7 +1039,7 @@ interface ThemeWindow extends Window {
         p.auxHex = (saved && saved.key === preset.key && saved.aux)
             ? saved.aux
             : defaultAuxFor(buildPalette(baseHex), preset);
-        p.auxBaseHex = p.custom ? baseHex : preset.aux.hex;
+        p.auxBaseHex = p.custom ? baseHex : (preset.aux ? preset.aux.hex : baseHex);
 
         p.name.textContent = p.custom ? '自定义颜色' : preset.name;
         p.rampLabel.textContent = preset.main ? '主色 · ' + preset.main.name : '主色';
@@ -1091,7 +1097,7 @@ interface ThemeWindow extends Window {
         if (_busy) return;
         var oldRgb = readPrimaryRgb();
         var defaultPreset = presetOf(DEFAULT_KEY) as ThemePreset;
-        var target = isHiddenMode() ? HIDDEN_DEFAULT_RGB : (hexToRgb(buildTheme(DEFAULT_KEY, defaultPreset.main.hex, '').pal.hex) || [236, 72, 153]);
+        var target = isHiddenMode() ? HIDDEN_DEFAULT_RGB : (hexToRgb(buildTheme(DEFAULT_KEY, defaultPreset.main ? defaultPreset.main.hex : '#ec4899', '').pal.hex) || [236, 72, 153]);
         _busy = true;
         clearState();
         playThemeBurst(oldRgb, target, function () {
@@ -1117,7 +1123,7 @@ interface ThemeWindow extends Window {
                 var target = e.target as HTMLElement;
                 var btn = target.closest ? target.closest('.theme-scheme') as HTMLElement : null;
                 if (!btn) return;
-                var preset = presetOf(btn.getAttribute('data-theme-key'));
+                var preset = presetOf(btn.getAttribute('data-theme-key') || '');
                 if (!preset) return;
                 openPicker(btn, preset);
             });

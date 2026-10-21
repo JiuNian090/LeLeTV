@@ -72,6 +72,7 @@ export function showShortcutHint(text: string, direction: string): void {
     const hintElement = document.getElementById('shortcutHint');
     const textElement = document.getElementById('shortcutText');
     const iconElement = document.getElementById('shortcutIcon');
+    if (!hintElement || !textElement || !iconElement) return;
 
     // 清除之前的超时
     if (shortcutHintTimeout) {
@@ -164,7 +165,7 @@ export function setupProgressBarPreciseClicks(): void {
 
     // 统一的跳转处理函数
     function seekByClientX(clientX: number): void {
-        if (!art || !art.video) return;
+        if (!progressBar || !art || !art.video) return;
         // 拖动期间使用缓存的 rect，初始点击时实时计算
         const rect = cachedRect || progressBar.getBoundingClientRect();
         const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
@@ -180,7 +181,7 @@ export function setupProgressBarPreciseClicks(): void {
 
     // --- 桌面端：mousedown 点击跳转 + 拖动 ---
     function handleMouseDown(e: MouseEvent): void {
-        if (!art || !art.video) return;
+        if (!progressBar || !art || !art.video) return;
         isDragging = true;
         cachedRect = progressBar.getBoundingClientRect(); // 缓存一次
         e.preventDefault();
@@ -204,7 +205,7 @@ export function setupProgressBarPreciseClicks(): void {
 
     // --- 移动端：touchstart 点击 + touchmove 滑动 ---
     function handleTouchStart(e: TouchEvent): void {
-        if (!art || !art.video || !e.touches[0]) return;
+        if (!progressBar || !art || !art.video || !e.touches[0]) return;
         isDragging = true;
         cachedRect = progressBar.getBoundingClientRect(); // 缓存一次
         e.stopPropagation();
@@ -241,23 +242,15 @@ export function showPositionRestoreHint(position: number): void {
     `;
 
     // 尝试添加到播放器容器或body
-    let container: Element;
-    if (document.getElementById('player')) {
-        container = document.getElementById('player');
-    } else if (document.querySelector('.player-container')) {
-        container = document.querySelector('.player-container');
+    const playerContainer = document.getElementById('player') || document.querySelector('.player-container');
+    let container: Element = document.body;
+    if (playerContainer) {
+        container = playerContainer;
     } else {
-        container = document.body;
-        // 如果添加到body，使用fixed定位
+        // 如果添加到 body，使用 fixed 定位
         hint.style.position = 'fixed';
     }
-
-    if (container) {
-        container.appendChild(hint);
-    } else {
-        console.error('未找到合适的容器来显示恢复位置提示');
-        return;
-    }
+    container.appendChild(hint);
 
     // 确保提示使用正确的样式
     hint.style.zIndex = '1000';
@@ -288,9 +281,12 @@ function formatTime(seconds: number): string {
 }
 
 export function setupLongPressSpeedControl(): void {
-    if (!art || !art.video) return;
+    const playerArt = art;
+    if (!playerArt || !playerArt.video) return;
+    const video = playerArt.video;
 
     const playerElement = document.getElementById('player');
+    if (!playerElement) return;
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let originalPlaybackRate = 1.0;
     let isLongPress = false;
@@ -300,6 +296,7 @@ export function setupLongPressSpeedControl(): void {
         const hintElement = document.getElementById('shortcutHint');
         const textElement = document.getElementById('shortcutText');
         const iconElement = document.getElementById('shortcutIcon');
+        if (!hintElement || !textElement || !iconElement) return;
 
         // 清除之前的超时
         if (shortcutHintTimeout) {
@@ -324,7 +321,7 @@ export function setupLongPressSpeedControl(): void {
 
         // 2倍速时不自动隐藏，直到松开恢复
         if (speed === 2.0) {
-            clearTimeout(shortcutHintTimeout);
+            if (shortcutHintTimeout) clearTimeout(shortcutHintTimeout);
         }
     }
 
@@ -336,13 +333,13 @@ export function setupLongPressSpeedControl(): void {
         if (controlsLocked) return;
         const target = e && e.target as HTMLElement;
         if (target && target.closest && target.closest('.art-controls, .art-bottom, .art-progress, .player-back-btn, .player-floating-lock-btn')) return;
-        if (art.video.paused) return;
-        originalPlaybackRate = art.video.playbackRate;
+        if (video.paused) return;
+        originalPlaybackRate = video.playbackRate;
         leletvPlayerTouchState.longPressActive = false;
-        clearTimeout(longPressTimer);
+        if (longPressTimer) clearTimeout(longPressTimer);
         longPressTimer = setTimeout(() => {
-            if (art.video.paused || leletvPlayerTouchState.touchMoved) return;
-            art.video.playbackRate = 2.0;
+            if (video.paused || leletvPlayerTouchState.touchMoved) return;
+            video.playbackRate = 2.0;
             isLongPress = true;
             leletvPlayerTouchState.longPressActive = true;
             leletvPlayerTouchState.suppressNextClick = true;
@@ -355,11 +352,11 @@ export function setupLongPressSpeedControl(): void {
 
     function endLongPress(e?: Event): void {
         if (longPressTimer) {
-            clearTimeout(longPressTimer);
+            if (longPressTimer) clearTimeout(longPressTimer);
             longPressTimer = null;
         }
         if (isLongPress) {
-            art.video.playbackRate = originalPlaybackRate;
+            video.playbackRate = originalPlaybackRate;
             isLongPress = false;
             leletvPlayerTouchState.longPressActive = false;
             leletvPlayerTouchState.suppressNextClick = true;
@@ -391,13 +388,13 @@ export function setupLongPressSpeedControl(): void {
     }
 
     // 视频暂停时取消长按状态
-    art.video.addEventListener('pause', function () {
+    video.addEventListener('pause', function () {
         if (isLongPress) {
-            art.video.playbackRate = originalPlaybackRate;
+            video.playbackRate = originalPlaybackRate;
             isLongPress = false;
         }
         if (longPressTimer) {
-            clearTimeout(longPressTimer);
+            if (longPressTimer) clearTimeout(longPressTimer);
             longPressTimer = null;
         }
     });
@@ -421,12 +418,14 @@ export function setupControlsBehavior(): void {
     const TAP_MOVE_THRESHOLD = 12;
 
     function showControls(resetTimer?: boolean): void {
+        if (!container) return;
         controlsVisible = true;
         container.classList.remove('controls-hidden');
         if (resetTimer !== false) resetAutoHide();
     }
 
     function hideControls(): void {
+        if (!container) return;
         controlsVisible = false;
         container.classList.add('controls-hidden');
         if (hideTimer) {
@@ -522,8 +521,10 @@ export function setupControlsBehavior(): void {
         const now = Date.now();
         if (now - lastTapAt <= DOUBLE_TAP_DELAY) {
             lastTapAt = 0;
-            if (art.video.paused) art.play?.();
-            else art.pause?.();
+            if (art && art.video) {
+                if (art.video.paused) art.play?.();
+                else art.pause?.();
+            }
             if (controlsVisible) resetAutoHide();
             return;
         }
@@ -565,8 +566,10 @@ export function setupControlsBehavior(): void {
         if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
-            if (art.video.paused) art.play?.();
-            else art.pause?.();
+            if (art && art.video) {
+                if (art.video.paused) art.play?.();
+                else art.pause?.();
+            }
             e.stopPropagation();
             return;
         }
@@ -1025,7 +1028,7 @@ function renderResourceLatency(sourceKey: string): string {
         if (spd.speed === -1) {
             return '<span class="resource-source-latency poor">' + escHtml(spd.error || '失败') + '</span>';
         }
-        const speed = spd.speed;
+        const speed = Number(spd.speed) || 0;
         // 视频段没测成时这个数字只是接口往返耗时，和实测值不可比，单独标出来
         if (spd.videoMeasured === false) {
             return '<span class="resource-source-latency api-only" title="视频地址未探测成功，这里是接口往返耗时">~' + speed + 'ms</span>';
