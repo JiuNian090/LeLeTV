@@ -1,6 +1,6 @@
 # INVENTORY — 全量文件清单（阶段 -1 初版）
 
-> 权威来源：`git ls-files`（当前共 **361** 个跟踪文件；迁移前基线 326，阶段 -1 / 0 新增的文档与脚本均已登记）。
+> 权威来源：`git ls-files`（当前共 **364** 个跟踪文件；迁移前基线 326，阶段 -1 / 0 新增的文档与脚本均已登记）。
 > 本表逐文件登记，一个不许漏；`check-coverage` 校验要求条目数 == `git ls-files` 数量。
 > 生成时间：2026-10-21；分支：`refactor/slim-arch`；基线 tag：`pre-refactor`。
 
@@ -19,11 +19,11 @@
 
 | 去向类型 | 数量 |
 |---|---|
-| keep | 270 |
+| keep | 273 |
 | migrated | 85 |
 | pending | 2 |
 | suspected-unused | 4 |
-| **合计** | **361** |
+| **合计** | **364** |
 
 > 疑似无用初判：`service-worker.js`、`image/brand/leletv-lockup.svg`、`image/brand/leletv-mark.svg`、`image/brand/leletv-wordmark-currentcolor.svg`。全部只登记，不删除。
 
@@ -452,11 +452,19 @@
 | 359 | `scripts/setup-hooks.mjs` | 安装 pre-commit 钩子 | keep | — | — | — | done | — |
 | 360 | `scripts/sync-agent-index.mjs` | 生成 AGENTS.md 与 .agents/skills/INDEX.md 索引 | keep | — | — | — | done | — |
 
+## src/（阶段 2 起）
+
+| # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
+|---|---|---|---|---|---|---|---|---|
+| 361 | `src/ui/invite-login.ts` | 邀请码登录弹窗逻辑（阶段 2 新增） | keep | — | — | — | done | 阶段 2 新增源码，按 01 / 02 规则维护 |
+| 362 | `src/ui/modals.ts` | 全局模态框 / Toast 运行时注入（阶段 2 新增） | keep | — | — | — | done | 阶段 2 新增源码，按 01 / 02 规则维护 |
+| 363 | `src/ui/nav-scroll.ts` | 导航栏滚动毛玻璃（阶段 2 新增） | keep | — | — | — | done | 阶段 2 新增源码，按 01 / 02 规则维护 |
+
 ## workers/（红区）
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 361 | `workers/tmdb-worker.js` | Cloudflare Worker：TMDB 代理 / 邀请码 / 云源管理（红区） | keep | — | — | — | done | 禁止修改 |
+| 364 | `workers/tmdb-worker.js` | Cloudflare Worker：TMDB 代理 / 邀请码 / 云源管理（红区） | keep | — | — | — | done | 禁止修改 |
 
 ## 生成后自检
 
