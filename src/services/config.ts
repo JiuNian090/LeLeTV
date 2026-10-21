@@ -32,14 +32,14 @@ function themeStoreKeys() {
     return (store && store.KEYS) || ['leletv_theme_normal', 'leletv_theme_hidden'];
 }
 
-function isThemeStoreKey(key) {
+function isThemeStoreKey(key: string): boolean {
     const store = (window as AppConfigWindow).LeLeThemeStore;
     if (store && store.isKey) return store.isKey(key);
     return themeStoreKeys().indexOf(key) !== -1;
 }
 
 // 配置项名 → localStorage 键：主题色用原键名，其余按当前数据域加 scoped 前缀
-function itemStorageKey(item) {
+function itemStorageKey(item: string): string {
     return isThemeStoreKey(item) ? item : scopedKey(item);
 }
 
@@ -69,7 +69,7 @@ function loadJSZip(): Promise<JSZipStatic> {
 export async function importConfigFromUrl() {
     showModal({
         title: '从链接导入配置',
-        content: (body, overlay) => {
+        content: (body: HTMLElement, overlay: HTMLElement) => {
             body.innerHTML = `
                 <div class="v2-field">
                     <label class="v2-label" for="configUrl">配置文件地址</label>
@@ -137,7 +137,7 @@ export async function importConfig() {
 /**
  * 解析备份文件（ZIP 或旧版 JSON），校验后写入 localStorage
  */
-async function processBackupFile(file) {
+async function processBackupFile(file: Blob & { name?: string }): Promise<void> {
     const isZip = file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
 
     let settingsData = null;
@@ -191,7 +191,7 @@ export async function exportConfig() {
     const times = Date.now().toString();
 
     // ===== 设置数据：主题、数据源、开关等 =====
-    const settingsItems = {};
+    const settingsItems: Record<string, string> = {};
     const settingsToExport = [
         'selectedAPIs',
         'customAPIs',
@@ -225,7 +225,7 @@ export async function exportConfig() {
     settingsJson.hash = await sha256(JSON.stringify(settingsItems));
 
     // ===== 用户数据：历史记录、搜索记录等 =====
-    const dataItems = {};
+    const dataItems: Record<string, string> = {};
     const viewingHistory = localStorage.getItem(scopedKey('viewingHistory'));
     if (viewingHistory) dataItems['viewingHistory'] = viewingHistory;
 
@@ -253,7 +253,7 @@ export async function exportConfig() {
     saveBlobAsFile(blob, 'LeLeTV-Backup_' + times + '.zip');
 }
 
-export function saveBlobAsFile(blob, fileName) {
+export function saveBlobAsFile(blob: Blob, fileName: string): void {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -473,7 +473,7 @@ export function addToViewingHistory(videoInfo: ViewingHistoryInput): void {
 function confirmClearViewingHistory(): void {
     const overlay = showModal({
         title: '清空观看记录',
-        content: (body) => {
+        content: (body: HTMLElement) => {
             body.innerHTML = `
                 <p class="v2-confirm-text">将删除本机保存的全部观看记录与播放进度。<strong>此操作无法撤销。</strong></p>
                 <div class="v2-dialog-foot is-end">

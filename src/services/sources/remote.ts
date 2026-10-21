@@ -225,7 +225,7 @@ export function syncRemoteApiSites(): Promise<string[]> {
         );
 
         return changed;
-    }).catch((err) => {
+    }).catch((err): string[] => {
         // 超时、断网、非 2xx 都落在这里：静默回退到内置源 + 上次缓存
         console.warn('远端数据源拉取失败，继续使用内置源与本地缓存:', err && err.message);
         return [];

@@ -86,7 +86,7 @@ export class LoadBalancer {
      */
     initializeApiStats() {
         // 初始化内置API源
-        Object.keys(API_SITES).forEach(apiKey => {
+        Object.keys(API_SITES).forEach((apiKey: string) => {
             if (!this.apiStats.has(apiKey)) {
                 this.apiStats.set(apiKey, this.createApiStat(apiKey));
             }
@@ -94,7 +94,7 @@ export class LoadBalancer {
 
         // 初始化自定义API源
         const customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
-        customAPIs.forEach((_, index) => {
+        customAPIs.forEach((_: unknown, index: number) => {
             const customKey = `custom_${index}`;
             if (!this.apiStats.has(customKey)) {
                 this.apiStats.set(customKey, this.createApiStat(customKey, true));
@@ -105,7 +105,7 @@ export class LoadBalancer {
     /**
      * 创建API统计对象
      */
-    createApiStat(apiKey, isCustom = false) {
+    createApiStat(apiKey: string, isCustom = false): ApiStat {
         return {
             apiKey,
             isCustom,
@@ -127,7 +127,7 @@ export class LoadBalancer {
      * 获取最佳API源（智能负载均衡）
      * 优先使用热缓存API，避免每次都重新算分
      */
-    getBestApi(preferredApis = null) {
+    getBestApi(preferredApis: string[] | null = null): string {
         const availableApis = preferredApis || this.getSelectedApis();
 
         if (availableApis.length === 0) {
@@ -147,14 +147,14 @@ export class LoadBalancer {
         }
 
         // 过滤健康的API
-        const healthyApis = availableApis.filter(apiKey => {
+        const healthyApis = availableApis.filter((apiKey: string) => {
             const stat = this.apiStats.get(apiKey);
             return stat && this.isApiHealthy(stat);
         });
 
         if (healthyApis.length === 0) {
             // 如果没有健康的API，尝试使用最近成功的API
-            const recentSuccessApis = availableApis.filter(apiKey => {
+            const recentSuccessApis = availableApis.filter((apiKey: string) => {
                 const stat = this.apiStats.get(apiKey);
                 return stat && (Date.now() - stat.lastSuccessTime) < this.config.cooldownPeriod;
             });
@@ -173,9 +173,9 @@ export class LoadBalancer {
     /**
      * 从候选API中选择最佳的
      */
-    selectBestFromCandidates(candidates) {
+    selectBestFromCandidates(candidates: string[]): string {
         // 计算每个API的权重分数
-        const scoredApis = candidates.map(apiKey => {
+        const scoredApis = candidates.map((apiKey: string) => {
             const stat = this.apiStats.get(apiKey);
             const score = this.calculateApiScore(stat);
             return { apiKey, score, stat };
@@ -201,7 +201,7 @@ export class LoadBalancer {
     /**
      * 计算API评分
      */
-    calculateApiScore(stat) {
+    calculateApiScore(stat: ApiStat): number {
         let score = 100; // 基础分数
 
         // 响应时间评分 (响应时间越低分数越高)
@@ -242,7 +242,7 @@ export class LoadBalancer {
      * 检查API是否健康
      * 基于实际搜索结果评估，不再发送额外探测请求
      */
-    isApiHealthy(stat) {
+    isApiHealthy(stat: ApiStat): boolean {
         const now = Date.now();
 
         // 检查是否在黑名单中
@@ -281,7 +281,7 @@ export class LoadBalancer {
      * 记录API请求结果
      * 成功时更新热缓存，失败时立即清除
      */
-    recordApiResult(apiKey, success, responseTime = 0, error = null) {
+    recordApiResult(apiKey: string, success: boolean, responseTime = 0, error: unknown = null): void {
         let stat = this.apiStats.get(apiKey);
         if (!stat) {
             stat = this.createApiStat(apiKey);
@@ -339,7 +339,7 @@ export class LoadBalancer {
     /**
      * 增加API负载
      */
-    increaseApiLoad(apiKey) {
+    increaseApiLoad(apiKey: string): void {
         const stat = this.apiStats.get(apiKey);
         if (stat) {
             stat.load++;
@@ -353,7 +353,7 @@ export class LoadBalancer {
     /**
      * 减少API负载
      */
-    decreaseApiLoad(apiKey) {
+    decreaseApiLoad(apiKey: string): void {
         const stat = this.apiStats.get(apiKey);
         if (stat && stat.load > 0) {
             stat.load--;
@@ -369,7 +369,7 @@ export class LoadBalancer {
     /**
      * 检查API是否超载
      */
-    isApiOverloaded(apiKey) {
+    isApiOverloaded(apiKey: string): boolean {
         const activeCount = this.activeRequests.get(apiKey) || 0;
         return activeCount >= this.config.maxConcurrentRequests;
     }
@@ -377,16 +377,16 @@ export class LoadBalancer {
     /**
      * 获取选中的API列表
      */
-    getSelectedApis() {
-        const selectedAPIs = JSON.parse(localStorage.getItem(scopedKey('selectedAPIs')) || '[]');
+    getSelectedApis(): string[] {
+        const selectedAPIs: string[] = JSON.parse(localStorage.getItem(scopedKey('selectedAPIs')) || '[]');
         return selectedAPIs.length > 0 ? selectedAPIs : Object.keys(API_SITES).slice(0, 5);
     }
 
     /**
      * 获取API统计信息
      */
-    getApiStats() {
-        const stats = {};
+    getApiStats(): Record<string, ApiStat> {
+        const stats: Record<string, ApiStat> = {};
         this.apiStats.forEach((stat, apiKey) => {
             stats[apiKey] = { ...stat };
         });
@@ -396,7 +396,7 @@ export class LoadBalancer {
     /**
      * 重置API统计
      */
-    resetApiStats(apiKey = null) {
+    resetApiStats(apiKey: string | null = null): void {
         if (apiKey) {
             const stat = this.apiStats.get(apiKey);
             if (stat) {
@@ -435,7 +435,7 @@ export class LoadBalancer {
      */
     saveStats() {
         try {
-            const statsData = {};
+            const statsData: Record<string, ApiStat> = {};
             this.apiStats.forEach((stat, apiKey) => {
                 statsData[apiKey] = stat;
             });

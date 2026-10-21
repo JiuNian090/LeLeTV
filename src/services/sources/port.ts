@@ -169,7 +169,7 @@ export function exportVideoSources(): void {
         version: SOURCE_LIST_VERSION,
         exportedAt: Date.now(),
         sources,
-        liveSources: []
+        liveSources: [] as string[]
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     saveBlobAsFile(blob, 'LeLeTV-SourceList_' + Date.now() + '.json');

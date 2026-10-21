@@ -38,7 +38,7 @@ export const INVITE_AUTH = {
   _legacyMigrationTried: false,
   _ensureHeartbeatRunning: false,
 
-  _inviteUrl(path) {
+  _inviteUrl(path: string): string {
     const workerBase = (window as InviteWindow).__ENV__?.TMDB_WORKER_URL || '';
     if (workerBase) {
       return `${workerBase}${path}`;
@@ -55,7 +55,7 @@ export const INVITE_AUTH = {
    */
 
   /** SHA-256(hex)；无 Web Crypto 时回退到简易哈希 */
-  async _sha256Hex(raw) {
+  async _sha256Hex(raw: string): Promise<string> {
     if (window.crypto && window.crypto.subtle && window.TextEncoder) {
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
       const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -79,7 +79,7 @@ export const INVITE_AUTH = {
   },
 
   /** 带超时的 fetch：鉴权网络挂起时不让登录按钮一直转（默认 8 秒） */
-  async _fetchWithTimeout(url, options, ms) {
+  async _fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
     const controller = (typeof AbortController === 'function') ? new AbortController() : null;
     const timer = controller ? setTimeout(() => controller.abort(), ms || 8000) : null;
     try {
@@ -92,7 +92,7 @@ export const INVITE_AUTH = {
   },
 
   /** 设备实例 ID 形态：d_ + 32 位十六进制 */
-  _isDeviceId(value) {
+  _isDeviceId(value: unknown): boolean {
     return typeof value === 'string' && /^d_[0-9a-f]{32}$/.test(value);
   },
 
@@ -256,7 +256,7 @@ export const INVITE_AUTH = {
   /**
    * 保存认证信息
    */
-  saveAuth(data) {
+  saveAuth(data: { code?: string; device_name?: string; device_fingerprint?: string; device_signature?: string }): void {
     localStorage.setItem(INVITE_AUTH.STORAGE_KEY, JSON.stringify({
       code: data.code,
       device_name: data.device_name,
@@ -277,7 +277,7 @@ export const INVITE_AUTH = {
    * 仅更新本地保存的设备名（改名后同步，不重置 verified_at）。
    * 改名后本地 auth.device_name 需与服务端保持一致，否则旧指纹迁移等逻辑会用到旧名称。
    */
-  updateLocalDeviceName(name, signature) {
+  updateLocalDeviceName(name: string, signature: string): void {
     const auth = INVITE_AUTH.getAuth();
     if (!auth) return;
     auth.device_name = name;
@@ -351,7 +351,7 @@ export const INVITE_AUTH = {
    * 心跳未命中后的二次确认：服务端偶发异常（部署抖动、D1 读取异常、新旧版本混跑）时
    * 不应把用户踢下线，连续两次都报告「本机不在册」才认定为已被移除
    */
-  async _confirmDeviceRemoved(fingerprint) {
+  async _confirmDeviceRemoved(fingerprint: string): Promise<boolean> {
     const retry = await INVITE_AUTH.heartbeat(fingerprint);
     return !!(retry && retry.updated === false);
   },
@@ -423,7 +423,7 @@ export const INVITE_AUTH = {
   /**
    * 验证邀请码
    */
-  async verify(code, deviceName) {
+  async verify(code: string, deviceName: string): Promise<{ ok: boolean; local?: boolean; is_admin?: boolean; action?: string; message?: string; error?: string }> {
     if (INVITE_AUTH.isLocalMode()) return INVITE_AUTH._localEnter();
     const deviceInfo = INVITE_AUTH.getOrCreateDeviceId();
     const deviceId = deviceInfo.id;
@@ -498,7 +498,7 @@ export const INVITE_AUTH = {
    * 返回 { updated } —— 服务端是否仍有本机设备记录；
    * 网络异常或响应异常返回 null（无从判断，调用方不可据此踢出用户）
    */
-  async heartbeat(fingerprint) {
+  async heartbeat(fingerprint: string): Promise<{ updated: boolean } | null> {
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/heartbeat');
 
@@ -508,7 +508,7 @@ export const INVITE_AUTH = {
         body: JSON.stringify({ device_fingerprint: fingerprint })
       }, 8000);
       if (!response.ok) return null;
-      const data = await response.json().catch(() => null) as InviteVerifyResponse | null;
+      const data = await response.json().catch((): null => null) as InviteVerifyResponse | null;
       if (!data || data.ok !== true) return null;
       return { updated: data.updated === true };
     } catch {
@@ -520,7 +520,7 @@ export const INVITE_AUTH = {
   /**
    * 启动心跳定时器
    */
-  startHeartbeat(fingerprint) {
+  startHeartbeat(fingerprint: string): void {
     if (INVITE_AUTH.isLocalMode()) return;
     // 防止重复创建定时器和 pagehide 监听
     if (INVITE_AUTH._heartbeatTimer) {

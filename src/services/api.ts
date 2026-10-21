@@ -4,6 +4,7 @@
 import { API_SITES, PROXY_URL, API_CONFIG, M3U8_PATTERN } from '../core/config';
 import { addAuthToProxyUrl } from '../core/http';
 import { TIMING } from '../core/timing';
+import type { SearchResultItem } from '../core/state';
 
 /**
  * 规范化播放地址。
@@ -16,7 +17,7 @@ import { TIMING } from '../core/timing';
  * @param {string} url 采集站返回的原始播放地址
  * @returns {string} 可直接交给播放器的地址
  */
-function normalizePlayUrl(url) {
+function normalizePlayUrl(url: string): string {
     if (!url || typeof url !== 'string') return url;
     // 已经是 m3u8 播放列表，原样返回
     if (/\.m3u8(\?|#|$)/i.test(url)) return url;
@@ -25,7 +26,7 @@ function normalizePlayUrl(url) {
     return url;
 }
 
-async function handleApiRequest(url) {
+async function handleApiRequest(url: URL): Promise<string> {
     const customApi = url.searchParams.get('customApi') || '';
     const customDetail = url.searchParams.get('customDetail') || '';
     const source = url.searchParams.get('source') || 'heimuer';
@@ -168,7 +169,7 @@ async function handleApiRequest(url) {
                 const videoDetail = data.list[0];
 
                 // 提取播放地址
-                let episodes = [];
+                let episodes: string[] = [];
 
                 // 外部数据先收窄：vod_play_url 不保证是字符串
                 const playUrl = typeof videoDetail.vod_play_url === 'string' ? videoDetail.vod_play_url : '';
@@ -240,7 +241,7 @@ async function handleApiRequest(url) {
 }
 
 // 特殊源正则表达式配置
-const SPECIAL_SOURCE_PATTERNS = {
+const SPECIAL_SOURCE_PATTERNS: Record<string, RegExp> = {
     ffzy: /\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g
 };
 
@@ -255,7 +256,7 @@ const SPECIAL_SOURCE_PATTERNS = {
  * @param {RegExp} [sourceConfig.customPattern] - 可选的自定义正则表达式
  * @returns {Promise<string>} JSON格式的详情数据
  */
-async function handleSpecialDetail通用(id, sourceConfig) {
+async function handleSpecialDetail通用(id: string, sourceConfig: { detailUrl: string; sourceName: string; sourceCode: string; customPattern?: RegExp }): Promise<string> {
     const startTime = Date.now();
 
     try {
@@ -287,7 +288,7 @@ async function handleSpecialDetail通用(id, sourceConfig) {
         const html = await response.text();
 
         // 提取m3u8链接
-        let matches = [];
+        let matches: string[] = [];
 
         // 优先使用自定义正则表达式
         if (sourceConfig.customPattern) {
@@ -346,7 +347,7 @@ async function handleSpecialDetail通用(id, sourceConfig) {
 }
 
 // 处理自定义API的特殊详情页（重构后）
-async function handleCustomApiSpecialDetail(id, customApi) {
+async function handleCustomApiSpecialDetail(id: string, customApi: string): Promise<string> {
     return await handleSpecialDetail通用(id, {
         detailUrl: customApi,
         sourceName: '自定义源',
@@ -355,7 +356,7 @@ async function handleCustomApiSpecialDetail(id, customApi) {
 }
 
 // 通用特殊源详情处理函数（重构后）
-async function handleSpecialSourceDetail(id, sourceCode) {
+async function handleSpecialSourceDetail(id: string, sourceCode: string): Promise<string> {
     const config: {
         detailUrl: string | undefined;
         sourceName: string;
@@ -376,7 +377,7 @@ async function handleSpecialSourceDetail(id, sourceCode) {
 }
 
 // 处理聚合搜索
-async function handleAggregatedSearch(searchQuery) {
+async function handleAggregatedSearch(searchQuery: string): Promise<string> {
     // 获取可用的API源列表（排除aggregated和custom）
     const availableSources = Object.keys(API_SITES).filter(key =>
         key !== 'aggregated' && key !== 'custom'
@@ -438,7 +439,7 @@ async function handleAggregatedSearch(searchQuery) {
         const resultsArray = await Promise.all(searchPromises);
 
         // 合并所有结果
-        let allResults = [];
+        let allResults: SearchResultItem[] = [];
         resultsArray.forEach(results => {
             if (Array.isArray(results) && results.length > 0) {
                 allResults = allResults.concat(results);
@@ -455,7 +456,7 @@ async function handleAggregatedSearch(searchQuery) {
         }
 
         // 去重（根据vod_id和source_code组合）
-        const uniqueResults = [];
+        const uniqueResults: SearchResultItem[] = [];
         const seen = new Set();
 
         allResults.forEach(item => {
@@ -491,7 +492,7 @@ async function handleAggregatedSearch(searchQuery) {
 }
 
 // 处理多个自定义API源的聚合搜索
-async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
+async function handleMultipleCustomSearch(searchQuery: string, customApiUrls: string): Promise<string> {
     // 解析自定义API列表
     const apiUrls = customApiUrls.split(CUSTOM_API_CONFIG.separator)
         .map(url => url.trim())
@@ -551,7 +552,7 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
         const resultsArray = await Promise.all(searchPromises);
 
         // 合并所有结果
-        let allResults = [];
+        let allResults: SearchResultItem[] = [];
         resultsArray.forEach(results => {
             if (Array.isArray(results) && results.length > 0) {
                 allResults = allResults.concat(results);
@@ -568,7 +569,7 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
         }
 
         // 去重（根据vod_id和api_url组合）
-        const uniqueResults = [];
+        const uniqueResults: SearchResultItem[] = [];
         const seen = new Set();
 
         allResults.forEach(item => {
@@ -631,7 +632,7 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
     };
 })();
 
-async function testSiteAvailability(apiUrl) {
+async function testSiteAvailability(apiUrl: string): Promise<boolean> {
     try {
         // 使用更简单的测试查询
         const response = await fetch('/api/search?wd=test&customApi=' + encodeURIComponent(apiUrl), {
