@@ -1375,7 +1375,16 @@ html[data-home-hub="off"][data-home-shelves="off"] .home-layout.v2-home {
         padding-bottom: 0;
     }
 
-    html[data-home-hub="off"] .v2-hero,
+    /* 关闭聚合动效、保留内容板块：标题区不再占满一屏，
+       LeLeTV 与搜索框停在页面中上位置，内容板块紧随其后进入首屏 */
+    html[data-home-hub="off"]:not([data-home-shelves="off"]) .v2-hero {
+        min-height: 0;
+        align-content: start;
+        padding-top: clamp(20px, 6vh, 56px);
+        padding-bottom: clamp(12px, 3vh, 32px);
+    }
+
+    /* 两块都关：保持原来的居中简洁首页 */
     html[data-home-hub="off"][data-home-shelves="off"] .v2-hero {
         min-height: calc(100vh - 56px);
         min-height: calc(100svh - 56px);
