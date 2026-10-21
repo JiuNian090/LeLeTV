@@ -17,7 +17,7 @@ var LeLePages = (function () {
     'use strict';
 
     var FRAGMENTS = {
-        movies: 'pages/movies.html',
+        movies: 'src/pages/movies/template.html',
         category: 'src/pages/category/template.html',
         history: 'src/pages/history/template.html',
         settings: 'pages/settings.html',

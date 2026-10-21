@@ -427,7 +427,7 @@
 | 338 | `pages/about.html` | 关于页片段（page-loader 拉取） | migrated | `src/pages/about/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 339 | `pages/category.html` | 分类页片段 | migrated | `src/pages/category/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 340 | `pages/history.html` | 历史页片段 | migrated | `src/pages/history/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 341 | `pages/movies.html` | 影片结果页片段 | migrated | `src/pages/movies/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 341 | `pages/movies.html` | 影片结果页片段 | migrated | `src/pages/movies/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 342 | `pages/readme.html` | README/说明页片段 | migrated | `src/pages/readme/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 343 | `pages/settings.html` | 设置页片段 | migrated | `src/pages/settings/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 
@@ -515,6 +515,7 @@
 | 418 | `src/pages/home/recent.ts` | 首页最近更新货架（迁移自 `js/ui/home-recent.js`） | keep | — | — | — | done | 阶段 4 第 49 条迁移目标 |
 | 419 | `src/pages/home/shelves.ts` | 首页继续观看/片源货架（迁移自 `js/ui/home-shelves.js`） | keep | — | — | — | done | 阶段 4 第 50 条迁移目标 |
 | 420 | `src/pages/home/style.css` | 首页样式（迁移自 `css/v2/home.css`） | keep | — | — | — | done | 阶段 4 第 51 条迁移目标 |
+| 421 | `src/pages/movies/template.html` | 影片结果页片段（迁移自 `pages/movies.html`） | keep | — | — | — | done | 阶段 4 第 52 条迁移目标 |
 
 ## workers/（红区）
 
