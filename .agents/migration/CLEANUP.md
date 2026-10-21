@@ -50,4 +50,4 @@
 
 | 时间 | 检测命令 | 候选路径 | 级别 | 批准记录 | 删除 commit | 回归结果 | revert tag |
 |---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | — |
+| 2026-10-22 | `find css -type f`（0 文件）→ `rmdir css/v2 css` | `css/`、`css/v2`（空目录） | cleanup | 用户授权（JiuNian090，2026-10-22） | —（空目录不被 Git 跟踪） | `npm test` 15/15、`npm run check` 通过 | — |
