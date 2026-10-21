@@ -1,4 +1,18 @@
 // 搜索结果缓存：跳转播放页前保存，返回首页时秒开（不重新发起搜索）
+// 阶段 5B-1：搜索共享状态已迁至 src/core/state.ts。
+import {
+  activeSourceFilter,
+  lastAllResults,
+  searchFilterConfig,
+  searchReady,
+  searchThrottled,
+  setActiveSourceFilter,
+  setLastAllResults,
+  setSearchFilterConfig,
+  setSearchThrottled,
+} from '../../core/state';
+import type { SearchFilterConfig } from '../../core/state';
+
 const SEARCH_CACHE_KEY = 'leletv_search_cache';
 const SEARCH_CACHE_MAX = 800; // 缓存结果条数上限（控制 sessionStorage 体积）
 
@@ -45,13 +59,13 @@ function cacheSearchContext() {
             sessionStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(payload));
             return;
         }
-        if (!_lastAllResults || _lastAllResults.length === 0) return;
+        if (!lastAllResults || lastAllResults.length === 0) return;
         const keyword = getCurrentSearchKeyword() || (document.getElementById('searchInput') as HTMLInputElement).value.trim();
         if (!keyword) return;
         const payload = {
             keyword: keyword,
-            results: _lastAllResults.slice(0, SEARCH_CACHE_MAX),
-            activeFilter: _activeSourceFilter || 'all',
+            results: lastAllResults.slice(0, SEARCH_CACHE_MAX),
+            activeFilter: activeSourceFilter || 'all',
             timestamp: Date.now()
         };
         sessionStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(payload));
@@ -80,8 +94,8 @@ function restoreSearchFromCache() {
     }
 
     // 还原内存状态
-    _lastAllResults = cached.results;
-    _activeSourceFilter = cached.activeFilter || 'all';
+    setLastAllResults(cached.results);
+    setActiveSourceFilter(cached.activeFilter || 'all');
 
     // 搜索框保持为空：避免残留关键词在下次打开搜索页/切换页面时被重复搜索
     clearSearchInput();
@@ -95,8 +109,8 @@ function restoreSearchFromCache() {
     document.getElementById('closeSearchResults')?.classList.add('flex');
 
     // 渲染来源过滤标签 + 应用过滤（渲染卡片）
-    _renderSourceFilterTabs(_lastAllResults.length);
-    _applySourceFilter(_activeSourceFilter);
+    _renderSourceFilterTabs(lastAllResults.length);
+    _applySourceFilter(activeSourceFilter);
 
     // 更新标题和 URL（不触发重新搜索）
     document.title = `搜索: ${cached.keyword} - LeLeTV`;
@@ -113,15 +127,15 @@ function restoreSearchFromCache() {
 }
 
 async function loadFilterConfig() {
-    if (_filterConfig) return _filterConfig;
+    if (searchFilterConfig) return searchFilterConfig;
     try {
         const res = await fetch('/src/services/adfilter-config.json');
-        _filterConfig = await res.json();
+        setSearchFilterConfig(await res.json() as SearchFilterConfig);
     } catch (e) {
         console.warn('过滤配置加载失败，使用默认空配置:', e);
-        _filterConfig = { mode: 'blacklist', blacklist: [], whitelist: [] };
+        setSearchFilterConfig({ mode: 'blacklist', blacklist: [], whitelist: [] });
     }
-    return _filterConfig;
+    return searchFilterConfig;
 }
 
 async function applyFilter(results) {
@@ -268,7 +282,7 @@ function setupEventListeners() {
     // 搜索历史下拉：点击/触摸时显示
     // 窄窗口触发全屏覆盖层，宽窗口显示下拉
     searchInput.addEventListener('pointerdown', function (e) {
-        if (!_searchReady) return;
+        if (!searchReady) return;
         if (window.innerWidth <= 639) {
             e.preventDefault();
             // 同一次点按在抬起后还会补发一次 click，落点正好在刚打开的搜索层上（常常压着某条历史记录），
@@ -286,7 +300,7 @@ function setupEventListeners() {
         if (window.LeLePages && typeof window.LeLePages.prefetch === 'function') {
             window.LeLePages.prefetch('movies');
         }
-        if (!_searchReady) return;
+        if (!searchReady) return;
         if (window.innerWidth > 639) {
             showSearchHistory((this as HTMLInputElement).value);
         }
@@ -298,7 +312,7 @@ function setupEventListeners() {
         // 输入框被清空：顺手清掉 URL 里的搜索残留，
         // 否则刷新时首页初始化会把上次的关键词当直链再搜一遍
         if (!(this as HTMLInputElement).value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
-        if (!_searchReady) return;
+        if (!searchReady) return;
         if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
         if (desktopComposing || e.isComposing) return;
@@ -534,7 +548,7 @@ function setupEventListeners() {
             const tab = (e.target as HTMLElement).closest('.source-filter-tab') as HTMLElement | null;
             if (!tab) return;
             const sourceFilter = tab.dataset.source;
-            if (!sourceFilter || sourceFilter === _activeSourceFilter) return;
+            if (!sourceFilter || sourceFilter === activeSourceFilter) return;
             _applySourceFilter(sourceFilter);
         });
     }
@@ -693,8 +707,8 @@ function resetSearchArea() {
     // 清空源过滤标签和状态
     const filterTabs = document.getElementById('sourceFilterTabs');
     if (filterTabs) filterTabs.innerHTML = '';
-    _activeSourceFilter = 'all';
-    _lastAllResults = [];
+    setActiveSourceFilter('all');
+    setLastAllResults([]);
 
     // 恢复后再统一隐藏搜索历史下拉
     _resettingSearchArea = false;
@@ -877,12 +891,12 @@ async function search() {
     }
 
     // 防重复搜索节流
-    if (_searchThrottled) {
+    if (searchThrottled) {
         showToast('请等待当前搜索完成', 'info');
         return;
     }
-    _searchThrottled = true;
-    const releaseThrottle = () => { _searchThrottled = false; };
+    setSearchThrottled(true);
+    const releaseThrottle = () => { setSearchThrottled(false); };
 
     // 结果页片段按需加载：首次搜索前先补齐，避免退回到已移除的首页结果区。
     // ensure() 失败时会显示占位页并 resolve，搜索流程仍可继续。
@@ -928,8 +942,8 @@ async function search() {
     }
 
     // 重置过滤状态
-    _activeSourceFilter = 'all';
-    _lastAllResults = [];
+    setActiveSourceFilter('all');
+    setLastAllResults([]);
 
     // 初始渲染标签：基于 selectedAPIs，但过滤掉配置中已不存在的源
     _initFilterTabs();
@@ -1061,13 +1075,13 @@ async function search() {
         if (allResults.length > 0) {
             // 结果排序：本次搜索延迟快的源在前（与结果页共用同一套规则）
             allResults = _sortResultsByLatencyThenName(allResults);
-            _lastAllResults = allResults;
+            setLastAllResults(allResults);
             if (routeToMovies && typeof showMoviesResults === 'function') {
                 // 统一进入结果页（左侧源列表 + 右侧结果）
                 showMoviesResults(query, allResults, { from: 'home', fallbackGenres: [] });
             } else {
                 _renderSourceFilterTabs(allResults.length);
-                _applySourceFilter(_activeSourceFilter);
+                _applySourceFilter(activeSourceFilter);
             }
         } else {
             if (routeToMovies && typeof showMoviesResults === 'function') {
@@ -1153,3 +1167,16 @@ Object.assign(window, {
   clearSearchInput,
   search
 });
+
+// 阶段 5B-1 过渡期类型桥：search/index.ts 已成为 ESM 模块，main / bridge 等
+// 仍以裸名访问这些符号（运行时由上方 window 兼容桥提供）。5B-3 改为 import 后删除。
+declare global {
+  const SEARCH_CACHE_KEY: string;
+  function cacheSearchContext(): void;
+  function applyFilter<T>(results: T[]): Promise<T[]>;
+  function setupEventListeners(): void;
+  function closeSearchResults(): void;
+  function hookInput(): void;
+  function clearSearchInput(): void;
+  function search(): Promise<void>;
+}

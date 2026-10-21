@@ -176,6 +176,55 @@ export function setCustomAPIs(v: CustomApiEntry[]): void {
     customAPIs = v;
 }
 
+// ==================== 搜索共享状态 ====================
+// 原在 src/main.ts 声明，被 pages/search/index.ts 与 pages/category/index.ts 直接读写。
+// 迁到 core 后 main / search / category 之间不再通过全局变量互相依赖。
+export interface SearchFilterConfig {
+    mode: 'blacklist' | 'whitelist';
+    blacklist: string[];
+    whitelist: string[];
+}
+
+/** 搜索结果条目的最小共享结构（原 pages/search/cards.ts 的 ResultItem） */
+export interface SearchResultItem {
+    [key: string]: unknown;
+    vod_id?: string | number;
+    vod_name?: string;
+    vod_year?: string | number;
+    vod_pic?: string;
+    vod_remarks?: string;
+    type_name?: string;
+    source_code?: string;
+    source_name?: string;
+    source_latency?: number;
+    api_url?: string;
+}
+
+export let activeSourceFilter = 'all';
+export function setActiveSourceFilter(v: string): void {
+    activeSourceFilter = v;
+}
+
+export let lastAllResults: SearchResultItem[] = [];
+export function setLastAllResults(v: SearchResultItem[]): void {
+    lastAllResults = v;
+}
+
+export let searchFilterConfig: SearchFilterConfig | null = null;
+export function setSearchFilterConfig(v: SearchFilterConfig | null): void {
+    searchFilterConfig = v;
+}
+
+export let searchReady = false;
+export function setSearchReady(v: boolean): void {
+    searchReady = v;
+}
+
+export let searchThrottled = false;
+export function setSearchThrottled(v: boolean): void {
+    searchThrottled = v;
+}
+
 // 阶段 5B-1 过渡期类型桥：尚未改为 import 的全局脚本仍以裸名访问这些符号。
 declare global {
     interface ApiSite {
@@ -195,6 +244,23 @@ declare global {
     const HIDDEN_MODE_KEY: string;
     let selectedAPIs: string[];
     let customAPIs: CustomApiEntry[];
+    // 过渡：cards.ts / category/index.ts 尚未改为 import，仍以裸名读写；
+    // 运行时由 main.ts 的 window getter/setter 代理到 state。5B-3 改为 import 后删除。
+    type SharedResultItem = {
+        [key: string]: unknown;
+        vod_id?: string | number;
+        vod_name?: string;
+        vod_year?: string | number;
+        vod_pic?: string;
+        vod_remarks?: string;
+        type_name?: string;
+        source_code?: string;
+        source_name?: string;
+        source_latency?: number;
+        api_url?: string;
+    };
+    let _activeSourceFilter: string;
+    let _lastAllResults: SharedResultItem[];
     function isHiddenContentMode(): boolean;
     function scopedKey(key: string): string;
     function extendAPISites(newSites: Record<string, ApiSite>): void;

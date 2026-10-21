@@ -1,19 +1,7 @@
 // LeLeTV — 搜索结果卡片渲染模块
 // 从 app-search.js 拆分
 
-interface ResultItem {
-  [key: string]: unknown;
-  vod_id?: string | number;
-  vod_name?: string;
-  vod_year?: string | number;
-  vod_pic?: string;
-  vod_remarks?: string;
-  type_name?: string;
-  source_code?: string;
-  source_name?: string;
-  source_latency?: number;
-  api_url?: string;
-}
+type ResultItem = SharedResultItem;
 
 interface MergeGroup {
   lead: ResultItem;

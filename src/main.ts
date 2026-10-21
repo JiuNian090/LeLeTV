@@ -1,3 +1,18 @@
+// 阶段 5B-1：搜索共享状态已迁至 src/core/state.ts。
+// main 只保留写入点与 window 代理；search / category 改为直接 import。
+import {
+    activeSourceFilter,
+    lastAllResults,
+    searchFilterConfig,
+    searchReady,
+    searchThrottled,
+    setActiveSourceFilter,
+    setLastAllResults,
+    setSearchFilterConfig,
+    setSearchReady,
+    setSearchThrottled,
+} from './core/state';
+
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
 // var selectedAPIs / customAPIs 已在 src/services/sources/config.ts 中声明
 
@@ -21,20 +36,15 @@ const mainWindow = window as MainWindow;
 // 添加当前视频的所有集数（实际在 player.js 中声明，此处仅为类型参考）
 // let currentEpisodeIndex, currentEpisodes, currentVideoTitle, episodesReversed
 
-// 搜索源过滤状态
-let _activeSourceFilter = 'all';
-let _lastAllResults = [];
-
-// 搜索框就绪标志，初始化期间不响应任何事件
-let _searchReady = false;
+// 搜索源过滤 / 最后结果 / 就绪标志 / 过滤配置缓存
+// 阶段 5B-1：已迁至 src/core/state.ts（见文件顶部 import）
 
 // ====== 默认数据源 ======
 // 首次初始化的默认源见 src/services/sources/config.ts 的 getDefaultDataSources()：正常域固定 6 个源
 // （光速 / 暴风 / 最大 / 量子 / 红牛 / 极速），隐藏域仍从私密源里随机抽 5 个。
 // 「重置」走的也是同一份默认逻辑。
 
-// 过滤配置缓存
-let _filterConfig = null;
+// 过滤配置缓存（阶段 5B-1：已迁至 src/core/state.ts）
 
 // 加载过滤配置（从外部 JSON，避免敏感词出现在代码中）
 
@@ -87,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('searchInput').blur();
 
     // 延迟标记搜索就绪，防止浏览器自动填充/自动聚焦触发下拉
-    setTimeout(() => { _searchReady = true; }, TIMING.SEARCH_READY_DELAY);
+    setTimeout(() => { setSearchReady(true); }, TIMING.SEARCH_READY_DELAY);
 
     // 初始检查隐藏API选中状态
     setTimeout(checkHiddenAPIsSelected, TIMING.FOCUS_DELAY);
@@ -129,8 +139,8 @@ window.addEventListener('pageshow', function (e) {
         document.getElementById('searchArea')?.classList.remove('flex-1', 'mb-8');
         document.querySelector('.home-layout')?.classList.remove('has-results');
         document.getElementById('closeSearchResults')?.classList.add('hidden');
-        _lastAllResults = [];
-        _activeSourceFilter = 'all';
+        setLastAllResults([]);
+        setActiveSourceFilter('all');
         const filterTabs = document.getElementById('sourceFilterTabs');
         if (filterTabs) filterTabs.innerHTML = '';
 
@@ -156,8 +166,7 @@ window.addEventListener('pageshow', function (e) {
 
 // ========== 骨架屏辅助 ==========
 
-// 搜索功能节流锁
-let _searchThrottled = false;
+// 搜索功能节流锁（阶段 5B-1：已迁至 src/core/state.ts）
 
 // 移动端全屏搜索覆盖层
 
@@ -475,32 +484,32 @@ Object.assign(window, {
 });
 
 Object.defineProperty(window, '_activeSourceFilter', {
-  get: () => _activeSourceFilter,
-  set: (v) => { _activeSourceFilter = v; },
+  get: () => activeSourceFilter,
+  set: (v) => { setActiveSourceFilter(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, '_lastAllResults', {
-  get: () => _lastAllResults,
-  set: (v) => { _lastAllResults = v; },
+  get: () => lastAllResults,
+  set: (v) => { setLastAllResults(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, '_searchReady', {
-  get: () => _searchReady,
-  set: (v) => { _searchReady = v; },
+  get: () => searchReady,
+  set: (v) => { setSearchReady(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, '_filterConfig', {
-  get: () => _filterConfig,
-  set: (v) => { _filterConfig = v; },
+  get: () => searchFilterConfig,
+  set: (v) => { setSearchFilterConfig(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, '_searchThrottled', {
-  get: () => _searchThrottled,
-  set: (v) => { _searchThrottled = v; },
+  get: () => searchThrottled,
+  set: (v) => { setSearchThrottled(v); },
   configurable: true,
 });
 
@@ -509,3 +518,28 @@ Object.defineProperty(window, 'AppInit', {
   set: (v) => { AppInit = v; },
   configurable: true,
 });
+
+// 阶段 5B-1 过渡期类型桥：main.ts 已成为 ESM 模块，router 仍以裸名访问
+// AppInit / setupEmailClickHandlers（运行时由上方 window 兼容桥提供）。
+interface AppInitApi {
+  PHASES: {
+    CORE: { order: number; name: string };
+    AUTH: { order: number; name: string };
+    CONFIG: { order: number; name: string };
+    UI: { order: number; name: string };
+    POST: { order: number; name: string };
+  };
+  register(
+    name: string,
+    phase: { order: number; name: string } | undefined,
+    fn: (context: unknown) => void,
+    options?: { once?: boolean }
+  ): void;
+  run(context?: unknown): void;
+  reset(): void;
+}
+
+declare global {
+  var AppInit: AppInitApi;
+  function setupEmailClickHandlers(): void;
+}
