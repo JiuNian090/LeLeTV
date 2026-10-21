@@ -25,7 +25,7 @@ export const BUNDLES = [
       'src/core/config.ts', 'js/api/remote-sources.js',
       'js/core/leletv-global.js', 'js/core/storage-service.js',
       'js/core/listener-tracker.js', 'js/core/timing.js',
-      'js/auth/proxy-auth.js', 'js/auth/password.js', 'js/auth/invite-auth.js',
+      'js/auth/proxy-auth.js', 'src/core/crypto.ts', 'js/auth/invite-auth.js',
       'js/ui/ui-core.js', 'js/ui/motion-pref.js', 'js/ui/line-probe.js',
     ],
   },

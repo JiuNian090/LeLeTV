@@ -355,7 +355,7 @@
 | 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
 | 283 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | pending | — |
 | 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | pending | — |
-| 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | pending | — |
+| 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | verified | 已迁移至 `src/core/crypto.ts`；类型检查通过 |
 | 286 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | pending | — |
 | 287 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | migrated | `src/core/sha256.ts` | — | — | pending | — |
 | 288 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | pending | — |
@@ -466,6 +466,7 @@
 | 368 | `src/ui/nav-scroll.ts` | 导航栏滚动毛玻璃（阶段 2 新增） | keep | — | — | — | done | 阶段 2 / 3 新增源码，按 01 / 02 规则维护 |
 | 370 | `src/core/cache.ts` | 缓存管理与 24h 清理（迁移自 `js/core/cache-manager.js`） | keep | — | — | — | done | 阶段 4 第 1 条迁移目标 |
 | 371 | `src/core/config.ts` | 全局常量与 API_SITES 配置（迁移自 `js/core/config.js`） | keep | — | — | — | done | 阶段 4 第 2 条迁移目标 |
+| 372 | `src/core/crypto.ts` | SHA-256 哈希（迁移自 `js/auth/password.js`） | keep | — | — | — | done | 阶段 4 第 3 条迁移目标 |
 
 ## workers/（红区）
 
