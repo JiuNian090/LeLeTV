@@ -2,6 +2,33 @@
 // 一条线路能不能播，只看两件事：详情接口有集数、当前集的 m3u8 能按 CORS 方式取到（hls.js 就是这么取的）。
 // 结果页在最佳匹配渲染后先探一遍最快线路，判死就把播放按钮换到下一条，点播放时不用再等超时换线；
 // 播放页起播前自动换线也用同一套校验。结论记在 sessionStorage，10 分钟内同一条线路不重复探。
+
+interface LineProbeCacheEntry {
+    ok: boolean;
+    t: number;
+}
+
+type LineProbeCache = Record<string, LineProbeCacheEntry>;
+
+interface CustomApiInfo {
+    name?: string;
+    url: string;
+    detail?: string;
+}
+
+interface LineProbeApi {
+    check(source: string, vodId: string, index?: number): Promise<boolean>;
+    cached(source: string, vodId: string, index?: number): boolean | undefined;
+    remember(source: string, vodId: string, index: number | undefined, ok: boolean): void;
+}
+
+interface LineProbeWindow extends Window {
+    LeLeLineProbe?: LineProbeApi;
+}
+
+declare function getCustomApiInfo(index: string): CustomApiInfo | null;
+declare function shouldUseNativeHls(): boolean;
+
 (function () {
     'use strict';
 
@@ -9,31 +36,31 @@
     const TTL_MS = 10 * 60 * 1000;
     const DETAIL_TIMEOUT_MS = 4000;
     const M3U8_TIMEOUT_MS = 5000;   // 清单 5 秒都拿不到的线路，起播也快不了
-    const pending = {};
+    const pending: Record<string, Promise<boolean>> = {};
 
-    function readCache() {
+    function readCache(): LineProbeCache {
         try {
-            const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}');
-            return c && typeof c === 'object' ? c : {};
+            const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || '{}') as unknown;
+            return c && typeof c === 'object' ? c as LineProbeCache : {};
         } catch (e) { return {}; }
     }
 
-    function writeCache(c) {
+    function writeCache(c: LineProbeCache): void {
         try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(c)); } catch (e) { /* 忽略 */ }
     }
 
-    function keyOf(source, vodId, index) {
+    function keyOf(source: string, vodId: string, index?: number): string {
         return String(source) + '|' + String(vodId) + '|' + (index || 0);
     }
 
     /** 缓存里的结论：true 能播 / false 不能播 / undefined 没探过或已过期 */
-    function cached(source, vodId, index) {
+    function cached(source: string, vodId: string, index?: number): boolean | undefined {
         const hit = readCache()[keyOf(source, vodId, index)];
         if (!hit || Date.now() - (hit.t || 0) > TTL_MS) return undefined;
         return !!hit.ok;
     }
 
-    function remember(source, vodId, index, ok) {
+    function remember(source: string, vodId: string, index: number | undefined, ok: boolean): void {
         const c = readCache();
         const now = Date.now();
         Object.keys(c).forEach(k => { if (now - (c[k].t || 0) > TTL_MS) delete c[k]; });
@@ -41,7 +68,7 @@
         writeCache(c);
     }
 
-    function detailParams(source) {
+    function detailParams(source: string): string | null {
         if (String(source).startsWith('custom_')) {
             const info = typeof getCustomApiInfo === 'function' ? getCustomApiInfo(String(source).replace('custom_', '')) : null;
             if (!info) return null;
@@ -51,24 +78,24 @@
     }
 
     /** iOS 走原生 HLS，不受 CORS 限制；播放页有 shouldUseNativeHls 就以它为准 */
-    function nativeHls() {
+    function nativeHls(): boolean {
         if (typeof shouldUseNativeHls === 'function') return !!shouldUseNativeHls();
         const ua = navigator.userAgent || '';
         return /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
-    async function probe(source, vodId, index) {
+    async function probe(source: string, vodId: string, index: number | undefined): Promise<boolean> {
         const params = detailParams(source);
         if (params === null) return false;
         const res = await fetch('/api/detail?id=' + encodeURIComponent(vodId) + params + '&_t=' + Date.now(), {
             cache: 'no-cache', signal: AbortSignal.timeout(DETAIL_TIMEOUT_MS)
         });
         if (!res.ok) return false;
-        const data = await res.json();
+        const data = await res.json() as { episodes?: unknown };
         if (!data || !Array.isArray(data.episodes) || !data.episodes.length) return false;
         const i = (index && index < data.episodes.length) ? index : 0;
         const url = data.episodes[i];
-        if (!url || !/^https?:\/\//.test(url)) return false;
+        if (typeof url !== 'string' || !/^https?:\/\//.test(url)) return false;
         // 不能带 cache: 'no-cache'：会加请求头触发预检，很多图床不答 OPTIONS，好线路也会被判死
         const native = nativeHls();
         const r = await fetch(url, { mode: native ? 'no-cors' : 'cors', signal: AbortSignal.timeout(M3U8_TIMEOUT_MS) });
@@ -76,7 +103,7 @@
     }
 
     /** 探一条线路：有缓存直接给；同一条并发只探一次；结论进缓存 */
-    function check(source, vodId, index) {
+    function check(source: string, vodId: string, index?: number): Promise<boolean> {
         const known = cached(source, vodId, index);
         if (known !== undefined) return Promise.resolve(known);
         const k = keyOf(source, vodId, index);
@@ -89,5 +116,5 @@
         return pending[k];
     }
 
-    window.LeLeLineProbe = { check, cached, remember };
+    (window as LineProbeWindow).LeLeLineProbe = { check, cached, remember };
 })();

@@ -384,7 +384,7 @@
 | 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
 | 311 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
 | 312 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | pending | — |
-| 313 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | pending | — |
+| 313 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | verified | IIFE 原样迁移，window.LeLeLineProbe 接口不变 |
 | 314 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | pending | — |
 | 315 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | pending | — |
 | 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
@@ -481,6 +481,7 @@
 | 384 | `src/services/sources/config.ts` | 采集站 API 配置（迁移自 `js/api/api-config.js`） | keep | — | — | — | done | 阶段 4 第 15 条迁移目标 |
 | 385 | `src/services/sources/port.ts` | 视频源导入 / 导出（迁移自 `js/api/source-port.js`） | keep | — | — | — | done | 阶段 4 第 16 条迁移目标 |
 | 386 | `src/services/sources/remote.ts` | 远端数据源同步与合并（迁移自 `js/api/remote-sources.js`） | keep | — | — | — | done | 阶段 4 第 17 条迁移目标 |
+| 387 | `src/services/line-probe.ts` | 线路可用性探测（迁移自 `js/ui/line-probe.js`） | keep | — | — | — | done | 阶段 4 第 18 条迁移目标 |
 
 ## workers/（红区）
 
