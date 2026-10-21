@@ -5,6 +5,8 @@
  * 功能：生成邀请码、查看列表、启用/禁用、统计数据
  */
 
+import { _deviceIcon, _timeAgo } from './user-devices';
+
 interface AdminApiResponse {
   ok?: boolean;
   code?: string;
@@ -20,6 +22,8 @@ interface AdminPanelWindow extends Window {
 }
 
 const adminWindow = window as AdminPanelWindow;
+// 跨 bundle：邀请码服务与 toast 都在首屏 bundle 中，settings 按需 bundle 不再重复打包
+const showToast = (window as Window & { showToast: (message: string, type?: string) => void }).showToast;
 
 const INVITE_ADMIN_PANEL = {
   _baseUrl(path) {
@@ -198,7 +202,7 @@ const INVITE_ADMIN_PANEL = {
       showToast('已刷新', 'success');
     });
     container.querySelector('#inviteAdminLogoutBtn').addEventListener('click', () => {
-      if (adminWindow.INVITE_AUTH && confirm('确定退出登录吗？')) {
+      if (INVITE_AUTH && confirm('确定退出登录吗？')) {
         adminWindow.INVITE_AUTH.logout();
       }
     });

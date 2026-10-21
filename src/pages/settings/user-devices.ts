@@ -35,6 +35,9 @@ interface UserDevicesWindow extends Window {
 }
 
 const devicesWindow = window as UserDevicesWindow;
+// 跨 bundle：邀请码服务 / toast / themeColor 由首屏 bundle 提供
+const showToast = (window as Window & { showToast: (message: string, type?: string) => void }).showToast;
+const themeColor = (window as Window & { themeColor?: () => string }).themeColor;
 
 const USER_DEVICES_PANEL = {
   _inviteUrl(path) {
@@ -44,7 +47,7 @@ const USER_DEVICES_PANEL = {
   },
 
   async fetchMyDevices() {
-    const auth = devicesWindow.INVITE_AUTH?.getAuth();
+    const auth = INVITE_AUTH?.getAuth();
     if (!auth) return null;
 
     try {
@@ -64,7 +67,7 @@ const USER_DEVICES_PANEL = {
   },
 
   async removeDevice(targetFingerprint) {
-    const auth = devicesWindow.INVITE_AUTH?.getAuth();
+    const auth = INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
     try {
@@ -85,7 +88,7 @@ const USER_DEVICES_PANEL = {
   },
 
   async renameDevice(newName) {
-    const auth = devicesWindow.INVITE_AUTH?.getAuth();
+    const auth = INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
     // 签名叠加了设备名：改名后必须重算并上报，否则「设备 ID 丢失找回」会对不上
@@ -164,7 +167,7 @@ const USER_DEVICES_PANEL = {
       showToast('已刷新', 'success');
     });
     container.querySelector('#userDeviceLogoutBtn').addEventListener('click', () => {
-      if (devicesWindow.INVITE_AUTH && confirm('确定退出登录吗？')) {
+      if (INVITE_AUTH && confirm('确定退出登录吗？')) {
         devicesWindow.INVITE_AUTH.logout();
       }
     });
@@ -177,7 +180,7 @@ const USER_DEVICES_PANEL = {
     const codeEl = container.querySelector('#userDeviceCode');
     const countEl = container.querySelector('#userDeviceCount');
     const maxEl = container.querySelector('#userDeviceMax');
-    const currentFingerprint = devicesWindow.INVITE_AUTH?.getAuth()?.device_fingerprint;
+    const currentFingerprint = INVITE_AUTH?.getAuth()?.device_fingerprint;
 
     if (!data) {
       listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">加载失败</p>';
@@ -244,7 +247,7 @@ const USER_DEVICES_PANEL = {
         const isCurrent = btn.dataset.current === 'true';
         
         if (isCurrent) {
-          if (devicesWindow.INVITE_AUTH) devicesWindow.INVITE_AUTH.logout();
+          if (INVITE_AUTH) devicesWindow.INVITE_AUTH.logout();
           return;
         }
         
@@ -312,7 +315,7 @@ const USER_DEVICES_PANEL = {
   }
 };
 
-function _timeAgo(ts) {
+export function _timeAgo(ts) {
   const diff = Date.now() - ts;
   if (diff < 60000) return '刚刚';
 
@@ -335,7 +338,7 @@ function _timeAgo(ts) {
   return parts.slice(0, 2).join('') + '前';
 }
 
-function _deviceIcon(browser) {
+export function _deviceIcon(browser) {
   if (!browser) return '📱';
   if (browser.includes('Chrome')) return '🌐';
   if (browser.includes('Firefox')) return '🦊';
