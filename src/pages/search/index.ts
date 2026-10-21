@@ -2,6 +2,20 @@
 const SEARCH_CACHE_KEY = 'leletv_search_cache';
 const SEARCH_CACHE_MAX = 800; // 缓存结果条数上限（控制 sessionStorage 体积）
 
+interface SearchLoadBalancer {
+  apiStats: Map<string, { averageResponseTime?: number }>;
+  getBestApi?: (apiId: string) => string;
+  isApiOverloaded: (apiId: string) => boolean;
+}
+
+interface SearchPageWindow extends Window {
+  __LELETV_BIND_SETTINGS_PAGE__?: () => void;
+  INVITE_AUTH?: { isVerified: () => boolean };
+  loadBalancer?: SearchLoadBalancer;
+}
+
+const searchPageWindow = window as SearchPageWindow;
+
 // 点击卡片跳转播放页的延迟定时器：保证流星动画循环可见后再跳转
 let _pendingPlayDirectTimer = null;
 
@@ -32,7 +46,7 @@ function cacheSearchContext() {
             return;
         }
         if (!_lastAllResults || _lastAllResults.length === 0) return;
-        const keyword = getCurrentSearchKeyword() || document.getElementById('searchInput').value.trim();
+        const keyword = getCurrentSearchKeyword() || (document.getElementById('searchInput') as HTMLInputElement).value.trim();
         if (!keyword) return;
         const payload = {
             keyword: keyword,
@@ -149,18 +163,18 @@ function addCardRipple(el, e) {
 // 设置页标记已拆到 pages/settings.html，首屏 setupEventListeners 时元素还不存在，
 // 因此既在首屏尝试一次，也由 initSettingsPage 在片段插入后补一次。
 function bindSettingsPageEvents() {
-    const hiddenModeToggle = document.getElementById('hiddenContentModeToggle');
+    const hiddenModeToggle = document.getElementById('hiddenContentModeToggle') as HTMLInputElement | null;
     if (hiddenModeToggle && hiddenModeToggle.dataset.leleBound !== '1') {
         hiddenModeToggle.dataset.leleBound = '1';
         hiddenModeToggle.checked = isHiddenContentMode();
         hiddenModeToggle.addEventListener('change', async function (e) {
-            const wantHidden = e.target.checked;
+            const wantHidden = (e.target as HTMLInputElement).checked;
 
             // 进入隐藏域需要私密密码；退出回正常域不需要
             if (wantHidden) {
                 const isAdminVerified = await verifyAdminPassword();
                 if (!isAdminVerified) {
-                    e.target.checked = false;
+                    (e.target as HTMLInputElement).checked = false;
                     showToast('需要私密密码才能进入私密模式', 'warning');
                     return;
                 }
@@ -170,7 +184,7 @@ function bindSettingsPageEvents() {
                 localStorage.setItem(HIDDEN_MODE_KEY, wantHidden ? 'true' : 'false');
             } catch (err) {
                 console.error('切换私密模式失败:', err);
-                e.target.checked = !wantHidden;
+                (e.target as HTMLInputElement).checked = !wantHidden;
                 return;
             }
 
@@ -180,7 +194,7 @@ function bindSettingsPageEvents() {
             // 不沿用上次搜索：清掉搜索结果缓存（否则重载或返回时会恢复旧域的结果页）
             try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (err) { /* 忽略 */ }
             // 动效期间锁住开关，避免重复触发切换
-            e.target.disabled = true;
+            (e.target as HTMLInputElement).disabled = true;
             // 过渡动效：卡片粒子消散 → 重载后粒子汇聚生成新页面（期间不出现加载弹窗/闪屏）
             if (typeof playParticleDissolve === 'function') {
                 playParticleDissolve(function () { window.location.reload(); });
@@ -194,20 +208,20 @@ function bindSettingsPageEvents() {
     if (adFilterToggle && adFilterToggle.dataset.leleBound !== '1') {
         adFilterToggle.dataset.leleBound = '1';
         adFilterToggle.addEventListener('change', function (e) {
-            localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, e.target.checked);
+            localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, String((e.target as HTMLInputElement).checked));
         });
     }
 }
-window.__LELETV_BIND_SETTINGS_PAGE__ = bindSettingsPageEvents;
+searchPageWindow.__LELETV_BIND_SETTINGS_PAGE__ = bindSettingsPageEvents;
 
 function setupEventListeners() {
-    const searchInput = document.getElementById('searchInput');
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
 
     // 输入框清空按钮：有内容时才显示（桌面 / 移动各一个）
     // 用 is-visible 而不是 Tailwind 的 hidden，避免与按钮自身的 display 工具类互相打架
     function syncSearchClearButtons() {
-        const desktopInput = document.getElementById('searchInput');
-        const mobileInput = document.getElementById('mobileSearchInput');
+        const desktopInput = document.getElementById('searchInput') as HTMLInputElement | null;
+        const mobileInput = document.getElementById('mobileSearchInput') as HTMLInputElement | null;
         const desktopBtn = document.getElementById('clearSearchInput');
         const mobileBtn = document.getElementById('clearMobileSearchInput');
         if (desktopBtn) desktopBtn.classList.toggle('is-visible', !!(desktopInput && desktopInput.value));
@@ -220,7 +234,7 @@ function setupEventListeners() {
     searchInput.addEventListener('compositionstart', function () { desktopComposing = true; });
     searchInput.addEventListener('compositionend', function () {
         desktopComposing = false;
-        if (window.innerWidth > 639) showSearchHistory(this.value);
+        if (window.innerWidth > 639) showSearchHistory((this as HTMLInputElement).value);
     });
 
     // 回车搜索 / ↑↓ 选择历史 / Escape 关闭
@@ -232,14 +246,14 @@ function setupEventListeners() {
             e.preventDefault();
             // 有高亮的历史项就采用它，否则用输入框内容
             const activeQuery = getActiveHistoryQuery();
-            if (activeQuery) this.value = activeQuery;
+            if (activeQuery) (this as HTMLInputElement).value = activeQuery;
             hideSearchHistory();
             search();
             return;
         }
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            if (!navigateSearchHistory(1)) showSearchHistory(this.value);
+            if (!navigateSearchHistory(1)) showSearchHistory((this as HTMLInputElement).value);
             return;
         }
         if (e.key === 'ArrowUp') {
@@ -263,7 +277,7 @@ function setupEventListeners() {
             openMobileSearch();
             return;
         }
-        showSearchHistory(this.value);
+        showSearchHistory((this as HTMLInputElement).value);
     });
 
     // focus 确保宽窗口下键盘正常弹出
@@ -274,7 +288,7 @@ function setupEventListeners() {
         }
         if (!_searchReady) return;
         if (window.innerWidth > 639) {
-            showSearchHistory(this.value);
+            showSearchHistory((this as HTMLInputElement).value);
         }
     });
 
@@ -283,14 +297,14 @@ function setupEventListeners() {
         syncSearchClearButtons();
         // 输入框被清空：顺手清掉 URL 里的搜索残留，
         // 否则刷新时首页初始化会把上次的关键词当直链再搜一遍
-        if (!this.value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
+        if (!(this as HTMLInputElement).value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
         if (!_searchReady) return;
         if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
         if (desktopComposing || e.isComposing) return;
         // 手动输入后清掉键盘高亮，但下拉保持打开
         clearHistoryNavHighlight();
-        showSearchHistory(this.value);
+        showSearchHistory((this as HTMLInputElement).value);
     });
 
     // 清空输入按钮
@@ -309,9 +323,9 @@ function setupEventListeners() {
     const historyDropdown = document.getElementById('searchHistoryDropdown');
     if (historyDropdown) {
         historyDropdown.addEventListener('click', function (e) {
-            const deleteBtn = e.target.closest('.history-delete');
-            const clearBtn = e.target.closest('.search-history-clear');
-            const item = e.target.closest('.search-history-item');
+            const deleteBtn = (e.target as HTMLElement).closest('.history-delete') as HTMLElement | null;
+            const clearBtn = (e.target as HTMLElement).closest('.search-history-clear') as HTMLElement | null;
+            const item = (e.target as HTMLElement).closest('.search-history-item') as HTMLElement | null;
 
             if (deleteBtn) {
                 e.stopPropagation();
@@ -320,7 +334,7 @@ function setupEventListeners() {
                     // 先让该条历史化作粒子消散，播完再删除并重渲染
                     dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
                         deleteSingleSearchHistory(query);
-                        showSearchHistory(document.getElementById('searchInput').value);
+                        showSearchHistory((document.getElementById('searchInput') as HTMLInputElement).value);
                     });
                 }
                 return;
@@ -339,7 +353,7 @@ function setupEventListeners() {
                 e.stopPropagation();
                 const query = item.dataset.query;
                 if (query) {
-                    document.getElementById('searchInput').value = query;
+                    (document.getElementById('searchInput') as HTMLInputElement).value = query;
                     hideSearchHistory();
                     search();
                 }
@@ -350,9 +364,9 @@ function setupEventListeners() {
     // 点击页面其他位置关闭下拉
     document.addEventListener('click', function (e) {
         const dropdown = document.getElementById('searchHistoryDropdown');
-        const searchInput = document.getElementById('searchInput');
+        const searchInput = document.getElementById('searchInput') as HTMLInputElement;
         if (dropdown && !dropdown.classList.contains('hidden')) {
-            if (!dropdown.contains(e.target) && e.target !== searchInput) {
+            if (!dropdown.contains(e.target as Node) && e.target !== searchInput) {
                 hideSearchHistory();
             }
         }
@@ -369,7 +383,7 @@ function setupEventListeners() {
     }
     
     // 移动端全屏搜索覆盖层
-    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileSearchInput = document.getElementById('mobileSearchInput') as HTMLInputElement | null;
     const mobileSearchClose = document.getElementById('mobileSearchClose');
     const mobileSearchSubmit = document.getElementById('mobileSearchSubmit');
     const mobileHistoryList = document.getElementById('mobileSearchHistoryList');
@@ -383,7 +397,7 @@ function setupEventListeners() {
             mobileSearchInput.focus();
             return;
         }
-        document.getElementById('searchInput').value = val;
+        (document.getElementById('searchInput') as HTMLInputElement).value = val;
         closeMobileSearch();
         search();
     }
@@ -394,15 +408,15 @@ function setupEventListeners() {
         mobileSearchInput.addEventListener('compositionstart', function () { mobileComposing = true; });
         mobileSearchInput.addEventListener('compositionend', function () {
             mobileComposing = false;
-            renderMobileSearchHistory(this.value);
+            renderMobileSearchHistory((this as HTMLInputElement).value);
         });
 
         mobileSearchInput.addEventListener('input', function (e) {
             syncSearchClearButtons();
             // 清空后同样清掉 URL 搜索残留（与桌面一致，避免刷新重放上次搜索）
-            if (!this.value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
+            if (!(this as HTMLInputElement).value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
             if (mobileComposing || e.isComposing) return;
-            renderMobileSearchHistory(this.value);
+            renderMobileSearchHistory((this as HTMLInputElement).value);
         });
 
         mobileSearchInput.addEventListener('keydown', function (e) {
@@ -439,9 +453,9 @@ function setupEventListeners() {
 
     if (mobileHistoryList) {
         mobileHistoryList.addEventListener('click', function (e) {
-            const deleteBtn = e.target.closest('.history-delete');
-            const clearBtn = e.target.closest('.search-history-clear');
-            const item = e.target.closest('.search-history-item');
+            const deleteBtn = (e.target as HTMLElement).closest('.history-delete') as HTMLElement | null;
+            const clearBtn = (e.target as HTMLElement).closest('.search-history-clear') as HTMLElement | null;
+            const item = (e.target as HTMLElement).closest('.search-history-item') as HTMLElement | null;
 
             if (deleteBtn) {
                 e.stopPropagation();
@@ -471,7 +485,7 @@ function setupEventListeners() {
                 const query = item.dataset.query;
                 if (query && mobileSearchInput) {
                     mobileSearchInput.value = query;
-                    document.getElementById('searchInput').value = query;
+                    (document.getElementById('searchInput') as HTMLInputElement).value = query;
                     closeMobileSearch();
                     search();
                 }
@@ -492,8 +506,8 @@ function setupEventListeners() {
                 overlay.style.height = vv.height + 'px';
                 overlay.style.top = '0px';
                 // 调整搜索历史列表高度：visualViewport 高度减去 header 高度
-                const header = overlay.querySelector('.mobile-search-header');
-                const list = overlay.querySelector('.mobile-search-history-list');
+                const header = overlay.querySelector('.mobile-search-header') as HTMLElement | null;
+                const list = overlay.querySelector('.mobile-search-history-list') as HTMLElement | null;
                 if (header && list) {
                     list.style.height = (vv.height - header.offsetHeight) + 'px';
                 }
@@ -501,7 +515,7 @@ function setupEventListeners() {
                 // 键盘收起时移除内联样式，让 CSS dvh 接管
                 overlay.style.height = '';
                 overlay.style.top = '';
-                const list = overlay.querySelector('.mobile-search-history-list');
+                const list = overlay.querySelector('.mobile-search-history-list') as HTMLElement | null;
                 if (list) list.style.height = '';
             }
         });
@@ -517,7 +531,7 @@ function setupEventListeners() {
     const sourceFilterTabs = document.getElementById('sourceFilterTabs');
     if (sourceFilterTabs) {
         sourceFilterTabs.addEventListener('click', function (e) {
-            const tab = e.target.closest('.source-filter-tab');
+            const tab = (e.target as HTMLElement).closest('.source-filter-tab') as HTMLElement | null;
             if (!tab) return;
             const sourceFilter = tab.dataset.source;
             if (!sourceFilter || sourceFilter === _activeSourceFilter) return;
@@ -527,7 +541,7 @@ function setupEventListeners() {
 
     // 全局 data-action 事件委托（替代 HTML onclick）
     document.addEventListener('click', function (e) {
-        const el = e.target.closest('[data-action]');
+        const el = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
         if (!el) return;
         const action = el.dataset.action;
         if (!action) return;
@@ -640,14 +654,14 @@ function resetSearchArea() {
 
     // 清理搜索结果
     document.getElementById('results').innerHTML = '';
-    document.getElementById('searchInput').value = '';
+    (document.getElementById('searchInput') as HTMLInputElement).value = '';
 
     // 恢复搜索区域的样式（恢复到初始状态：无flex-1、无mb-8）
     document.getElementById('searchArea').classList.remove('flex-1', 'mb-8');
     document.getElementById('resultsArea').classList.add('hidden');
 
     // 恢复居中布局 + 隐藏关闭按钮
-    const homeLayout = document.querySelector('.home-layout');
+    const homeLayout = document.querySelector('.home-layout') as HTMLElement | null;
     if (homeLayout) {
         homeLayout.classList.remove('has-results');
         void homeLayout.offsetHeight;
@@ -655,7 +669,7 @@ function resetSearchArea() {
     document.getElementById('closeSearchResults')?.classList.add('hidden');
 
     // 确保页脚正确显示，移除相对定位
-    const footer = document.querySelector('.footer');
+    const footer = document.querySelector('.footer') as HTMLElement | null;
     if (footer) {
         footer.style.position = '';
     }
@@ -703,7 +717,7 @@ function closeSearchResults() {
 }
 
 function hookInput() {
-    const input = document.getElementById('searchInput');
+    const input = document.getElementById('searchInput') as HTMLInputElement | null;
     if (!input) return;
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
 
@@ -732,9 +746,9 @@ function clearSearchInput() {
     const wasResetting = _resettingSearchArea;
     _resettingSearchArea = true; // 抑制 hookInput 派发的 input 事件唤起搜索历史下拉
     try {
-        const input = document.getElementById('searchInput');
+        const input = document.getElementById('searchInput') as HTMLInputElement | null;
         if (input && input.value !== '') input.value = '';
-        const mobileInput = document.getElementById('mobileSearchInput');
+        const mobileInput = document.getElementById('mobileSearchInput') as HTMLInputElement | null;
         if (mobileInput && mobileInput.value !== '') mobileInput.value = '';
     } finally {
         _resettingSearchArea = wasResetting;
@@ -796,7 +810,7 @@ function playM3U8Direct(url) {
                     <button type="button" class="v2-btn v2-btn--primary" data-role="confirm">开始播放</button>
                 </div>
             `;
-            const input = body.querySelector('#directM3u8Title');
+            const input = body.querySelector('#directM3u8Title') as HTMLInputElement;
             const submit = () => {
                 const title = input.value.trim();
                 if (!title) {
@@ -825,7 +839,7 @@ function playM3U8Direct(url) {
 function openM3U8Player(url, title) {
     try {
         localStorage.setItem('currentVideoTitle', title);
-        localStorage.setItem('lastPlayTime', Date.now());
+        localStorage.setItem('lastPlayTime', String(Date.now()));
         localStorage.setItem('lastSearchPage', window.location.href);
         // 直链不继承上一部剧的剧集/详情，避免播放页渲染残留的集数按钮与封面
         localStorage.removeItem('currentEpisodes');
@@ -849,7 +863,7 @@ async function search() {
     closeMobileSearch();
     hideSearchHistory();
 
-    const query = document.getElementById('searchInput').value.trim();
+    const query = (document.getElementById('searchInput') as HTMLInputElement).value.trim();
     if (!query) {
         showToast('请输入搜索内容', 'info');
         return;
@@ -878,7 +892,7 @@ async function search() {
 
     // 强化的密码保护校验 - 防止绕过
     // 已通过邀请码验证的用户跳过密码检查
-    const _isInviteVerified = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
+    const _isInviteVerified = searchPageWindow.INVITE_AUTH && searchPageWindow.INVITE_AUTH.isVerified();
     if (!_isInviteVerified) {
         // 未验证邀请码 - 搜索需要弹登录框，由角色逻辑控制
     }
@@ -971,10 +985,10 @@ async function search() {
         
         // 智能排序API源：快源优先，慢源后排
         let orderedApis = [...selectedAPIs];
-        if (window.loadBalancer && typeof window.loadBalancer.getBestApi === 'function') {
+        if (searchPageWindow.loadBalancer && typeof searchPageWindow.loadBalancer.getBestApi === 'function') {
             orderedApis.sort((a, b) => {
-                const statA = window.loadBalancer.apiStats?.get(a);
-                const statB = window.loadBalancer.apiStats?.get(b);
+                const statA = searchPageWindow.loadBalancer.apiStats?.get(a);
+                const statB = searchPageWindow.loadBalancer.apiStats?.get(b);
                 const avgA = statA?.averageResponseTime || 9999;
                 const avgB = statB?.averageResponseTime || 9999;
                 return avgA - avgB; // 响应时间短的优先
@@ -992,7 +1006,7 @@ async function search() {
                 // 检查全局截止时间
                 if (Date.now() - searchStartTime > SEARCH_DEADLINE_MS) return;
 
-                if (window.loadBalancer && window.loadBalancer.isApiOverloaded(apiId)) {
+                if (searchPageWindow.loadBalancer && searchPageWindow.loadBalancer.isApiOverloaded(apiId)) {
                     return;
                 }
                 const results = await searchByAPIAndKeyWord(apiId, query);
@@ -1021,7 +1035,7 @@ async function search() {
             }
         });
 
-        if (!window.loadBalancer) {
+        if (!searchPageWindow.loadBalancer) {
             const fallbackResults = await performTraditionalSearch(query);
             if (fallbackResults.length > 0) {
                 let filtered = fallbackResults;

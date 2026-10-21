@@ -350,7 +350,7 @@
 | 276 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | verified | 已迁移至 `src/services/config.ts`；类型检查通过 |
 | 277 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
 | 278 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | pending | — |
-| 279 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | pending | — |
+| 279 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | verified | 全局搜索入口与事件绑定不变 |
 | 280 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | pending | — |
 | 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
 | 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
@@ -521,6 +521,7 @@
 | 424 | `src/pages/player/style.css` | 播放页样式（迁移自 `css/v2/player.css`） | keep | — | — | — | done | 阶段 4 第 54 条迁移目标 |
 | 425 | `src/pages/readme/template.html` | README/说明页片段（迁移自 `pages/readme.html`） | keep | — | — | — | done | 阶段 4 第 55 条迁移目标 |
 | 426 | `src/pages/search/cards.ts` | 搜索结果卡片渲染（迁移自 `js/ui/search-cards.js`） | keep | — | — | — | done | 阶段 4 第 56 条迁移目标 |
+| 427 | `src/pages/search/index.ts` | 搜索流程与结果页编排（迁移自 `js/app/app-search.js`） | keep | — | — | — | done | 阶段 4 第 57 条迁移目标 |
 
 ## workers/（红区）
 
