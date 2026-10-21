@@ -9,7 +9,8 @@
  * 卡片沿用 home-shelves.js 的 posterCard：点击按片名去各片源检索。
  */
 
-import type { HomeShelvesApi } from './shelves';
+import { isHiddenContentMode } from '../../core/state';
+import { HomeShelves } from './shelves';
 
 interface TmdbRecentItem {
   title?: string;
@@ -44,18 +45,19 @@ interface RecentCachePayload {
   data?: Record<string, NormalizedItem[]>;
 }
 
+export interface HomeRecentApi {
+  ensure: () => Promise<void> | null;
+}
+
 interface HomeRecentWindow extends Window {
-  HomeShelves?: HomeShelvesApi;
-  HomeRecent?: { ensure: () => Promise<void> | null };
+  HomeRecent?: HomeRecentApi;
 }
 
 type QueryParams = Record<string, string | number>;
 type QueryFactory = () => [string, QueryParams];
 
-(function () {
+export const HomeRecent: HomeRecentApi = (function (): HomeRecentApi {
   'use strict';
-
-  const recentWindow = window as HomeRecentWindow;
 
   const LIMIT = 6;
   const CACHE_KEY = 'leletv_home_recent_v1';
@@ -110,7 +112,7 @@ type QueryFactory = () => [string, QueryParams];
   };
 
   function isPrivateMode(): boolean {
-    return typeof isHiddenContentMode === 'function' && isHiddenContentMode();
+    return isHiddenContentMode();
   }
 
   /** URLSearchParams 会把所有值转成字符串，这里显式转换以匹配 tmdbFetch 的参数类型 */
@@ -156,7 +158,7 @@ type QueryFactory = () => [string, QueryParams];
   function normalize(type: string, item: TmdbRecentItem): NormalizedItem {
     const title = String(item.title || item.name || '').trim();
     const date = String(item.release_date || item.first_air_date || '');
-    const shelves = recentWindow.HomeShelves;
+    const shelves = HomeShelves;
     return {
       title,
       year: date.slice(0, 4),
@@ -197,7 +199,7 @@ type QueryFactory = () => [string, QueryParams];
 
   function renderRow(row: HTMLElement, items: NormalizedItem[]): boolean {
     const grid = row.querySelector('[data-recent-list]');
-    const shelves = recentWindow.HomeShelves;
+    const shelves = HomeShelves;
     if (!grid || !shelves || !items.length) { row.hidden = true; return false; }
     const frag = document.createDocumentFragment();
     items.forEach(item => {
@@ -242,7 +244,7 @@ type QueryFactory = () => [string, QueryParams];
       if (!row) return;
       rows[type] = row;
       const grid = row.querySelector('[data-recent-list]');
-      if (grid && recentWindow.HomeShelves) grid.replaceChildren(recentWindow.HomeShelves.skeletons(LIMIT));
+      if (grid && HomeShelves) grid.replaceChildren(HomeShelves.skeletons(LIMIT));
       row.hidden = false;
     });
     section.hidden = false;
@@ -275,5 +277,8 @@ type QueryFactory = () => [string, QueryParams];
   // 设置里刚把内容板块打开：这时再拉数据
   window.addEventListener('leletv:layoutchange', init);
 
-  recentWindow.HomeRecent = { ensure: init };
+  return { ensure: init };
 })();
+
+// boot 与 HTML 内联脚本仍按全局名访问
+(window as HomeRecentWindow).HomeRecent = HomeRecent;
