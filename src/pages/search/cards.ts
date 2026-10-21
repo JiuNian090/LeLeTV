@@ -158,7 +158,7 @@ document.addEventListener('keydown', function(e) {
 
 export function _chineseToNumber(str: string): number {
   var n: Record<string, number> = {零:0, 一:1, 二:2, 三:3, 四:4, 五:5, 六:6, 七:7, 八:8, 九:9, 十:10, 百:100, 千:1000};
-  if (/^d+$/.test(str)) return parseInt(str, 10);
+  if (/^\d+$/.test(str)) return parseInt(str, 10);
   var r = 0, t = 0;
   for (var i = 0; i < str.length; i++) {
     var v = n[str[i]];
@@ -169,10 +169,10 @@ export function _chineseToNumber(str: string): number {
 }
 
 export function _extractSeasonInfo(title: string): { base: string; season: number | null } {
-  var m = title.match(/第([一二三四五六七八九十百千d]+)(季|部|集)/);
-  if (m) return { base: title.replace(m[0], "").replace(/s+$/, ""), season: _chineseToNumber(m[1]) };
-  var sm = title.match(/S(d+)/i);
-  if (sm) return { base: title.replace(sm[0], "").replace(/s+$/, ""), season: parseInt(sm[1], 10) };
+  var m = title.match(/第([一二三四五六七八九十百千\d]+)(季|部|集)/);
+  if (m) return { base: title.replace(m[0], "").replace(/\s+$/, ""), season: _chineseToNumber(m[1]) };
+  var sm = title.match(/S(\d+)/i);
+  if (sm) return { base: title.replace(sm[0], "").replace(/\s+$/, ""), season: parseInt(sm[1], 10) };
   return { base: title, season: null };
 }
 
