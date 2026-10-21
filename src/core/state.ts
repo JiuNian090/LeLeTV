@@ -149,6 +149,33 @@ export function extendAPISites(newSites: Record<string, ApiSite>): void {
     Object.assign(API_SITES, newSites);
 }
 
+// ==================== 数据源选择状态 ====================
+// 原在 services/sources/config.ts 声明；迁到 core 后 core/global.ts 与
+// services/sources/config.ts 不再互相依赖。旧位置保留 window getter/setter 代理。
+export interface CustomApiEntry {
+    name: string;
+    url: string;
+    detail?: string;
+    isHidden?: boolean;
+    isAdult?: boolean;
+}
+
+export let selectedAPIs: string[] = [];
+export function getSelectedAPIs(): string[] {
+    return selectedAPIs;
+}
+export function setSelectedAPIs(v: string[]): void {
+    selectedAPIs = v;
+}
+
+export let customAPIs: CustomApiEntry[] = [];
+export function getCustomAPIs(): CustomApiEntry[] {
+    return customAPIs;
+}
+export function setCustomAPIs(v: CustomApiEntry[]): void {
+    customAPIs = v;
+}
+
 // 阶段 5B-1 过渡期类型桥：尚未改为 import 的全局脚本仍以裸名访问这些符号。
 declare global {
     interface ApiSite {
@@ -157,8 +184,17 @@ declare global {
         hidden?: boolean;
         detail?: string;
     }
+    interface CustomApiEntry {
+        name: string;
+        url: string;
+        detail?: string;
+        isHidden?: boolean;
+        isAdult?: boolean;
+    }
     const API_SITES: Record<string, ApiSite>;
     const HIDDEN_MODE_KEY: string;
+    let selectedAPIs: string[];
+    let customAPIs: CustomApiEntry[];
     function isHiddenContentMode(): boolean;
     function scopedKey(key: string): string;
     function extendAPISites(newSites: Record<string, ApiSite>): void;

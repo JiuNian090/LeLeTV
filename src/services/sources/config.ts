@@ -1,19 +1,18 @@
 // 全局变量（跨文件共享，本文件在 app bundle 中最先加载）
 // 注意: 使用 typeof 而不用 in 检查，避免 var 提升导致误判
 
+// 阶段 5B-1：selectedAPIs / customAPIs 已迁至 src/core/state.ts。
+// 这里保留 window getter/setter 代理，旧调用方零改动。
+import { selectedAPIs, setSelectedAPIs, customAPIs, setCustomAPIs } from '../../core/state';
+import type { CustomApiEntry } from '../../core/state';
+
+export type { CustomApiEntry };
+
 interface ApiConfigWindow extends Window {
     __ENV__?: { HIDDENKEY?: string };
     selectedAPIs?: string[];
     customAPIs?: CustomApiEntry[];
     _jsSha256?: (input: string) => Promise<string>;
-}
-
-interface CustomApiEntry {
-    name: string;
-    url: string;
-    detail?: string;
-    isHidden?: boolean;
-    isAdult?: boolean;
 }
 
 interface AdminModalOptions {
@@ -34,8 +33,9 @@ if (typeof apiConfigWindow.selectedAPIs === 'undefined') {
 if (typeof apiConfigWindow.customAPIs === 'undefined') {
     apiConfigWindow.customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]') as CustomApiEntry[];
 }
-var selectedAPIs: string[] = apiConfigWindow.selectedAPIs;
-var customAPIs: CustomApiEntry[] = apiConfigWindow.customAPIs;
+// 同步到 core/state 的共享状态（此后所有读写都走 state）
+setSelectedAPIs(apiConfigWindow.selectedAPIs || []);
+setCustomAPIs(apiConfigWindow.customAPIs || []);
 
 // 验证私密密码
 function verifyAdminPassword(): Promise<boolean> {
@@ -222,7 +222,7 @@ function applyNewDataSourceLogic(): void {
     const defaultSelected = getDefaultDataSources();
 
     if (currentVersion !== DATA_SOURCE_LOGIC_VERSION) {
-        selectedAPIs = defaultSelected.slice();
+        setSelectedAPIs(defaultSelected.slice());
         localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
         localStorage.setItem('lastRefreshTime', currentTime.toString());
         localStorage.setItem('hasUserSelectedAPIs', 'false');
@@ -237,9 +237,9 @@ function applyNewDataSourceLogic(): void {
 
         const savedSelectedAPIs = localStorage.getItem(scopedKey('selectedAPIs'));
         if (savedSelectedAPIs) {
-            selectedAPIs = JSON.parse(savedSelectedAPIs) as string[];
+            setSelectedAPIs(JSON.parse(savedSelectedAPIs) as string[]);
         } else {
-            selectedAPIs = defaultSelected.slice();
+            setSelectedAPIs(defaultSelected.slice());
             localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
             localStorage.setItem('lastRefreshTime', currentTime.toString());
             localStorage.setItem('hasUserSelectedAPIs', 'false');
@@ -257,7 +257,7 @@ function refreshDataSources(hasUserSelected: boolean): void {
     const updatedSelectedAPIs = currentSelectedAPIs.filter(api =>
         allDataSources.includes(api) || api.startsWith('custom_')
     );
-    selectedAPIs = updatedSelectedAPIs;
+    setSelectedAPIs(updatedSelectedAPIs);
     localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
     localStorage.setItem('lastRefreshTime', currentTime.toString());
 }
@@ -439,7 +439,7 @@ function updateSelectedAPIs(): void {
     const customApiIndices = Array.from(customApiCheckboxes).map(input => 'custom_' + input.dataset.customIndex);
 
     // 合并内置和自定义API
-    selectedAPIs = [...builtInApis, ...customApiIndices];
+    setSelectedAPIs([...builtInApis, ...customApiIndices]);
 
     // 保存到localStorage（当前数据域）
     localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
@@ -553,10 +553,10 @@ function removeCustomApi(index: number): void {
 
     // 从选中列表中移除此API
     const customApiId = 'custom_' + index;
-    selectedAPIs = selectedAPIs.filter(id => id !== customApiId);
+    setSelectedAPIs(selectedAPIs.filter(id => id !== customApiId));
 
     // 更新大于此索引的自定义API索引
-    selectedAPIs = selectedAPIs.map(id => {
+    setSelectedAPIs(selectedAPIs.map(id => {
         if (id.startsWith('custom_')) {
             const currentIndex = parseInt(id.replace('custom_', ''));
             if (currentIndex > index) {
@@ -564,7 +564,7 @@ function removeCustomApi(index: number): void {
             }
         }
         return id;
-    });
+    }));
 
     localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
 
@@ -605,12 +605,35 @@ Object.assign(window, {
 
 Object.defineProperty(window, 'selectedAPIs', {
   get: () => selectedAPIs,
-  set: (v) => { selectedAPIs = v; },
+  set: (v) => { setSelectedAPIs(v); },
   configurable: true,
 });
 
 Object.defineProperty(window, 'customAPIs', {
   get: () => customAPIs,
-  set: (v) => { customAPIs = v; },
+  set: (v) => { setCustomAPIs(v); },
   configurable: true,
 });
+
+// 阶段 5B-1 过渡期类型桥：sources/config.ts 已成为 ESM 模块，未改造的全局脚本
+// 仍以裸名访问这些符号（运行时由上方 window 兼容桥提供）。5B-3 改为 import 后删除。
+declare global {
+  function verifyAdminPassword(): Promise<boolean>;
+  function resetDataSourceLogic(): void;
+  function initAPICheckboxes(): void;
+  const DATA_SOURCE_LOGIC_VERSION: string;
+  function applyNewDataSourceLogic(): void;
+  function getDefaultDataSources(): string[];
+  function getRandomDataSources(count: number): string[];
+  function checkHiddenAPIsSelected(): void;
+  function renderCustomAPIsList(): void;
+  function editCustomApi(index: number): void;
+  function updateCustomApi(index: number): void;
+  function cancelEditCustomApi(): void;
+  function updateSelectedApiCount(): void;
+  function selectAllAPIs(selectAll?: boolean, excludeHidden?: boolean): void;
+  function showAddCustomApiForm(): void;
+  function cancelAddCustomApi(): void;
+  function addCustomApi(): void;
+  function removeCustomApi(index: number): void;
+}
