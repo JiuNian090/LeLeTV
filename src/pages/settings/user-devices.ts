@@ -88,13 +88,14 @@ const USER_DEVICES_PANEL = {
   },
 
   async renameDevice(newName: string) {
-    const auth = INVITE_AUTH?.getAuth();
-    if (!auth) return false;
+    const authApi = devicesWindow.INVITE_AUTH;
+    const auth = authApi?.getAuth();
+    if (!authApi || !auth) return false;
 
     // 签名叠加了设备名：改名后必须重算并上报，否则「设备 ID 丢失找回」会对不上
     let newSignature = '';
     try {
-      newSignature = await devicesWindow.INVITE_AUTH.computeDeviceSignature(newName);
+      newSignature = await authApi.computeDeviceSignature(newName);
     } catch {
       newSignature = '';
     }
@@ -112,7 +113,7 @@ const USER_DEVICES_PANEL = {
       });
       const data: MyDevicesResponse = await res.json();
       if (data.ok) {
-        devicesWindow.INVITE_AUTH.updateLocalDeviceName(newName, newSignature);
+        devicesWindow.INVITE_AUTH?.updateLocalDeviceName(newName, newSignature);
         return true;
       }
       return false;
@@ -154,11 +155,11 @@ const USER_DEVICES_PANEL = {
     `;
 
     // 分享邀请信息：与关于页「分享」按钮同一入口（移动端系统分享 / 桌面端复制）
-    container.querySelector('#userDeviceShareBtn').addEventListener('click', function () {
+    container.querySelector('#userDeviceShareBtn')?.addEventListener('click', function () {
       if (typeof window.shareInviteInfo === 'function') window.shareInviteInfo();
     });
 
-    container.querySelector('#userDeviceRefreshBtn').addEventListener('click', async function clickRefresh() {
+    container.querySelector('#userDeviceRefreshBtn')?.addEventListener('click', async function clickRefresh() {
       const btn = this;
       btn.classList.add('refreshing');
       await USER_DEVICES_PANEL._refresh(container);
@@ -166,9 +167,10 @@ const USER_DEVICES_PANEL = {
       btn.blur();
       showToast('已刷新', 'success');
     });
-    container.querySelector('#userDeviceLogoutBtn').addEventListener('click', () => {
-      if (INVITE_AUTH && confirm('确定退出登录吗？')) {
-        devicesWindow.INVITE_AUTH.logout();
+    container.querySelector('#userDeviceLogoutBtn')?.addEventListener('click', () => {
+      const auth = devicesWindow.INVITE_AUTH;
+      if (auth && confirm('确定退出登录吗？')) {
+        auth.logout();
       }
     });
     this._refresh(container);
@@ -181,6 +183,7 @@ const USER_DEVICES_PANEL = {
     const countEl = container.querySelector('#userDeviceCount');
     const maxEl = container.querySelector('#userDeviceMax');
     const currentFingerprint = INVITE_AUTH?.getAuth()?.device_fingerprint;
+    if (!listEl) return;
 
     if (!data) {
       listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">加载失败</p>';
@@ -201,7 +204,7 @@ const USER_DEVICES_PANEL = {
 
     listEl.innerHTML = data.devices.map((d: DeviceInfo) => {
       const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
-      const safeName = d.device_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeName = (d.device_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return `
       <div class="invite-card" style="margin-bottom:0.35rem;">
         <div class="invite-card-top" style="gap:0.4rem;">
@@ -212,7 +215,7 @@ const USER_DEVICES_PANEL = {
             ${isCurrent ? '<span class="invite-status-badge invite-status-active" style="font-size:0.6rem;flex-shrink:0;">当前</span>' : ''}
           </div>
           <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;">
-            <span class="text-xs text-gray-500" style="white-space:nowrap;">${_timeAgo(d.last_active_at)}</span>
+            <span class="text-xs text-gray-500" style="white-space:nowrap;">${d.last_active_at != null ? _timeAgo(d.last_active_at) : '从未'}</span>
             <button class="invite-action-btn ${isCurrent ? '' : 'invite-action-btn-danger'} del-device-btn" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}" style="flex-shrink:0;">${isCurrent ? '退出' : '✕'}</button>
           </div>
         </div>
@@ -244,10 +247,12 @@ const USER_DEVICES_PANEL = {
     listEl.querySelectorAll<HTMLElement>('.del-device-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const fp = btn.dataset.fp;
+        if (!fp) return;
         const isCurrent = btn.dataset.current === 'true';
         
         if (isCurrent) {
-          if (INVITE_AUTH) devicesWindow.INVITE_AUTH.logout();
+          const auth = devicesWindow.INVITE_AUTH;
+          if (auth) auth.logout();
           return;
         }
         
