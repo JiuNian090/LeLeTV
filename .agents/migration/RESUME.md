@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`9d9668d refactor: 阶段 5A-6 player bundle 切换 ESM 入口`
+> 最新提交：`8665594 refactor: 阶段 5B-1c 收敛搜索状态到 core/state`
 
 ---
 
@@ -24,6 +24,8 @@
 | 5A-5 | **完成**：settings bundle（3 文件）切 ESM 入口；settings 40.5 KB，设置页 / 主题 / 邀请码 / 设备面板回归通过 |
 | 5A-6 | **完成**：player bundle（15 文件）切 ESM 入口 + 8 个文件补桥（15 个播放器状态用 getter/setter）；player 94.2 KB |
 | 5A-7 | **已达成**：5 个 bundle 全部走 esbuild.build；concat 分支暂留作回退 |
+| 5B-1 | **完成（3 个 commit）**：新增 `src/core/state.ts`，收敛 `API_SITES` / 数据域函数 / `selectedAPIs` / `customAPIs` / 搜索状态；旧位置保留 re-export 与 window getter/setter 代理。首屏 238.3 KB |
+| 5B-2 | **进行中**：抽 `src/ui/player/state.ts` 拆 player 内部环 |
 
 ---
 
@@ -118,8 +120,9 @@
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
 阶段 5A 已完成：5 个 bundle 全部走 esbuild.build，首屏 238.4 KB。
-下一步：阶段 5B-1（抽 `src/core/state.ts` 收敛共享状态与双向引用），再逐模块改 import、启用 splitting。
-新会话开场：读本文件与 `PHASE-5-PLAN.md` → 从 5B-1 继续 → `npm start` 启动一次服务器。
+阶段 5B-1 已完成：`src/core/state.ts` 落地，`API_SITES` / 数据域函数 / `selectedAPIs` / `customAPIs` / 搜索状态已收敛；首屏 238.3 KB。
+下一步：阶段 5B-2（抽 `src/ui/player/state.ts` + `session/utils/navigation` 拆 player 内部环），再逐模块改 import、启用 splitting。
+新会话开场：读本文件与 `PHASE-5-PLAN.md` / `PHASE-5-GRAPH.md` → 从 5B-2 继续 → `npm start` 启动一次服务器。
 
 ---
 
@@ -144,7 +147,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **238.4 KB**（预算 275 KB）；core **47.8 KB**；app **190.7 KB**；category **19.1 KB**；settings **40.5 KB**；player **94.2 KB**；`js/` 剩余 `.js` **0**；tracked 372 / inventory 441。
+基线：首屏 core+app **238.3 KB**（预算 275 KB）；core **47.7 KB**；app **190.6 KB**；category **19.1 KB**；settings **40.5 KB**；player **94.2 KB**；`js/` 剩余 `.js` **0**；tracked 374 / inventory 443。
 
 ---
 
