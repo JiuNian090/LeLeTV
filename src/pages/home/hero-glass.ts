@@ -1,14 +1,10 @@
 // 首屏玻璃字标：环境光跟着指针走，边缘那条细高光随之转向（只反射，不发光）
 // 主光在指针那一侧，次光在对侧；方位角按最短弧平滑过渡。触屏、减少动态效果时不动
 
-interface HeroGlassWindow extends Window {
-    LeLeMotion?: { reduced: () => boolean };
-}
+import { prefersReducedMotion } from '../../ui/motion-pref';
 
 (function () {
     'use strict';
-
-    const heroWindow = window as HeroGlassWindow;
 
     var REST = 230;   // 没有指针时光从左上方来
 
@@ -22,7 +18,7 @@ interface HeroGlassWindow extends Window {
 
         var target = REST, current = REST, raf = 0;
         function reduced(): boolean {
-            return !!(heroWindow.LeLeMotion && typeof heroWindow.LeLeMotion.reduced === 'function' && heroWindow.LeLeMotion.reduced());
+            return prefersReducedMotion();
         }
         function tick(): void {
             raf = 0;
