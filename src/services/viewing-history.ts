@@ -148,8 +148,9 @@ function renderHistoryCard(item: ViewingHistoryItem): string {
         `;
     }
 
-    const hasCover = item.cover && /^https?:\/\//.test(item.cover);
-    const coverUrl = hasCover ? item.cover.replace(/"/g, '%22') : '';
+    const cover = item.cover;
+    const hasCover = !!cover && /^https?:\/\//.test(cover);
+    const coverUrl = hasCover && cover ? cover.replace(/"/g, '%22') : '';
     const placeholder = '<div class="history-cover-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1Z"/></svg></div>';
 
     // 封面失败时换成占位（通过 data 属性取模板，不在 onerror 里拼 HTML）
@@ -232,7 +233,7 @@ export async function playFromHistory(url: string, title: string, episodeIndex: 
         const historyRaw = localStorage.getItem(scopedKey('viewingHistory'));
         if (historyRaw) {
             const history = JSON.parse(historyRaw) as ViewingHistoryItem[];
-            historyItem = history.find(item => item.url === url);
+            historyItem = history.find(item => item.url === url) || null;
 
             if (historyItem && historyItem.episodes && Array.isArray(historyItem.episodes)) {
                 episodesList = historyItem.episodes;
@@ -420,7 +421,8 @@ export function addToViewingHistory(videoInfo: ViewingHistoryInput): void {
             existingItem.vod_id = videoInfo.vod_id || existingItem.vod_id; // 强制更新为最新播放源
             existingItem.directVideoUrl = videoInfo.directVideoUrl || existingItem.directVideoUrl; // 强制更新为最新播放源
             existingItem.url = videoInfo.url; // 强制更新为最新播放源
-            existingItem.playbackPosition = (episodeChanged || videoInfo.playbackPosition > 10) ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
+            const nextPosition = videoInfo.playbackPosition ?? 0;
+            existingItem.playbackPosition = (episodeChanged || nextPosition > 10) ? nextPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
 
             // 更新showIdentifier为最新播放源的标识符
@@ -429,10 +431,11 @@ export function addToViewingHistory(videoInfo: ViewingHistoryInput): void {
             }
 
             if (videoInfo.episodes && Array.isArray(videoInfo.episodes) && videoInfo.episodes.length > 0) {
-                if (!existingItem.episodes ||
-                    !Array.isArray(existingItem.episodes) ||
-                    existingItem.episodes.length !== videoInfo.episodes.length ||
-                    !videoInfo.episodes.every((ep, i) => ep === existingItem.episodes[i])) {
+                const existingEpisodes = existingItem.episodes;
+                if (!existingEpisodes ||
+                    !Array.isArray(existingEpisodes) ||
+                    existingEpisodes.length !== videoInfo.episodes.length ||
+                    !videoInfo.episodes.every((ep, i) => ep === existingEpisodes[i])) {
                     existingItem.episodes = [...videoInfo.episodes];
                 }
             }
@@ -481,8 +484,8 @@ function confirmClearViewingHistory(): void {
                     <button type="button" class="v2-btn v2-btn--danger" data-role="confirm">清空</button>
                 </div>
             `;
-            body.querySelector('[data-role="cancel"]').addEventListener('click', () => overlay.remove());
-            body.querySelector('[data-role="confirm"]').addEventListener('click', () => {
+            body.querySelector('[data-role="cancel"]')?.addEventListener('click', () => overlay.remove());
+            body.querySelector('[data-role="confirm"]')?.addEventListener('click', () => {
                 overlay.remove();
                 clearViewingHistory();
             });
