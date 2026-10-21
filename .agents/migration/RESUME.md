@@ -25,7 +25,8 @@
 | 5A-6 | **完成**：player bundle（15 文件）切 ESM 入口 + 8 个文件补桥（15 个播放器状态用 getter/setter）；player 94.2 KB |
 | 5A-7 | **已达成**：5 个 bundle 全部走 esbuild.build；concat 分支暂留作回退 |
 | 5B-1 | **完成（3 个 commit）**：新增 `src/core/state.ts`，收敛 `API_SITES` / 数据域函数 / `selectedAPIs` / `customAPIs` / 搜索状态；旧位置保留 re-export 与 window getter/setter 代理。首屏 238.3 KB |
-| 5B-2 | **进行中**：抽 `src/ui/player/state.ts` 拆 player 内部环 |
+| 5B-2 | **完成（6 个 commit）**：新增 `ui/player/state.ts`（15 个状态 + 选集 hook）、`session.ts`、`utils.ts`、`navigation.ts`；`core.ts` 改为 import state 并用 `advanceEpisode()` 断开 core→episodes；播放页起播/选集/自动连播/关灯/返回回归通过。player 94.4 KB |
+| 5B-3 | **进行中**：按 core → services → ui → pages → router 逐模块改 import |
 
 ---
 
