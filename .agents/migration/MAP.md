@@ -88,7 +88,7 @@
 | 60 | pages | `pages/settings.html` | `src/pages/settings/template.html` | verified | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单；2026-10-21 迁移完成 |
 | 61 | pages | `js/auth/user-devices.js` | `src/pages/settings/user-devices.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 62 | router | `js/app/app-routing.js` | `src/router/index.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
-| 63 | router | `js/app/page-loader.js` | `src/router/page-loader.ts` | pending | 第 8 节 页面导航 | — |
+| 63 | router | `js/app/page-loader.js` | `src/router/page-loader.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 64 | entry | `index.html` | `src/index.html` | pending | 第 0 节通用前置 | — |
 | 65 | entry | `js/app/app.js` | `src/main.ts` | pending | 第 0 节通用前置 | — |
 | 66 | styles | `css/v2/base.css` | `src/styles/base.css` | pending | 第 4 节 主题 | — |

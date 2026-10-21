@@ -13,6 +13,13 @@
  *   - ensure() 失败时插入占位页并 resolve，保证导航仍可继续
  *   - 脚本与样式失败都不阻断页面显示，只记录警告
  */
+
+interface PageLoaderWindow extends Window {
+    __LELETV_VERSION__?: string;
+}
+
+const pageLoaderWindow = window as PageLoaderWindow;
+
 var LeLePages = (function () {
     'use strict';
 
@@ -59,7 +66,7 @@ var LeLePages = (function () {
     }
 
     function versionQuery() {
-        var v = window.__LELETV_VERSION__ || '';
+        var v = pageLoaderWindow.__LELETV_VERSION__ || '';
         return v ? '?v=' + encodeURIComponent(v) : '';
     }
 
@@ -76,12 +83,12 @@ var LeLePages = (function () {
         var href = STYLES[key];
         if (!href) return Promise.resolve();
 
-        _stylePromises[key] = new Promise(function (resolve) {
+        _stylePromises[key] = new Promise<void>(function (resolve) {
             var link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = href + versionQuery();
             link.setAttribute('data-leletv-style', key);
-            link.onload = resolve;
+            link.onload = function () { resolve(); };
             // 样式失败不阻断页面：内容仍可操作，只是外观退化为无样式
             link.onerror = function () {
                 console.warn('页面样式加载失败:', href);
@@ -97,7 +104,7 @@ var LeLePages = (function () {
         if (!src) return Promise.resolve();
         if (_scriptPromises[name]) return _scriptPromises[name];
 
-        _scriptPromises[name] = new Promise(function (resolve) {
+        _scriptPromises[name] = new Promise<void>(function (resolve) {
             var s = document.createElement('script');
             s.src = src + versionQuery();
             s.async = true;

@@ -353,7 +353,7 @@
 | 279 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | verified | 全局搜索入口与事件绑定不变 |
 | 280 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | pending | — |
 | 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
-| 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
+| 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | verified | `LeLePages` 接口不变 |
 | 283 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | verified | 面板入口与接口调用不变；移除与 user-devices 完全相同的重复函数 |
 | 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | verified | 已迁移至 `src/services/invitation.ts`；类型检查通过 |
 | 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | verified | 已迁移至 `src/core/crypto.ts`；类型检查通过 |
@@ -527,6 +527,7 @@
 | 430 | `src/pages/settings/template.html` | 设置页片段（迁移自 `pages/settings.html`） | keep | — | — | — | done | 阶段 4 第 60 条迁移目标 |
 | 431 | `src/pages/settings/user-devices.ts` | 设备管理面板（迁移自 `js/auth/user-devices.js`） | keep | — | — | — | done | 阶段 4 第 61 条迁移目标 |
 | 432 | `src/router/index.ts` | hash 路由 / 页面切换与装载（迁移自 `js/app/app-routing.js`） | keep | — | — | — | done | 阶段 4 第 62 条迁移目标 |
+| 433 | `src/router/page-loader.ts` | 页面片段 / bundle 按需加载（迁移自 `js/app/page-loader.js`） | keep | — | — | — | done | 阶段 4 第 63 条迁移目标 |
 
 ## workers/（红区）
 
