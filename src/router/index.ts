@@ -10,6 +10,8 @@ interface RouterWindow extends Window {
   LELETV_DISCLAIMER?: { handled?: boolean };
   currentPage?: string;
   INVITE_AUTH?: { getAuth?: () => { code?: string } | null };
+  initMoviesPageBindings?: () => void;
+  initMoviesPage?: () => void;
 }
 
 const routerWindow = window as RouterWindow;
@@ -930,8 +932,8 @@ function handlePageLoad(n) {
       break;
     case 'movies':
       // 结果页的顶栏/筛选事件只在片段插入后才能绑定
-      if (typeof window.initMoviesPageBindings === 'function') window.initMoviesPageBindings();
-      if (typeof initMoviesPage === 'function') initMoviesPage();
+      if (typeof routerWindow.initMoviesPageBindings === 'function') routerWindow.initMoviesPageBindings();
+      if (typeof routerWindow.initMoviesPage === 'function') routerWindow.initMoviesPage();
       break;
     case 'settings':
       // 设置页的开关、片源列表、主题盘与设备面板都在片段加载后初始化

@@ -54,6 +54,17 @@ interface SearchPageWindow extends Window {
 
 const searchPageWindow = window as SearchPageWindow;
 
+// 结果页（pages/category）的跨页契约：pages 之间禁止互相 import
+interface MoviesPageBridge {
+  restoreMoviesFromCache: (cached: unknown) => boolean;
+  moviesPageBack: () => void;
+  openMoviesPage: (keyword: string, opts?: { from?: string; fallbackGenres?: string[] }) => void;
+  showMoviesResults: (keyword: string, results: unknown[], opts?: { from?: string; fallbackGenres?: string[] }) => void;
+  _moviesState?: { from?: string; fallbackGenres?: unknown[] };
+  _moviesEpoch?: number;
+}
+const moviesPage = window as unknown as MoviesPageBridge;
+
 // 点击卡片跳转播放页的延迟定时器：保证流星动画循环可见后再跳转
 let _pendingPlayDirectTimer = null;
 
@@ -101,8 +112,8 @@ function restoreSearchFromCache() {
     if (!cached || !cached.keyword || !Array.isArray(cached.results) || cached.results.length === 0) return false;
 
     // 结果页缓存：委托结果页模块恢复（搜索/类别统一入口）
-    if (cached.sourcePage === 'movies' && typeof restoreMoviesFromCache === 'function') {
-        if (restoreMoviesFromCache(cached)) return true;
+    if (cached.sourcePage === 'movies' && typeof moviesPage.restoreMoviesFromCache === 'function') {
+        if (moviesPage.restoreMoviesFromCache(cached)) return true;
     }
 
     // 还原内存状态
@@ -576,7 +587,7 @@ function setupEventListeners() {
             case 'switch-page': switchPage(el.dataset.page); break;
             case 'reset-home': resetSearchArea(); closeMobileSearch(); hideSearchHistory(); break;
             case 'close-results': closeSearchResults(); break;
-            case 'movies-back': moviesPageBack(); break;
+            case 'movies-back': moviesPage.moviesPageBack(); break;
             case 'search': search(); break;
             case 'close-modal': closeModal(); break;
             case 'open-disclaimer': openDisclaimerModal(); break;
@@ -930,17 +941,17 @@ async function search() {
     }
 
     // 用户主动发起的搜索：结果页返回去向固定为首页（清除类别入口残留上下文）
-    if (typeof _moviesState !== 'undefined' && _moviesState) {
-        _moviesState.from = 'home';
-        _moviesState.fallbackGenres = [];
+    if (moviesPage._moviesState) {
+        moviesPage._moviesState.from = 'home';
+        moviesPage._moviesState.fallbackGenres = [];
     }
     // 结果页可用时，搜索完成后统一路由到结果页（桌面/移动全设备统一入口）
     const routeToMovies = !!document.getElementById('page-movies');
     // 新搜索发起：递增结果页纪元，作废仍在途的旧类别入口加载（后发起者优先）
     let searchEpoch = 0;
-    if (typeof _moviesEpoch !== 'undefined') {
-        _moviesEpoch++;
-        searchEpoch = _moviesEpoch;
+    if (typeof moviesPage._moviesEpoch !== 'undefined') {
+        moviesPage._moviesEpoch = (moviesPage._moviesEpoch || 0) + 1;
+        searchEpoch = moviesPage._moviesEpoch;
     }
 
     // 清空结果区域，等待首个源返回后直接渲染真实结果
@@ -961,13 +972,13 @@ async function search() {
     _initFilterTabs();
 
     // 结果页可用：直接进入结果页，各片源谁先返回先显示，不再用整屏加载层挡住页面
-    if (routeToMovies && typeof openMoviesPage === 'function') {
+    if (routeToMovies && typeof moviesPage.openMoviesPage === 'function') {
         saveSearchHistory(query);
         try {
             window.history.pushState({ search: query }, `搜索: ${query} - LeLeTV`, `/s=${encodeURIComponent(query)}`);
             document.title = `搜索: ${query} - LeLeTV`;
         } catch (e) { /* 地址栏更新失败不影响搜索 */ }
-        openMoviesPage(query, { from: 'home' });
+        moviesPage.openMoviesPage(query, { from: 'home' });
         setTimeout(releaseThrottle, TIMING.SEARCH_THROTTLE_RELEASE);
         return;
     }
@@ -1079,7 +1090,7 @@ async function search() {
         }
 
         // 期间有更新的搜索/类别入口发起，放弃本次迟到结果，避免覆盖新页面
-        if (searchEpoch && typeof _moviesEpoch !== 'undefined' && searchEpoch !== _moviesEpoch) {
+        if (searchEpoch && typeof moviesPage._moviesEpoch !== 'undefined' && searchEpoch !== moviesPage._moviesEpoch) {
             hideLoading();
             return;
         }
@@ -1088,16 +1099,16 @@ async function search() {
             // 结果排序：本次搜索延迟快的源在前（与结果页共用同一套规则）
             allResults = _sortResultsByLatencyThenName(allResults);
             setLastAllResults(allResults);
-            if (routeToMovies && typeof showMoviesResults === 'function') {
+            if (routeToMovies && typeof moviesPage.showMoviesResults === 'function') {
                 // 统一进入结果页（左侧源列表 + 右侧结果）
-                showMoviesResults(query, allResults, { from: 'home', fallbackGenres: [] });
+                moviesPage.showMoviesResults(query, allResults, { from: 'home', fallbackGenres: [] });
             } else {
                 _renderSourceFilterTabs(allResults.length);
                 _applySourceFilter(activeSourceFilter);
             }
         } else {
-            if (routeToMovies && typeof showMoviesResults === 'function') {
-                showMoviesResults(query, [], { from: 'home', fallbackGenres: [] });
+            if (routeToMovies && typeof moviesPage.showMoviesResults === 'function') {
+                moviesPage.showMoviesResults(query, [], { from: 'home', fallbackGenres: [] });
             } else {
                 resultsDiv.innerHTML = `
                     <div class="v2-state">

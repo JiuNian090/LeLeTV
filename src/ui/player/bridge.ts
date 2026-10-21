@@ -69,9 +69,11 @@ async function buildApiParamsAndFetch(id: string, sourceCode: string): Promise<D
 // 因此改写为 #category 并附 returnTo 标记，供 goHome 判断本次不能用 history.back()。
 function buildPlayerBackUrl(): string {
     try {
+        // 结果页可能由类别页发起（pages 之间不互相 import，沿用 window 契约）
+        const moviesState = (window as Window & { _moviesState?: { from?: string } })._moviesState;
         if (location.hash === '#movies'
-            && typeof _moviesState !== 'undefined' && _moviesState
-            && _moviesState.from === 'category') {
+            && moviesState
+            && moviesState.from === 'category') {
             return window.location.origin + window.location.pathname + '?returnTo=category#category';
         }
         return window.location.href;

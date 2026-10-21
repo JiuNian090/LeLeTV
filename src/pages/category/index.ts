@@ -4,6 +4,11 @@
 // 选中单个片源时不合并，平铺该片源的结果
 // 类别入口采用混合策略：先按影片名关键词搜索，全部无结果时按分类拉取兜底
 
+import { API_SITES, isHiddenContentMode, selectedAPIs } from '../../core/state';
+import type { MergeGroup } from '../../core/state';
+import { searchByAPIAndKeyWord, searchByCategory } from '../../services/search';
+
+
 // 页面状态（app-search.js 也会读取）
 interface MovieItem {
   source_code?: string;
@@ -17,6 +22,42 @@ interface MovieItem {
 }
 
 type MovieGroup = MergeGroup;
+
+// cards 属于 pages/search；pages 之间禁止互相 import，沿用 window 契约。
+// 签名与 src/pages/search/cards.ts 的导出一致；运行时由该文件的 window 桥承接。
+interface SearchCardsBridge {
+  _normTitle(name: unknown): string;
+  _mergeResultsByTitle(items: MovieItem[]): MovieGroup[];
+  _latencyLevel(lat: unknown): string;
+  _latencyText(lat: unknown): string;
+  _sourceFastestLatency(results?: MovieItem[]): Record<string, number>;
+  _orderSourcesByLatency(codes?: string[], fastest?: Record<string, number>, fallbackSort?: (ids: string[]) => string[]): string[];
+  _sortResultsByLatencyThenName(list?: MovieItem[]): MovieItem[];
+  _getSourceLabel(apiId: string, results?: MovieItem[]): string;
+  _posterLoaded(img: HTMLImageElement): void;
+  generateSkeletonCards(count?: number): string;
+  animateCardEntrance(containerSel?: string): void;
+}
+
+const {
+  _normTitle,
+  _mergeResultsByTitle,
+  _latencyLevel,
+  _latencyText,
+  _sourceFastestLatency,
+  _orderSourcesByLatency,
+  _getSourceLabel,
+  _posterLoaded,
+  generateSkeletonCards,
+  animateCardEntrance,
+  _sortResultsByLatencyThenName,
+} = window as unknown as SearchCardsBridge;
+
+// 结果页与搜索页 / 路由之间的跨页契约，运行时由各自的 window 桥提供
+const { clearSearchInput, switchPage } = window as unknown as {
+  clearSearchInput: () => void;
+  switchPage: (name: string) => void;
+};
 
 interface MoviesGroupsData {
   all: MovieGroup[];
@@ -1012,7 +1053,6 @@ if (document.readyState === 'loading') {
 } else {
   initMoviesPageBindings();
 }
-window.initMoviesPageBindings = initMoviesPageBindings;
 
 // ===================== 导出 =====================
 
@@ -1021,12 +1061,6 @@ Object.defineProperty(window, '_moviesState', {
   configurable: true,
   get: function () { return _moviesState; }
 });
-window.openMoviesPage = openMoviesPage;
-window.showMoviesResults = showMoviesResults;
-window.loadMoviesResults = loadMoviesResults;
-window.initMoviesPage = initMoviesPage;
-window.moviesPageBack = moviesPageBack;
-window.restoreMoviesFromCache = restoreMoviesFromCache;
 
 // 阶段 5A-4 过渡期兼容桥：app bundle 切 ESM 入口后，
 // 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
