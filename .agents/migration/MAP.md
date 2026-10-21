@@ -33,7 +33,7 @@
 | 5 | core | `js/auth/proxy-auth.js` | `src/core/http.ts` | verified | 第 0 节通用前置 | — |
 | 6 | core | `js/core/listener-tracker.js` | `src/core/listener-tracker.ts` | verified | 第 0 节通用前置 | — |
 | 7 | core | `js/auth/sha256.js` | `src/core/crypto.ts` | verified | 第 0 节通用前置 | 已合并（AP-001） |
-| 8 | core | `js/core/storage-service.js` | `src/core/storage.ts` | pending | 第 0 节通用前置 | — |
+| 8 | core | `js/core/storage-service.js` | `src/core/storage.ts` | verified | 第 0 节通用前置 | — |
 | 9 | core | `js/core/timing.js` | `src/core/timing.ts` | pending | 第 0 节通用前置 | — |
 | 10 | services | `js/filter-config.json` | `src/services/adfilter-config.json` | pending | 对应功能节（2 / 5 / 6 / 9） | 运行时 fetch /js/filter-config.json，迁移后需同步 fetch 路径 |
 | 11 | services | `js/api/api.js` | `src/services/api.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |

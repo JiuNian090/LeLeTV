@@ -62,7 +62,7 @@ const StorageKeys = {
 
     // ---- 其他 ----
     LAST_ACCEPTED_DISCLAIMER: 'lastAcceptedDisclaimer'
-};
+} as const;
 
 // ==================== 存储服务 ====================
 
@@ -72,13 +72,10 @@ const StorageService = {
 
     /**
      * 读取字符串值
-     * @param {string} key
-     * @param {string|null} [defaultValue=null]
-     * @returns {string|null}
      */
-    get: function (key, defaultValue) {
+    get: function (key: string, defaultValue?: string | null): string | null {
         try {
-            var value = localStorage.getItem(key);
+            const value = localStorage.getItem(key);
             return value !== null ? value : (defaultValue !== undefined ? defaultValue : null);
         } catch (e) {
             console.warn('StorageService.get 失败:', e);
@@ -88,10 +85,8 @@ const StorageService = {
 
     /**
      * 写入字符串值
-     * @param {string} key
-     * @param {string} value
      */
-    set: function (key, value) {
+    set: function (key: string, value: unknown): void {
         try {
             localStorage.setItem(key, String(value));
         } catch (e) {
@@ -101,9 +96,8 @@ const StorageService = {
 
     /**
      * 删除指定键
-     * @param {string} key
      */
-    remove: function (key) {
+    remove: function (key: string): void {
         try {
             localStorage.removeItem(key);
         } catch (e) {
@@ -114,7 +108,7 @@ const StorageService = {
     /**
      * 清空所有 localStorage
      */
-    clear: function () {
+    clear: function (): void {
         try {
             localStorage.clear();
         } catch (e) {
@@ -126,27 +120,22 @@ const StorageService = {
 
     /**
      * 读取并解析 JSON
-     * @param {string} key
-     * @param {*} [defaultValue=null]
-     * @returns {*}
      */
-    getJSON: function (key, defaultValue) {
+    getJSON: function <T>(key: string, defaultValue?: T): T {
         try {
-            var raw = localStorage.getItem(key);
-            if (raw === null) return defaultValue !== undefined ? defaultValue : null;
-            return JSON.parse(raw);
+            const raw = localStorage.getItem(key);
+            if (raw === null) return (defaultValue !== undefined ? defaultValue : null) as T;
+            return JSON.parse(raw) as T;
         } catch (e) {
             console.warn('StorageService.getJSON 解析失败:', key, e);
-            return defaultValue !== undefined ? defaultValue : null;
+            return (defaultValue !== undefined ? defaultValue : null) as T;
         }
     },
 
     /**
      * 写入 JSON 值
-     * @param {string} key
-     * @param {*} value
      */
-    setJSON: function (key, value) {
+    setJSON: function (key: string, value: unknown): void {
         try {
             localStorage.setItem(key, JSON.stringify(value));
         } catch (e) {
@@ -156,91 +145,80 @@ const StorageService = {
 
     /**
      * 读取布尔值（支持 'true'/'false' 字符串）
-     * @param {string} key
-     * @param {boolean} [defaultValue=false]
-     * @returns {boolean}
      */
-    getBool: function (key, defaultValue) {
-        var raw = this.get(key);
+    getBool: function (key: string, defaultValue?: boolean): boolean {
+        const raw = StorageService.get(key);
         if (raw === null) return defaultValue !== undefined ? defaultValue : false;
         return raw === 'true';
     },
 
     /**
      * 读取整数
-     * @param {string} key
-     * @param {number} [defaultValue=0]
-     * @returns {number}
      */
-    getInt: function (key, defaultValue) {
-        var raw = this.get(key);
+    getInt: function (key: string, defaultValue?: number): number {
+        const raw = StorageService.get(key);
         if (raw === null) return defaultValue !== undefined ? defaultValue : 0;
-        var num = parseInt(raw, 10);
+        const num = parseInt(raw, 10);
         return isNaN(num) ? (defaultValue !== undefined ? defaultValue : 0) : num;
     },
 
     // ---- 常用数据的命名访问器 ----
 
     // 注意：下列 4 类数据按当前数据域隔离（scopedKey）——隐藏模式下读写 hidden:: 前缀的键
-    /** @returns {string[]} */
-    getSelectedAPIs: function () {
-        return this.getJSON(scopedKey(StorageKeys.SELECTED_APIS), []);
+    getSelectedAPIs: function (): string[] {
+        return StorageService.getJSON<string[]>(scopedKey(StorageKeys.SELECTED_APIS), []);
     },
 
-    /** @param {string[]} apis */
-    setSelectedAPIs: function (apis) {
-        this.setJSON(scopedKey(StorageKeys.SELECTED_APIS), apis);
+    setSelectedAPIs: function (apis: string[]): void {
+        StorageService.setJSON(scopedKey(StorageKeys.SELECTED_APIS), apis);
     },
 
-    /** @returns {Array} */
-    getCustomAPIs: function () {
-        return this.getJSON(scopedKey(StorageKeys.CUSTOM_APIS), []);
+    getCustomAPIs: function (): unknown[] {
+        return StorageService.getJSON<unknown[]>(scopedKey(StorageKeys.CUSTOM_APIS), []);
     },
 
-    /** @param {Array} apis */
-    setCustomAPIs: function (apis) {
-        this.setJSON(scopedKey(StorageKeys.CUSTOM_APIS), apis);
+    setCustomAPIs: function (apis: unknown[]): void {
+        StorageService.setJSON(scopedKey(StorageKeys.CUSTOM_APIS), apis);
     },
 
-    /** @returns {Array} */
-    getViewingHistory: function () {
-        return this.getJSON(scopedKey(StorageKeys.VIEWING_HISTORY), []);
+    getViewingHistory: function (): unknown[] {
+        return StorageService.getJSON<unknown[]>(scopedKey(StorageKeys.VIEWING_HISTORY), []);
     },
 
-    /** @param {Array} history */
-    setViewingHistory: function (history) {
-        this.setJSON(scopedKey(StorageKeys.VIEWING_HISTORY), history);
+    setViewingHistory: function (history: unknown[]): void {
+        StorageService.setJSON(scopedKey(StorageKeys.VIEWING_HISTORY), history);
     },
 
-    /** @returns {Array} */
-    getSearchHistory: function () {
-        return this.getJSON(scopedKey(StorageKeys.SEARCH_HISTORY), []);
+    getSearchHistory: function (): unknown[] {
+        return StorageService.getJSON<unknown[]>(scopedKey(StorageKeys.SEARCH_HISTORY), []);
     },
 
-    /** @param {Array} history */
-    setSearchHistory: function (history) {
-        this.setJSON(scopedKey(StorageKeys.SEARCH_HISTORY), history);
+    setSearchHistory: function (history: unknown[]): void {
+        StorageService.setJSON(scopedKey(StorageKeys.SEARCH_HISTORY), history);
     },
 
-    /** @returns {Object|null} */
-    getCurrentVideoInfo: function () {
-        return this.getJSON(StorageKeys.CURRENT_VIDEO_INFO, null);
+    getCurrentVideoInfo: function (): Record<string, unknown> | null {
+        return StorageService.getJSON<Record<string, unknown> | null>(StorageKeys.CURRENT_VIDEO_INFO, null);
     },
 
-    /** @param {Object} info */
-    setCurrentVideoInfo: function (info) {
-        this.setJSON(StorageKeys.CURRENT_VIDEO_INFO, info);
+    setCurrentVideoInfo: function (info: Record<string, unknown>): void {
+        StorageService.setJSON(StorageKeys.CURRENT_VIDEO_INFO, info);
     },
 
-    /** @returns {boolean} 是否处于隐藏内容模式（决定当前数据域） */
-    isHiddenContentMode: function () {
-        return this.getBool(StorageKeys.HIDDEN_CONTENT_MODE, false);
+    /** 是否处于隐藏内容模式（决定当前数据域） */
+    isHiddenContentMode: function (): boolean {
+        return StorageService.getBool(StorageKeys.HIDDEN_CONTENT_MODE, false);
     }
 };
 
 // ==================== 注册到 LeLeTV ====================
 
-if (typeof window.LeLeTV !== 'undefined') {
-    window.LeLeTV.storage = StorageService;
-    window.LeLeTV.StorageKeys = StorageKeys;
+type LeLeTVStorageHost = Window & {
+    LeLeTV?: { storage?: unknown; StorageKeys?: typeof StorageKeys };
+};
+
+const leleTVHost = (window as LeLeTVStorageHost).LeLeTV;
+if (typeof leleTVHost !== 'undefined') {
+    leleTVHost.storage = StorageService;
+    leleTVHost.StorageKeys = StorageKeys;
 }
