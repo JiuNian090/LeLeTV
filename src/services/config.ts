@@ -2,6 +2,10 @@
 // 主题色两个数据域各存一套，键名本身已带模式，因此不能套 scopedKey 的 hidden:: 前缀。
 // 键名的唯一来源是 js/ui/theme-system.js 暴露的 LeLeThemeStore，这里只是兜底
 
+// 阶段 5B-3：显式 import core 的键名解析与哈希。
+import { scopedKey, SEARCH_HISTORY_KEY, HIDDEN_MODE_KEY } from '../core/config';
+import { sha256 } from '../core/crypto';
+
 interface JSZipInstance {
     file(name: string): { async(type: 'string'): Promise<string> } | null;
     file(name: string, content: string): void;
@@ -62,7 +66,7 @@ function loadJSZip(): Promise<JSZipStatic> {
     return _jszipPromise;
 }
 
-async function importConfigFromUrl() {
+export async function importConfigFromUrl() {
     showModal({
         title: '从链接导入配置',
         content: (body, overlay) => {
@@ -108,7 +112,7 @@ async function importConfigFromUrl() {
     });
 }
 
-async function importConfig() {
+export async function importConfig() {
     showImportBox(async (file) => {
         try {
             if (file.size > 1024 * 1024 * 20) throw new Error('文件大小超过 20MB');
@@ -178,7 +182,7 @@ async function processBackupFile(file) {
     }
 }
 
-async function exportConfig() {
+export async function exportConfig() {
     const times = Date.now().toString();
 
     // ===== 设置数据：主题、数据源、开关等 =====
@@ -244,7 +248,7 @@ async function exportConfig() {
     saveBlobAsFile(blob, 'LeLeTV-Backup_' + times + '.zip');
 }
 
-function saveBlobAsFile(blob, fileName) {
+export function saveBlobAsFile(blob, fileName) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -255,7 +259,7 @@ function saveBlobAsFile(blob, fileName) {
     window.URL.revokeObjectURL(url);
 }
 
-function openMobileSearch() {
+export function openMobileSearch() {
     const overlay = document.getElementById('mobileSearchOverlay');
     const input = document.getElementById('mobileSearchInput') as HTMLInputElement | null;
     if (!overlay || !input) return;
@@ -275,7 +279,7 @@ function openMobileSearch() {
     input.focus();
 }
 
-function closeMobileSearch() {
+export function closeMobileSearch() {
     const overlay = document.getElementById('mobileSearchOverlay');
     if (!overlay) return;
     // blur 输入框以收起键盘
@@ -297,3 +301,14 @@ Object.assign(window, {
   openMobileSearch,
   closeMobileSearch
 });
+
+// 阶段 5B-3 过渡期类型桥：services/config.ts 已成为 ESM 模块，尚未改为 import 的
+// 调用方仍以裸名访问。
+declare global {
+  function importConfigFromUrl(): Promise<void>;
+  function importConfig(): Promise<void>;
+  function exportConfig(): Promise<void>;
+  function saveBlobAsFile(blob: Blob, fileName: string): void;
+  function openMobileSearch(): void;
+  function closeMobileSearch(): void;
+}
