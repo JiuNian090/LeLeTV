@@ -1,3 +1,6 @@
+// 阶段 5B-3：TMDB Worker URL 改为显式 import。
+import { TMDB_WORKER_URL } from '../core/config';
+
 interface TmdbState {
   type: string;
   page: number;
