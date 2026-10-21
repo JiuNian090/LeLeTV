@@ -1,3 +1,6 @@
+import { isHiddenContentMode } from '../../core/config';
+import type { ApiSite } from '../../core/config';
+
 /**
  * 远端数据源同步
  *
@@ -149,7 +152,7 @@ function applyRemoteApiSites(sites: unknown): string[] {
  * 隐藏域才把缓存的私密源一起合并进来。
  * @returns {string[]} 实际合并的 key
  */
-function applyRemoteApiSitesFromCache(): string[] {
+export function applyRemoteApiSitesFromCache(): string[] {
     const cached = readRemoteSourcesCache();
     if (!cached) return [];
 
@@ -179,7 +182,7 @@ function fetchRemoteSourcesJson(url: string, token: string, signal?: AbortSignal
  * 拉取远端配置并合并。
  * @returns {Promise<string[]>} 实际发生变化（新增/改动）的 key；失败或无变化时为空数组
  */
-function syncRemoteApiSites(): Promise<string[]> {
+export function syncRemoteApiSites(): Promise<string[]> {
     const base = remoteSourcesBaseUrl();
     if (!base) return Promise.resolve([]);
 
@@ -241,3 +244,10 @@ Object.assign(window, {
   applyRemoteApiSitesFromCache,
   syncRemoteApiSites
 });
+
+// 阶段 5B-3 过渡期类型桥：remote.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问。
+declare global {
+  function applyRemoteApiSitesFromCache(): string[];
+  function syncRemoteApiSites(): Promise<string[]>;
+}
