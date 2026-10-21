@@ -461,6 +461,7 @@
 | 454 | `scripts/test/dom-stub.ts` | 测试用最小浏览器桩 | keep | — | — | — | done | 自动化测试基础设施 |
 | 455 | `scripts/test/cards.test.ts` | 搜索结果卡片纯函数单测 | keep | — | — | — | done | 自动化测试基础设施 |
 | 456 | `scripts/test/user-devices.test.ts` | 设备面板格式化函数单测 | keep | — | — | — | done | 自动化测试基础设施 |
+| 457 | `scripts/test/migrate-player-url.test.ts` | 旧播放页地址迁移单测（正常域 / 私密域 / 幂等） | keep | — | — | — | done | 自动化测试基础设施 |
 
 ## src/（阶段 2 起）
 
