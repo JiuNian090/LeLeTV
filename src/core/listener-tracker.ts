@@ -15,25 +15,26 @@
  *   在模块初始化时创建 tracker，在 destroy() 中调用 removeAll()。
  */
 
-var ListenerTracker = (function () {
-    'use strict';
+interface TrackedListener {
+    target: EventTarget;
+    type: string;
+    listener: EventListenerOrEventListenerObject;
+    options?: boolean | AddEventListenerOptions;
+}
 
-    /**
-     * @constructor
-     */
-    function ListenerTracker() {
-        this._listeners = [];
-    }
+class ListenerTracker {
+    private _listeners: TrackedListener[] = [];
 
     /**
      * 绑定事件并追踪
-     * @param {EventTarget} target
-     * @param {string} type
-     * @param {Function} listener
-     * @param {Object|boolean} [options]
-     * @returns {Function} 绑定的 listener（方便 removeEventListener）
+     * @returns 绑定的 listener（方便 removeEventListener）
      */
-    ListenerTracker.prototype.on = function (target, type, listener, options) {
+    on(
+        target: EventTarget | null,
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ): EventListenerOrEventListenerObject {
         if (!target || typeof target.addEventListener !== 'function') {
             console.warn('ListenerTracker.on: 无效的 target', target);
             return listener;
@@ -49,16 +50,17 @@ var ListenerTracker = (function () {
         });
 
         return listener;
-    };
+    }
 
     /**
      * 解绑单个事件
-     * @param {EventTarget} target
-     * @param {string} type
-     * @param {Function} listener
-     * @param {Object|boolean} [options]
      */
-    ListenerTracker.prototype.off = function (target, type, listener, options) {
+    off(
+        target: EventTarget | null,
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ): void {
         if (!target || typeof target.removeEventListener !== 'function') return;
 
         target.removeEventListener(type, listener, options);
@@ -66,19 +68,17 @@ var ListenerTracker = (function () {
         // 从追踪列表中移除
         this._listeners = this._listeners.filter(function (item) {
             return !(item.target === target &&
-                     item.type === type &&
-                     item.listener === listener);
+                item.type === type &&
+                item.listener === listener);
         });
-    };
+    }
 
     /**
      * 批量解绑所有追踪的事件
      */
-    ListenerTracker.prototype.removeAll = function () {
-        var i, item;
-
-        for (i = this._listeners.length - 1; i >= 0; i--) {
-            item = this._listeners[i];
+    removeAll(): void {
+        for (let i = this._listeners.length - 1; i >= 0; i--) {
+            const item = this._listeners[i];
             try {
                 item.target.removeEventListener(item.type, item.listener, item.options);
             } catch (e) {
@@ -87,15 +87,15 @@ var ListenerTracker = (function () {
         }
 
         this._listeners = [];
-    };
+    }
 
     /**
      * 获取当前追踪的监听器数量
-     * @returns {number}
      */
-    ListenerTracker.prototype.count = function () {
+    count(): number {
         return this._listeners.length;
-    };
+    }
+}
 
-    return ListenerTracker;
-})();
+// 保持原有全局构造器行为（原 var 声明会挂到 window）
+(window as Window & { ListenerTracker?: typeof ListenerTracker }).ListenerTracker = ListenerTracker;

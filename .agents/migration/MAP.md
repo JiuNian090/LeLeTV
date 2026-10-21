@@ -31,7 +31,7 @@
 | 3 | core | `js/auth/password.js` | `src/core/crypto.ts` | verified | 第 0 节通用前置 | — |
 | 4 | core | `js/core/leletv-global.js` | `src/core/global.ts` | verified | 第 0 节通用前置 | — |
 | 5 | core | `js/auth/proxy-auth.js` | `src/core/http.ts` | verified | 第 0 节通用前置 | — |
-| 6 | core | `js/core/listener-tracker.js` | `src/core/listener-tracker.ts` | pending | 第 0 节通用前置 | — |
+| 6 | core | `js/core/listener-tracker.js` | `src/core/listener-tracker.ts` | verified | 第 0 节通用前置 | — |
 | 7 | core | `js/auth/sha256.js` | `src/core/sha256.ts` | pending | 第 0 节通用前置 | — |
 | 8 | core | `js/core/storage-service.js` | `src/core/storage.ts` | pending | 第 0 节通用前置 | — |
 | 9 | core | `js/core/timing.js` | `src/core/timing.ts` | pending | 第 0 节通用前置 | — |
