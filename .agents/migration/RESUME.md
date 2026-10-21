@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`2d74afb refactor: 迁移 home-shelves 到 src/pages/home/shelves.ts`
+> 最新提交：`4bc3375 refactor: 迁移 movies 页片段到 src/pages/movies/template.html`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：50 / 85 条已验证** |
+| 4 | **进行中：52 / 85 条已验证** |
 
 ---
 
-## 阶段 4 已完成（MAP 1–50）
+## 阶段 4 已完成（MAP 1–52）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -74,20 +74,26 @@
 | 48 | `js/ui/nav-search.js` | `src/pages/home/nav-search.ts` | 桌面展开 / 移动搜索层行为不变 |
 | 49 | `js/ui/home-recent.js` | `src/pages/home/recent.ts` | `window.HomeRecent` 接口不变 |
 | 50 | `js/ui/home-shelves.js` | `src/pages/home/shelves.ts` | `window.HomeShelves` 接口不变 |
+| 51 | `css/v2/home.css` | `src/pages/home/style.css` | 相对图片路径改为 `../../../image/*`，CRITICAL_STYLES 与 bump-version 已同步 |
+| 52 | `pages/movies.html` | `src/pages/movies/template.html` | FRAGMENTS 映射已同步 |
 
 ---
 
 ## 下一步
 
-**MAP 第 51 条**：`css/v2/home.css → src/pages/home/style.css`
+**MAP 第 53 条**：`player.html → src/pages/player/index.html`
+
+> 注意：播放页 URL 被历史记录、分享链接与多处 `player.html?...` 拼接引用；
+> 迁移前需确认旧链接兼容策略（已向用户确认）。
 
 之后：
 
-- 第 52 条 `pages/movies.html → src/pages/movies/template.html`
-- 第 53 条 `player.html → src/pages/player/index.html`（构建脚本与 HTML 引用需同步）
+- 第 54 条 `css/v2/player.css → src/pages/player/style.css`
+- 第 55 条 `pages/readme.html → src/pages/readme/template.html`
+- 第 56/57 条 `search-cards` / `app-search` 迁入 `src/pages/search/`
 - pages 层共 20 条，再 router（2）、entry（2）、styles（3）、public（17）
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 51 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 53 条继续。
 
 ---
 
@@ -112,7 +118,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **265.8 KB**（预算 275 KB）；`js/` 剩余 `.js` **9**；tracked 369 / inventory 419。
+基线：首屏 core+app **265.8 KB**（预算 275 KB）；`js/` 剩余 `.js` **9**；tracked 369 / inventory 421。
 
 ---
 
