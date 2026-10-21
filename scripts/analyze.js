@@ -17,65 +17,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { BUNDLES } from '../build.config.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const DEFAULT_OUT = path.join(ROOT, 'docs', 'BASELINE.md');
 
-// 与 scripts/build-bundles.mjs 的清单保持一致（阶段 3 重写构建后改为单一来源）
-const BUNDLES = [
-  {
-    name: 'leletv-core',
-    firstScreen: true,
-    files: [
-      'js/core/config.js', 'js/api/remote-sources.js',
-      'js/core/leletv-global.js', 'js/core/storage-service.js',
-      'js/core/listener-tracker.js', 'js/core/timing.js',
-      'js/auth/proxy-auth.js', 'js/auth/password.js', 'js/auth/invite-auth.js',
-      'js/ui/ui-core.js', 'js/ui/motion-pref.js', 'js/ui/line-probe.js',
-    ],
-  },
-  {
-    name: 'leletv-app',
-    firstScreen: true,
-    files: [
-      'js/api/api-config.js', 'js/api/loadBalancer.js',
-      'js/ui/ui-search-history.js', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
-      'js/api/api.js', 'js/api/search.js',
-      'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
-      'js/app/app-search.js', 'js/app/app-config.js', 'js/api/source-port.js', 'js/app/app.js',
-      'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
-      'js/utils/version-updater.js', 'js/core/cache-manager.js',
-      'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
-      'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
-      'js/app/boot-sequence.js',
-    ],
-  },
-  {
-    name: 'leletv-category',
-    firstScreen: false,
-    files: ['js/api/tmdb.js'],
-  },
-  {
-    name: 'leletv-settings',
-    firstScreen: false,
-    files: [
-      'js/ui/theme-system.js', 'js/auth/admin-panel.js', 'js/auth/user-devices.js',
-    ],
-  },
-  {
-    name: 'leletv-player',
-    firstScreen: false,
-    files: [
-      'js/api/api.js', 'js/api/search.js', 'js/ui/ui-viewing-history.js',
-      'js/player/player-manager.js', 'js/player/player-shortcuts.js',
-      'js/player/player-core.js', 'js/player/player-episodes.js',
-      'js/player/player-ui.js', 'js/player/player-failover.js', 'js/player/player-lights.js',
-      'js/player/player-detail.js', 'js/player/player-quality.js', 'js/player/player.js',
-      'js/utils/version-updater.js', 'js/core/cache-manager.js',
-    ],
-  },
-];
+// bundle 清单见 build.config.js（单一来源）
 
 const kb = n => (n / 1024).toFixed(1);
 const num = n => n.toLocaleString('en-US');
@@ -84,7 +32,8 @@ async function minifiedSize(content) {
   const result = await esbuild.transform(content, {
     minify: true,
     target: ['es2020'],
-    sourcefile: 'analyze.js',
+    sourcefile: 'module.ts',
+    loader: 'ts',
   });
   return Buffer.byteLength(result.code, 'utf8');
 }
@@ -147,8 +96,10 @@ async function main() {
   const lines = [];
   lines.push('# 构建体积基线');
   lines.push('');
-  lines.push(`> 生成命令：\`node scripts/analyze.js\`  `);
-  lines.push(`> 版本：\`${version}\`  `);
+  lines.push(`> 生成命令：\`node scripts/analyze.js\``);
+  lines.push('>');
+  lines.push(`> 版本：\`${version}\``);
+  lines.push('>');
   lines.push(`> 生成时间：${new Date().toISOString().slice(0, 10)}`);
   lines.push('');
   lines.push('## 口径说明');

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { BUNDLES } from '../build.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,70 +14,18 @@ const DIST = path.join(ROOT, 'dist');
 const version = fs.readFileSync(path.join(ROOT, 'VERSION.txt'), 'utf8').trim();
 console.log('[build] version:', version);
 
-// Bundle configs
-const CORE = {
-  name: 'leletv-core',
-  files: [
-    // 全局模态框 / Toast 必须在 ui-core.js 之前注入：ui-core.js 在模块顶层就查找 #toast / #modal
-    'src/ui/modals.ts',
-    // remote-sources 必须排在 config.js 之后（依赖 API_SITES / extendAPISites / isHiddenContentMode），
-    // 且要在 app.js 与 player.js 之前（两个页面启动时都会调用它）
-    'js/core/config.js', 'js/api/remote-sources.js',
-    'js/core/leletv-global.js', 'js/core/storage-service.js',
-    'js/core/listener-tracker.js', 'js/core/timing.js',
-    'js/auth/proxy-auth.js', 'js/auth/password.js', 'js/auth/invite-auth.js',
-    'js/ui/ui-core.js', 'js/ui/motion-pref.js', 'js/ui/line-probe.js',
-  ],
+// Bundle 清单的单一来源见 build.config.js
+const byName = (name) => {
+  const bundle = BUNDLES.find((item) => item.name === name);
+  if (!bundle) throw new Error('未知 bundle：' + name);
+  return bundle;
 };
 
-const APP = {
-  name: 'leletv-app',
-  files: [
-    'js/api/api-config.js', 'js/api/loadBalancer.js',
-    'js/ui/ui-search-history.js', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
-    'js/api/api.js', 'js/api/search.js',
-    'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
-    'js/app/app-search.js', 'js/app/app-config.js', 'js/api/source-port.js', 'js/app/app.js',
-    'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
-    'js/utils/version-updater.js', 'js/core/cache-manager.js',
-    'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
-    'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
-    'src/ui/nav-scroll.ts',
-    // 启动编排必须最后执行：它要等所有首页模块与路由注册完成后再开始鉴权 / 首页加载
-    'js/app/boot-sequence.js',
-    // 邀请码弹窗逻辑注册 DOMContentLoaded，保持在 boot-sequence 之后（与拆分前顺序一致）
-    'src/ui/invite-login.ts',
-  ],
-};
-
-// 分类页（TMDB 浏览）：只在首次进入分类页时加载
-const CATEGORY = {
-  name: 'leletv-category',
-  files: [
-    'js/api/tmdb.js',
-  ],
-};
-
-// 设置页：主题配色、设备管理、邀请码管理；只在首次进入设置页时加载
-const SETTINGS = {
-  name: 'leletv-settings',
-  files: [
-    'js/ui/theme-system.js', 'js/auth/admin-panel.js', 'js/auth/user-devices.js',
-  ],
-};
-
-const PLAYER = {
-  name: 'leletv-player',
-  files: [
-    'js/api/api.js', 'js/api/search.js',
-    // 播放页会调用 addToViewingHistory 补建历史记录（player.js 内），该函数定义在此文件，必须一起打包
-    'js/ui/ui-viewing-history.js',
-    'js/player/player-manager.js', 'js/player/player-shortcuts.js',
-    'js/player/player-core.js', 'js/player/player-episodes.js',
-    'js/player/player-ui.js', 'js/player/player-failover.js', 'js/player/player-lights.js', 'js/player/player-detail.js', 'js/player/player-quality.js', 'js/player/player.js',
-    'js/utils/version-updater.js', 'js/core/cache-manager.js',
-  ],
-};
+const CORE = byName('leletv-core');
+const APP = byName('leletv-app');
+const CATEGORY = byName('leletv-category');
+const SETTINGS = byName('leletv-settings');
+const PLAYER = byName('leletv-player');
 
 function concatFiles(fileList) {
   return fileList.map(f => {

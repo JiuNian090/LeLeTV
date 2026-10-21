@@ -17,6 +17,28 @@ function itemStorageKey(item) {
     return isThemeStoreKey(item) ? item : scopedKey(item);
 }
 
+// ===== JSZip 按需加载（阶段 3：移出首屏关键路径，仅导入/导出配置时加载） =====
+let _jszipPromise = null;
+
+function loadJSZip() {
+    if (window.JSZip) return Promise.resolve(window.JSZip);
+    if (_jszipPromise) return _jszipPromise;
+
+    _jszipPromise = new Promise(function (resolve, reject) {
+        var script = document.createElement('script');
+        var version = window.__LELETV_VERSION__ || '';
+        script.src = 'libs/jszip.min.js' + (version ? '?v=' + encodeURIComponent(version) : '');
+        script.onload = function () { resolve(window.JSZip); };
+        script.onerror = function () {
+            _jszipPromise = null;
+            reject(new Error('JSZip 加载失败'));
+        };
+        document.head.appendChild(script);
+    });
+
+    return _jszipPromise;
+}
+
 async function importConfigFromUrl() {
     showModal({
         title: '从链接导入配置',
@@ -91,7 +113,8 @@ async function processBackupFile(file) {
 
     if (isZip) {
         // 新版：ZIP 包内含 settings.json + data.json
-        const zip = await JSZip.loadAsync(file);
+        const JSZipLib = await loadJSZip();
+        const zip = await JSZipLib.loadAsync(file);
         const settingsFile = zip.file('settings.json');
         const dataFile = zip.file('data.json');
         if (!settingsFile) throw 'ZIP 包内缺少 settings.json';
@@ -179,7 +202,8 @@ async function exportConfig() {
     };
 
     // ===== 打包 ZIP =====
-    const zip = new JSZip();
+    const JSZipLib = await loadJSZip();
+    const zip = new JSZipLib();
     zip.file('settings.json', JSON.stringify(settingsJson, null, 2));
     zip.file('data.json', JSON.stringify(dataJson, null, 2));
     const blob = await zip.generateAsync({
