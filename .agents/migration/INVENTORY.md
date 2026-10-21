@@ -349,7 +349,7 @@
 | 275 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | verified | 公开函数与 TMDB_STATE / TMDB_CONFIG / GENRE_MAP 保持不变 |
 | 276 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | verified | 已迁移至 `src/services/config.ts`；类型检查通过 |
 | 277 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
-| 278 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | pending | — |
+| 278 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | verified | 路由与页面切换行为不变 |
 | 279 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | verified | 全局搜索入口与事件绑定不变 |
 | 280 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | pending | — |
 | 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
@@ -526,6 +526,7 @@
 | 429 | `src/pages/settings/style.css` | 设置/管理面板样式（迁移自 `css/v2/admin.css`） | keep | — | — | — | done | 阶段 4 第 59 条迁移目标 |
 | 430 | `src/pages/settings/template.html` | 设置页片段（迁移自 `pages/settings.html`） | keep | — | — | — | done | 阶段 4 第 60 条迁移目标 |
 | 431 | `src/pages/settings/user-devices.ts` | 设备管理面板（迁移自 `js/auth/user-devices.js`） | keep | — | — | — | done | 阶段 4 第 61 条迁移目标 |
+| 432 | `src/router/index.ts` | hash 路由 / 页面切换与装载（迁移自 `js/app/app-routing.js`） | keep | — | — | — | done | 阶段 4 第 62 条迁移目标 |
 
 ## workers/（红区）
 

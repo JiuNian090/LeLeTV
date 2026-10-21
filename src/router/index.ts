@@ -1,5 +1,21 @@
 // LeLeTV - Hash routing module
 // Extracted from index.html inline script
+
+interface RouterWindow extends Window {
+  __LELETV_BOOT_INTRO__?: unknown;
+  LeLeMotion?: { reduced: () => boolean };
+  LeLeBrandCanvas?: { draw?: (...args: unknown[]) => boolean };
+  __LELETV_INIT_SETTINGS_PAGE__?: () => void;
+  __LELETV_VERSION__?: string;
+  LELETV_DISCLAIMER?: { handled?: boolean };
+  currentPage?: string;
+  INVITE_AUTH?: { getAuth?: () => { code?: string } | null };
+}
+
+const routerWindow = window as RouterWindow;
+
+declare const marked: { parse: (md: string) => string };
+
 let currentPage = 'home';
 
 // 整页重载（如切换隐藏/正常内容模式）前记录目标页，重载后恢复到该页
@@ -86,7 +102,7 @@ var _particleIncoming = false;
 try { _particleIncoming = sessionStorage.getItem(PARTICLE_SWEEP_KEY) === '1'; } catch (e) { /* 忽略 */ }
 // 启动占位（index.html 的 #bootSplash）已接管这次切换的遮罩：它自己就能挡住首帧，
 // 所以不必再藏设置页内容——反过来要放行，让新页面在深色遮罩下就绪
-var _bootSplashOwnsTransition = !!window.__LELETV_BOOT_INTRO__;
+var _bootSplashOwnsTransition = !!routerWindow.__LELETV_BOOT_INTRO__;
 if (_particleIncoming && !_bootSplashOwnsTransition) {
   document.documentElement.setAttribute('data-particle-in', '1');
   // 兜底：任何原因导致入场动画没启动，也不能让设置页一直不可见
@@ -101,7 +117,7 @@ if (_particleIncoming && !_bootSplashOwnsTransition) {
 }
 
 function _particleReducedMotion() {
-  if (window.LeLeMotion) return window.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
+  if (routerWindow.LeLeMotion) return routerWindow.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
 }
 
@@ -163,7 +179,7 @@ function _particleColorTable() {
 
 // 采样：在元素区域按网格生成粒子种子，记录"元素内位置 → 向上飘散终点"、延迟、寿命与摆动参数。
 // duration / riseBase 可覆盖：删除单项这类小场景用更短时长、更低的飘散高度。
-function _particleSeeds(elements, duration, riseBase) {
+function _particleSeeds(elements, duration?: number, riseBase?: number) {
   var total = duration || PARTICLE_SWEEP_MS;
   var baseRise = riseBase || PARTICLE_RISE;
   var boxes = [];
@@ -415,7 +431,7 @@ function playHomeIntro() {
   if (_particleReducedMotion()) return;
   // 启动占位（index.html 的 #bootSplash）已经播过同一套入场：粒子随加载进度凝聚 → 实体化 → 爆开。
   // 此处直接跳过，否则新访客会连着看两遍同样的动画
-  if (window.__LELETV_BOOT_INTRO__) return;
+  if (routerWindow.__LELETV_BOOT_INTRO__) return;
   // 仅在首页播放：带搜索直链 / 结果页 / 其它 hash 时不打扰
   if (location.hash && location.hash !== '#home') return;
   if (!document.getElementById('page-home')) return;
@@ -614,7 +630,7 @@ function _domainDrawRing(ctx, center, radius, alpha) {
 // 取不到 sprite 时退回旧的 MapleMono 文字
 function _domainDrawBrand(ctx, center, fontSize, scale, alpha) {
   if (alpha <= 0.01) return;
-  var brand = window.LeLeBrandCanvas;
+  var brand = routerWindow.LeLeBrandCanvas;
   if (brand && brand.draw(ctx, center.x, center.y, fontSize * 1.1, _themeRgbParts(), alpha, scale)) return;
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -654,7 +670,7 @@ function playDomainTransition() {
   // 启动占位（index.html 的 #bootSplash）在本次重载后已经播过同一套"粒子凝聚 → 爆开"，
   // 且遮罩是纯深色底。这里不再重复播粒子，只做面板交接：
   // 摘掉首帧隐藏，让设置页内容就绪，等占位在爆开时同步淡出后自然露出来
-  if (window.__LELETV_BOOT_INTRO__) {
+  if (routerWindow.__LELETV_BOOT_INTRO__) {
     _resetPanel();
     return;
   }
@@ -803,7 +819,7 @@ function seedCategoryFiltersFromPrefs() {
 // 清掉 URL 里的搜索残留（/s=关键词 路径 或 ?s=关键词 查询串），只保留当前页 hash。
 // 搜索状态只由结果页（#movies）持有：用户切到别的页面后刷新，不该再把上次搜索词当直链重搜一遍。
 // 初始化路径不调用本函数，因此 /s=关键词 直链（分享链接）仍能自动搜索。
-function clearSearchResidueFromUrl(targetPage) {
+function clearSearchResidueFromUrl(targetPage?: string) {
   try {
     var page = typeof targetPage === 'string' ? targetPage : (location.hash.slice(1) || 'home');
     if (page === 'movies') return;
@@ -850,9 +866,9 @@ function showPage(n) {
     var m = document.querySelector('.main-container');
     if (m) m.setAttribute("data-page", n);
     // TV 风格结果页全屏：隐藏全局导航栏与页脚
-    var nav = document.querySelector('.top-nav-bar');
+    var nav = document.querySelector(".top-nav-bar") as HTMLElement | null;
     if (nav) nav.style.display = n === 'movies' ? 'none' : '';
-    var footer = document.querySelector('.footer');
+    var footer = document.querySelector(".footer") as HTMLElement | null;
     if (footer) footer.style.display = n === 'movies' ? 'none' : '';
     // 清除所有卡片的加载动画状态
     document.querySelectorAll('.search-result-card.card-loading').forEach(function(c) { c.classList.remove('card-loading'); });
@@ -887,7 +903,7 @@ function showPage(n) {
 }
 
 function updateNavButtons(a) {
-  document.querySelectorAll('.nav-btn[data-page]').forEach(function(b) {
+  document.querySelectorAll<HTMLElement>('.nav-btn[data-page]').forEach(function(b) {
     var page = b.getAttribute('data-page');
     // 私密模式下分类入口不显示：样式表负责首帧，这里兜底，避免样式表被缓存时漏出来
     if (isCategoryPageBlocked(page)) {
@@ -919,7 +935,7 @@ function handlePageLoad(n) {
       break;
     case 'settings':
       // 设置页的开关、片源列表、主题盘与设备面板都在片段加载后初始化
-      if (typeof window.__LELETV_INIT_SETTINGS_PAGE__ === 'function') window.__LELETV_INIT_SETTINGS_PAGE__();
+      if (typeof routerWindow.__LELETV_INIT_SETTINGS_PAGE__ === 'function') routerWindow.__LELETV_INIT_SETTINGS_PAGE__();
       break;
     case 'about': loadAboutPageChangelog(); break;
     case 'readme': loadReadmePage(); break;
@@ -1030,10 +1046,10 @@ function ensureMarked() {
   if (typeof marked !== 'undefined') return Promise.resolve();
   if (_markedLoading) return _markedLoading;
 
-  _markedLoading = new Promise(function(resolve) {
+  _markedLoading = new Promise<void>(function(resolve) {
     var s = document.createElement('script');
     // 版本号与 index.html 的静态引用同一套缓存键（generate-version.mjs 注入）
-    var v = window.__LELETV_VERSION__ || '';
+    var v = routerWindow.__LELETV_VERSION__ || '';
     s.src = 'libs/marked.min.js' + (v ? '?v=' + encodeURIComponent(v) : '');
     s.onload = function() { resolve(); };
     s.onerror = function() {
@@ -1047,7 +1063,7 @@ function ensureMarked() {
 }
 
 document.addEventListener('click', function(e) {
-  var retryBtn = e.target.closest('#retryReadmeBtn');
+  var retryBtn = (e.target as HTMLElement).closest('#retryReadmeBtn');
   if (retryBtn) {
     var content = document.getElementById('readmeContent');
     if (content) content.removeAttribute('data-loaded');
@@ -1128,8 +1144,8 @@ function closeDisclaimerModal() {
   document.getElementById('disclaimerModal').style.display = 'none';
 
   // 幂等广播：通知挂起的更新弹窗「隐私政策已确认」（只派发一次）
-  if (window.LELETV_DISCLAIMER && !window.LELETV_DISCLAIMER.handled) {
-    window.LELETV_DISCLAIMER.handled = true;
+  if (routerWindow.LELETV_DISCLAIMER && !routerWindow.LELETV_DISCLAIMER.handled) {
+    routerWindow.LELETV_DISCLAIMER.handled = true;
     document.dispatchEvent(new CustomEvent('disclaimerAccepted'));
   }
 }
@@ -1168,14 +1184,14 @@ document.addEventListener('DOMContentLoaded', function() {
   AppInit.register('category-filter-persist', AppInit.PHASES.POST, function() {
     // 点击分类页标签后应落盘（tmdb.js 会先更新 TMDB_STATE，这里等一拍再读）
     document.addEventListener('click', function (e) {
-      if (!e.target || !e.target.closest || !e.target.closest('#tmdb-filters')) return;
+      if (!e.target || !(e.target as HTMLElement).closest || !(e.target as HTMLElement).closest('#tmdb-filters')) return;
       setTimeout(saveCategoryFilterPrefs, 0);
     });
   });
   AppInit.run();
 });
 
-window.currentPage = currentPage;
+routerWindow.currentPage = currentPage;
 window.switchPage = switchPage;
 window.handleHashChange = handleHashChange;
 window.showPage = showPage;
@@ -1189,10 +1205,10 @@ window.shareInviteInfo = shareInviteInfo;
 
 // 「分享」入口：移动端调起系统级分享，桌面端复制文案到剪贴板。
 // targetCode 可选 —— 管理端分享指定邀请码时传入；不传则取当前登录用户的邀请码（关于页「分享」、设置-设备管理）
-function shareInviteInfo(targetCode) {
+function shareInviteInfo(targetCode?: string) {
   var code = targetCode || '';
   if (!code) {
-    var auth = (window.INVITE_AUTH && typeof window.INVITE_AUTH.getAuth === 'function') ? window.INVITE_AUTH.getAuth() : null;
+    var auth = (routerWindow.INVITE_AUTH && typeof routerWindow.INVITE_AUTH.getAuth === 'function') ? routerWindow.INVITE_AUTH.getAuth() : null;
     code = (auth && auth.code) ? auth.code : '';
   }
   if (!code) { showToast('未获取到邀请码，请先验证邀请码登录', 'error'); return; }
@@ -1256,9 +1272,9 @@ function shareInviteInfo(targetCode) {
   document.addEventListener('touchstart', function(e) {
     // 不在播放器、搜索框、表单元素、或水平可滚动的标签区域内触发
     // 标签区域的水平滑动应滚动标签而非切换页面，否则用户滑标签时经常误触翻页
-    if (e.target.closest('#player') || e.target.closest('#searchInput') ||
-        e.target.closest('.art-controls') || e.target.closest('input, textarea, select') ||
-        e.target.closest('.tmdb-filter-section, .source-filter-tabs, .movies-sources-list')) {
+    if ((e.target as HTMLElement).closest('#player') || (e.target as HTMLElement).closest('#searchInput') ||
+        (e.target as HTMLElement).closest('.art-controls') || (e.target as HTMLElement).closest('input, textarea, select') ||
+        (e.target as HTMLElement).closest('.tmdb-filter-section, .source-filter-tabs, .movies-sources-list')) {
       startX = null;
       return;
     }
@@ -1306,8 +1322,8 @@ function shareInviteInfo(targetCode) {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
 
     // 播放器内左右键是快进/快退，输入框内是光标移动，均不触发翻页
-    if (e.target.closest('#player') || e.target.closest('#searchInput') ||
-        e.target.closest('input, textarea, select, [contenteditable="true"]')) {
+    if ((e.target as HTMLElement).closest('#player') || (e.target as HTMLElement).closest('#searchInput') ||
+        (e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]')) {
       return;
     }
 
