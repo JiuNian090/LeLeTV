@@ -378,7 +378,7 @@
 | 304 | `js/player/player-quality.js` | 清晰度切换 | migrated | `src/ui/player/quality.ts` | — | — | pending | — |
 | 305 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | pending | — |
 | 306 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | pending | — |
-| 307 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | pending | — |
+| 307 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | verified | 全局播放状态与入口函数保持不变 |
 | 308 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | verified | IIFE 原样迁移，LeLeBrandCanvas.draw 接口不变 |
 | 309 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | pending | — |
 | 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
@@ -497,6 +497,7 @@
 | 400 | `src/ui/player/detail.ts` | 播放页详情/海报信息（迁移自 `js/player/player-detail.js`） | keep | — | — | — | done | 阶段 4 第 31 条迁移目标 |
 | 401 | `src/ui/player/episodes.ts` | 剧集列表与选集（迁移自 `js/player/player-episodes.js`） | keep | — | — | — | done | 阶段 4 第 32 条迁移目标 |
 | 402 | `src/ui/player/failover.ts` | 起播失败自动换线（迁移自 `js/player/player-failover.js`） | keep | — | — | — | done | 阶段 4 第 33 条迁移目标 |
+| 403 | `src/ui/player/index.ts` | 播放页入口与返回导航（迁移自 `js/player/player.js`） | keep | — | — | — | done | 阶段 4 第 34 条迁移目标 |
 
 ## workers/（红区）
 

@@ -1,6 +1,6 @@
 // 返回键：全屏时退出全屏，否则返回来源页
 let returningFromPlayer = false; // 防止快速连点触发多次返回导航
-function goHome(event) {
+function goHome(event?: Event): void {
     if (returningFromPlayer) return;
     if (event) event.preventDefault();
 
@@ -80,7 +80,7 @@ window.addEventListener('load', function () {
 // 处理移动端滑动返回/前进时的 bfcache 恢复
 // 当页面从 bfcache 恢复时（浏览器缓存了页面状态但网络连接已断开），
 // HLS.js 实例可能处于失效状态，加载指示器会卡住无法消失
-window.addEventListener('pageshow', function (event) {
+window.addEventListener('pageshow', function (event: PageTransitionEvent) {
     if (event.persisted) {
         // 页面从 bfcache 恢复，强制刷新以确保播放器干净初始化
         window.location.reload();
@@ -92,34 +92,94 @@ window.addEventListener('pageshow', function (event) {
 // ============== PLAYER ==========
 // =================================
 // 全局变量
+interface PlayerArtInstance extends ArtplayerInstance {
+    video?: HTMLVideoElement;
+    url?: string;
+    play?: () => void;
+    pause?: () => void;
+}
 let currentVideoTitle = '';
 let currentEpisodeIndex = 0;
-let art = null; // 用于 ArtPlayer 实例
-let currentHls = null; // 跟踪当前HLS实例
-let currentEpisodes = [];
+let art: PlayerArtInstance | null = null; // 用于 ArtPlayer 实例
+let currentHls: unknown = null; // 跟踪当前HLS实例
+let currentEpisodes: string[] = [];
 let episodesReversed = false;
 let autoplayEnabled = true; // 默认开启自动连播
 let videoHasEnded = false; // 跟踪视频是否已经自然结束
-let userClickedPosition = null; // 记录用户点击的位置
-let shortcutHintTimeout = null; // 用于控制快捷键提示显示时间
+let userClickedPosition: number | null = null; // 记录用户点击的位置
+let shortcutHintTimeout: ReturnType<typeof setTimeout> | null = null; // 用于控制快捷键提示显示时间
 let autoFullscreened = false; // 标记是否由自动全屏进入
-let progressSaveInterval = null; // 定期保存进度的计时器
+let progressSaveInterval: ReturnType<typeof setInterval> | null = null; // 定期保存进度的计时器
 let currentVideoUrl = ''; // 记录当前实际的视频URL
-let episodeSwitchTimeout = null; // 集数切换超时定时器（用于兜底重建）
-Artplayer.FULLSCREEN_WEB_IN_BODY = true;
-Artplayer.REMOVE_SRC_WHEN_DESTROY = true;
+let episodeSwitchTimeout: ReturnType<typeof setTimeout> | null = null; // 集数切换超时定时器（用于兜底重建）
+
+interface ArtplayerStaticExt extends ArtplayerStatic {
+    FULLSCREEN_WEB_IN_BODY: boolean;
+    REMOVE_SRC_WHEN_DESTROY: boolean;
+}
+
+(Artplayer as ArtplayerStaticExt).FULLSCREEN_WEB_IN_BODY = true;
+(Artplayer as ArtplayerStaticExt).REMOVE_SRC_WHEN_DESTROY = true;
+
+interface PlayerIndexWindow extends Window {
+    _mediaSessionHandlersSet?: boolean;
+}
+
+const playerIndexWindow = window as PlayerIndexWindow;
 
 // TMDB 影片详情配置（TMDB优先，视频源API兜底）
 const PLAYER_TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
-function getPlayerTmdbBaseUrl() {
+interface TmdbSearchResult {
+    media_type?: string;
+    id: number;
+}
+
+interface TmdbSearchResponse {
+    results?: TmdbSearchResult[];
+}
+
+interface TmdbNamedItem {
+    name?: string;
+}
+
+interface TmdbDetailResponse {
+    genres?: TmdbNamedItem[];
+    production_countries?: TmdbNamedItem[];
+    release_date?: string;
+    first_air_date?: string;
+    poster_path?: string;
+    title?: string;
+    name?: string;
+    overview?: string;
+    [key: string]: unknown;
+}
+
+interface TmdbCreditsResponse {
+    crew?: { job?: string; name?: string }[];
+    cast?: { name?: string }[];
+}
+
+interface PlayerTmdbInfo {
+    title?: string;
+    cover: string;
+    desc: string;
+    type: string;
+    year: string;
+    area: string;
+    director: string;
+    actor: string;
+    fromTmdb: boolean;
+}
+
+function getPlayerTmdbBaseUrl(): string {
   if (typeof TMDB_WORKER_URL !== 'undefined' && TMDB_WORKER_URL) {
     return TMDB_WORKER_URL;
   }
   return '/api/tmdb';
 }
 
-async function fetchTmdbPlayerDetail(title) {
+async function fetchTmdbPlayerDetail(title: string): Promise<PlayerTmdbInfo | null> {
   try {
     const baseUrl = getPlayerTmdbBaseUrl();
     if (!baseUrl) return null;
@@ -128,7 +188,7 @@ async function fetchTmdbPlayerDetail(title) {
     const res = await fetch(multiUrl);
     if (!res.ok) return null;
 
-    const data = await res.json();
+    const data = await res.json() as TmdbSearchResponse;
     if (!data.results || data.results.length === 0) return null;
 
     const result = data.results.find(r => r.media_type === 'movie' || r.media_type === 'tv');
@@ -145,8 +205,8 @@ async function fetchTmdbPlayerDetail(title) {
     if (!detailRes.ok) return null;
 
     const [detail, credits] = await Promise.all([
-      detailRes.json(),
-      creditsRes.ok ? creditsRes.json() : Promise.resolve({ crew: [], cast: [] })
+      detailRes.json() as Promise<TmdbDetailResponse>,
+      creditsRes.ok ? creditsRes.json() as Promise<TmdbCreditsResponse> : Promise.resolve({ crew: [], cast: [] })
     ]);
 
     const isMovie = mediaType === 'movie';
@@ -192,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 // 初始化页面内容
-function initializePageContent() {
+function initializePageContent(): void {
 
     // 解析URL参数
     const urlParams = new URLSearchParams(window.location.search);
@@ -246,23 +306,24 @@ function initializePageContent() {
 
     // 设置自动连播开关状态
     autoplayEnabled = localStorage.getItem('autoplayEnabled') !== 'false'; // 默认为true
-    document.getElementById('autoplayToggle').checked = autoplayEnabled;
+    const autoplayToggle = document.getElementById('autoplayToggle') as HTMLInputElement;
+    autoplayToggle.checked = autoplayEnabled;
 
     // 监听自动连播开关变化
-    document.getElementById('autoplayToggle').addEventListener('change', function (e) {
-        autoplayEnabled = e.target.checked;
-        localStorage.setItem('autoplayEnabled', autoplayEnabled);
+    autoplayToggle.addEventListener('change', function (e) {
+        autoplayEnabled = (e.target as HTMLInputElement).checked;
+        localStorage.setItem('autoplayEnabled', String(autoplayEnabled));
     });
 
     // 优先使用URL传递的集数信息，否则从localStorage获取
     try {
         if (episodesList) {
             // 如果URL中有集数数据，优先使用它
-            currentEpisodes = JSON.parse(decodeURIComponent(episodesList));
+            currentEpisodes = JSON.parse(decodeURIComponent(episodesList)) as string[];
 
         } else {
             // 否则从localStorage获取
-            currentEpisodes = JSON.parse(localStorage.getItem('currentEpisodes') || '[]');
+            currentEpisodes = JSON.parse(localStorage.getItem('currentEpisodes') || '[]') as string[];
 
         }
 
@@ -277,7 +338,7 @@ function initializePageContent() {
 
             // 更新URL以反映修正后的索引
             const newUrl = new URL(window.location.href);
-            newUrl.searchParams.set('index', index);
+            newUrl.searchParams.set('index', String(index));
             window.history.replaceState({}, '', newUrl);
         }
 
@@ -335,13 +396,13 @@ function initializePageContent() {
     if (videoUrl) {
         fetchTmdbPlayerDetail(currentVideoTitle).then(tmdbInfo => {
             if (tmdbInfo) {
-                let existingInfo = null;
+                let existingInfo: Record<string, unknown> | null = null;
                 try {
                     existingInfo = StorageService.getCurrentVideoInfo();
                 } catch (e) {
                     console.warn('[LeLeTV] 获取 TMDB 已有详情失败:', e);
                 }
-                    const mergedInfo = {
+                    const mergedInfo: Record<string, unknown> = {
                     ...tmdbInfo,
                     ...(existingInfo || {}),
                     // 但 TMDB 的封面通常质量更好，优先使用
@@ -357,7 +418,7 @@ function initializePageContent() {
 
                 // 同步 TMDB 元数据到观看历史：下次从历史进入可直接恢复简介/海报，不必等接口
                 try {
-                    const history = StorageService.getViewingHistory();
+                    const history = StorageService.getViewingHistory() as ViewingHistoryItem[];
                     const idx = history.findIndex(item => item.title === currentVideoTitle);
                     if (idx !== -1) {
                         ['cover', 'desc', 'type', 'year', 'area', 'director', 'actor'].forEach(key => {
@@ -413,7 +474,8 @@ function initializePageContent() {
 
     // 全局 data-action 事件委托（替代 player.html onclick）
     document.addEventListener('click', function (e) {
-        const el = e.target.closest('[data-action]');
+        const target = e.target as HTMLElement;
+        const el = target.closest('[data-action]') as HTMLElement | null;
         if (!el) return;
         switch (el.dataset.action) {
             case 'go-home': goHome(e); break;
@@ -458,9 +520,6 @@ function initializePageContent() {
 
 
 
-
-
-
 // ========== 长时间加载提示模块 ==========
 
 // ========== 播放器初始化函数（重构版）==========
@@ -493,7 +552,7 @@ function initializePageContent() {
 // 设置进度条准确点击和拖动处理（桌面点击 + 移动端触摸滑动）
 
 // 在播放器初始化后添加视频到历史记录
-function saveToHistory() {
+function saveToHistory(): void {
     // 确保 currentEpisodes 非空且有当前视频URL
     if (!currentEpisodes || currentEpisodes.length === 0 || !currentVideoUrl) {
         return;
@@ -515,7 +574,7 @@ function saveToHistory() {
     }
 
     // Define a show identifier: Prioritize sourceName_id, fallback to first episode URL or current video URL
-    let show_identifier_for_video_info;
+    let show_identifier_for_video_info: string;
     if (sourceName && id_from_params) {
         show_identifier_for_video_info = `${sourceName}_${id_from_params}`;
     } else {
@@ -527,12 +586,12 @@ function saveToHistory() {
     try {
         const parsedInfo = StorageService.getCurrentVideoInfo();
         if (parsedInfo) {
-            currentVideoCover = parsedInfo.cover || parsedInfo.vod_pic || '';
+            currentVideoCover = (parsedInfo.cover || parsedInfo.vod_pic || '') as string;
         }
     } catch (e) {
         console.warn('[LeLeTV] saveToHistory 获取封面失败:', e);
     }
-    const videoInfo = {
+    const videoInfo: ViewingHistoryItem = {
         title: currentVideoTitle,
         directVideoUrl: currentVideoUrl, // Current episode's direct URL
         url: `player.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}&id=${encodeURIComponent(id_from_params || '')}&index=${currentEpisodeIndex}&position=${Math.floor(currentPosition || 0)}`,
@@ -547,19 +606,19 @@ function saveToHistory() {
         episodes: currentEpisodes && currentEpisodes.length > 0 ? [...currentEpisodes] : [],
         cover: currentVideoCover // 添加封面信息
     };
-    
+
     try {
-        const history = StorageService.getViewingHistory();
+        const history = StorageService.getViewingHistory() as ViewingHistoryItem[];
 
         // 查找相同标题的剧集（不管播放源如何，只保留最新播放源）
-        const existingIndex = history.findIndex(item => 
+        const existingIndex = history.findIndex(item =>
             item.title === videoInfo.title
         );
 
         if (existingIndex !== -1) {
             // 找到相同标题的剧集：更新为最新播放源的信息
             const existingItem = history[existingIndex];
-            
+
             // 检测剧集是否已切换（用于重置播放进度，防止换集后保留旧集数的位置）
             const episodeChanged = existingItem.episodeIndex !== videoInfo.episodeIndex;
 
@@ -569,7 +628,7 @@ function saveToHistory() {
             existingItem.sourceName = videoInfo.sourceName; // 强制更新为最新播放源
             existingItem.sourceCode = videoInfo.sourceCode; // 强制更新为最新播放源
             existingItem.vod_id = videoInfo.vod_id; // 强制更新为最新播放源
-            
+
             // 强制更新URL信息
             existingItem.directVideoUrl = videoInfo.directVideoUrl;
             existingItem.url = videoInfo.url;
@@ -578,22 +637,22 @@ function saveToHistory() {
             // 剧集切换时，直接使用新位置（即使为0）；同集时用 >10 守卫避免覆盖
             existingItem.playbackPosition = (episodeChanged || videoInfo.playbackPosition > 10) ? videoInfo.playbackPosition : (existingItem.playbackPosition || 0);
             existingItem.duration = videoInfo.duration || existingItem.duration;
-            
+
             // 更新showIdentifier为最新播放源的标识符
             if (videoInfo.sourceName && videoInfo.vod_id) {
                 existingItem.showIdentifier = `${videoInfo.sourceName}_${videoInfo.vod_id}`;
             }
-            
+
             // 更新封面信息
             if (videoInfo.cover) {
                 existingItem.cover = videoInfo.cover;
             }
-            
+
             // 更新集数列表
             if (videoInfo.episodes && videoInfo.episodes.length > 0) {
                 existingItem.episodes = [...videoInfo.episodes];
             }
-            
+
             // 移到最前面
             history.splice(existingIndex, 1);
             history.unshift(existingItem);
@@ -614,7 +673,7 @@ function saveToHistory() {
 // 格式化时间为 mm:ss 格式
 
 // 开始定期保存播放进度
-function startProgressSaveInterval() {
+function startProgressSaveInterval(): void {
     // 清除可能存在的旧计时器
     if (progressSaveInterval) {
         clearInterval(progressSaveInterval);
@@ -626,7 +685,7 @@ function startProgressSaveInterval() {
 
 // 保存当前播放进度
 let _lastHistoryWriteTime = 0;
-function saveCurrentProgress() {
+function saveCurrentProgress(): void {
     if (!art || !art.video) return;
     const currentTime = art.video.currentTime;
     const duration = art.video.duration;
@@ -641,7 +700,7 @@ function saveCurrentProgress() {
     };
     try {
         localStorage.setItem(progressKey, JSON.stringify(progressData));
-        
+
         // 防抖：viewingHistory 写入最多每30秒一次
         const now = Date.now();
         if (now - _lastHistoryWriteTime < 30000) return;
@@ -649,26 +708,26 @@ function saveCurrentProgress() {
 
         // 更新 viewingHistory 中的进度
         try {
-            const history = StorageService.getViewingHistory();
+            const history = StorageService.getViewingHistory() as ViewingHistoryItem[];
             if (history.length > 0) {
-                
+
                 // 用更精确的匹配方式：sourceName + vod_id + episodeIndex
                 let idx = -1;
-                
+
                 // 尝试从URL获取source和id参数
                 const urlParams = new URLSearchParams(window.location.search);
                 const sourceName = urlParams.get('source') || '';
                 const vod_id = urlParams.get('id') || '';
-                
+
                 // 优先使用sourceName + vod_id匹配
                 if (sourceName && vod_id) {
-                    idx = history.findIndex(item => 
-                        item.sourceName === sourceName && 
+                    idx = history.findIndex(item =>
+                        item.sourceName === sourceName &&
                         item.vod_id === vod_id &&
                         (item.episodeIndex === undefined || item.episodeIndex === currentEpisodeIndex)
                     );
                 }
-                
+
                 // 如果没有匹配到，使用title + episodeIndex作为备选匹配方式
                 if (idx === -1 && currentVideoTitle) {
                     idx = history.findIndex(item =>
@@ -676,7 +735,7 @@ function saveCurrentProgress() {
                         (item.episodeIndex === undefined || item.episodeIndex === currentEpisodeIndex)
                     );
                 }
-                
+
                 // 如果找到了匹配项，更新播放进度
                 if (idx !== -1) {
                     // 只在进度有明显变化时才更新，减少写入
@@ -693,7 +752,7 @@ function saveCurrentProgress() {
                     // 如果找不到匹配项，并且有足够信息，创建一个新的历史记录项
                     // 注意：url 必须是播放页地址。m3u8 直链导入时没有 episodes，saveToHistory 不会写入，
                     // 这里若直接存 currentVideoUrl，历史页点击会把 m3u8 交给系统播放器
-                    let currentInfo = null;
+                    let currentInfo: Record<string, unknown> | null = null;
                     try { currentInfo = StorageService.getCurrentVideoInfo(); } catch (e) { /* 忽略 */ }
                     addToViewingHistory({
                         title: currentVideoTitle,
@@ -732,7 +791,7 @@ function saveCurrentProgress() {
 // 清除视频进度记录
 
 // 获取视频唯一标识
-function getVideoId() {
+function getVideoId(): string {
     // 使用视频标题和集数索引作为唯一标识
     // If currentVideoUrl is available and more unique, prefer it. Otherwise, fallback.
     if (currentVideoUrl) {
@@ -743,7 +802,9 @@ function getVideoId() {
 
 // ========== Media Session API ==========
 
-function updateMediaSession() {
+type MediaHandler = (details?: { seekTime?: number | null }) => void;
+
+function updateMediaSession(): void {
     if (!('mediaSession' in navigator)) return;
 
     const coverUrl = getVideoCover();
@@ -762,10 +823,10 @@ function updateMediaSession() {
     });
 
     // 只在第一次设置 action handlers
-    if (window._mediaSessionHandlersSet) return;
-    window._mediaSessionHandlersSet = true;
+    if (playerIndexWindow._mediaSessionHandlersSet) return;
+    playerIndexWindow._mediaSessionHandlersSet = true;
 
-    const handlers = {
+    const handlers: Record<string, MediaHandler> = {
         play() { if (art) art.play(); },
         pause() { if (art) art.pause(); },
         previoustrack() { playPreviousEpisode(); },
@@ -777,7 +838,7 @@ function updateMediaSession() {
 
     for (const [action, handler] of Object.entries(handlers)) {
         try {
-            navigator.mediaSession.setActionHandler(action, handler);
+            navigator.mediaSession.setActionHandler(action as MediaSessionAction, handler as MediaSessionActionHandler);
         } catch (e) {
             // 某些浏览器不支持所有 action，静默跳过
         }
@@ -785,7 +846,7 @@ function updateMediaSession() {
 }
 
 // 异步获取视频详情并初始化播放器（用于搜索卡片直接跳转场景）
-async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
+async function fetchDetailAndInit(vodId: string, sourceCode: string, title: string | null, episodeIndex = 0): Promise<void> {
     // 构建API参数（支持自定义源）
     let apiParams = '';
     if (sourceCode.startsWith('custom_')) {
@@ -808,7 +869,7 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
         const timestamp = new Date().getTime();
         const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}&_t=${timestamp}`);
         if (!response.ok) throw new Error(`API请求失败: ${response.status}`);
-        const data = await response.json();
+        const data = await response.json() as DetailData;
 
         if (!data.episodes || data.episodes.length === 0) {
             showError('没有可用的视频资源');
@@ -824,7 +885,7 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
         try {
             localStorage.setItem('currentVideoTitle', currentVideoTitle);
             localStorage.setItem('currentEpisodes', JSON.stringify(episodes));
-            localStorage.setItem('currentEpisodeIndex', episodeIndex);
+            localStorage.setItem('currentEpisodeIndex', String(episodeIndex));
             localStorage.setItem('currentSourceCode', sourceCode || '');
             if (data.videoInfo) {
                 localStorage.setItem('currentVideoInfo', JSON.stringify(data.videoInfo));
@@ -865,7 +926,7 @@ async function fetchDetailAndInit(vodId, sourceCode, title, episodeIndex = 0) {
 }
 
 // 静默获取视频详情并更新UI（用于历史记录路径，不重新初始化播放器）
-async function fetchDetailInfo(vodId, sourceCode) {
+async function fetchDetailInfo(vodId: string, sourceCode: string): Promise<void> {
     let apiParams = '';
     if (sourceCode.startsWith('custom_')) {
         const customIndex = sourceCode.replace('custom_', '');
@@ -884,7 +945,7 @@ async function fetchDetailInfo(vodId, sourceCode) {
         const timestamp = new Date().getTime();
         const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}&_t=${timestamp}`);
         if (!response.ok) return;
-        const data = await response.json();
+        const data = await response.json() as DetailData;
 
         // 保存视频详情到 localStorage，更新UI
         if (data.videoInfo) {
@@ -911,7 +972,6 @@ async function fetchDetailInfo(vodId, sourceCode) {
 let controlsLocked = false;
 
 // ========== 播放器浮动锁定按钮（右侧居中） ==========
-
 
 
 
