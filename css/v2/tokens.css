@@ -1,5 +1,5 @@
 /* LeLeTV v2 设计变量 · 配色「霓虹夜场」
-   加载顺序：本文件 → base.css → home.css → views.css。
+   加载顺序：本文件 → src/styles/base.css → src/pages/home/style.css → views.css。
    原则：只留一个强调色（跟随设置里的主题色，默认霓虹粉），其余信息靠灰阶分层；
    灰阶统一带一点冷紫调；功能色只以小圆点出现。 */
 
