@@ -1,13 +1,35 @@
 // ===== 主题色存储键 =====
 // 主题色两个数据域各存一套，键名本身已带模式，因此不能套 scopedKey 的 hidden:: 前缀。
 // 键名的唯一来源是 js/ui/theme-system.js 暴露的 LeLeThemeStore，这里只是兜底
+
+interface JSZipInstance {
+    file(name: string): { async(type: 'string'): Promise<string> } | null;
+    file(name: string, content: string): void;
+    generateAsync(options: {
+        type: string;
+        compression: string;
+        compressionOptions: { level: number };
+    }): Promise<Blob>;
+}
+
+interface JSZipStatic {
+    new (): JSZipInstance;
+    loadAsync(file: Blob): Promise<JSZipInstance>;
+}
+
+type AppConfigWindow = Window & {
+    LeLeThemeStore?: { KEYS?: string[]; isKey?: (key: string) => boolean };
+    JSZip?: JSZipStatic;
+    __LELETV_VERSION__?: string;
+};
+
 function themeStoreKeys() {
-    const store = window.LeLeThemeStore;
+    const store = (window as AppConfigWindow).LeLeThemeStore;
     return (store && store.KEYS) || ['leletv_theme_normal', 'leletv_theme_hidden'];
 }
 
 function isThemeStoreKey(key) {
-    const store = window.LeLeThemeStore;
+    const store = (window as AppConfigWindow).LeLeThemeStore;
     if (store && store.isKey) return store.isKey(key);
     return themeStoreKeys().indexOf(key) !== -1;
 }
@@ -18,17 +40,18 @@ function itemStorageKey(item) {
 }
 
 // ===== JSZip 按需加载（阶段 3：移出首屏关键路径，仅导入/导出配置时加载） =====
-let _jszipPromise = null;
+let _jszipPromise: Promise<JSZipStatic> | null = null;
 
-function loadJSZip() {
-    if (window.JSZip) return Promise.resolve(window.JSZip);
+function loadJSZip(): Promise<JSZipStatic> {
+    const existing = (window as AppConfigWindow).JSZip;
+    if (existing) return Promise.resolve(existing);
     if (_jszipPromise) return _jszipPromise;
 
-    _jszipPromise = new Promise(function (resolve, reject) {
+    _jszipPromise = new Promise<JSZipStatic>(function (resolve, reject) {
         var script = document.createElement('script');
-        var version = window.__LELETV_VERSION__ || '';
+        var version = (window as AppConfigWindow).__LELETV_VERSION__ || '';
         script.src = 'libs/jszip.min.js' + (version ? '?v=' + encodeURIComponent(version) : '');
-        script.onload = function () { resolve(window.JSZip); };
+        script.onload = function () { resolve((window as AppConfigWindow).JSZip as JSZipStatic); };
         script.onerror = function () {
             _jszipPromise = null;
             reject(new Error('JSZip 加载失败'));
@@ -54,7 +77,7 @@ async function importConfigFromUrl() {
                 </div>
             `;
             overlay.querySelector('#confirmUrlImport').addEventListener('click', async () => {
-                const url = document.getElementById('configUrl').value.trim();
+                const url = (document.getElementById('configUrl') as HTMLInputElement).value.trim();
                 if (!url) { showToast('请输入配置文件URL', 'warning'); return; }
                 try {
                     const urlObj = new URL(url);
@@ -124,13 +147,13 @@ async function processBackupFile(file) {
         }
     } else {
         // 兼容旧版：单个 JSON 文件
-        const content = await new Promise((resolve, reject) => {
+        const content = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
+            reader.onload = () => resolve(reader.result as string);
             reader.onerror = () => reject('文件读取失败');
             reader.readAsText(file);
         });
-        const oldConfig = JSON.parse(content);
+        const oldConfig = JSON.parse(content) as { name: string; data: unknown; hash?: string };
         if (oldConfig.name !== 'LeLeTV-Settings') throw '配置文件格式不正确';
         const dataHash = await sha256(JSON.stringify(oldConfig.data));
         if (dataHash !== oldConfig.hash) throw '配置文件哈希值不匹配';
@@ -178,7 +201,13 @@ async function exportConfig() {
         if (value !== null) settingsItems[key] = value;
     });
 
-    const settingsJson = {
+    const settingsJson: {
+        name: string;
+        version: string;
+        time: string;
+        data: unknown;
+        hash?: string;
+    } = {
         name: 'LeLeTV-Settings',
         version: '2.0',
         time: times,
@@ -228,12 +257,12 @@ function saveBlobAsFile(blob, fileName) {
 
 function openMobileSearch() {
     const overlay = document.getElementById('mobileSearchOverlay');
-    const input = document.getElementById('mobileSearchInput');
+    const input = document.getElementById('mobileSearchInput') as HTMLInputElement | null;
     if (!overlay || !input) return;
     // 先 blur 桌面搜索框，防止键盘干扰
-    document.getElementById('searchInput')?.blur();
+    (document.getElementById('searchInput') as HTMLInputElement | null)?.blur();
     // 同步已有输入文本
-    input.value = document.getElementById('searchInput').value;
+    input.value = (document.getElementById('searchInput') as HTMLInputElement).value;
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     // 移除之前可能残留的 visualViewport 内联样式，让 CSS dvh 接管

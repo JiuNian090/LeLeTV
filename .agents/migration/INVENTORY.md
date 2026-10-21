@@ -346,7 +346,7 @@
 | 273 | `js/api/search.js` | 跨源聚合搜索与结果缓存 | migrated | `src/services/search.ts` | — | — | pending | — |
 | 274 | `js/api/source-port.js` | 视频源导入/导出（LibreTV 互操作） | migrated | `src/services/sources/port.ts` | — | — | pending | — |
 | 275 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | pending | — |
-| 276 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | pending | — |
+| 276 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | verified | 已迁移至 `src/services/config.ts`；类型检查通过 |
 | 277 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
 | 278 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | pending | — |
 | 279 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | pending | — |
@@ -475,6 +475,7 @@
 | 378 | `src/services/adfilter-config.json` | 广告过滤规则配置（迁移自 `js/filter-config.json`） | keep | — | — | — | done | 阶段 4 第 10 条迁移目标 |
 | 379 | `src/services/api.ts` | 采集站请求 / 详情 / 搜索 API（迁移自 `js/api/api.js`） | keep | — | — | — | done | 阶段 4 第 11 条迁移目标 |
 | 380 | `src/services/balancer.ts` | 采集站负载均衡（迁移自 `js/api/loadBalancer.js`） | keep | — | — | — | done | 阶段 4 第 12 条迁移目标 |
+| 381 | `src/services/config.ts` | 配置导入/导出与 JSZip 懒加载（迁移自 `js/app/app-config.js`） | keep | — | — | — | done | 阶段 4 第 13 条迁移目标 |
 
 ## workers/（红区）
 

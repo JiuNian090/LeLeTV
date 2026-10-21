@@ -38,7 +38,7 @@
 | 10 | services | `js/filter-config.json` | `src/services/adfilter-config.json` | verified | 第 6 节 广告过滤 | fetch 路径已同步 |
 | 11 | services | `js/api/api.js` | `src/services/api.ts` | verified | 第 5 / 9 节 搜索与详情 | — |
 | 12 | services | `js/api/loadBalancer.js` | `src/services/balancer.ts` | verified | 第 5 节 负载均衡 | — |
-| 13 | services | `js/app/app-config.js` | `src/services/config.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
+| 13 | services | `js/app/app-config.js` | `src/services/config.ts` | verified | 第 10 节 配置导入导出 | — |
 | 14 | services | `js/auth/invite-auth.js` | `src/services/invitation.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 15 | services | `js/ui/line-probe.js` | `src/services/line-probe.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 16 | services | `js/ui/ui-search-history.js` | `src/services/search-history.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
