@@ -343,7 +343,7 @@
 | 269 | `js/api/api-config.js` | 采集站 API 配置（selectedAPIs / customAPIs） | migrated | `src/services/sources/config.ts` | — | — | verified | 全局脚本迁移，函数/变量名保持不变 |
 | 270 | `js/api/api.js` | 采集站请求与详情/搜索 API 封装 | migrated | `src/services/api.ts` | — | — | verified | 已迁移至 `src/services/api.ts`；类型检查通过 |
 | 271 | `js/api/loadBalancer.js` | 采集站负载均衡与延迟调度 | migrated | `src/services/balancer.ts` | — | — | verified | 已迁移至 `src/services/balancer.ts`；类型检查通过 |
-| 272 | `js/api/remote-sources.js` | 远端数据源同步与合并 | migrated | `src/services/sources/remote.ts` | — | — | pending | — |
+| 272 | `js/api/remote-sources.js` | 远端数据源同步与合并 | migrated | `src/services/sources/remote.ts` | — | — | verified | 两个 window 入口名保持不变 |
 | 273 | `js/api/search.js` | 跨源聚合搜索与结果缓存 | migrated | `src/services/search.ts` | — | — | pending | — |
 | 274 | `js/api/source-port.js` | 视频源导入/导出（LibreTV 互操作） | migrated | `src/services/sources/port.ts` | — | — | verified | 全局脚本迁移，export/import 入口名保持不变 |
 | 275 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | pending | — |
@@ -480,6 +480,7 @@
 | 382 | `src/services/invitation.ts` | 邀请码验证 / 设备指纹 / 心跳（迁移自 `js/auth/invite-auth.js`） | keep | — | — | — | done | 阶段 4 第 14 条迁移目标 |
 | 384 | `src/services/sources/config.ts` | 采集站 API 配置（迁移自 `js/api/api-config.js`） | keep | — | — | — | done | 阶段 4 第 15 条迁移目标 |
 | 385 | `src/services/sources/port.ts` | 视频源导入 / 导出（迁移自 `js/api/source-port.js`） | keep | — | — | — | done | 阶段 4 第 16 条迁移目标 |
+| 386 | `src/services/sources/remote.ts` | 远端数据源同步与合并（迁移自 `js/api/remote-sources.js`） | keep | — | — | — | done | 阶段 4 第 17 条迁移目标 |
 
 ## workers/（红区）
 

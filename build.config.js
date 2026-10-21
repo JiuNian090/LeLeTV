@@ -20,9 +20,9 @@ export const BUNDLES = [
     files: [
       // 全局模态框 / Toast 必须在 ui-core.js 之前注入：ui-core.js 在模块顶层就查找 #toast / #modal
       'src/ui/modals.ts',
-      // remote-sources 必须排在 config.js 之后（依赖 API_SITES / extendAPISites / isHiddenContentMode），
+      // remote-sources 必须排在 config.ts 之后（依赖 API_SITES / extendAPISites / isHiddenContentMode），
       // 且要在 app.js 与 player.js 之前（两个页面启动时都会调用它）
-      'src/core/config.ts', 'js/api/remote-sources.js',
+      'src/core/config.ts', 'src/services/sources/remote.ts',
       'src/core/global.ts', 'src/core/storage.ts',
       'src/core/listener-tracker.ts', 'src/core/timing.ts',
       'src/core/http.ts', 'src/core/crypto.ts', 'src/services/invitation.ts',

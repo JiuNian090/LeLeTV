@@ -45,7 +45,7 @@
 | 17 | services | `js/api/search.js` | `src/services/search.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 18 | services | `js/api/api-config.js` | `src/services/sources/config.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
 | 19 | services | `js/api/source-port.js` | `src/services/sources/port.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
-| 20 | services | `js/api/remote-sources.js` | `src/services/sources/remote.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
+| 20 | services | `js/api/remote-sources.js` | `src/services/sources/remote.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，window 入口不变 |
 | 21 | services | `js/ui/theme-system.js` | `src/services/theme.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 22 | services | `js/api/tmdb.js` | `src/services/tmdb.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 23 | services | `js/utils/version-updater.js` | `src/services/version-updater.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
