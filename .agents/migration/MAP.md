@@ -56,7 +56,7 @@
 | 28 | ui | `js/ui/motion-pref.js` | `src/ui/motion-pref.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 29 | ui | `js/player/player-bridge.js` | `src/ui/player/bridge.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 30 | ui | `js/player/player-core.js` | `src/ui/player/core.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
-| 31 | ui | `js/player/player-detail.js` | `src/ui/player/detail.ts` | pending | 第 7 节 播放器 | — |
+| 31 | ui | `js/player/player-detail.js` | `src/ui/player/detail.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 32 | ui | `js/player/player-episodes.js` | `src/ui/player/episodes.ts` | pending | 第 7 节 播放器 | — |
 | 33 | ui | `js/player/player-failover.js` | `src/ui/player/failover.ts` | pending | 第 7 节 播放器 | — |
 | 34 | ui | `js/player/player.js` | `src/ui/player/index.ts` | pending | 第 7 节 播放器 | — |

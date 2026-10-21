@@ -370,7 +370,7 @@
 | 296 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | verified | fetch 路径已同步为 `/src/services/adfilter-config.json` |
 | 297 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | verified | 公开函数与全局播放状态变量保持不变 |
 | 298 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | verified | 公开函数保持不变，HLS/ArtPlayer 使用最小本地接口声明 |
-| 299 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | pending | — |
+| 299 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | verified | 公开函数保持不变，详情渲染与编辑逻辑原样迁移 |
 | 300 | `js/player/player-episodes.js` | 剧集列表与选集 | migrated | `src/ui/player/episodes.ts` | — | — | pending | — |
 | 301 | `js/player/player-failover.js` | 起播失败自动换线 | migrated | `src/ui/player/failover.ts` | — | — | pending | — |
 | 302 | `js/player/player-lights.js` | 播放页氛围灯/背景 | migrated | `src/ui/player/lights.ts` | — | — | pending | — |
@@ -494,6 +494,7 @@
 | 397 | `src/ui/motion-pref.ts` | 动态效果偏好（迁移自 `js/ui/motion-pref.js`） | keep | — | — | — | done | 阶段 4 第 28 条迁移目标 |
 | 398 | `src/ui/player/bridge.ts` | 播放页与搜索/详情接口桥接（迁移自 `js/player/player-bridge.js`） | keep | — | — | — | done | 阶段 4 第 29 条迁移目标 |
 | 399 | `src/ui/player/core.ts` | HLS + ArtPlayer 核心初始化（迁移自 `js/player/player-core.js`） | keep | — | — | — | done | 阶段 4 第 30 条迁移目标 |
+| 400 | `src/ui/player/detail.ts` | 播放页详情/海报信息（迁移自 `js/player/player-detail.js`） | keep | — | — | — | done | 阶段 4 第 31 条迁移目标 |
 
 ## workers/（红区）
 
