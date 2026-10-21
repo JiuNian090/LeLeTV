@@ -1,12 +1,35 @@
 // LeLeTV — 选集管理模块
 
+// 阶段 5B-3：状态与 core/manager 依赖改为显式 import。
+import {
+    art,
+    currentEpisodes,
+    currentEpisodeIndex,
+    currentVideoUrl,
+    episodesReversed,
+    episodeSwitchTimeout,
+    progressSaveInterval,
+    userClickedPosition,
+    videoHasEnded,
+    setCurrentEpisodeIndex,
+    setCurrentVideoUrl,
+    setEpisodesReversed,
+    setEpisodeSwitchTimeout,
+    setProgressSaveInterval,
+    setUserClickedPosition,
+    setVideoHasEnded,
+} from './state';
+import { initPlayer } from './core';
+import { PlayerManager } from './manager';
+import { clearVideoProgress } from './session';
+
 interface EpisodesWindow extends Window {
     isSwitchingVideo?: boolean;
 }
 
 const episodesWindow = window as EpisodesWindow;
 
-function updateEpisodeInfo(): void {
+export function updateEpisodeInfo(): void {
     const el = document.getElementById('episodeInfo');
     if (!el) return;
     if (currentEpisodes.length > 0) {
@@ -16,7 +39,7 @@ function updateEpisodeInfo(): void {
     }
 }
 
-function updateButtonStates(): void {
+export function updateButtonStates(): void {
     const prevButton = document.getElementById('prevButton');
     const nextButton = document.getElementById('nextButton');
     if (!prevButton && !nextButton) return;
@@ -46,7 +69,7 @@ function updateButtonStates(): void {
     }
 }
 
-function renderEpisodes(): void {
+export function renderEpisodes(): void {
     const episodesList = document.getElementById('episodesList');
     if (!episodesList) return;
 
@@ -72,7 +95,7 @@ function renderEpisodes(): void {
     episodesList.innerHTML = html;
 }
 
-function playEpisode(index: number): void {
+export function playEpisode(index: number): void {
     // 切换状态锁：防止快速点击集数造成并发切换
     if (episodesWindow.isSwitchingVideo) {
         return;
@@ -93,7 +116,7 @@ function playEpisode(index: number): void {
     // 清除进度保存计时器
     if (progressSaveInterval) {
         clearInterval(progressSaveInterval);
-        progressSaveInterval = null;
+        setProgressSaveInterval(null);
     }
 
     // 首先隐藏之前可能显示的错误
@@ -107,9 +130,9 @@ function playEpisode(index: number): void {
     const url = currentEpisodes[index];
 
     // 更新当前剧集索引
-    currentEpisodeIndex = index;
-    currentVideoUrl = url;
-    videoHasEnded = false;
+    setCurrentEpisodeIndex(index);
+    setCurrentVideoUrl(url);
+    setVideoHasEnded(false);
 
     clearVideoProgress();
 
@@ -125,7 +148,7 @@ function playEpisode(index: number): void {
     updateButtonStates();
     renderEpisodes();
     updateMediaSession();
-    userClickedPosition = null;
+    setUserClickedPosition(null);
 
     // 尝试无缝切换，如果失败则回退到销毁重建播放器
     if (art) {
@@ -135,8 +158,8 @@ function playEpisode(index: number): void {
         }
 
         // 设置切换超时：12秒后如果视频仍未开始播放，说明切换可能失败
-        episodeSwitchTimeout = setTimeout(function () {
-            episodeSwitchTimeout = null;
+        setEpisodeSwitchTimeout(setTimeout(function () {
+            setEpisodeSwitchTimeout(null);
             episodesWindow.isSwitchingVideo = false;
 
             // 兜底：销毁现有播放器，重新初始化
@@ -144,7 +167,7 @@ function playEpisode(index: number): void {
                 PlayerManager.destroy();
             }
             initPlayer(url);
-        }, 12000);
+        }, 12000));
 
         // art.url = url 触发 ArtPlayer 内部源切换
         // 如果新 URL 加载异常，ArtPlayer 内部可能访问已销毁状态导致报错
@@ -153,7 +176,7 @@ function playEpisode(index: number): void {
         } catch (e) {
             console.warn('[LeLeTV] 剧集无缝切换失败，回退重建播放器:', e);
             clearTimeout(episodeSwitchTimeout);
-            episodeSwitchTimeout = null;
+            setEpisodeSwitchTimeout(null);
             episodesWindow.isSwitchingVideo = false;
             PlayerManager.destroy();
             initPlayer(url);
@@ -168,20 +191,20 @@ function playEpisode(index: number): void {
     setTimeout(function () { saveToHistory(); }, 3000);
 }
 
-function playPreviousEpisode(): void {
+export function playPreviousEpisode(): void {
     if (currentEpisodeIndex > 0) {
         playEpisode(currentEpisodeIndex - 1);
     }
 }
 
-function playNextEpisode(): void {
+export function playNextEpisode(): void {
     if (currentEpisodeIndex < currentEpisodes.length - 1) {
         playEpisode(currentEpisodeIndex + 1);
     }
 }
 
-function toggleEpisodeOrder(): void {
-    episodesReversed = !episodesReversed;
+export function toggleEpisodeOrder(): void {
+    setEpisodesReversed(!episodesReversed);
 
     // 保存到localStorage
     localStorage.setItem('episodesReversed', String(episodesReversed));
@@ -193,7 +216,7 @@ function toggleEpisodeOrder(): void {
     updateOrderButton();
 }
 
-function updateOrderButton(): void {
+export function updateOrderButton(): void {
     const orderIcon = document.getElementById('orderIcon') as HTMLElement | null;
 
     if (orderIcon) {
@@ -213,3 +236,16 @@ Object.assign(window, {
   toggleEpisodeOrder,
   updateOrderButton
 });
+
+// 阶段 5B-3 过渡期类型桥：episodes.ts 已成为 ESM 模块，尚未改为 import 的模块
+// 仍以裸名访问。
+declare global {
+  function updateEpisodeInfo(): void;
+  function updateButtonStates(): void;
+  function renderEpisodes(): void;
+  function playEpisode(index: number): void;
+  function playPreviousEpisode(): void;
+  function playNextEpisode(): void;
+  function toggleEpisodeOrder(): void;
+  function updateOrderButton(): void;
+}

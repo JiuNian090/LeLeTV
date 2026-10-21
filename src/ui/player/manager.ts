@@ -10,11 +10,14 @@
  *   - 为未来播放器实例无全局化提供接入点
  */
 
+import { setArt, setCurrentHls } from './state';
+import { ListenerTracker } from '../../core/listener-tracker';
+
 interface PlayerManagerArt extends ArtplayerInstance {
     destroy?: (removeDom?: boolean) => void;
 }
 
-const PlayerManager = {
+export const PlayerManager = {
     _art: null as PlayerManagerArt | null,
     _hls: null as HlsInstance | null,
     _intervals: [] as number[],
@@ -49,7 +52,7 @@ const PlayerManager = {
         this._hls = instance;
         // 同步全局变量（向后兼容，旧代码仍读取 currentHls）
         if (typeof currentHls !== 'undefined') {
-            currentHls = instance;
+            setCurrentHls(instance);
         }
     },
 
@@ -80,7 +83,7 @@ const PlayerManager = {
 
         // 同步全局变量
         if (typeof art !== 'undefined') {
-            art = null;
+            setArt(null);
         }
 
         // 销毁 HLS
@@ -157,3 +160,10 @@ const PlayerManager = {
 Object.assign(window, {
   PlayerManager
 });
+
+// 阶段 5B-3 过渡期类型桥：manager.ts 已成为 ESM 模块，尚未改为 import 的模块
+// 仍以裸名访问。
+type PlayerManagerApi = typeof PlayerManager;
+declare global {
+  const PlayerManager: PlayerManagerApi;
+}
