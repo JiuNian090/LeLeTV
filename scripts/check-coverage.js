@@ -41,6 +41,7 @@ for (const line of inventory.split(/\r?\n/)) {
     type: cells[4],
     target: clean(cells[5]),
     approval: cells[7],
+    status: cells[8],
   });
 }
 
@@ -48,7 +49,11 @@ const trackedSet = new Set(tracked);
 const inventorySet = new Set(rows.map(r => r.path));
 const duplicated = rows.map(r => r.path).filter((p, i, arr) => arr.indexOf(p) !== i);
 const missing = tracked.filter(p => !inventorySet.has(p));
-const extra = rows.map(r => r.path).filter(p => !trackedSet.has(p));
+// 已完成的 migrated 记录：原路径已不存在是预期结果，不算 B - A
+const extra = rows
+  .filter(r => !trackedSet.has(r.path))
+  .filter(r => !(r.type === 'migrated' && ['migrated', 'verified', 'done'].includes(r.status)))
+  .map(r => r.path);
 
 const errors = [];
 if (duplicated.length) errors.push(`INVENTORY 存在重复条目：${[...new Set(duplicated)].join('、')}`);
