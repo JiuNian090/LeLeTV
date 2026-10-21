@@ -14,6 +14,9 @@
  *   旧代码继续有效，不破坏现有功能。
  */
 
+// 阶段 5B-3：数据域键名解析改为显式 import。
+import { scopedKey } from './state';
+
 // ==================== 键名常量 ====================
 
 const StorageKeys = {
@@ -66,7 +69,7 @@ const StorageKeys = {
 
 // ==================== 存储服务 ====================
 
-const StorageService = {
+export const StorageService = {
 
     // ---- 通用方法 ----
 
@@ -228,3 +231,10 @@ if (typeof leleTVHost !== 'undefined') {
 Object.assign(window, {
   StorageService
 });
+
+// 阶段 5B-3 过渡期类型桥：storage.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问（运行时由上方 window 兼容桥提供）。
+type StorageServiceApi = typeof StorageService;
+declare global {
+  const StorageService: StorageServiceApi;
+}
