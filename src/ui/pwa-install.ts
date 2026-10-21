@@ -7,6 +7,8 @@
  *   - 已经以独立窗口运行（装过了）就什么都不显示；点「以后再说」两周内不再出现
  */
 
+import { showToast } from './toast';
+
 /** 非标准事件：Chromium 系在可安装时派发 */
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => void;
@@ -18,16 +20,16 @@ interface PwaNavigator extends Navigator {
   standalone?: boolean;
 }
 
-interface PwaWindow extends Window {
-  LeLePwa?: {
-    isStandalone: () => boolean;
-    hasPrompt: () => boolean;
-  };
+export interface PwaApi {
+  isStandalone: () => boolean;
+  hasPrompt: () => boolean;
 }
 
-declare function showToast(message: string, type?: string): void;
+interface PwaWindow extends Window {
+  LeLePwa?: PwaApi;
+}
 
-(function () {
+export const LeLePwa: PwaApi = (function (): PwaApi {
   'use strict';
 
   var DISMISS_KEY = 'leletv_pwa_tip_dismissed';
@@ -199,5 +201,8 @@ declare function showToast(message: string, type?: string): void;
   else init();
 
   // 调试与测试用：可查询当前状态
-  (window as PwaWindow).LeLePwa = { isStandalone: isStandalone, hasPrompt: function () { return !!deferredPrompt; } };
+  return { isStandalone: isStandalone, hasPrompt: function () { return !!deferredPrompt; } };
 })();
+
+// 首页 / 关于页的 PWA 状态查询仍走全局名（HTML 内联脚本契约）
+(window as PwaWindow).LeLePwa = LeLePwa;
