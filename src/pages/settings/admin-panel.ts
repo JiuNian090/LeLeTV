@@ -211,8 +211,8 @@ const INVITE_ADMIN_PANEL = {
       </div>
     `;
     
-    container.querySelector('#inviteGenerateBtn').addEventListener('click', () => this._handleGenerate(container));
-    container.querySelector('#inviteRefreshBtn').addEventListener('click', async function clickRefresh() {
+    container.querySelector('#inviteGenerateBtn')?.addEventListener('click', () => this._handleGenerate(container));
+    container.querySelector('#inviteRefreshBtn')?.addEventListener('click', async function clickRefresh() {
       const btn = this;
       btn.classList.add('refreshing');
       await INVITE_ADMIN_PANEL._refresh(container);
@@ -220,17 +220,18 @@ const INVITE_ADMIN_PANEL = {
       btn.blur();
       showToast('已刷新', 'success');
     });
-    container.querySelector('#inviteAdminLogoutBtn').addEventListener('click', () => {
-      if (INVITE_AUTH && confirm('确定退出登录吗？')) {
-        adminWindow.INVITE_AUTH.logout();
+    container.querySelector('#inviteAdminLogoutBtn')?.addEventListener('click', () => {
+      const auth = adminWindow.INVITE_AUTH;
+      if (auth && confirm('确定退出登录吗？')) {
+        auth.logout();
       }
     });
     // 生成弹窗事件
-    container.querySelector('#inviteGenCancel').addEventListener('click', () => this._closeGenModal());
-    container.querySelector('#inviteGenConfirm').addEventListener('click', () => this._confirmGenerate(container));
+    container.querySelector('#inviteGenCancel')?.addEventListener('click', () => this._closeGenModal());
+    container.querySelector('#inviteGenConfirm')?.addEventListener('click', () => this._confirmGenerate(container));
     // Enter 键确认
-    const modalInput = container.querySelector('#inviteGenRemarkInput') as HTMLInputElement;
-    modalInput.addEventListener('keydown', (e) => {
+    const modalInput = container.querySelector('#inviteGenRemarkInput') as HTMLInputElement | null;
+    modalInput?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this._confirmGenerate(container);
     });
 
@@ -283,6 +284,7 @@ const INVITE_ADMIN_PANEL = {
   async _refresh(container: HTMLElement) {
     const statsEl = container.querySelector('#inviteStats');
     const listEl = container.querySelector('#inviteCodeList');
+    if (!statsEl || !listEl) return;
     
     const [codes, stats] = await Promise.all([
       this.fetchList(),
@@ -324,19 +326,25 @@ const INVITE_ADMIN_PANEL = {
           </div>
         </div>
         <div class="invite-card-meta">
-          <span>${_formatTime(invite.created_at)}</span>
+          <span>${invite.created_at != null ? _formatTime(invite.created_at) : '—'}</span>
           <span>设备：${invite.device_count}/${invite.max_devices}</span>
           ${lastActive ? `<span>${recentDot} 最近使用：${_timeAgo(lastActive)}</span>` : '<span class="text-gray-600">暂无使用</span>'}
         </div>
         ${devices.length > 0 ? `
         <details class="invite-devices" open>
           <summary class="invite-device-toggle">设备详情（${devices.length}）</summary>
-          ${devices.map(d => `
-          <div class="invite-device-item ${_isRecentlyActive(d.last_active_at) ? 'invite-device-recent' : ''}">
-            <span class="invite-device-name">${_recentDot(d.last_active_at)} ${_deviceIcon(d.browser)} ${d.device_name}</span>
-            <span>${_timeAgo(d.last_active_at)} <button class="invite-action-btn invite-action-btn-danger delete-device-btn" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button></span>
+          ${devices.map(d => {
+            const lastActive = d.last_active_at;
+            const recent = lastActive != null && _isRecentlyActive(lastActive);
+            const dot = lastActive != null ? _recentDot(lastActive) : '';
+            const activeText = lastActive != null ? _timeAgo(lastActive) : '从未';
+            return `
+          <div class="invite-device-item ${recent ? 'invite-device-recent' : ''}">
+            <span class="invite-device-name">${dot} ${_deviceIcon(d.browser)} ${d.device_name}</span>
+            <span>${activeText} <button class="invite-action-btn invite-action-btn-danger delete-device-btn" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button></span>
           </div>
-          `).join('')}
+          `;
+          }).join('')}
         </details>
         ` : ''}
       </div>`;
@@ -353,6 +361,7 @@ const INVITE_ADMIN_PANEL = {
     listEl.querySelectorAll<HTMLElement>('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
+        if (!code) return;
         const isActive = btn.dataset.active === 'true';
         const success = await this.toggleCode(code, !isActive);
         if (success) this._refresh(container);
@@ -364,6 +373,7 @@ const INVITE_ADMIN_PANEL = {
     listEl.querySelectorAll<HTMLElement>('.invite-code-text').forEach(el => {
       el.addEventListener('click', async () => {
         const code = el.dataset.code;
+        if (!code) return;
         try {
           await navigator.clipboard.writeText(code);
           showToast('邀请码已复制', 'success');
@@ -383,6 +393,7 @@ const INVITE_ADMIN_PANEL = {
     listEl.querySelectorAll<HTMLElement>('.remark-btn').forEach(el => {
       el.addEventListener('click', async () => {
         const code = el.dataset.code;
+        if (!code) return;
         const current = el.closest('.invite-card')?.querySelector('.invite-remark-text')?.textContent?.replace(/[（）]/g, '').trim() || '';
         const remark = prompt('编辑备注（留空则清除）：', current);
         if (remark === null) return;
@@ -397,6 +408,7 @@ const INVITE_ADMIN_PANEL = {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
         const fp = btn.dataset.fp;
+        if (!code || !fp) return;
         const deviceName = btn.closest('.invite-device-item')?.querySelector('.invite-device-name')?.textContent?.trim() || fp;
         if (!confirm(`确定删除设备「${deviceName}」？`)) return;
         const ok = await this.deleteDevice(code, fp);
@@ -413,6 +425,7 @@ const INVITE_ADMIN_PANEL = {
     listEl.querySelectorAll<HTMLElement>('.delete-code-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
+        if (!code) return;
         if (!confirm(`确定删除邀请码「${code}」？关联的设备也将一并删除。`)) return;
         if (!confirm('此操作不可恢复，再次确认？')) return;
         const ok = await this.deleteCode(code);
