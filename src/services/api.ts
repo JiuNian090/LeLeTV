@@ -1,10 +1,9 @@
 // 改进的API请求处理函数
 
-type ApiWindow = Window & {
-    ProxyAuth?: { addAuthToProxyUrl(url: string): Promise<string> };
-};
-
-const proxyAuth = (window as ApiWindow).ProxyAuth;
+// 阶段 5B-3：显式 import core 的配置、鉴权与时间常量。
+import { API_SITES, PROXY_URL, API_CONFIG, M3U8_PATTERN } from '../core/config';
+import { addAuthToProxyUrl } from '../core/http';
+import { TIMING } from '../core/timing';
 
 /**
  * 规范化播放地址。
@@ -57,9 +56,7 @@ async function handleApiRequest(url) {
 
             try {
                 // 添加鉴权参数到代理URL
-                const proxiedUrl = await proxyAuth?.addAuthToProxyUrl ?
-                    await proxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl)) :
-                    PROXY_URL + encodeURIComponent(apiUrl);
+                const proxiedUrl = await addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl));
 
                 const response = await fetch(proxiedUrl, {
                     headers: API_CONFIG.search.headers,
@@ -146,9 +143,7 @@ async function handleApiRequest(url) {
 
             try {
                 // 添加鉴权参数到代理URL
-                const proxiedUrl = await proxyAuth?.addAuthToProxyUrl ?
-                    await proxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
-                    PROXY_URL + encodeURIComponent(detailUrl);
+                const proxiedUrl = await addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl));
 
                 const response = await fetch(proxiedUrl, {
                     headers: API_CONFIG.detail.headers,
@@ -272,9 +267,7 @@ async function handleSpecialDetail通用(id, sourceConfig) {
         const timeoutId = setTimeout(() => controller.abort(), TIMING.API_REQUEST_TIMEOUT);
 
         // 添加鉴权参数到代理URL
-        const proxiedUrl = await proxyAuth?.addAuthToProxyUrl ?
-            await proxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl)) :
-            PROXY_URL + encodeURIComponent(detailUrl);
+        const proxiedUrl = await addAuthToProxyUrl(PROXY_URL + encodeURIComponent(detailUrl));
 
         // 获取详情页HTML
         const response = await fetch(proxiedUrl, {
@@ -406,9 +399,7 @@ async function handleAggregatedSearch(searchQuery) {
             );
 
             // 添加鉴权参数到代理URL
-            const proxiedUrl = await proxyAuth?.addAuthToProxyUrl ?
-                await proxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl)) :
-                PROXY_URL + encodeURIComponent(apiUrl);
+            const proxiedUrl = await addAuthToProxyUrl(PROXY_URL + encodeURIComponent(apiUrl));
 
             const fetchPromise = fetch(proxiedUrl, {
                 headers: API_CONFIG.search.headers
@@ -522,9 +513,7 @@ async function handleMultipleCustomSearch(searchQuery, customApiUrls) {
             );
 
             // 添加鉴权参数到代理URL
-            const proxiedUrl = await proxyAuth?.addAuthToProxyUrl ?
-                await proxyAuth.addAuthToProxyUrl(PROXY_URL + encodeURIComponent(fullUrl)) :
-                PROXY_URL + encodeURIComponent(fullUrl);
+            const proxiedUrl = await addAuthToProxyUrl(PROXY_URL + encodeURIComponent(fullUrl));
 
             const fetchPromise = fetch(proxiedUrl, {
                 headers: API_CONFIG.search.headers
