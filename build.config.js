@@ -78,6 +78,8 @@ export const BUNDLES = [
   {
     name: 'leletv-player',
     firstScreen: false,
+    // 阶段 5A-6：由 files 顺序生成 ESM 入口，走 esbuild.build
+    esm: true,
     files: [
       'src/services/api.ts', 'src/services/search.ts',
       'src/services/viewing-history.ts',

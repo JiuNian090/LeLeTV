@@ -991,3 +991,104 @@ let controlsLocked = false;
 
 
 // 切换资源的函数
+
+// 阶段 5A-6 过渡期兼容桥：player bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  goHome,
+  saveToHistory,
+  startProgressSaveInterval,
+  saveCurrentProgress,
+  getVideoId,
+  updateMediaSession
+});
+
+Object.defineProperty(window, 'currentVideoTitle', {
+  get: () => currentVideoTitle,
+  set: (v) => { currentVideoTitle = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'currentEpisodeIndex', {
+  get: () => currentEpisodeIndex,
+  set: (v) => { currentEpisodeIndex = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'art', {
+  get: () => art,
+  set: (v) => { art = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'currentHls', {
+  get: () => currentHls,
+  set: (v) => { currentHls = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'currentEpisodes', {
+  get: () => currentEpisodes,
+  set: (v) => { currentEpisodes = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'episodesReversed', {
+  get: () => episodesReversed,
+  set: (v) => { episodesReversed = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'autoplayEnabled', {
+  get: () => autoplayEnabled,
+  set: (v) => { autoplayEnabled = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'videoHasEnded', {
+  get: () => videoHasEnded,
+  set: (v) => { videoHasEnded = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'userClickedPosition', {
+  get: () => userClickedPosition,
+  set: (v) => { userClickedPosition = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'shortcutHintTimeout', {
+  get: () => shortcutHintTimeout,
+  set: (v) => { shortcutHintTimeout = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'autoFullscreened', {
+  get: () => autoFullscreened,
+  set: (v) => { autoFullscreened = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'progressSaveInterval', {
+  get: () => progressSaveInterval,
+  set: (v) => { progressSaveInterval = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'currentVideoUrl', {
+  get: () => currentVideoUrl,
+  set: (v) => { currentVideoUrl = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'episodeSwitchTimeout', {
+  get: () => episodeSwitchTimeout,
+  set: (v) => { episodeSwitchTimeout = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'controlsLocked', {
+  get: () => controlsLocked,
+  set: (v) => { controlsLocked = v; },
+  configurable: true,
+});
