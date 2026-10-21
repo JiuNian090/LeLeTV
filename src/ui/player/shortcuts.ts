@@ -31,10 +31,10 @@ export function handleKeyboardShortcuts(e: KeyboardEvent): void {
     if (player && player.currentTime < player.duration - 5) { player.currentTime += 5; showShortcutHint('\u5feb\u8fdb', 'right'); e.preventDefault(); }
   }
   if (e.key === 'ArrowUp') {
-    if (player && player.volume < 1) { player.volume += 0.1; showShortcutHint('\u97f3\u91cf+', 'up'); e.preventDefault(); }
+    if (player && (player.volume ?? 0) < 1) { player.volume = (player.volume ?? 0) + 0.1; showShortcutHint('\u97f3\u91cf+', 'up'); e.preventDefault(); }
   }
   if (e.key === 'ArrowDown') {
-    if (player && player.volume > 0) { player.volume -= 0.1; showShortcutHint('\u97f3\u91cf-', 'down'); e.preventDefault(); }
+    if (player && (player.volume ?? 0) > 0) { player.volume = (player.volume ?? 0) - 0.1; showShortcutHint('\u97f3\u91cf-', 'down'); e.preventDefault(); }
   }
   if (e.key === ' ') {
     if (player) { player.toggle?.(); showShortcutHint('\u64ad\u653e/\u6682\u505c', 'play'); e.preventDefault(); }

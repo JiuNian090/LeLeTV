@@ -168,13 +168,15 @@ function setupHlsCustomType(video: HTMLVideoElement, url: string, hlsConfig: Rec
         }
         playerCoreWindow.isSwitchingVideo = false;
 
-        document.getElementById('error').style.display = 'none';
+        const errorEl = document.getElementById('error');
+        if (errorEl) errorEl.style.display = 'none';
     });
 
     // 首次播放后隐藏错误提示，然后移除自身
     video.addEventListener('timeupdate', function onFirstTimeUpdate() {
         if (video.currentTime > 1) {
-            document.getElementById('error').style.display = 'none';
+            const errorEl = document.getElementById('error');
+            if (errorEl) errorEl.style.display = 'none';
             video.removeEventListener('timeupdate', onFirstTimeUpdate);
         }
     });
@@ -357,11 +359,11 @@ function createFullScreenController(): FullScreenController {
     function handleFullScreen(isFullScreen: boolean): void {
         const container = document.getElementById('playerContainer');
         if (isFullScreen) {
-            container.classList.add('fullscreen-active');
+            container?.classList.add('fullscreen-active');
             document.body.classList.add('fullscreen-active');
             document.addEventListener('mouseout', handleMouseOut);
         } else {
-            container.classList.remove('fullscreen-active');
+            container?.classList.remove('fullscreen-active');
             document.body.classList.remove('fullscreen-active');
             document.removeEventListener('mouseout', handleMouseOut);
             clearTimeout(hideTimer);
@@ -624,13 +626,14 @@ export function initPlayer(videoUrl: string): void {
 
     const hlsConfig = createHlsConfig();
 
-    setArt(createArtPlayerInstance(videoUrl, hlsConfig));
-    PlayerManager.setInstance(art);
-    if (playerCoreWindow.LeLeFailover) playerCoreWindow.LeLeFailover.watch(art);
+    const artInstance = createArtPlayerInstance(videoUrl, hlsConfig);
+    setArt(artInstance);
+    PlayerManager.setInstance(artInstance);
+    if (playerCoreWindow.LeLeFailover) playerCoreWindow.LeLeFailover.watch(artInstance);
 
     const fullScreenController = createFullScreenController();
 
-    setupPlayerEventListeners(art, fullScreenController);
+    setupPlayerEventListeners(artInstance, fullScreenController);
 
     setupNativeFullscreenHandler();
 
