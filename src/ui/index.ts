@@ -100,7 +100,8 @@ export function showSourceImportBox(fun: FileHandler): void {
                 dropZone.addEventListener('drop', (e) => {
                     e.preventDefault();
                     dropZone.classList.remove('is-over');
-                    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                    const dt = e.dataTransfer;
+                    const file = dt && dt.files && dt.files[0];
                     if (file) fun(file);
                 });
             }
@@ -142,10 +143,17 @@ export function showImportBox(fun: FileHandler): void {
             if (dropZone) {
                 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('is-over'); });
                 dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('is-over'); });
-                dropZone.addEventListener('drop', (e) => { e.preventDefault(); fun(e.dataTransfer.files[0]); });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer && e.dataTransfer.files[0];
+                    if (file) fun(file);
+                });
             }
             if (fileInput) {
-                fileInput.addEventListener('change', () => { fun(fileInput.files[0]); });
+                fileInput.addEventListener('change', () => {
+                    const file = fileInput.files && fileInput.files[0];
+                    if (file) fun(file);
+                });
             }
         }
     });

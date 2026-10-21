@@ -76,7 +76,7 @@ export const LeLePwa: PwaApi = (function (): PwaApi {
   }
 
   function showBanner(mode: 'prompt' | 'guide'): void {
-    var el = banner();
+    const el = banner();
     if (!el) return;
     var title = el.querySelector('[data-role="title"]') as HTMLElement | null;
     var sub = el.querySelector('[data-role="sub"]') as HTMLElement | null;
@@ -96,7 +96,7 @@ export const LeLePwa: PwaApi = (function (): PwaApi {
   }
 
   function hideBanner(): void {
-    var el = banner();
+    const el = banner();
     if (!el) return;
     el.classList.remove('is-visible');
     setTimeout(function () { el.hidden = true; }, 260);
@@ -110,11 +110,12 @@ export const LeLePwa: PwaApi = (function (): PwaApi {
     if (title) title.textContent = g.title;
     var list = modal.querySelector('[data-role="steps"]') as HTMLElement | null;
     if (!list) return;
-    list.textContent = '';
+    const listEl = list;
+    listEl.textContent = '';
     g.steps.forEach(function (step) {
       var li = document.createElement('li');
       li.textContent = step;
-      list.appendChild(li);
+      listEl.appendChild(li);
     });
     modal.classList.remove('hidden');
     modal.style.display = 'flex';

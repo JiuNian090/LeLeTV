@@ -6,14 +6,15 @@
 export function initNavScroll(): void {
     const nav = document.querySelector<HTMLElement>('.top-nav-bar.v2-nav');
     if (!nav) return;
+    const navEl = nav;
 
     let ticking = false;
 
     function updateNav(): void {
         if (window.scrollY > 8) {
-            nav.classList.add('scrolled');
+            navEl.classList.add('scrolled');
         } else {
-            nav.classList.remove('scrolled');
+            navEl.classList.remove('scrolled');
         }
         ticking = false;
     }
