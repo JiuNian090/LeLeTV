@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：README 项目说明排版修复（见 git log）
+> 最新提交：首页布局调整（仅开内容板块时上移标题与内容，见 git log）
 
 ---
 
@@ -42,6 +42,7 @@
 | 历史记录迁移补强 | **完成（2 个 commit）**：`services/migrate-player-url.ts` 在每次启动时同时迁移正常域与私密域（`viewingHistory` / `hidden::viewingHistory`），继续支持相对/绝对 `player.html` 地址，直链与新地址保持不变；导出 `migrateLegacyPlayerUrls` 并新增 2 个单测（双域改写、幂等）。`npm test` 15 项全绿 |
 | 启动屏慢速提示修复 | **完成**：慢速提示由固定 6s 改为 8s，且仅在「非等待登录」且「进度停滞 ≥ 2.5s」时显示；等待登录 9s 实测不再误报，已登录正常进入与未登录登录框展示均验证通过 |
 | 项目说明排版修复 | **完成**：`renderReadme` 在渲染前统一 `ensureMarked()`，缓存命中时也会加载 marked；修复早前缓存把 Markdown 当纯文本塞进 `.markdown-body` 导致「完全没有排版」。实测缓存命中仍渲染 49 个标题 / 17 个列表，截图排版正常 |
+| 首页布局调整 | **完成**：仅关闭聚合动效、保留内容板块时，移动端 `.v2-hero` 不再占满整屏；标题区由 815px 收到 278px，LeLeTV/搜索框位于页面中上，继续观看从首屏 354px 开始。两块都关的居中简洁首页保持原样 |
 
 ---
 
