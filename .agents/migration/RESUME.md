@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：strictNullChecks 分批 7 完成（player 35 处清零，全局 strictNullChecks 已开启，见 git log）
+> 最新提交：完整 strict 模式已开启（33 处清零，见 git log）
 
 ---
 
@@ -37,6 +37,7 @@
 | strictNullChecks 分批 5 | **完成（2 个 commit）**：`pages/search/cards.ts`（6）、`pages/home/recent.ts`（4）、`pages/home/hero-glass.ts`（1）、`pages/home/shelves.ts`（9）、`pages/home/nav-search.ts`（9）清零；首页继续观看/四行最近更新/聚合动效、导航搜索展开与提交、结果卡片渲染回归通过。剩余 49 处：ui/player 35、ui/index 4、router/page-loader 4、ui/pwa-install 3、ui/nav-scroll 2、main 1 |
 | strictNullChecks 分批 6 | **完成（2 个 commit）**：`ui/index.ts`（4）、`ui/pwa-install.ts`（3）、`ui/nav-scroll.ts`（2）、`router/page-loader.ts`（4）、`main.ts`（1）清零；导航滚动、历史/关于/设置懒加载切页、导入配置弹窗、PWA 接口回归通过。剩余 35 处，全部在 `ui/player`：detail 12、index 10、core 5、shortcuts 4、episodes 2、quality 1、failover 1 |
 | strictNullChecks 分批 7 | **完成（4 个 commit）**：`ui/player/detail.ts`（12）、`ui/player/index.ts`（10）、`ui/player/core.ts` + `shortcuts.ts`（9）、`ui/player/episodes.ts` + `quality.ts` + `failover.ts`（4）清零；起播/续播、切集、切源、音量快捷键、关灯回归通过。**全局 `strictNullChecks` 已在 `tsconfig.json` 开启**，`npm run typecheck` / `npm run check` 全绿，剩余 **0** 处 |
+| 完整 strict 模式 8 | **完成（4 个 commit）**：补齐 `this` 注解（main / admin / user-devices 8 处）、catch `unknown` 收窄（10 处）、settings 面板空值与字段类型（11 处）、fetch 透传 / Path2D / 定时器（4 处）；首页、搜索、设置数据源与邀请码统计、播放起播/切集、关于页回归通过。**`tsconfig.json` 已改为 `"strict": true`**，`npx tsc --noEmit` 全绿，剩余 **0** 处 |
 
 ---
 
