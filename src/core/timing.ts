@@ -9,7 +9,7 @@
  *   setInterval(fn, TIMING.PROGRESS_SAVE_INTERVAL);
  */
 
-var TIMING = {
+const TIMING = {
 
     // ==================== 动画 ====================
 
@@ -119,9 +119,18 @@ var TIMING = {
 
     /** 重试按钮防抖 (ms) */
     RETRY_DEBOUNCE: 300
+} as const;
+
+// 保持原有全局常量行为（原 var 声明会挂到 window）
+type TimingWindow = Window & {
+    TIMING?: typeof TIMING;
+    LeLeTV?: { TIMING?: typeof TIMING };
 };
 
+(window as TimingWindow).TIMING = TIMING;
+
 // 注册到 LeLeTV
-if (typeof window.LeLeTV !== 'undefined') {
-    window.LeLeTV.TIMING = TIMING;
+const timingHost = (window as TimingWindow).LeLeTV;
+if (typeof timingHost !== 'undefined') {
+    timingHost.TIMING = TIMING;
 }

@@ -364,7 +364,7 @@
 | 291 | `js/core/leletv-global.js` | 全局命名空间适配器 | migrated | `src/core/global.ts` | — | — | verified | 已迁移至 `src/core/global.ts`；类型检查通过 |
 | 292 | `js/core/listener-tracker.js` | 事件监听追踪与批量解绑 | migrated | `src/core/listener-tracker.ts` | — | — | verified | 已迁移至 `src/core/listener-tracker.ts`；类型检查通过 |
 | 293 | `js/core/storage-service.js` | 统一存储服务（localStorage 封装） | migrated | `src/core/storage.ts` | — | — | verified | 已迁移至 `src/core/storage.ts`；类型检查通过 |
-| 294 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | pending | — |
+| 294 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | verified | 已迁移至 `src/core/timing.ts`；类型检查通过 |
 | 295 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | pending | — |
 | 296 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | pending | 运行时 fetch /js/filter-config.json，迁移后需同步 fetch 路径 |
 | 297 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | pending | — |
@@ -471,6 +471,7 @@
 | 374 | `src/core/http.ts` | 代理请求鉴权（迁移自 `js/auth/proxy-auth.js`） | keep | — | — | — | done | 阶段 4 第 5 条迁移目标 |
 | 375 | `src/core/listener-tracker.ts` | 事件监听追踪器（迁移自 `js/core/listener-tracker.js`） | keep | — | — | — | done | 阶段 4 第 6 条迁移目标 |
 | 376 | `src/core/storage.ts` | 统一存储服务（迁移自 `js/core/storage-service.js`） | keep | — | — | — | done | 阶段 4 第 8 条迁移目标 |
+| 377 | `src/core/timing.ts` | 时间常量配置（迁移自 `js/core/timing.js`） | keep | — | — | — | done | 阶段 4 第 9 条迁移目标 |
 
 ## workers/（红区）
 
