@@ -9,6 +9,8 @@
  * 卡片沿用 home-shelves.js 的 posterCard：点击按片名去各片源检索。
  */
 
+import type { HomeShelvesApi } from './shelves';
+
 interface TmdbRecentItem {
   title?: string;
   name?: string;

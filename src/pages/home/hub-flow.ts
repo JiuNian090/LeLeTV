@@ -41,24 +41,24 @@ interface HubPose {
   rot: number;
 }
 
-interface HubFlowApi {
+export interface HubFlowApi {
   setPosters(list: HubPoster[]): void;
   usePlaceholders(): void;
 }
 
-interface HubStage extends HTMLElement {
+export interface HubStage extends HTMLElement {
   __hubFlow?: HubFlowApi;
 }
 
 interface HubWindow extends Window {
-  LeLeMotion?: { reduced: () => boolean };
   HubFlow?: { init: (stage: HubStage | null) => HubFlowApi | null | undefined };
 }
 
-(function () {
-  'use strict';
+import { API_SITES } from '../../core/state';
+import { prefersReducedMotion as isMotionReduced } from '../../ui/motion-pref';
 
-  const hubWindow = window as HubWindow;
+export const HubFlow = (function () {
+  'use strict';
 
   const BASE_W = 1920;                      // flux 的设计宽度，画布不会比它窄
   const H = 850;
@@ -152,8 +152,7 @@ interface HubWindow extends Window {
   }
 
   function prefersReducedMotion(): boolean {
-    if (hubWindow.LeLeMotion) return hubWindow.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
-    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+    return isMotionReduced();   // 设置里可强制开启 / 关闭
   }
 
   /** 当前缩放比：CSS 按断点给 --hub-s，画布宽度 = 舞台宽度 / 缩放比 */
@@ -326,7 +325,7 @@ interface HubWindow extends Window {
     };
   }
 
-  hubWindow.HubFlow = {
+  return {
     init(stage: HubStage | null): HubFlowApi | null | undefined {
       if (!stage || stage.__hubFlow) return stage && stage.__hubFlow;
       stage.__hubFlow = createHubFlow(stage);
@@ -334,3 +333,6 @@ interface HubWindow extends Window {
     }
   };
 })();
+
+// 同页 shelves 直接 import；跨层/HTML 内联脚本仍走全局名
+(window as HubWindow).HubFlow = HubFlow;

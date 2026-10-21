@@ -5,6 +5,8 @@
  *   - data-action="play-from-history" + data-url/title/index/position → 续播
  */
 
+import type { HubFlowApi, HubStage } from './hub-flow';
+
 interface TrendPoster {
   title: string;
   year: string;
@@ -37,7 +39,7 @@ interface PosterCardOptions {
   progress?: number;
 }
 
-interface HomeShelvesApi {
+export interface HomeShelvesApi {
   ensure: () => Promise<void> | null;
   refresh: () => void;
   loadTrending: () => Promise<TrendPoster[]>;
