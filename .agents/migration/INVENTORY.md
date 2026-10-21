@@ -361,7 +361,7 @@
 | 288 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | pending | — |
 | 289 | `js/core/cache-manager.js` | 本地存储缓存管理与 24h 清理 | migrated | `src/core/cache.ts` | — | — | verified | 已迁移至 `src/core/cache.ts`；类型检查与回归通过 |
 | 290 | `js/core/config.js` | 全局常量与 API_SITES 基础配置 | migrated | `src/core/config.ts` | — | — | verified | 已迁移至 `src/core/config.ts`；类型检查与回归通过 |
-| 291 | `js/core/leletv-global.js` | 全局命名空间适配器 | migrated | `src/core/global.ts` | — | — | pending | — |
+| 291 | `js/core/leletv-global.js` | 全局命名空间适配器 | migrated | `src/core/global.ts` | — | — | verified | 已迁移至 `src/core/global.ts`；类型检查通过 |
 | 292 | `js/core/listener-tracker.js` | 事件监听追踪与批量解绑 | migrated | `src/core/listener-tracker.ts` | — | — | pending | — |
 | 293 | `js/core/storage-service.js` | 统一存储服务（localStorage 封装） | migrated | `src/core/storage.ts` | — | — | pending | — |
 | 294 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | pending | — |
@@ -467,6 +467,7 @@
 | 370 | `src/core/cache.ts` | 缓存管理与 24h 清理（迁移自 `js/core/cache-manager.js`） | keep | — | — | — | done | 阶段 4 第 1 条迁移目标 |
 | 371 | `src/core/config.ts` | 全局常量与 API_SITES 配置（迁移自 `js/core/config.js`） | keep | — | — | — | done | 阶段 4 第 2 条迁移目标 |
 | 372 | `src/core/crypto.ts` | SHA-256 哈希（迁移自 `js/auth/password.js`） | keep | — | — | — | done | 阶段 4 第 3 条迁移目标 |
+| 373 | `src/core/global.ts` | 全局命名空间适配器（迁移自 `js/core/leletv-global.js`） | keep | — | — | — | done | 阶段 4 第 4 条迁移目标 |
 
 ## workers/（红区）
 
