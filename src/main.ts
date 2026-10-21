@@ -1,6 +1,22 @@
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
 // var selectedAPIs / customAPIs 已在 src/services/sources/config.ts 中声明
 
+interface MainWindow extends Window {
+  __LELETV_BOOT_READY__?: () => void;
+  __LELETV_REFRESH_API_CHECKBOXES__?: () => void;
+  __LELETV_INIT_SETTINGS_PANELS__?: () => void;
+  __LELETV_INIT_SETTINGS_PAGE__?: () => void;
+  __LELETV_BIND_SETTINGS_PAGE__?: () => void;
+  INVITE_ADMIN_PANEL?: { render: (el: HTMLElement) => void };
+  USER_DEVICES_PANEL?: { render: (el: HTMLElement) => void };
+  INVITE_AUTH?: { isLocalMode: () => boolean; isVerified: () => boolean; ensureHeartbeat: () => void };
+  LeLeLayout?: { refresh: () => void };
+  LeLeThemeSystem?: { render: () => void };
+  syncRemoteApiSites?: () => Promise<string[] | null | undefined>;
+}
+
+const mainWindow = window as MainWindow;
+
 // 添加当前视频的所有集数（实际在 player.js 中声明，此处仅为类型参考）
 // let currentEpisodeIndex, currentEpisodes, currentVideoTitle, episodesReversed
 
@@ -61,8 +77,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // 交互已就绪 → 通知启动占位可以收尾（index.html 的粒子引擎等的就是这个信号）。
     // 位置刻意放在 setupEventListeners() 之后：页面"点得动"的必要条件此时已满足；
     // 后面几步（历史下拉复位、延迟标记）即使出错，也不该把用户永远挡在启动占位后面
-    if (typeof window.__LELETV_BOOT_READY__ === 'function') {
-        window.__LELETV_BOOT_READY__();
+    if (typeof mainWindow.__LELETV_BOOT_READY__ === 'function') {
+        mainWindow.__LELETV_BOOT_READY__();
     }
 
     // 确保搜索历史下拉默认隐藏，并强制移除焦点
@@ -77,10 +93,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 后台拉取最新远端数据源。此时已过 __LELETV_BOOT_READY__（首屏就绪点），
     // 网络再慢也不拖慢启动；只有列表真的变化时才重建设置页的复选框
-    if (typeof window.syncRemoteApiSites === 'function') {
-        window.syncRemoteApiSites().then(function (changed) {
-            if (changed && changed.length && typeof window.__LELETV_REFRESH_API_CHECKBOXES__ === 'function') {
-                window.__LELETV_REFRESH_API_CHECKBOXES__();
+    if (typeof mainWindow.syncRemoteApiSites === 'function') {
+        mainWindow.syncRemoteApiSites().then(function (changed) {
+            if (changed && changed.length && typeof mainWindow.__LELETV_REFRESH_API_CHECKBOXES__ === 'function') {
+                mainWindow.__LELETV_REFRESH_API_CHECKBOXES__();
             }
         });
     }
@@ -89,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // 远端数据源有变化时刷新设置页的源列表。
 // initAPICheckboxes 是整体重建（内部含域内随机选源逻辑，重复调用安全），
 // 抽成具名函数是为了让「后台拉取完成」这一时机能主动刷新一次。
-window.__LELETV_REFRESH_API_CHECKBOXES__ = function () {
+mainWindow.__LELETV_REFRESH_API_CHECKBOXES__ = function () {
     if (!document.getElementById('apiCheckboxes')) return;
     try {
         initAPICheckboxes();
@@ -104,7 +120,7 @@ window.__LELETV_REFRESH_API_CHECKBOXES__ = function () {
 window.addEventListener('pageshow', function (e) {
     if (e.persisted) {
         // 清除首页搜索结果残留（结果页/历史页不含这些元素，清理无副作用）
-        const searchInput = document.getElementById('searchInput');
+        const searchInput = document.getElementById('searchInput') as HTMLInputElement | null;
         if (searchInput) searchInput.value = '';
         const resultsEl = document.getElementById('results');
         if (resultsEl) resultsEl.innerHTML = '';
@@ -261,20 +277,20 @@ document.addEventListener('passwordVerified', function() {
 
     // 显示邀请码管理
     const adminContainer = document.getElementById('inviteAdminContainer');
-    if (adminContainer && window.INVITE_ADMIN_PANEL) {
+    if (adminContainer && mainWindow.INVITE_ADMIN_PANEL) {
         adminContainer.classList.remove('hidden');
-        window.INVITE_ADMIN_PANEL.render(adminContainer);
+        mainWindow.INVITE_ADMIN_PANEL.render(adminContainer);
     }
 });
 
 document.addEventListener('inviteVerified', function() {
     // 本地版没有邀请码后端，设备管理无数据可取
-    if (window.INVITE_AUTH && window.INVITE_AUTH.isLocalMode()) return;
+    if (mainWindow.INVITE_AUTH && mainWindow.INVITE_AUTH.isLocalMode()) return;
     // 显示设备管理
     const userContainer = document.getElementById('userDeviceContainer');
-    if (userContainer && window.USER_DEVICES_PANEL) {
+    if (userContainer && mainWindow.USER_DEVICES_PANEL) {
         userContainer.classList.remove('hidden');
-        window.USER_DEVICES_PANEL.render(userContainer);
+        mainWindow.USER_DEVICES_PANEL.render(userContainer);
     }
 });
 
@@ -284,31 +300,31 @@ document.addEventListener('inviteVerified', function() {
 // 两个模块的 render() 都是整体重建 container.innerHTML，重复调用是安全的
 function initSettingsPanels() {
     // 本地版没有邀请码后端：设备管理、邀请码管理都不渲染
-    if (window.INVITE_AUTH && window.INVITE_AUTH.isLocalMode()) return;
+    if (mainWindow.INVITE_AUTH && mainWindow.INVITE_AUTH.isLocalMode()) return;
     const isAdmin = localStorage.getItem('leletv_is_admin') === 'true';
-    const hasInviteAuth = window.INVITE_AUTH && window.INVITE_AUTH.isVerified();
+    const hasInviteAuth = mainWindow.INVITE_AUTH && mainWindow.INVITE_AUTH.isVerified();
 
-    if (isAdmin && window.INVITE_ADMIN_PANEL) {
+    if (isAdmin && mainWindow.INVITE_ADMIN_PANEL) {
         const adminContainer = document.getElementById('inviteAdminContainer');
         if (adminContainer) {
             adminContainer.classList.remove('hidden');
-            window.INVITE_ADMIN_PANEL.render(adminContainer);
+            mainWindow.INVITE_ADMIN_PANEL.render(adminContainer);
         }
-    } else if (hasInviteAuth && window.USER_DEVICES_PANEL) {
+    } else if (hasInviteAuth && mainWindow.USER_DEVICES_PANEL) {
         const userContainer = document.getElementById('userDeviceContainer');
         if (userContainer) {
             userContainer.classList.remove('hidden');
-            window.USER_DEVICES_PANEL.render(userContainer);
+            mainWindow.USER_DEVICES_PANEL.render(userContainer);
         }
     }
 
     // 确保已验证用户的心跳在页面加载后立即运行
-    if (hasInviteAuth && window.INVITE_AUTH) {
-        window.INVITE_AUTH.ensureHeartbeat();
+    if (hasInviteAuth && mainWindow.INVITE_AUTH) {
+        mainWindow.INVITE_AUTH.ensureHeartbeat();
     }
 }
 
-window.__LELETV_INIT_SETTINGS_PANELS__ = initSettingsPanels;
+mainWindow.__LELETV_INIT_SETTINGS_PANELS__ = initSettingsPanels;
 
 // 设置页整体初始化：片段按需插入后由路由调用。
 // 首屏 DOM 里没有设置页标记，所以所有设置页渲染/绑定都必须集中在这里处理。
@@ -321,26 +337,26 @@ function initSettingsPage() {
     updateSelectedApiCount();
     checkHiddenAPIsSelected();
 
-    const adFilterToggle = document.getElementById('adFilterToggle');
+    const adFilterToggle = document.getElementById('adFilterToggle') as HTMLInputElement | null;
     if (adFilterToggle) {
         adFilterToggle.checked = localStorage.getItem(PLAYER_CONFIG.adFilteringStorage) !== 'false';
     }
 
     // 私密模式 / 广告过滤开关的绑定在 app-search.js，首屏时片段不存在，这里补绑（函数内幂等）
-    if (typeof window.__LELETV_BIND_SETTINGS_PAGE__ === 'function') {
-        window.__LELETV_BIND_SETTINGS_PAGE__();
+    if (typeof mainWindow.__LELETV_BIND_SETTINGS_PAGE__ === 'function') {
+        mainWindow.__LELETV_BIND_SETTINGS_PAGE__();
     }
 
     // 首页与导航布局开关：片段插入后同步勾选状态
-    if (window.LeLeLayout && typeof window.LeLeLayout.refresh === 'function') {
-        window.LeLeLayout.refresh();
+    if (mainWindow.LeLeLayout && typeof mainWindow.LeLeLayout.refresh === 'function') {
+        mainWindow.LeLeLayout.refresh();
     }
 
     // 主题配色盘由 theme-system.js 渲染；脚本与片段都就绪后补一次
-    if (window.LeLeThemeSystem && typeof window.LeLeThemeSystem.render === 'function') {
-        window.LeLeThemeSystem.render();
+    if (mainWindow.LeLeThemeSystem && typeof mainWindow.LeLeThemeSystem.render === 'function') {
+        mainWindow.LeLeThemeSystem.render();
     }
 
     initSettingsPanels();
 }
-window.__LELETV_INIT_SETTINGS_PAGE__ = initSettingsPage;
+mainWindow.__LELETV_INIT_SETTINGS_PAGE__ = initSettingsPage;

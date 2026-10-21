@@ -90,7 +90,7 @@
 | 62 | router | `js/app/app-routing.js` | `src/router/index.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 63 | router | `js/app/page-loader.js` | `src/router/page-loader.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 64 | entry | `index.html` | `src/index.html` | pending | 第 0 节通用前置 | — |
-| 65 | entry | `js/app/app.js` | `src/main.ts` | pending | 第 0 节通用前置 | — |
+| 65 | entry | `js/app/app.js` | `src/main.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 66 | styles | `css/v2/base.css` | `src/styles/base.css` | pending | 第 4 节 主题 | — |
 | 67 | styles | `css/v2/tokens.css` | `src/styles/variables.css` | pending | 第 4 节 主题 | — |
 | 68 | styles | `css/v2/views.css` | `src/styles/views.css` | pending | 第 4 节 主题 | page-loader.js 运行时插入 <link>，属动态引用白名单 |

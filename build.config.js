@@ -39,7 +39,7 @@ export const BUNDLES = [
       'src/services/search-history.ts', 'src/services/viewing-history.ts', 'src/ui/index.ts',
       'src/services/api.ts', 'src/services/search.ts',
       'src/ui/player/bridge.ts', 'src/pages/search/cards.ts', 'src/pages/category/index.ts',
-      'src/pages/search/index.ts', 'src/services/config.ts', 'src/services/sources/port.ts', 'js/app/app.js',
+      'src/pages/search/index.ts', 'src/services/config.ts', 'src/services/sources/port.ts', 'src/main.ts',
       'js/app/app-init.js', 'src/router/page-loader.ts', 'src/router/index.ts',
       'src/services/version-updater.ts', 'src/core/cache.ts',
       'src/pages/home/hub-flow.ts', 'src/ui/brand-canvas.ts', 'src/pages/home/shelves.ts', 'src/pages/home/hero-glass.ts',
