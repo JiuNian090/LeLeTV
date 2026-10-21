@@ -126,7 +126,7 @@ type LeLeTVWindow = Window & {
 
     /**
      * 全局 getCustomApiInfo — 供搜索/播放各模块跨 bundle 使用。
-     * 优先读取 window.customAPIs（由 js/api/api-config.js 注入），
+     * 优先读取 window.customAPIs（由 src/services/sources/config.ts 注入），
      * 缺失时从 localStorage 兜底，确保 APP/PLAYER 两个 bundle 都能工作。
      */
     (window as LeLeTVWindow).getCustomApiInfo = function getCustomApiInfo(customApiIndex: string | number): unknown {

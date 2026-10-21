@@ -340,7 +340,7 @@
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 269 | `js/api/api-config.js` | 采集站 API 配置（selectedAPIs / customAPIs） | migrated | `src/services/sources/config.ts` | — | — | pending | — |
+| 269 | `js/api/api-config.js` | 采集站 API 配置（selectedAPIs / customAPIs） | migrated | `src/services/sources/config.ts` | — | — | verified | 全局脚本迁移，函数/变量名保持不变 |
 | 270 | `js/api/api.js` | 采集站请求与详情/搜索 API 封装 | migrated | `src/services/api.ts` | — | — | verified | 已迁移至 `src/services/api.ts`；类型检查通过 |
 | 271 | `js/api/loadBalancer.js` | 采集站负载均衡与延迟调度 | migrated | `src/services/balancer.ts` | — | — | verified | 已迁移至 `src/services/balancer.ts`；类型检查通过 |
 | 272 | `js/api/remote-sources.js` | 远端数据源同步与合并 | migrated | `src/services/sources/remote.ts` | — | — | pending | — |
@@ -478,6 +478,7 @@
 | 380 | `src/services/balancer.ts` | 采集站负载均衡（迁移自 `js/api/loadBalancer.js`） | keep | — | — | — | done | 阶段 4 第 12 条迁移目标 |
 | 381 | `src/services/config.ts` | 配置导入/导出与 JSZip 懒加载（迁移自 `js/app/app-config.js`） | keep | — | — | — | done | 阶段 4 第 13 条迁移目标 |
 | 382 | `src/services/invitation.ts` | 邀请码验证 / 设备指纹 / 心跳（迁移自 `js/auth/invite-auth.js`） | keep | — | — | — | done | 阶段 4 第 14 条迁移目标 |
+| 384 | `src/services/sources/config.ts` | 采集站 API 配置（迁移自 `js/api/api-config.js`） | keep | — | — | — | done | 阶段 4 第 15 条迁移目标 |
 
 ## workers/（红区）
 

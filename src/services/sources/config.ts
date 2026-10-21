@@ -1,19 +1,47 @@
-// 全局变量（跨文件共享，api-config.js 最先加载）
+// 全局变量（跨文件共享，本文件在 app bundle 中最先加载）
 // 注意: 使用 typeof 而不用 in 检查，避免 var 提升导致误判
-if (typeof window.selectedAPIs === 'undefined') {
-    window.selectedAPIs = [];
+
+interface ApiConfigWindow extends Window {
+    __ENV__?: { HIDDENKEY?: string };
+    selectedAPIs?: string[];
+    customAPIs?: CustomApiEntry[];
+    _jsSha256?: (input: string) => Promise<string>;
 }
-if (typeof window.customAPIs === 'undefined') {
-    window.customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
+
+interface CustomApiEntry {
+    name: string;
+    url: string;
+    detail?: string;
+    isHidden?: boolean;
+    isAdult?: boolean;
 }
-var selectedAPIs = window.selectedAPIs;
-var customAPIs = window.customAPIs;
+
+interface AdminModalOptions {
+    title?: string;
+    content?: (body: HTMLElement) => void;
+    width?: string;
+    closeOnBackdrop?: boolean;
+    onClose?: () => void;
+}
+
+declare function showToast(message: string, type?: string, duration?: number): void;
+declare function showModal(options: AdminModalOptions): HTMLElement;
+
+const apiConfigWindow = window as ApiConfigWindow;
+if (typeof apiConfigWindow.selectedAPIs === 'undefined') {
+    apiConfigWindow.selectedAPIs = [];
+}
+if (typeof apiConfigWindow.customAPIs === 'undefined') {
+    apiConfigWindow.customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]') as CustomApiEntry[];
+}
+var selectedAPIs: string[] = apiConfigWindow.selectedAPIs;
+var customAPIs: CustomApiEntry[] = apiConfigWindow.customAPIs;
 
 // 验证私密密码
-function verifyAdminPassword() {
+function verifyAdminPassword(): Promise<boolean> {
     return new Promise((resolve) => {
         // 检查是否设置了私密密码
-        const adminPasswordHash = window.__ENV__ && window.__ENV__.HIDDENKEY;
+        const adminPasswordHash = apiConfigWindow.__ENV__ && apiConfigWindow.__ENV__.HIDDENKEY;
         if (!adminPasswordHash) {
             showToast('未配置私密模式的访问密码，无法切换', 'error');
             resolve(false);
@@ -41,10 +69,10 @@ function verifyAdminPassword() {
         });
 
 
-        const passwordInput = overlay.querySelector('#adminPasswordInput');
-        const submitBtn = overlay.querySelector('#adminPasswordSubmitBtn');
-        const cancelBtn = overlay.querySelector('#adminPasswordCancelBtn');
-        const errorMsg = overlay.querySelector('#adminPasswordError');
+        const passwordInput = overlay.querySelector('#adminPasswordInput') as HTMLInputElement;
+        const submitBtn = overlay.querySelector('#adminPasswordSubmitBtn') as HTMLElement;
+        const cancelBtn = overlay.querySelector('#adminPasswordCancelBtn') as HTMLElement;
+        const errorMsg = overlay.querySelector('#adminPasswordError') as HTMLElement;
 
         // 聚焦到密码输入框
         setTimeout(() => passwordInput?.focus(), 100);
@@ -61,7 +89,7 @@ function verifyAdminPassword() {
 
             try {
                 // 使用与服务器端相同的哈希方法
-                const inputHash = await window._jsSha256(inputPassword);
+                const inputHash = await apiConfigWindow._jsSha256!(inputPassword);
                 if (inputHash === adminPasswordHash) {
                     overlay.remove();
                     resolve(true);
@@ -93,29 +121,29 @@ function verifyAdminPassword() {
 }
 
 // 重置数据源选择逻辑
-function resetDataSourceLogic() {
+function resetDataSourceLogic(): void {
     // 清除所有相关的本地存储项
     localStorage.removeItem('dataSourceLogicVersion');
     localStorage.removeItem(scopedKey('selectedAPIs'));
     localStorage.removeItem('hasUserSelectedAPIs');
     localStorage.removeItem('lastRefreshTime');
-    
+
     // 显示提示信息
     showToast(isHiddenContentMode()
         ? '已重置，随机选取 5 个私密内容源'
         : `已重置，恢复默认 ${DEFAULT_DATA_SOURCE_KEYS.length} 个数据源`, 'success');
-    
+
     // 重新初始化API复选框，应用新逻辑
     initAPICheckboxes();
 }
 
 // 初始化API复选框
-function initAPICheckboxes() {
+function initAPICheckboxes(): void {
     const container = document.getElementById('apiCheckboxes');
-    
+
     // 强制重新创建所有UI元素，确保每次刷新都能更新
     container.innerHTML = '';
-    
+
     // 从当前版本开始，对所有用户应用新的数据源选择逻辑
     applyNewDataSourceLogic();
 
@@ -171,7 +199,7 @@ function initAPICheckboxes() {
     container.appendChild(normaldiv);
 
     // 自定义API的「隐藏资源站」标记由当前数据域决定，不允许手动改
-    const hiddenFlagInput = document.getElementById('customApiIsHidden');
+    const hiddenFlagInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
     if (hiddenFlagInput) {
         hiddenFlagInput.checked = isHiddenContentMode();
         hiddenFlagInput.disabled = true;
@@ -185,7 +213,7 @@ function initAPICheckboxes() {
 const DATA_SOURCE_LOGIC_VERSION = 'v2';
 
 // 从当前版本开始，对所有用户应用新的数据源选择逻辑
-function applyNewDataSourceLogic() {
+function applyNewDataSourceLogic(): void {
     const currentVersion = localStorage.getItem('dataSourceLogicVersion');
     const currentTime = Date.now();
     const dayInMs = 24 * 60 * 60 * 1000;
@@ -209,7 +237,7 @@ function applyNewDataSourceLogic() {
 
         const savedSelectedAPIs = localStorage.getItem(scopedKey('selectedAPIs'));
         if (savedSelectedAPIs) {
-            selectedAPIs = JSON.parse(savedSelectedAPIs);
+            selectedAPIs = JSON.parse(savedSelectedAPIs) as string[];
         } else {
             selectedAPIs = defaultSelected.slice();
             localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
@@ -220,13 +248,13 @@ function applyNewDataSourceLogic() {
 }
 
 // 刷新数据源
-function refreshDataSources(hasUserSelected) {
+function refreshDataSources(hasUserSelected: boolean): void {
     const currentTime = Date.now();
     const savedSelectedAPIs = localStorage.getItem(scopedKey('selectedAPIs')) || '[]';
-    const currentSelectedAPIs = JSON.parse(savedSelectedAPIs);
+    const currentSelectedAPIs = JSON.parse(savedSelectedAPIs) as string[];
     // 保留所有内置源（含隐藏源）与有效自定义源；仅剔除已不存在的源
     const allDataSources = Object.keys(API_SITES);
-    const updatedSelectedAPIs = currentSelectedAPIs.filter(api => 
+    const updatedSelectedAPIs = currentSelectedAPIs.filter(api =>
         allDataSources.includes(api) || api.startsWith('custom_')
     );
     selectedAPIs = updatedSelectedAPIs;
@@ -238,7 +266,7 @@ function refreshDataSources(hasUserSelected) {
 const DEFAULT_DATA_SOURCE_KEYS = ['gszy', 'bfzy', 'zuid', 'lzzy', 'hnzy', 'jszy'];
 
 // 数据域内的默认选中源：正常域取固定清单，隐藏域仍从私密源里随机抽 5 个
-function getDefaultDataSources() {
+function getDefaultDataSources(): string[] {
     if (!isHiddenContentMode()) {
         const keys = DEFAULT_DATA_SOURCE_KEYS.filter(key => API_SITES[key] && !API_SITES[key].hidden);
         if (keys.length > 0) return keys;
@@ -248,7 +276,7 @@ function getDefaultDataSources() {
 
 // 随机选择指定数量的数据源（按当前数据域取池子：正常域取普通源，隐藏域取隐藏源）
 // 仅隐藏域还在用；正常域的默认源见 getDefaultDataSources()
-function getRandomDataSources(count) {
+function getRandomDataSources(count: number): string[] {
     const pool = Object.keys(API_SITES).filter(key =>
         isHiddenContentMode() ? !!API_SITES[key].hidden : !API_SITES[key].hidden
     );
@@ -260,15 +288,15 @@ function getRandomDataSources(count) {
 }
 
 // 同步"隐藏内容模式"开关的显示状态（当前数据域由开关本身决定，不再与源选择互斥）
-function checkHiddenAPIsSelected() {
-    const hiddenModeToggle = document.getElementById('hiddenContentModeToggle');
+function checkHiddenAPIsSelected(): void {
+    const hiddenModeToggle = document.getElementById('hiddenContentModeToggle') as HTMLInputElement | null;
     if (hiddenModeToggle) {
         hiddenModeToggle.checked = isHiddenContentMode();
     }
 }
 
 // 渲染自定义API列表（只列出当前数据域的条目，另一个域完全不出现）
-function renderCustomAPIsList() {
+function renderCustomAPIsList(): void {
     const container = document.getElementById('customApisList');
     if (!container) return;
 
@@ -286,7 +314,7 @@ function renderCustomAPIsList() {
     visible.forEach(({ api, index }) => {
         const apiItem = document.createElement('div');
         apiItem.className = 'v2-custom-api';
-        const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const esc = (v: unknown) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const hiddenTag = api.isHidden ? '<em>私密</em>' : '';
         apiItem.innerHTML = `
             <label class="v2-switch-wrap" for="custom_api_${index}">
@@ -320,18 +348,18 @@ function renderCustomAPIsList() {
 }
 
 // 编辑自定义API
-function editCustomApi(index) {
+function editCustomApi(index: number): void {
     if (index < 0 || index >= customAPIs.length) return;
     const api = customAPIs[index];
-    document.getElementById('customApiName').value = api.name;
-    document.getElementById('customApiUrl').value = api.url;
-    document.getElementById('customApiDetail').value = api.detail || '';
-    const isHiddenInput = document.getElementById('customApiIsHidden');
+    (document.getElementById('customApiName') as HTMLInputElement).value = api.name;
+    (document.getElementById('customApiUrl') as HTMLInputElement).value = api.url;
+    (document.getElementById('customApiDetail') as HTMLInputElement).value = api.detail || '';
+    const isHiddenInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
     if (isHiddenInput) isHiddenInput.checked = api.isHidden || false;
     const form = document.getElementById('addCustomApiForm');
     if (form) {
         form.classList.remove('hidden');
-        const buttonContainer = form.querySelector('div:last-child');
+        const buttonContainer = form.querySelector('div:last-child') as HTMLElement;
         buttonContainer.innerHTML = `
             <button type="button" data-action="cancel-edit-custom-api" class="v2-btn v2-btn--secondary v2-btn--sm">取消</button>
             <button type="button" data-action="update-custom-api" data-index="${index}" class="v2-btn v2-btn--primary v2-btn--sm">保存</button>
@@ -340,12 +368,12 @@ function editCustomApi(index) {
 }
 
 // 更新自定义API
-function updateCustomApi(index) {
+function updateCustomApi(index: number): void {
     if (index < 0 || index >= customAPIs.length) return;
-    const nameInput = document.getElementById('customApiName');
-    const urlInput = document.getElementById('customApiUrl');
-    const detailInput = document.getElementById('customApiDetail');
-    const isHiddenInput = document.getElementById('customApiIsHidden');
+    const nameInput = document.getElementById('customApiName') as HTMLInputElement;
+    const urlInput = document.getElementById('customApiUrl') as HTMLInputElement;
+    const detailInput = document.getElementById('customApiDetail') as HTMLInputElement | null;
+    const isHiddenInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
     const name = nameInput.value.trim();
     let url = urlInput.value.trim();
     const detail = detailInput ? detailInput.value.trim() : '';
@@ -373,12 +401,12 @@ function updateCustomApi(index) {
 }
 
 // 取消编辑自定义API
-function cancelEditCustomApi() {
+function cancelEditCustomApi(): void {
     // 清空表单
-    document.getElementById('customApiName').value = '';
-    document.getElementById('customApiUrl').value = '';
-    document.getElementById('customApiDetail').value = '';
-    const isHiddenInput = document.getElementById('customApiIsHidden');
+    (document.getElementById('customApiName') as HTMLInputElement).value = '';
+    (document.getElementById('customApiUrl') as HTMLInputElement).value = '';
+    (document.getElementById('customApiDetail') as HTMLInputElement).value = '';
+    const isHiddenInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
     if (isHiddenInput) isHiddenInput.checked = false;
 
     // 隐藏表单
@@ -389,9 +417,9 @@ function cancelEditCustomApi() {
 }
 
 // 恢复自定义API添加按钮
-function restoreAddCustomApiButtons() {
+function restoreAddCustomApiButtons(): void {
     const form = document.getElementById('addCustomApiForm');
-    const buttonContainer = form.querySelector('div:last-child');
+    const buttonContainer = form.querySelector('div:last-child') as HTMLElement;
     buttonContainer.innerHTML = `
         <button type="button" data-action="cancel-add-custom-api" class="v2-btn v2-btn--secondary v2-btn--sm">取消</button>
         <button type="button" data-action="add-custom-api" class="v2-btn v2-btn--primary v2-btn--sm">添加</button>
@@ -399,15 +427,15 @@ function restoreAddCustomApiButtons() {
 }
 
 // 更新选中的API列表
-function updateSelectedAPIs() {
+function updateSelectedAPIs(): void {
     // 获取所有内置API复选框
-    const builtInApiCheckboxes = document.querySelectorAll('#apiCheckboxes input:checked');
+    const builtInApiCheckboxes = document.querySelectorAll<HTMLInputElement>('#apiCheckboxes input:checked');
 
     // 获取选中的内置API
-    const builtInApis = Array.from(builtInApiCheckboxes).map(input => input.dataset.api);
+    const builtInApis = Array.from(builtInApiCheckboxes).map(input => input.dataset.api as string);
 
     // 获取选中的自定义API
-    const customApiCheckboxes = document.querySelectorAll('#customApisList input:checked');
+    const customApiCheckboxes = document.querySelectorAll<HTMLInputElement>('#customApisList input:checked');
     const customApiIndices = Array.from(customApiCheckboxes).map(input => 'custom_' + input.dataset.customIndex);
 
     // 合并内置和自定义API
@@ -423,16 +451,16 @@ function updateSelectedAPIs() {
 }
 
 // 更新选中的API数量显示
-function updateSelectedApiCount() {
+function updateSelectedApiCount(): void {
     const countEl = document.getElementById('selectedApiCount');
     if (countEl) {
-        countEl.textContent = selectedAPIs.length;
+        countEl.textContent = String(selectedAPIs.length);
     }
 }
 
 // 全选或取消全选API
-function selectAllAPIs(selectAll = true, excludeHidden = false) {
-    const checkboxes = document.querySelectorAll('#apiCheckboxes input[type="checkbox"]');
+function selectAllAPIs(selectAll = true, excludeHidden = false): void {
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('#apiCheckboxes input[type="checkbox"]');
 
     checkboxes.forEach(checkbox => {
         if (excludeHidden && checkbox.classList.contains('api-hidden')) {
@@ -447,7 +475,7 @@ function selectAllAPIs(selectAll = true, excludeHidden = false) {
 }
 
 // 显示添加自定义API表单
-function showAddCustomApiForm() {
+function showAddCustomApiForm(): void {
     const form = document.getElementById('addCustomApiForm');
     if (form) {
         form.classList.remove('hidden');
@@ -455,14 +483,14 @@ function showAddCustomApiForm() {
 }
 
 // 取消添加自定义API - 修改函数来重用恢复按钮逻辑
-function cancelAddCustomApi() {
+function cancelAddCustomApi(): void {
     const form = document.getElementById('addCustomApiForm');
     if (form) {
         form.classList.add('hidden');
-        document.getElementById('customApiName').value = '';
-        document.getElementById('customApiUrl').value = 'https://xxx.example.com/api.php/provide/vod/';
-        document.getElementById('customApiDetail').value = '';
-        const isHiddenInput = document.getElementById('customApiIsHidden');
+        (document.getElementById('customApiName') as HTMLInputElement).value = '';
+        (document.getElementById('customApiUrl') as HTMLInputElement).value = 'https://xxx.example.com/api.php/provide/vod/';
+        (document.getElementById('customApiDetail') as HTMLInputElement).value = '';
+        const isHiddenInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
         if (isHiddenInput) isHiddenInput.checked = false;
 
         // 确保按钮是添加按钮
@@ -471,11 +499,11 @@ function cancelAddCustomApi() {
 }
 
 // 添加自定义API
-function addCustomApi() {
-    const nameInput = document.getElementById('customApiName');
-    const urlInput = document.getElementById('customApiUrl');
-    const detailInput = document.getElementById('customApiDetail');
-    const isHiddenInput = document.getElementById('customApiIsHidden');
+function addCustomApi(): void {
+    const nameInput = document.getElementById('customApiName') as HTMLInputElement;
+    const urlInput = document.getElementById('customApiUrl') as HTMLInputElement;
+    const detailInput = document.getElementById('customApiDetail') as HTMLInputElement | null;
+    const isHiddenInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
     const name = nameInput.value.trim();
     let url = urlInput.value.trim();
     const detail = detailInput ? detailInput.value.trim() : '';
@@ -514,7 +542,7 @@ function addCustomApi() {
 }
 
 // 移除自定义API
-function removeCustomApi(index) {
+function removeCustomApi(index: number): void {
     if (index < 0 || index >= customAPIs.length) return;
 
     const apiName = customAPIs[index].name;

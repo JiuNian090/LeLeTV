@@ -21,7 +21,7 @@
 | 💡 功能建议 | 同上，说明使用场景，而不只是"想要某个功能" |
 | 🔧 提交代码 | 见下面的[提交流程](#-提交流程) |
 | 📄 文档与翻译 | 修正错别字、补充说明、改进 README 都很有价值 |
-| 🔌 新增资源站 | 在 `js/api/api-config.js` 的 `API_SITES` 里按现有格式添加，并**确认站点可用** |
+| 🔌 新增资源站 | 在 `src/services/sources/config.ts` 的 `API_SITES` 里按现有格式添加，并**确认站点可用** |
 
 > ⚠️ **请不要在公开 Issue / PR 里粘贴任何密钥**（`HIDDENKEY` / `ADMINKEY` / `TMDB_API_KEY` 等）。安全漏洞请走 [SECURITY.md](SECURITY.md) 的私密渠道。
 

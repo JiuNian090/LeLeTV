@@ -1,5 +1,5 @@
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
-// var selectedAPIs / customAPIs 已在 api-config.js 中声明
+// var selectedAPIs / customAPIs 已在 src/services/sources/config.ts 中声明
 
 // 添加当前视频的所有集数（实际在 player.js 中声明，此处仅为类型参考）
 // let currentEpisodeIndex, currentEpisodes, currentVideoTitle, episodesReversed
@@ -12,7 +12,7 @@ let _lastAllResults = [];
 let _searchReady = false;
 
 // ====== 默认数据源 ======
-// 首次初始化的默认源见 api-config.js 的 getDefaultDataSources()：正常域固定 6 个源
+// 首次初始化的默认源见 src/services/sources/config.ts 的 getDefaultDataSources()：正常域固定 6 个源
 // （光速 / 暴风 / 最大 / 量子 / 红牛 / 极速），隐藏域仍从私密源里随机抽 5 个。
 // 「重置」走的也是同一份默认逻辑。
 
