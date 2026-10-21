@@ -137,10 +137,19 @@ async function showDetails(id: string, vod_name: string, sourceCode: string): Pr
             return;
         }
         const data = result.data;
+        if (!data) {
+            showToast('获取详情失败', 'error');
+            hideLoading();
+            return;
+        }
 
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modalTitle');
         const modalContent = document.getElementById('modalContent');
+        if (!modal || !modalTitle || !modalContent) {
+            hideLoading();
+            return;
+        }
 
         // 显示来源信息
         const sourceName = data.videoInfo && data.videoInfo.source_name ?
@@ -315,7 +324,8 @@ bridgeWindow.toggleEpisodeOrder = function (sourceCode: string, vodId: string): 
     // 更新按钮文本和箭头方向
     const toggleBtn = document.querySelector(`button[data-action="toggle-episode-order" data-source="${sourceCode}" data-vod-id="${vodId}"]`);
     if (toggleBtn) {
-        toggleBtn.querySelector('span').textContent = episodesReversed ? '正序排列' : '倒序排列';
+        const label = toggleBtn.querySelector('span');
+        if (label) label.textContent = episodesReversed ? '正序排列' : '倒序排列';
         const arrowIcon = toggleBtn.querySelector('svg');
         if (arrowIcon) {
             arrowIcon.style.transform = episodesReversed ? 'rotate(180deg)' : 'rotate(0deg)';

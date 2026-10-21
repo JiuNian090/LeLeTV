@@ -208,9 +208,10 @@ function _particleColorTable() {
   if (!PARTICLE_PALETTE[0].rgb) PARTICLE_PALETTE[0].rgb = _themeRgbParts();
   var table: string[][] = [];
   PARTICLE_PALETTE.forEach(function (p) {
-    var row = [];
+    const rgb = p.rgb || _themeRgbParts();
+    var row: string[] = [];
     for (var i = 0; i <= PARTICLE_ALPHA_STEPS; i++) {
-      row.push('rgba(' + p.rgb[0] + ',' + p.rgb[1] + ',' + p.rgb[2] + ',' + (i / PARTICLE_ALPHA_STEPS).toFixed(2) + ')');
+      row.push('rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (i / PARTICLE_ALPHA_STEPS).toFixed(2) + ')');
     }
     table.push(row);
   });
@@ -339,8 +340,9 @@ export function playParticleDissolve(onDone?: () => void): void {
   if (!cards.length || _particleReducedMotion()) { finish(); return; }
 
   var seeds = _particleSeeds(cards);
-  var view = seeds.length ? _particleNewCanvas() : null;
+  const view = seeds.length ? _particleNewCanvas() : null;
   if (!view) { finish(); return; }
+  const viewCanvas = view.canvas;
 
   // 标记本次过渡：重载后据此播放"凝聚"入场，并让新页面首帧先藏住设置页内容
   try { sessionStorage.setItem(PARTICLE_SWEEP_KEY, '1'); } catch (e) { /* 忽略 */ }
@@ -355,7 +357,7 @@ export function playParticleDissolve(onDone?: () => void): void {
   // 画布背景同步由透明渐变为深色底：粒子还在飘散时，画面已经渐变到与重载后启动占位（#bootSplash）
   // 相同的深色，于是"消散 → 深色背景 → 粒子重新凝聚"之间没有跳色：
   // 重载前后两帧是同一个颜色，接缝看不出来
-  var sweepCanvas = view.canvas;
+  var sweepCanvas = viewCanvas;
   sweepCanvas.style.transition = 'background-color ' + PARTICLE_SWEEP_MS + 'ms linear';
   void sweepCanvas.offsetWidth;                 // 强制采纳初值（CSS 未设底色 = 透明），过渡才会真的发生
   sweepCanvas.style.backgroundColor = PARTICLE_SWEEP_BG;
@@ -371,7 +373,7 @@ export function playParticleDissolve(onDone?: () => void): void {
       requestAnimationFrame(frame);
       return;
     }
-    _particleDropCanvas(view.canvas);
+    _particleDropCanvas(viewCanvas);
     finish();
   }
   requestAnimationFrame(frame);
@@ -379,7 +381,7 @@ export function playParticleDissolve(onDone?: () => void): void {
   // 兜底：标签页在后台时 rAF 可能长时间不执行，保证最终一定继续重载
   setTimeout(function () {
     if (!finished) {
-      _particleDropCanvas(view.canvas);
+      _particleDropCanvas(viewCanvas);
       finish();
     }
   }, PARTICLE_SWEEP_MS + 900);
@@ -402,8 +404,9 @@ function dissolveElement(el: HTMLElement, onDone?: () => void): void {
   if (!el || typeof el.getBoundingClientRect !== 'function' || _particleReducedMotion()) { finish(); return; }
 
   var seeds = _particleSeeds([el], DISSOLVE_ITEM_MS, DISSOLVE_ITEM_RISE);
-  var view = seeds.length ? _particleNewCanvas() : null;
+  const view = seeds.length ? _particleNewCanvas() : null;
   if (!view) { finish(); return; }
+  const viewCanvas = view.canvas;
 
   // 元素同步淡出，与粒子飘散配合
   el.style.transition = 'opacity ' + Math.round(DISSOLVE_ITEM_MS * 0.6) + 'ms ease';
@@ -420,7 +423,7 @@ function dissolveElement(el: HTMLElement, onDone?: () => void): void {
       requestAnimationFrame(frame);
       return;
     }
-    _particleDropCanvas(view.canvas);
+    _particleDropCanvas(viewCanvas);
     el.style.transition = '';
     el.style.opacity = '';
     finish();
@@ -430,7 +433,7 @@ function dissolveElement(el: HTMLElement, onDone?: () => void): void {
   // 兜底：后台标签页 rAF 暂停时也要保证删除继续执行
   setTimeout(function () {
     if (!finished) {
-      _particleDropCanvas(view.canvas);
+      _particleDropCanvas(viewCanvas);
       el.style.transition = '';
       el.style.opacity = '';
       finish();
@@ -477,11 +480,12 @@ export function playHomeIntro() {
   if (location.hash && location.hash !== '#home') return;
   if (!document.getElementById('page-home')) return;
 
-  var view = _particleNewCanvas();
+  const view = _particleNewCanvas();
   if (!view) return;
+  const viewCanvas = view.canvas;
 
-  view.canvas.style.background = _homeIntroBackground();
-  view.canvas.style.transition = 'opacity ' + HOME_INTRO_FADE_MS + 'ms ease';
+  viewCanvas.style.background = _homeIntroBackground();
+  viewCanvas.style.transition = 'opacity ' + HOME_INTRO_FADE_MS + 'ms ease';
 
   var ctx = view.ctx;
   var center = _domainCenter();
@@ -497,8 +501,8 @@ export function playHomeIntro() {
   function finish() {
     if (finished) return;
     finished = true;
-    view.canvas.style.opacity = '0'; // 整层淡出，露出首页
-    setTimeout(function () { _particleDropCanvas(view.canvas); }, HOME_INTRO_FADE_MS + 60);
+    viewCanvas.style.opacity = '0'; // 整层淡出，露出首页
+    setTimeout(function () { _particleDropCanvas(viewCanvas); }, HOME_INTRO_FADE_MS + 60);
   }
 
   // 等 MapleMono 就绪再起动画（避免用回退字体画出的字样与首页标题不一致），最多等 220ms
@@ -561,7 +565,7 @@ export function playHomeIntro() {
   setTimeout(function () {
     if (!began) {
       finished = true;
-      _particleDropCanvas(view.canvas);
+      _particleDropCanvas(viewCanvas);
       return;
     }
     finish();
@@ -672,7 +676,7 @@ function _domainDrawRing(ctx: CanvasRenderingContext2D, center: Point, radius: n
 function _domainDrawBrand(ctx: CanvasRenderingContext2D, center: Point, fontSize: number, scale: number, alpha: number): void {
   if (alpha <= 0.01) return;
   var brand = routerWindow.LeLeBrandCanvas;
-  if (brand && brand.draw(ctx, center.x, center.y, fontSize * 1.1, _themeRgbParts(), alpha, scale)) return;
+  if (brand && typeof brand.draw === 'function' && brand.draw(ctx, center.x, center.y, fontSize * 1.1, _themeRgbParts(), alpha, scale)) return;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(center.x, center.y);
@@ -724,8 +728,9 @@ function playDomainTransition() {
   // 设置页内容先按初态藏住（摘掉 data-particle-in 也不会闪），等爆开后再整体淡入
   _panelInitialState();
 
-  var view = _particleNewCanvas();
+  const view = _particleNewCanvas();
   if (!view) { _revealPanel(); return; }
+  const viewCanvas = view.canvas;
 
   var ctx = view.ctx;
   var center = _domainCenter();
@@ -792,7 +797,7 @@ function playDomainTransition() {
       requestAnimationFrame(frame);
       return;
     }
-    _particleDropCanvas(view.canvas);
+    _particleDropCanvas(viewCanvas);
   }
 
   // 字体就绪即起动画；兜底 220ms 起动画（字体加载慢时不让卡片一直空着）
@@ -806,7 +811,7 @@ function playDomainTransition() {
   // 兜底：标签页在后台时 rAF 会暂停，保证界面最终一定会浮现
   setTimeout(function () {
     if (!cardsStarted) {
-      _particleDropCanvas(view.canvas);
+      _particleDropCanvas(viewCanvas);
       startCards();
     }
   }, burstStart + DOMAIN_BURST_MS + 900);
@@ -836,7 +841,7 @@ var CATEGORY_FILTER_FIELDS = ['type', 'selectedGenre', 'selectedYear', 'selected
 // 落盘当前标签选择
 function saveCategoryFilterPrefs() {
   try {
-    var tmdbState = routerWindow.TMDB_STATE;
+    const tmdbState = routerWindow.TMDB_STATE;
     if (!tmdbState) return;
     var payload: Record<string, unknown> = {};
     CATEGORY_FILTER_FIELDS.forEach(function (k) {
@@ -948,7 +953,7 @@ export function showPage(n: string): void {
 
 function updateNavButtons(a: string): void {
   document.querySelectorAll<HTMLElement>('.nav-btn[data-page]').forEach(function(b) {
-    var page = b.getAttribute('data-page');
+    var page = b.getAttribute('data-page') || '';
     // 私密模式下分类入口不显示：样式表负责首帧，这里兜底，避免样式表被缓存时漏出来
     if (isCategoryPageBlocked(page)) {
       b.hidden = true;
@@ -987,12 +992,13 @@ export function handlePageLoad(n: string): void {
 }
 
 function loadReadmePage() {
-  var content = document.getElementById('readmeContent');
+  const content = document.getElementById('readmeContent');
   if (!content || content.getAttribute('data-loaded') === 'true') return;
   content.setAttribute('data-loaded', 'true');
 
-  var loading = document.getElementById('readmeLoading');
-  var error = document.getElementById('readmeError');
+  const loading = document.getElementById('readmeLoading');
+  const error = document.getElementById('readmeError');
+  if (!loading || !error) return;
 
   loading.classList.remove('hidden');
   content.classList.add('hidden');
@@ -1128,7 +1134,7 @@ export function toggleSettings(e?: Event): void { if (e) e.stopPropagation(); sw
 export function focusSearch() { switchPage('home'); setTimeout(function() { var si = document.getElementById('searchInput'); if (si) si.focus(); }, 100); }
 
 function loadAboutPageChangelog() {
-  var ct = document.getElementById('aboutChangelogContent');
+  const ct = document.getElementById('aboutChangelogContent');
   if (!ct || ct.getAttribute('data-loaded') === 'true') return;
   ct.setAttribute('data-loaded', 'true');
   fetch('/CHANGELOG.md', { cache: 'no-store' })
@@ -1180,12 +1186,14 @@ function renderVersionHistory(entries: Array<{ version: string; date: string; co
 }
 
 export function openDisclaimerModal() {
-  document.getElementById('disclaimerModal').style.display = 'flex';
+  const modal = document.getElementById('disclaimerModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 export function closeDisclaimerModal() {
   localStorage.setItem('lastAcceptedDisclaimer', Date.now().toString());
-  document.getElementById('disclaimerModal').style.display = 'none';
+  const modal = document.getElementById('disclaimerModal');
+  if (modal) modal.style.display = 'none';
 
   // 幂等广播：通知挂起的更新弹窗「隐私政策已确认」（只派发一次）
   if (routerWindow.LELETV_DISCLAIMER && !routerWindow.LELETV_DISCLAIMER.handled) {
@@ -1195,11 +1203,13 @@ export function closeDisclaimerModal() {
 }
 
 export function openInviteGuideModal() {
-  document.getElementById('inviteGuideModal').style.display = 'flex';
+  const modal = document.getElementById('inviteGuideModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 export function closeInviteGuideModal() {
-  document.getElementById('inviteGuideModal').style.display = 'none';
+  const modal = document.getElementById('inviteGuideModal');
+  if (modal) modal.style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1294,7 +1304,7 @@ export function shareInviteInfo(targetCode?: string) {
 
 // ===================== 移动端滑动手势 =====================
 (function() {
-  var startX: number, startY: number, startTime: number;
+  var startX: number | null = null, startY: number | null = null, startTime: number | null = null;
   var SWIPE_THRESHOLD = 100;   // px - 必须划过此距离才切换页面，避免轻微滑动误触
   var VERTICAL_LIMIT = 30;     // px - 垂直偏移超过此值不触发水平滑动
   var MAX_TIME = 500;          // ms - 超过此时间不触发（距离变长后放宽时间）
@@ -1321,7 +1331,7 @@ export function shareInviteInfo(targetCode?: string) {
   }, { passive: true });
 
   document.addEventListener('touchend', function(e) {
-    if (startX === null) return;
+    if (startX === null || startY === null || startTime === null) return;
     var t = e.changedTouches[0];
     var dx = t.screenX - startX;
     var dy = t.screenY - startY;

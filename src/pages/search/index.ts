@@ -147,9 +147,9 @@ function restoreSearchFromCache() {
     clearSearchInput();
 
     // 还原布局（与搜索完成后的状态一致）
-    document.getElementById('searchArea').classList.remove('flex-1');
-    document.getElementById('searchArea').classList.add('mb-8');
-    document.getElementById('resultsArea').classList.remove('hidden');
+    document.getElementById('searchArea')?.classList.remove('flex-1');
+    document.getElementById('searchArea')?.classList.add('mb-8');
+    document.getElementById('resultsArea')?.classList.remove('hidden');
     document.querySelector('.home-layout')?.classList.add('has-results');
     document.getElementById('closeSearchResults')?.classList.remove('hidden');
     document.getElementById('closeSearchResults')?.classList.add('flex');
@@ -187,6 +187,7 @@ async function loadFilterConfig() {
 async function applyFilter(results: SearchResultItem[]): Promise<SearchResultItem[]> {
     if (!results || results.length === 0) return results;
     const config = await loadFilterConfig();
+    if (!config) return results;
     if (config.mode === 'whitelist') {
         // 白名单模式：只保留分类在白名单中的结果
         return results.filter((item: SearchResultItem) => {
@@ -392,7 +393,7 @@ export function setupEventListeners() {
                 const query = deleteBtn.dataset.query;
                 if (query) {
                     // 先让该条历史化作粒子消散，播完再删除并重渲染
-                    routerBridge.dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
+                    routerBridge.dissolveThenRemove(deleteBtn.closest('.search-history-item') as Element, function () {
                         deleteSingleSearchHistory(query);
                         showSearchHistory((document.getElementById('searchInput') as HTMLInputElement).value);
                     });
@@ -403,7 +404,7 @@ export function setupEventListeners() {
             if (clearBtn) {
                 e.stopPropagation();
                 // 整块历史列表一起化作粒子消散，播完再清空
-                routerBridge.dissolveThenRemove(clearBtn.closest('#searchHistoryDropdown'), function () {
+                routerBridge.dissolveThenRemove(clearBtn.closest('#searchHistoryDropdown') as Element, function () {
                     clearSearchHistory();
                 });
                 return;
@@ -522,7 +523,7 @@ export function setupEventListeners() {
                 const query = deleteBtn.dataset.query;
                 if (query) {
                     // 先让该条历史化作粒子消散，播完再删除并重渲染
-                    routerBridge.dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
+                    routerBridge.dissolveThenRemove(deleteBtn.closest('.search-history-item') as Element, function () {
                         deleteSingleSearchHistory(query);
                         renderMobileSearchHistory(mobileSearchInput ? mobileSearchInput.value : '');
                     });
@@ -533,7 +534,7 @@ export function setupEventListeners() {
             if (clearBtn) {
                 e.stopPropagation();
                 // 整块历史列表一起化作粒子消散，播完再清空
-                routerBridge.dissolveThenRemove(clearBtn.closest('.mobile-search-history-list'), function () {
+                routerBridge.dissolveThenRemove(clearBtn.closest('.mobile-search-history-list') as Element, function () {
                     clearSearchHistory();
                     renderMobileSearchHistory('');
                 });
@@ -560,6 +561,7 @@ export function setupEventListeners() {
             const overlay = document.getElementById('mobileSearchOverlay');
             if (!overlay || !overlay.classList.contains('active')) return;
             const vv = window.visualViewport;
+            if (!vv) return;
             const isKeyboardVisible = vv.height < vv.width * 0.6; // 典型宽高比判断键盘是否弹出
             if (isKeyboardVisible) {
                 // 键盘弹出时用 visualViewport 精确尺寸覆盖
@@ -607,7 +609,7 @@ export function setupEventListeners() {
         if (!action) return;
 
         switch (action) {
-            case 'switch-page': routerBridge.switchPage(el.dataset.page); break;
+            case 'switch-page': routerBridge.switchPage(el.dataset.page || 'home'); break;
             case 'reset-home': resetSearchArea(); closeMobileSearch(); hideSearchHistory(); break;
             case 'close-results': closeSearchResults(); break;
             case 'movies-back': moviesPage.moviesPageBack(); break;
@@ -655,21 +657,21 @@ export function setupEventListeners() {
                 }
                 break;
             }
-            case 'edit-custom-api': editCustomApi(parseInt(el.dataset.index)); break;
+            case 'edit-custom-api': editCustomApi(parseInt(el.dataset.index || '0')); break;
             case 'remove-custom-api': {
                 // 先让该条自定义 API 化作粒子消散，播完再真正移除
                 // （条目是 #customApisList 的直接子 div，无需在渲染处加类名）
-                const removeApiIndex = parseInt(el.dataset.index);
-                routerBridge.dissolveThenRemove(el.closest('#customApisList > div'), function () {
+                const removeApiIndex = parseInt(el.dataset.index || '0');
+                routerBridge.dissolveThenRemove(el.closest('#customApisList > div') as Element, function () {
                     removeCustomApi(removeApiIndex);
                 });
                 break;
             }
-            case 'update-custom-api': updateCustomApi(parseInt(el.dataset.index)); break;
+            case 'update-custom-api': updateCustomApi(parseInt(el.dataset.index || '0')); break;
             case 'cancel-edit-custom-api': cancelEditCustomApi(); break;
             case 'load-tmdb-results': loadTmdbResults(); break;
-            case 'tmdb-search-video': tmdbSearchVideo(el.dataset.title, el.dataset.genres || ''); break;
-            case 'recent-more': if (typeof openTmdbCategory === 'function') openTmdbCategory(el.dataset.recentType); break;
+            case 'tmdb-search-video': tmdbSearchVideo(el.dataset.title || '', el.dataset.genres || ''); break;
+            case 'recent-more': if (typeof openTmdbCategory === 'function') openTmdbCategory(el.dataset.recentType || ''); break;
             case 'play-from-history': {
                 const url = el.dataset.url;
                 const title = el.dataset.title;
@@ -682,9 +684,10 @@ export function setupEventListeners() {
                 const itemUrl = el.dataset.url;
                 const itemTitle = el.dataset.title;
                 if (itemUrl) {
-                    event.stopPropagation();
+                    e.stopPropagation();
                     // 传入所在卡片：先播粒子消散，播完再删除并重渲染
-                    deleteHistoryItem(itemUrl, itemTitle, el.closest('.history-item'));
+                    const historyItem = el.closest('.history-item');
+                    if (historyItem) deleteHistoryItem(itemUrl, itemTitle || '', historyItem);
                 }
                 break;
             }
@@ -696,7 +699,7 @@ export function setupEventListeners() {
     });
 
     // 搜索框回车事件（独立绑定，不再用 onkeypress）
-    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    document.getElementById('searchInput')?.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             hideSearchHistory();
             search();
@@ -713,12 +716,13 @@ function resetSearchArea() {
     closeMobileSearch();
 
     // 清理搜索结果
-    document.getElementById('results').innerHTML = '';
+    const resultsEl = document.getElementById('results');
+    if (resultsEl) resultsEl.innerHTML = '';
     (document.getElementById('searchInput') as HTMLInputElement).value = '';
 
     // 恢复搜索区域的样式（恢复到初始状态：无flex-1、无mb-8）
-    document.getElementById('searchArea').classList.remove('flex-1', 'mb-8');
-    document.getElementById('resultsArea').classList.add('hidden');
+    document.getElementById('searchArea')?.classList.remove('flex-1', 'mb-8');
+    document.getElementById('resultsArea')?.classList.add('hidden');
 
     // 恢复居中布局 + 隐藏关闭按钮
     const homeLayout = document.querySelector('.home-layout') as HTMLElement | null;
@@ -780,18 +784,21 @@ export function hookInput() {
     const input = document.getElementById('searchInput') as HTMLInputElement | null;
     if (!input) return;
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    const originalGet = descriptor && descriptor.get;
+    const originalSet = descriptor && descriptor.set;
+    if (!originalGet || !originalSet) return;
 
     // 重写 value 属性的 getter 和 setter
     Object.defineProperty(input, 'value', {
         get: function () {
             // 确保读取时返回字符串（即使原始值为 undefined/null）
-            const originalValue = descriptor.get.call(this);
+            const originalValue = originalGet.call(this);
             return originalValue != null ? String(originalValue) : '';
         },
         set: function (value) {
             // 显式将值转换为字符串后写入
             const strValue = String(value);
-            descriptor.set.call(this, strValue);
+            originalSet.call(this, strValue);
             this.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
@@ -881,8 +888,8 @@ function playM3U8Direct(url: string): void {
                 overlay.remove();
                 openM3U8Player(url, title);
             };
-            body.querySelector('[data-role="cancel"]').addEventListener('click', () => overlay.remove());
-            body.querySelector('[data-role="confirm"]').addEventListener('click', submit);
+            body.querySelector('[data-role="cancel"]')?.addEventListener('click', () => overlay.remove());
+            body.querySelector('[data-role="confirm"]')?.addEventListener('click', submit);
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -978,7 +985,7 @@ export async function search() {
     }
 
     // 清空结果区域，等待首个源返回后直接渲染真实结果
-    const resultsDiv = document.getElementById('results');
+    const resultsDiv = document.getElementById('results') as HTMLElement;
     const resultsArea = document.getElementById('resultsArea');
     if (resultsDiv) {
         resultsDiv.innerHTML = '';
@@ -1019,9 +1026,9 @@ export async function search() {
 
         // 显示结果区域，调整搜索区域（仅非结果页路由时生效，结果页由 #page-movies 承载）
         if (!routeToMovies) {
-            document.getElementById('searchArea').classList.remove('flex-1');
-            document.getElementById('searchArea').classList.add('mb-8');
-            document.getElementById('resultsArea').classList.remove('hidden');
+            document.getElementById('searchArea')?.classList.remove('flex-1');
+            document.getElementById('searchArea')?.classList.add('mb-8');
+            document.getElementById('resultsArea')?.classList.remove('hidden');
         }
 
         // 抬升布局 + 显示关闭按钮
@@ -1045,10 +1052,11 @@ export async function search() {
         
         // 智能排序API源：快源优先，慢源后排
         let orderedApis = [...selectedAPIs];
-        if (searchPageWindow.loadBalancer && typeof searchPageWindow.loadBalancer.getBestApi === 'function') {
+        const balancer = searchPageWindow.loadBalancer;
+        if (balancer && typeof balancer.getBestApi === 'function') {
             orderedApis.sort((a, b) => {
-                const statA = searchPageWindow.loadBalancer.apiStats?.get(a);
-                const statB = searchPageWindow.loadBalancer.apiStats?.get(b);
+                const statA = balancer.apiStats?.get(a);
+                const statB = balancer.apiStats?.get(b);
                 const avgA = statA?.averageResponseTime || 9999;
                 const avgB = statB?.averageResponseTime || 9999;
                 return avgA - avgB; // 响应时间短的优先
@@ -1139,7 +1147,8 @@ export async function search() {
                         <p>换个关键词试试，或在「设置 › 数据源」中启用更多片源。</p>
                     </div>
                 `;
-                document.getElementById('sourceFilterTabs').innerHTML = '';
+                const sourceFilterTabs = document.getElementById('sourceFilterTabs');
+                if (sourceFilterTabs) sourceFilterTabs.innerHTML = '';
             }
             hideLoading();
         }
