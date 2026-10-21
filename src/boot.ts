@@ -12,6 +12,11 @@
  * 本模块只负责编排顺序，不直接操作启动屏 DOM。
  */
 
+import { isCategoryPageBlocked } from './router/index';
+import { LeLePages } from './router/page-loader';
+import { HomeRecent } from './pages/home/recent';
+import { HomeShelves } from './pages/home/shelves';
+
 interface BootUiApi {
     setStage?: (progress: number, text: string) => void;
     waitAuth?: () => void;
@@ -41,10 +46,8 @@ interface LeLeBootApi {
 }
 
 interface BootWindow extends Window {
-    __LELETV_BOOT_UI__?: BootUiApi;
     INVITE_AUTH?: BootInviteAuth;
-    HomeRecent?: BootHomeRecent;
-    HomeShelves?: BootHomeShelves;
+    __LELETV_BOOT_UI__?: BootUiApi;
     LeLeBoot?: LeLeBootApi;
 }
 
@@ -141,16 +144,16 @@ var LeLeBoot = (function (): LeLeBootApi {
         var jobs: Array<Promise<unknown>> = [];
         var recent: Promise<unknown> | null = null;
 
-        if (bootWindow.HomeRecent && typeof bootWindow.HomeRecent.ensure === 'function') {
-            recent = Promise.resolve(bootWindow.HomeRecent.ensure()).catch(function (e) {
+        if (HomeRecent && typeof HomeRecent.ensure === 'function') {
+            recent = Promise.resolve(HomeRecent.ensure()).catch(function (e) {
                 console.warn('[boot] 首页最近更新加载失败:', e);
             });
             jobs.push(recent);
         }
 
         // 继续观看是本地数据；聚合动效的海报属于装饰，不阻塞进入首页
-        if (bootWindow.HomeShelves && typeof bootWindow.HomeShelves.ensure === 'function') {
-            Promise.resolve(bootWindow.HomeShelves.ensure()).catch(function (e) {
+        if (HomeShelves && typeof HomeShelves.ensure === 'function') {
+            Promise.resolve(HomeShelves.ensure()).catch(function (e) {
                 console.warn('[boot] 首页聚合内容加载失败:', e);
             });
         }
@@ -222,14 +225,14 @@ var LeLeBoot = (function (): LeLeBootApi {
             return;
         }
 
-        if (!bootWindow.LeLePages || typeof bootWindow.LeLePages.ensure !== 'function'
-            || (typeof bootWindow.LeLePages.has === 'function' && !bootWindow.LeLePages.has(name))) {
+        if (!LeLePages || typeof LeLePages.ensure !== 'function'
+            || (typeof LeLePages.has === 'function' && !LeLePages.has(name))) {
             schedule(preloadNext);
             return;
         }
 
         // 串行：上一页的片段 / 样式 / 专属脚本都就绪后，再开始下一页
-        var task = bootWindow.LeLePages.ensure(name);
+        var task = LeLePages.ensure(name);
         Promise.resolve(task).then(preloadNext, preloadNext);
     }
 

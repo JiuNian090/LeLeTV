@@ -2,6 +2,7 @@
 // main 只保留写入点与 window 代理；search / category 改为直接 import。
 import {
     activeSourceFilter,
+    scopedKey,
     lastAllResults,
     searchFilterConfig,
     searchReady,
@@ -13,6 +14,10 @@ import {
     setSearchThrottled,
 } from './core/state';
 import type { LeLeTVAdapter } from './core/global';
+import { handlePageLoad, playHomeIntro, showPage } from './router/index';
+import { setupEventListeners, hookInput } from './pages/search/index';
+import { initAPICheckboxes } from './services/sources/config';
+import { TIMING } from './core/timing';
 
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
 // var selectedAPIs / customAPIs 已在 src/services/sources/config.ts 中声明
@@ -26,6 +31,7 @@ interface MainWindow extends Window {
   INVITE_ADMIN_PANEL?: { render: (el: HTMLElement) => void };
   USER_DEVICES_PANEL?: { render: (el: HTMLElement) => void };
   INVITE_AUTH?: { isLocalMode: () => boolean; isVerified: () => boolean; ensureHeartbeat: () => void };
+  showToast?: (message: string, type?: string) => void;
   LeLeLayout?: { refresh: () => void };
   LeLeThemeSystem?: { render: () => void };
   syncRemoteApiSites?: () => Promise<string[] | null | undefined>;
@@ -240,7 +246,7 @@ function setupEmailClickHandlers() {
                         this.textContent = email;
                         
                         // 显示指定的提示消息
-                        showToast(`'${email}'已复制`, 'success');
+                        mainWindow.showToast?.(`'${email}'已复制`, 'success');
                         
                         // 3秒后恢复原始文本和移除高亮效果
                         setTimeout(() => {
@@ -249,7 +255,7 @@ function setupEmailClickHandlers() {
                         }, 3000);
                     } else {
                         // 客户端打开成功，显示原有提示
-                        showToast(`邮箱 ${email} 已复制并正在打开邮件客户端`, 'success');
+                        mainWindow.showToast?.(`邮箱 ${email} 已复制并正在打开邮件客户端`, 'success');
                         
                         // 3秒后移除高亮效果
                         setTimeout(() => {

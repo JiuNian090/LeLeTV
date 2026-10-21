@@ -65,6 +65,20 @@ interface MoviesPageBridge {
 }
 const moviesPage = window as unknown as MoviesPageBridge;
 
+// 路由函数属于 router 层，pages 不能 import；沿用 window 契约
+const {
+  rememberPageForReload,
+  playParticleDissolve,
+  clearSearchResidueFromUrl,
+  dissolveThenRemove,
+  switchPage,
+  openDisclaimerModal,
+  closeDisclaimerModal,
+  openInviteGuideModal,
+  closeInviteGuideModal,
+  shareInviteInfo,
+} = window;
+
 // 点击卡片跳转播放页的延迟定时器：保证流星动画循环可见后再跳转
 let _pendingPlayDirectTimer = null;
 
@@ -251,7 +265,7 @@ function bindSettingsPageEvents() {
 }
 searchPageWindow.__LELETV_BIND_SETTINGS_PAGE__ = bindSettingsPageEvents;
 
-function setupEventListeners() {
+export function setupEventListeners() {
     const searchInput = document.getElementById('searchInput') as HTMLInputElement;
 
     // 输入框清空按钮：有内容时才显示（桌面 / 移动各一个）
@@ -749,11 +763,11 @@ function swallowNextClick() {
     setTimeout(() => document.removeEventListener('click', stop, true), 600);
 }
 
-function closeSearchResults() {
+export function closeSearchResults() {
     resetSearchArea();
 }
 
-function hookInput() {
+export function hookInput() {
     const input = document.getElementById('searchInput') as HTMLInputElement | null;
     if (!input) return;
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
@@ -895,7 +909,7 @@ function openM3U8Player(url, title) {
     else window.location.href = playerUrl;
 }
 
-async function search() {
+export async function search() {
     // 关闭移动端覆盖层（如果有）
     closeMobileSearch();
     hideSearchHistory();

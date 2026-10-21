@@ -1,6 +1,22 @@
 // LeLeTV - Hash routing module
 // Extracted from index.html inline script
 
+import { isHiddenContentMode, scopedKey } from '../core/state';
+import { LeLePages } from './page-loader';
+
+interface AppInitBridge {
+  PHASES: {
+    CORE: { order: number; name: string };
+    AUTH: { order: number; name: string };
+    CONFIG: { order: number; name: string };
+    UI: { order: number; name: string };
+    POST: { order: number; name: string };
+  };
+  register(name: string, phase: { order: number; name: string } | undefined, fn: (context: unknown) => void, options?: { once?: boolean }): void;
+  run(context?: unknown): void;
+  reset(): void;
+}
+
 interface RouterWindow extends Window {
   __LELETV_BOOT_INTRO__?: unknown;
   LeLeMotion?: { reduced: () => boolean };
@@ -12,6 +28,14 @@ interface RouterWindow extends Window {
   INVITE_AUTH?: { getAuth?: () => { code?: string } | null };
   initMoviesPageBindings?: () => void;
   initMoviesPage?: () => void;
+  AppInit?: AppInitBridge;
+  setupEmailClickHandlers?: () => void;
+  showToast?: (message: string, type?: string) => void;
+  TMDB_STATE?: Record<string, unknown>;
+  initTmdbCategory?: () => void;
+  saveTmdbScroll?: () => void;
+  loadViewingHistory?: () => void;
+  search?: () => void;
 }
 
 const routerWindow = window as RouterWindow;
@@ -24,7 +48,7 @@ let currentPage = 'home';
 const RELOAD_RESUME_PAGE_KEY = 'leletv_reload_resume_page';
 
 // 记录重载后应停留的页面：URL 只保留目标页 hash（丢掉搜索残留），并用 sessionStorage 兜底
-function rememberPageForReload(page) {
+export function rememberPageForReload(page) {
   try {
     sessionStorage.setItem(RELOAD_RESUME_PAGE_KEY, page);
     // 只保留目标页 hash：清掉 /s=关键词 路径与 ?s= 查询串这类搜索残留，
@@ -288,7 +312,7 @@ function _resetPanel() {
 }
 
 // 重载前：卡片化作细密粒子向上飘散湮灭；动画结束或超时兜底后回调（用于触发 reload）
-function playParticleDissolve(onDone) {
+export function playParticleDissolve(onDone) {
   var finished = false;
   function finish() {
     if (finished) return;
@@ -400,7 +424,7 @@ function dissolveElement(el, onDone) {
 }
 
 // 删除动作的统一入口：有元素就先播消散，播完再执行删除；元素缺失/降级时直接删除
-function dissolveThenRemove(el, action) {
+export function dissolveThenRemove(el, action) {
   if (!el || typeof dissolveElement !== 'function') {
     if (typeof action === 'function') action();
     return;
@@ -429,7 +453,7 @@ function _homeIntroBackground() {
 
 // 首次打开网站（或清除缓存后重开）时，在首页播"粒子凝聚成 LeLeTV → 爆开"的入场过渡：
 // 最上层盖一张不透明 canvas，动效结束后整层淡出，露出已渲染好的首页（为首页加载提供过渡）
-function playHomeIntro() {
+export function playHomeIntro() {
   if (_particleReducedMotion()) return;
   // 启动占位（index.html 的 #bootSplash）已经播过同一套入场：粒子随加载进度凝聚 → 实体化 → 爆开。
   // 此处直接跳过，否则新访客会连着看两遍同样的动画
@@ -774,11 +798,11 @@ function playDomainTransition() {
 }
 
 // 私密模式下分类页整体隐藏（入口按钮 + 页面本身，见 css/variables.css）
-function isCategoryPageBlocked(n) {
+export function isCategoryPageBlocked(n) {
   return n === 'category' && typeof isHiddenContentMode === 'function' && isHiddenContentMode();
 }
 
-function switchPage(a) {
+export function switchPage(a) {
   // 任何入口（导航按钮、switch-to-category 动作、影片页返回）都回落到首页
   if (isCategoryPageBlocked(a)) a = 'home';
   // 离开搜索状态时清掉 URL 里的搜索残留，避免刷新后重放上次搜索
@@ -797,10 +821,11 @@ var CATEGORY_FILTER_FIELDS = ['type', 'selectedGenre', 'selectedYear', 'selected
 // 落盘当前标签选择
 function saveCategoryFilterPrefs() {
   try {
-    if (typeof TMDB_STATE === 'undefined' || !TMDB_STATE) return;
+    var tmdbState = routerWindow.TMDB_STATE;
+    if (!tmdbState) return;
     var payload = {};
     CATEGORY_FILTER_FIELDS.forEach(function (k) {
-      if (k in TMDB_STATE) payload[k] = TMDB_STATE[k];
+      if (k in tmdbState) payload[k] = tmdbState[k];
     });
     localStorage.setItem(scopedKey(CATEGORY_FILTER_PREFS_KEY), JSON.stringify(payload));
   } catch (e) { /* 忽略：存储不可用不影响浏览 */ }
@@ -821,7 +846,7 @@ function seedCategoryFiltersFromPrefs() {
 // 清掉 URL 里的搜索残留（/s=关键词 路径 或 ?s=关键词 查询串），只保留当前页 hash。
 // 搜索状态只由结果页（#movies）持有：用户切到别的页面后刷新，不该再把上次搜索词当直链重搜一遍。
 // 初始化路径不调用本函数，因此 /s=关键词 直链（分享链接）仍能自动搜索。
-function clearSearchResidueFromUrl(targetPage?: string) {
+export function clearSearchResidueFromUrl(targetPage?: string) {
   try {
     var page = typeof targetPage === 'string' ? targetPage : (location.hash.slice(1) || 'home');
     if (page === 'movies') return;
@@ -836,7 +861,7 @@ function clearSearchResidueFromUrl(targetPage?: string) {
   } catch (e) { /* 隐私模式等场景忽略：只影响 URL 是否残留搜索词 */ }
 }
 
-function handleHashChange() {
+export function handleHashChange() {
   var page = location.hash.slice(1) || 'home';
   clearSearchResidueFromUrl(page);
   showPage(page);
@@ -845,7 +870,7 @@ function handleHashChange() {
 // 当前显示的页面在片段加载完成后才落地，token 用于丢弃过期的加载回调
 var _pageShowToken = 0;
 
-function showPage(n) {
+export function showPage(n) {
   // 私密模式下分类页不可达：hash 直达或重载落点落在分类页时回落首页（不加载 TMDB 分类数据）
   if (isCategoryPageBlocked(n)) {
     n = 'home';
@@ -855,7 +880,7 @@ function showPage(n) {
   }
   // 离开类别页前保存滚动位置与标签选择（标签供下次进入时沿用）
   if (currentPage === 'category' && n !== 'category') {
-    if (typeof saveTmdbScroll === 'function') saveTmdbScroll();
+    if (typeof routerWindow.saveTmdbScroll === 'function') routerWindow.saveTmdbScroll();
     saveCategoryFilterPrefs();
   }
   currentPage = n;
@@ -918,17 +943,17 @@ function updateNavButtons(a) {
   });
 }
 
-function handlePageLoad(n) {
+export function handlePageLoad(n) {
   switch(n) {
     case 'category':
       // 先按持久化的标签选择注入会话状态，再由 tmdb.js 统一恢复并加载
       seedCategoryFiltersFromPrefs();
-      if (typeof initTmdbCategory === 'function') initTmdbCategory();
+      if (typeof routerWindow.initTmdbCategory === 'function') routerWindow.initTmdbCategory();
       break;
     case 'history':
       // 片段在 showPage 里已按需插入，这里补事件绑定并加载数据
       if (typeof window.initViewingHistoryBindings === 'function') window.initViewingHistoryBindings();
-      if (typeof loadViewingHistory === 'function') loadViewingHistory();
+      if (typeof routerWindow.loadViewingHistory === 'function') routerWindow.loadViewingHistory();
       break;
     case 'movies':
       // 结果页的顶栏/筛选事件只在片段插入后才能绑定
@@ -1044,7 +1069,7 @@ function fetchReadmeMd() {
 
 // 按需加载 marked.js（仅 README 弹窗用）。失败也 resolve —— README 内容本身照常显示，只是不渲染 Markdown
 var _markedLoading = null;
-function ensureMarked() {
+export function ensureMarked() {
   if (typeof marked !== 'undefined') return Promise.resolve();
   if (_markedLoading) return _markedLoading;
 
@@ -1073,7 +1098,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-function switchToAbout(s) {
+export function switchToAbout(s) {
   switchPage('about');
   if (s) setTimeout(function() {
     var el = document.getElementById(s);
@@ -1081,9 +1106,9 @@ function switchToAbout(s) {
   }, 100);
 }
 
-function toggleHistory(e) { if (e) e.stopPropagation(); switchPage('history'); }
-function toggleSettings(e) { if (e) e.stopPropagation(); switchPage('settings'); }
-function focusSearch() { switchPage('home'); setTimeout(function() { var si = document.getElementById('searchInput'); if (si) si.focus(); }, 100); }
+export function toggleHistory(e) { if (e) e.stopPropagation(); switchPage('history'); }
+export function toggleSettings(e) { if (e) e.stopPropagation(); switchPage('settings'); }
+export function focusSearch() { switchPage('home'); setTimeout(function() { var si = document.getElementById('searchInput'); if (si) si.focus(); }, 100); }
 
 function loadAboutPageChangelog() {
   var ct = document.getElementById('aboutChangelogContent');
@@ -1101,7 +1126,7 @@ function loadAboutPageChangelog() {
     });
 }
 
-function parseChangelogMarkdown(md) {
+export function parseChangelogMarkdown(md) {
   var entries = [], cur = null;
   md.split('\n').forEach(function(line) {
     if (line.indexOf('### ') === 0) {
@@ -1137,11 +1162,11 @@ function renderVersionHistory(entries) {
   return d.firstElementChild;
 }
 
-function openDisclaimerModal() {
+export function openDisclaimerModal() {
   document.getElementById('disclaimerModal').style.display = 'flex';
 }
 
-function closeDisclaimerModal() {
+export function closeDisclaimerModal() {
   localStorage.setItem('lastAcceptedDisclaimer', Date.now().toString());
   document.getElementById('disclaimerModal').style.display = 'none';
 
@@ -1152,16 +1177,18 @@ function closeDisclaimerModal() {
   }
 }
 
-function openInviteGuideModal() {
+export function openInviteGuideModal() {
   document.getElementById('inviteGuideModal').style.display = 'flex';
 }
 
-function closeInviteGuideModal() {
+export function closeInviteGuideModal() {
   document.getElementById('inviteGuideModal').style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  AppInit.register('hash-routing', AppInit.PHASES.POST, function() {
+  var appInit = routerWindow.AppInit;
+  if (!appInit) return;
+  appInit.register('hash-routing', appInit.PHASES.POST, function() {
     // 重载恢复页优先（如切换隐藏/正常内容模式后要留在设置页），其次 URL hash，最后默认首页
     var resumePage = '';
     try {
@@ -1176,48 +1203,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // 本次重载的首帧已处理完毕：恢复正常视图过渡（后续切页照旧）
     _particleIncoming = false;
   });
-  AppInit.register('domain-transition', AppInit.PHASES.POST, function() {
+  appInit.register('domain-transition', appInit.PHASES.POST, function() {
     // 等 showPage 的路由与数据源渲染落定后再播"星环 + LeLeTV"入场，避免刚渲染的卡片被立刻替换
     setTimeout(playDomainTransition, 90);
   });
-  AppInit.register('email-handler', AppInit.PHASES.POST, function() {
-    if (typeof setupEmailClickHandlers === 'function') setupEmailClickHandlers();
+  appInit.register('email-handler', appInit.PHASES.POST, function() {
+    if (typeof routerWindow.setupEmailClickHandlers === 'function') routerWindow.setupEmailClickHandlers();
   });
-  AppInit.register('category-filter-persist', AppInit.PHASES.POST, function() {
+  appInit.register('category-filter-persist', appInit.PHASES.POST, function() {
     // 点击分类页标签后应落盘（tmdb.js 会先更新 TMDB_STATE，这里等一拍再读）
     document.addEventListener('click', function (e) {
       if (!e.target || !(e.target as HTMLElement).closest || !(e.target as HTMLElement).closest('#tmdb-filters')) return;
       setTimeout(saveCategoryFilterPrefs, 0);
     });
   });
-  AppInit.run();
+  appInit.run();
 });
 
 routerWindow.currentPage = currentPage;
-window.switchPage = switchPage;
-window.handleHashChange = handleHashChange;
-window.showPage = showPage;
-window.switchToAbout = switchToAbout;
-window.toggleHistory = toggleHistory;
-window.toggleSettings = toggleSettings;
-window.focusSearch = focusSearch;
-window.openDisclaimerModal = openDisclaimerModal;
-window.closeDisclaimerModal = closeDisclaimerModal;
-window.shareInviteInfo = shareInviteInfo;
 
 // 「分享」入口：移动端调起系统级分享，桌面端复制文案到剪贴板。
 // targetCode 可选 —— 管理端分享指定邀请码时传入；不传则取当前登录用户的邀请码（关于页「分享」、设置-设备管理）
-function shareInviteInfo(targetCode?: string) {
+export function shareInviteInfo(targetCode?: string) {
   var code = targetCode || '';
   if (!code) {
     var auth = (routerWindow.INVITE_AUTH && typeof routerWindow.INVITE_AUTH.getAuth === 'function') ? routerWindow.INVITE_AUTH.getAuth() : null;
     code = (auth && auth.code) ? auth.code : '';
   }
-  if (!code) { showToast('未获取到邀请码，请先验证邀请码登录', 'error'); return; }
+  if (!code) { routerWindow.showToast?.('未获取到邀请码，请先验证邀请码登录', 'error'); return; }
 
   var text = 'LeLeTV：https://leletv.415599.xyz\n邀请码：' + code;
-  var onOk = function() { showToast('邀请信息已复制，可粘贴分享', 'success'); };
-  var onFail = function() { showToast('复制失败，请手动复制', 'error'); };
+  var onOk = function() { routerWindow.showToast?.('邀请信息已复制，可粘贴分享', 'success'); };
+  var onFail = function() { routerWindow.showToast?.('复制失败，请手动复制', 'error'); };
 
   var fallbackCopy = function() {
     try {
@@ -1387,7 +1404,12 @@ Object.assign(window, {
   closeDisclaimerModal,
   openInviteGuideModal,
   closeInviteGuideModal,
-  shareInviteInfo
+  shareInviteInfo,
+  switchPage,
+  handleHashChange,
+  switchToAbout,
+  toggleSettings,
+  focusSearch
 });
 
 Object.defineProperty(window, 'PARTICLE_SWEEP_KEY', {
@@ -1401,3 +1423,28 @@ Object.defineProperty(window, '_themeRgbCache', {
   set: (v) => { _themeRgbCache = v; },
   configurable: true,
 });
+
+
+// 过渡期类型桥：pages / main / boot 仍通过 window 访问路由函数（跨层契约）
+declare global {
+  interface Window {
+    switchPage: (page: string) => void;
+    handleHashChange: () => void;
+    showPage: (page: string) => void;
+    switchToAbout: () => void;
+    toggleHistory: (e?: Event) => void;
+    toggleSettings: (e?: Event) => void;
+    focusSearch: () => void;
+    openDisclaimerModal: () => void;
+    closeDisclaimerModal: () => void;
+    openInviteGuideModal: () => void;
+    closeInviteGuideModal: () => void;
+    shareInviteInfo: (targetCode?: string) => void;
+    rememberPageForReload: (page: string) => void;
+    playParticleDissolve: (onDone?: () => void) => void;
+    clearSearchResidueFromUrl: (targetPage?: string) => void;
+    dissolveThenRemove: (el: Element, action: () => void) => void;
+    parseChangelogMarkdown: (md: string) => string;
+    isCategoryPageBlocked: (page: string) => boolean;
+  }
+}
