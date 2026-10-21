@@ -3,15 +3,15 @@
  * 不参与首屏关键路径；预取失败只记录警告，不阻断导航。
  */
 
+import { LeLePages } from './page-loader';
+
 (function initRoutePrefetch(): void {
     const SELECTOR = '[data-action="switch-page"][data-page]';
     const prefetched = new Set<string>();
 
     function prefetch(page: string): void {
         if (!page || page === 'home' || prefetched.has(page)) return;
-        const pages = (window as Window & {
-            LeLePages?: { prefetch(name: string): void };
-        }).LeLePages;
+        const pages = LeLePages;
         if (!pages || typeof pages.prefetch !== 'function') return;
         prefetched.add(page);
         pages.prefetch(page);

@@ -33,11 +33,6 @@ interface BootHomeShelves {
     ensure: () => Promise<unknown>;
 }
 
-interface BootLeLePages {
-    ensure: (name: string) => Promise<unknown>;
-    has?: (name: string) => boolean;
-}
-
 interface LeLeBootApi {
     start: () => void;
     onEntered: () => void;
@@ -50,7 +45,6 @@ interface BootWindow extends Window {
     INVITE_AUTH?: BootInviteAuth;
     HomeRecent?: BootHomeRecent;
     HomeShelves?: BootHomeShelves;
-    LeLePages?: BootLeLePages;
     LeLeBoot?: LeLeBootApi;
 }
 

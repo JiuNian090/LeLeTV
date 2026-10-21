@@ -63,10 +63,6 @@ interface TmdbResponse {
 
 interface TmdbWindow extends Window {
   saveTmdbScroll?: () => void;
-  LeLePages?: {
-    ensure: (name: string) => Promise<void>;
-    isLoaded: (name: string) => boolean;
-  };
 }
 
 declare function generateSkeletonCards(count: number): string;

@@ -46,7 +46,7 @@ const ALLOWED = {
   services: new Set(['core', 'services']),
   ui: new Set(['core', 'ui']),
   pages: new Set(['core', 'services', 'ui', 'pages']),
-  router: new Set(['core', 'pages']),
+  router: new Set(['core', 'pages', 'router']),
   main: new Set(['core', 'services', 'ui', 'pages', 'router', 'main']),
 };
 

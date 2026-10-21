@@ -20,7 +20,7 @@ interface PageLoaderWindow extends Window {
 
 const pageLoaderWindow = window as PageLoaderWindow;
 
-var LeLePages = (function () {
+export const LeLePages = (function () {
     'use strict';
 
     var FRAGMENTS = {
@@ -197,6 +197,16 @@ var LeLePages = (function () {
         prefetch: prefetch
     };
 
-    window.LeLePages = api;
     return api;
 })();
+
+// HTML 内联脚本 / 页面模块仍按全局名访问
+(pageLoaderWindow as PageLoaderWindow & { LeLePages?: typeof LeLePages }).LeLePages = LeLePages;
+
+
+// 过渡期类型桥：search / router / boot 仍通过 window.LeLePages 访问（跨层契约）
+declare global {
+    interface Window {
+        LeLePages?: typeof LeLePages;
+    }
+}
