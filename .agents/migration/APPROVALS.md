@@ -20,11 +20,11 @@
 
 ---
 
-## 当前状态（阶段 -1 结束）
+## 当前状态
 
-- 已批准条目：**1**（AP-001：`js/auth/sha256.js` 合并进 `src/core/crypto.ts`）
-- 已执行删除：**1**（随 AP-001 合并）
-- 已执行合并：**1**
+- 已批准条目：**2**（AP-001：`js/auth/sha256.js` 合并进 `src/core/crypto.ts`；AP-002：`js/app/app-init.js` 合并进 `src/main.ts`）
+- 已执行删除：**2**（随 AP-001 / AP-002 合并）
+- 已执行合并：**2**
 - 阶段 -1 的全部产出仅为登记与初判，未触碰任何被跟踪文件的内容。
 
 ---
@@ -34,6 +34,7 @@
 | 编号 | 类型 | 路径 | 判定依据 | 替代者 | 批准人 | 批准时间 | 关联 commit |
 |---|---|---|---|---|---|---|---|
 | AP-001 | merge | `js/auth/sha256.js` | 与 `src/core/crypto.ts` 的 `sha256` Web Crypto 分支完全重复，且后者额外提供 js-sha256 降级；合并后行为等价且更健壮 | `src/core/crypto.ts` | 用户授权（JiuNian090） | 2026-10-21 | 阶段 4 第 7 条 |
+| AP-002 | merge | `js/app/app-init.js` | `AppInit` 仅被 `src/router/index.ts` 使用；并入 `src/main.ts` 末尾后，bundle 中的执行顺序（main.ts → AppInit → router）与原顺序完全一致 | `src/main.ts` | 用户授权（JiuNian090） | 2026-10-21 | 阶段 4.5 清零 `js/` |
 
 ---
 

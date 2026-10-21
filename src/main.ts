@@ -13,6 +13,7 @@ interface MainWindow extends Window {
   LeLeLayout?: { refresh: () => void };
   LeLeThemeSystem?: { render: () => void };
   syncRemoteApiSites?: () => Promise<string[] | null | undefined>;
+  LeLeTV?: LeLeTVAdapter;
 }
 
 const mainWindow = window as MainWindow;
@@ -360,3 +361,108 @@ function initSettingsPage() {
     initSettingsPanels();
 }
 mainWindow.__LELETV_INIT_SETTINGS_PAGE__ = initSettingsPage;
+
+// ====== AppInit — 应用初始化协调器（迁移自 js/app/app-init.js，AP-002） ======
+// 显式定义 LeLeTV 首页的初始化阶段和依赖顺序，不再隐式依赖 <script> 标签顺序。
+// 初始化阶段（按顺序执行）：CORE → AUTH → CONFIG → UI → POST。
+// 新模块通过 AppInit.register() 注册初始化函数，或直接调用 AppInit.run()。
+
+var AppInit = (function () {
+    'use strict';
+
+    /** 初始化阶段枚举 */
+    var PHASES = {
+        CORE:   { order: 0, name: 'core' },
+        AUTH:   { order: 1, name: 'auth' },
+        CONFIG: { order: 2, name: 'config' },
+        UI:     { order: 3, name: 'ui' },
+        POST:   { order: 4, name: 'post' }
+    };
+
+    /** 已注册的初始化任务 */
+    var _tasks: Array<{ name: string; order: number; fn: (context: unknown) => void; once: boolean; executed: boolean }> = [];
+
+    /** 是否已执行 */
+    var _ran = false;
+
+    /**
+     * 注册一个初始化函数
+     * @param name     模块名称
+     * @param phase    阶段（AppInit.PHASES.xxx）
+     * @param fn       初始化函数
+     * @param options  once 默认 true
+     */
+    function register(
+        name: string,
+        phase: { order: number; name: string } | undefined,
+        fn: (context: unknown) => void,
+        options?: { once?: boolean }
+    ): void {
+        if (typeof name !== 'string' || !name) {
+            console.warn('AppInit.register: 需要有效的模块名');
+            return;
+        }
+        if (typeof fn !== 'function') {
+            console.warn('AppInit.register: 需要有效的初始化函数');
+            return;
+        }
+
+        var order = (phase && typeof phase.order === 'number') ? phase.order : 99;
+
+        _tasks.push({
+            name: name,
+            order: order,
+            fn: fn,
+            once: !options || options.once !== false,
+            executed: false
+        });
+
+        // 按阶段排序
+        _tasks.sort(function (a, b) { return a.order - b.order; });
+    }
+
+    /**
+     * 执行所有已注册的初始化任务
+     * @param context 可选的上下文参数
+     */
+    function run(context?: unknown): void {
+        if (_ran) {
+            console.warn('AppInit.run: 初始化已执行过');
+            return;
+        }
+        _ran = true;
+
+        var i, task;
+        for (i = 0; i < _tasks.length; i++) {
+            task = _tasks[i];
+            if (task.executed) continue;
+            try {
+                task.fn(context || {});
+                task.executed = true;
+            } catch (e) {
+                console.error('AppInit: [' + task.name + '] 初始化失败:', e);
+            }
+        }
+    }
+
+    /**
+     * 重置（主要用于测试）
+     */
+    function reset(): void {
+        _tasks = [];
+        _ran = false;
+    }
+
+    // 公开 API
+    return {
+        PHASES: PHASES,
+        register: register,
+        run: run,
+        reset: reset
+    };
+})();
+
+// 注册到 LeLeTV
+if (typeof mainWindow.LeLeTV !== 'undefined') {
+    mainWindow.LeLeTV.AppInit = AppInit;
+}

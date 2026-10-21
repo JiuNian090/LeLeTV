@@ -1,5 +1,5 @@
 /**
- * LeLeBoot — 启动编排
+ * LeLeBoot — 启动编排（迁移自 js/app/boot-sequence.js）
  *
  * 冷启动顺序（与 index.html 的启动屏配合）：
  *   1. 启动屏 — HTML 首帧立即出现，不依赖任何 JS / 外部样式
@@ -11,7 +11,52 @@
  * 启动屏 UI 由 index.html 内联脚本暴露为 window.__LELETV_BOOT_UI__，
  * 本模块只负责编排顺序，不直接操作启动屏 DOM。
  */
-var LeLeBoot = (function () {
+
+interface BootUiApi {
+    setStage?: (progress: number, text: string) => void;
+    waitAuth?: () => void;
+    authReady?: () => void;
+    resumeProgress?: () => void;
+    homeReady?: () => void;
+}
+
+interface BootInviteAuth {
+    isVerified: () => boolean;
+    ensureHeartbeat: () => void;
+}
+
+interface BootHomeRecent {
+    ensure: () => Promise<unknown>;
+}
+
+interface BootHomeShelves {
+    ensure: () => Promise<unknown>;
+}
+
+interface BootLeLePages {
+    ensure: (name: string) => Promise<unknown>;
+    has?: (name: string) => boolean;
+}
+
+interface LeLeBootApi {
+    start: () => void;
+    onEntered: () => void;
+    isAuthPassed: () => boolean;
+    isHomeReady: () => boolean;
+}
+
+interface BootWindow extends Window {
+    __LELETV_BOOT_UI__?: BootUiApi;
+    INVITE_AUTH?: BootInviteAuth;
+    HomeRecent?: BootHomeRecent;
+    HomeShelves?: BootHomeShelves;
+    LeLePages?: BootLeLePages;
+    LeLeBoot?: LeLeBootApi;
+}
+
+const bootWindow = window as BootWindow;
+
+var LeLeBoot = (function (): LeLeBootApi {
     'use strict';
 
     // 首页数据超时：TMDB 跨境慢时不让启动屏无限等待，到点先进入首页再继续补数据
@@ -25,23 +70,23 @@ var LeLeBoot = (function () {
     var entered = false;
     var preloadIndex = 0;
 
-    function ui() {
-        return window.__LELETV_BOOT_UI__ || null;
+    function ui(): BootUiApi | null {
+        return bootWindow.__LELETV_BOOT_UI__ || null;
     }
 
-    function stage(progress, text) {
+    function stage(progress: number, text: string): void {
         var api = ui();
         if (api && typeof api.setStage === 'function') api.setStage(progress, text);
     }
 
-    function start() {
+    function start(): void {
         stage(0.22, '正在验证身份…');
         waitAuth();
     }
 
     // ---------- 1. 鉴权 ----------
-    function waitAuth() {
-        var auth = window.INVITE_AUTH;
+    function waitAuth(): void {
+        var auth = bootWindow.INVITE_AUTH;
         if (!auth || typeof auth.isVerified !== 'function') {
             // 鉴权模块没起来（bundle 异常）：不把用户挡在启动屏后面
             console.warn('[boot] 鉴权模块不可用，跳过门禁');
@@ -60,7 +105,7 @@ var LeLeBoot = (function () {
         if (api && typeof api.waitAuth === 'function') api.waitAuth();
         showLoginGate();
 
-        var onVerified = function () {
+        var onVerified = function (): void {
             document.removeEventListener('inviteVerified', onVerified);
             document.removeEventListener('passwordVerified', onVerified);
             authPassed();
@@ -69,7 +114,7 @@ var LeLeBoot = (function () {
         document.addEventListener('passwordVerified', onVerified);
     }
 
-    function showLoginGate() {
+    function showLoginGate(): void {
         var modal = document.getElementById('inviteLoginModal');
         if (!modal) return;
         // 启动屏尚未退场：抬高登录框层级（见 index.html 启动层样式）
@@ -77,7 +122,7 @@ var LeLeBoot = (function () {
         modal.style.display = 'flex';
     }
 
-    function authPassed() {
+    function authPassed(): void {
         if (authDone) return;
         authDone = true;
 
@@ -94,24 +139,24 @@ var LeLeBoot = (function () {
     }
 
     // ---------- 2. 首页 ----------
-    function loadHome() {
+    function loadHome(): void {
         if (homeStarted) return;
         homeStarted = true;
         stage(0.4, '正在加载首页…');
 
-        var jobs = [];
-        var recent = null;
+        var jobs: Array<Promise<unknown>> = [];
+        var recent: Promise<unknown> | null = null;
 
-        if (window.HomeRecent && typeof window.HomeRecent.ensure === 'function') {
-            recent = Promise.resolve(window.HomeRecent.ensure()).catch(function (e) {
+        if (bootWindow.HomeRecent && typeof bootWindow.HomeRecent.ensure === 'function') {
+            recent = Promise.resolve(bootWindow.HomeRecent.ensure()).catch(function (e) {
                 console.warn('[boot] 首页最近更新加载失败:', e);
             });
             jobs.push(recent);
         }
 
         // 继续观看是本地数据；聚合动效的海报属于装饰，不阻塞进入首页
-        if (window.HomeShelves && typeof window.HomeShelves.ensure === 'function') {
-            Promise.resolve(window.HomeShelves.ensure()).catch(function (e) {
+        if (bootWindow.HomeShelves && typeof bootWindow.HomeShelves.ensure === 'function') {
+            Promise.resolve(bootWindow.HomeShelves.ensure()).catch(function (e) {
                 console.warn('[boot] 首页聚合内容加载失败:', e);
             });
         }
@@ -122,14 +167,14 @@ var LeLeBoot = (function () {
             });
         }
 
-        var timeout = new Promise(function (resolve) {
+        var timeout = new Promise<void>(function (resolve) {
             setTimeout(resolve, HOME_TIMEOUT_MS);
         });
 
         Promise.race([Promise.all(jobs), timeout]).then(homeArrived);
     }
 
-    function homeArrived() {
+    function homeArrived(): void {
         if (homeDone) return;
         homeDone = true;
         stage(0.95, '即将进入…');
@@ -139,18 +184,18 @@ var LeLeBoot = (function () {
         scheduleHeartbeat();
     }
 
-    function scheduleHeartbeat() {
-        function run() {
+    function scheduleHeartbeat(): void {
+        function run(): void {
             try {
-                if (window.INVITE_AUTH && typeof window.INVITE_AUTH.ensureHeartbeat === 'function') {
-                    window.INVITE_AUTH.ensureHeartbeat();
+                if (bootWindow.INVITE_AUTH && typeof bootWindow.INVITE_AUTH.ensureHeartbeat === 'function') {
+                    bootWindow.INVITE_AUTH.ensureHeartbeat();
                 }
             } catch (e) {
                 console.warn('[boot] 心跳启动失败:', e);
             }
         }
-        if (window.requestIdleCallback) {
-            window.requestIdleCallback(run, { timeout: 3000 });
+        if (bootWindow.requestIdleCallback) {
+            bootWindow.requestIdleCallback(run, { timeout: 3000 });
         } else {
             setTimeout(run, 800);
         }
@@ -158,22 +203,22 @@ var LeLeBoot = (function () {
 
     // ---------- 3. 进入首页后后台预加载 ----------
     // 启动屏完全退场后由 index.html 调用。
-    function onEntered() {
+    function onEntered(): void {
         if (entered) return;
         entered = true;
         // 多等一拍，把首帧渲染和入场动画排在预加载前面
         setTimeout(function () { schedule(preloadNext); }, 400);
     }
 
-    function schedule(fn) {
-        if (window.requestIdleCallback) {
-            window.requestIdleCallback(fn, { timeout: 1200 });
+    function schedule(fn: () => void): void {
+        if (bootWindow.requestIdleCallback) {
+            bootWindow.requestIdleCallback(fn, { timeout: 1200 });
         } else {
             setTimeout(fn, 200);
         }
     }
 
-    function preloadNext() {
+    function preloadNext(): void {
         if (preloadIndex >= PRELOAD_ORDER.length) return;
         var name = PRELOAD_ORDER[preloadIndex++];
 
@@ -183,18 +228,18 @@ var LeLeBoot = (function () {
             return;
         }
 
-        if (!window.LeLePages || typeof window.LeLePages.ensure !== 'function'
-            || (typeof window.LeLePages.has === 'function' && !window.LeLePages.has(name))) {
+        if (!bootWindow.LeLePages || typeof bootWindow.LeLePages.ensure !== 'function'
+            || (typeof bootWindow.LeLePages.has === 'function' && !bootWindow.LeLePages.has(name))) {
             schedule(preloadNext);
             return;
         }
 
         // 串行：上一页的片段 / 样式 / 专属脚本都就绪后，再开始下一页
-        var task = window.LeLePages.ensure(name);
+        var task = bootWindow.LeLePages.ensure(name);
         Promise.resolve(task).then(preloadNext, preloadNext);
     }
 
-    function boot() {
+    function boot(): void {
         // 此时 DOM 已解析、bundle 已执行，启动屏仍在播入场动画
         start();
     }
@@ -205,13 +250,13 @@ var LeLeBoot = (function () {
         boot();
     }
 
-    var api = {
+    var api: LeLeBootApi = {
         start: start,
         onEntered: onEntered,
-        isAuthPassed: function () { return authDone; },
-        isHomeReady: function () { return homeDone; }
+        isAuthPassed: function (): boolean { return authDone; },
+        isHomeReady: function (): boolean { return homeDone; }
     };
 
-    window.LeLeBoot = api;
+    bootWindow.LeLeBoot = api;
     return api;
 })();

@@ -348,11 +348,11 @@
 | 274 | `js/api/source-port.js` | 视频源导入/导出（LibreTV 互操作） | migrated | `src/services/sources/port.ts` | — | — | verified | 全局脚本迁移，export/import 入口名保持不变 |
 | 275 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | verified | 公开函数与 TMDB_STATE / TMDB_CONFIG / GENRE_MAP 保持不变 |
 | 276 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | verified | 已迁移至 `src/services/config.ts`；类型检查通过 |
-| 277 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
+| 277 | `js/app/app-init.js` | 应用初始化协调器 | merge | `src/main.ts` | `src/main.ts` | AP-002 | verified | 并入 `src/main.ts` 末尾，bundle 执行顺序不变；删除原文件 |
 | 278 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | verified | 路由与页面切换行为不变 |
 | 279 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | verified | 全局搜索入口与事件绑定不变 |
 | 280 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | verified | 全局入口与启动信号不变 |
-| 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
+| 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | migrated | `src/boot.ts` | — | — | verified | 阶段 4.5 迁移；保留 bundle 末尾位置 |
 | 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | verified | `LeLePages` 接口不变 |
 | 283 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | verified | 面板入口与接口调用不变；移除与 user-devices 完全相同的重复函数 |
 | 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | verified | 已迁移至 `src/services/invitation.ts`；类型检查通过 |
@@ -533,6 +533,7 @@
 | 436 | `src/styles/variables.css` | 设计令牌与主题变量（迁移自 `css/v2/tokens.css`） | keep | — | — | — | done | 阶段 4 第 67 条迁移目标 |
 | 437 | `src/styles/views.css` | 内页共享视图样式（迁移自 `css/v2/views.css`） | keep | — | — | — | done | 阶段 4 第 68 条迁移目标 |
 | 438 | `src/index.html` | 应用壳 + 首页骨架 + 启动动画（迁移自 `index.html`） | keep | — | — | — | done | 阶段 4 第 64 条迁移目标；根 `index.html` 由 `build-bundles.mjs` 装配生成 |
+| 439 | `src/boot.ts` | 启动编排（迁移自 `js/app/boot-sequence.js`） | keep | — | — | — | done | 阶段 4.5 迁移目标；保持 bundle 末尾位置 |
 
 ## workers/（红区）
 

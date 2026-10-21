@@ -17,6 +17,7 @@
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
 | 4 | **完成：68 / 85 条已验证，69–85 条标 keep**（C-1：不引入 `public/`） |
+| 4.5 | **收尾完成**：`js/` 清零（app-init 并入 main.ts，boot-sequence → `src/boot.ts`）；3 个零引用品牌 SVG 保留不删 |
 
 ---
 
@@ -104,14 +105,15 @@
 | 64 | **已解禁并完成（方案 A）**：`src/index.html` 为唯一手工编辑源，`build-bundles.mjs` 装配根 `index.html`；Pages 入口、`_headers`、`_routes.json`、`manifest.json` 均未改动 |
 | 69–85 | **保持暂缓并标 keep**：与 C-1 一致，不引入 `public/`，字体 / 图标 / logo / manifest 保留 `/libs` 与 `/image` 原路径 |
 
-> `pages/` 目录已清空；`js/` 仅剩 2 个 `.js`（app-init / boot-sequence，未在 MAP 队列）。
+> `pages/` 目录已清空；`js/` 已清零（app-init 并入 `src/main.ts`，boot-sequence → `src/boot.ts`）。
 > styles 层已全部迁入 `src/styles/`；入口层 `index.html` 已迁入 `src/index.html`。
 
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-下一步候选：阶段 4.5（orphans 清理，需人工批准）或阶段 5（ESM splitting）。
-新会话开场：读本文件 → 确认下一阶段范围 → `npm start` 启动一次服务器。
+阶段 4.5 收尾已完成：`js/` 已清零；3 个零引用品牌 SVG 保留（未批准删除）。
+下一步：阶段 5（ESM splitting），需把 58 个全局脚本逐步改造成 ESM 模块。
+新会话开场：读本文件 → 确认阶段 5 范围 → `npm start` 启动一次服务器。
 
 ---
 
@@ -136,7 +138,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **267.1 KB**（预算 275 KB）；`js/` 剩余 `.js` **2**；tracked 371 / inventory 438。
+基线：首屏 core+app **267.2 KB**（预算 275 KB）；`js/` 剩余 `.js` **0**；tracked 370 / inventory 439。
 
 ---
 

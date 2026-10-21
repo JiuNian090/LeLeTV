@@ -111,6 +111,8 @@
 | 83 | public | `image/logo-black.png` | `public/images/logo-black.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 | 84 | public | `image/logo.png` | `public/images/logo.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 | 85 | public | `manifest.json` | `public/manifest.json` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 86 | entry | `js/app/app-init.js` | `src/main.ts` | verified | 第 0 节通用前置 | 阶段 4.5 合并（AP-002）；并入 main.ts 末尾，执行顺序不变 |
+| 87 | entry | `js/app/boot-sequence.js` | `src/boot.ts` | verified | 第 0 节通用前置 | 阶段 4.5 迁移；保持 bundle 末尾位置 |
 
 ## 状态流转
 

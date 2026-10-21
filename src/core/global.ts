@@ -25,6 +25,7 @@ interface LeLeTVAdapter {
     };
     storage: unknown;
     ListenerTracker: unknown;
+    AppInit?: unknown;
     showToast(message: string, type?: string, duration?: number): void;
     onReady(fn: () => void): void;
 }
