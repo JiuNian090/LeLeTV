@@ -1,7 +1,14 @@
 // LeLeTV — 播放器详情渲染模块
 // 从 player-ui.js 拆分
 
-function renderPlayerDetailInfo(): void {
+// 阶段 5B-3：状态、详情存储与同层渲染函数改为显式 import。
+import { currentEpisodeIndex, currentVideoTitle, currentVideoUrl, setCurrentVideoTitle } from './state';
+import { escHtml } from './utils';
+import { renderResourceCurrentSource, updateResourceSourceCount } from './ui';
+import { StorageService } from '../../core/storage';
+import { showModal, showToast } from '../toast';
+
+export function renderPlayerDetailInfo(): void {
   var ct = document.getElementById('playerDetailInfo');
   if (!ct) return;
   var metaCt = document.getElementById('detailMetaContainer');
@@ -35,25 +42,25 @@ function renderPlayerDetailInfo(): void {
   if (hasActorOrDesc) ct.classList.add('detail-collapsed');
 }
 
-function toggleDetailInfo(): void {
+export function toggleDetailInfo(): void {
   var ct = document.getElementById('playerDetailInfo');
   if (!ct) return;
   ct.classList.toggle('detail-collapsed');
 }
 
-function toggleEpisodeSection(): void {
+export function toggleEpisodeSection(): void {
   var sec = document.getElementById('episodeSection');
   if (sec) sec.classList.toggle('episode-collapsed');
 }
 
-function updateEpisodeCollapseState(): void {
+export function updateEpisodeCollapseState(): void {
   var sec = document.getElementById('episodeSection');
   if (sec) sec.classList.remove('episode-collapsed');
 }
 
 // 线路切换面板（折叠）：折叠态只显示「线路切换 · 当前源名 · 当前集共 N 个来源」，
 // 展开后由 player-ui.js 扫描全部来源并逐条补上延迟
-function renderResourceInfoBar(): void {
+export function renderResourceInfoBar(): void {
   var countEl = document.getElementById('resourceSourceCount');
   if (!countEl) return;
   if (typeof renderResourceCurrentSource === 'function') renderResourceCurrentSource();
@@ -64,7 +71,7 @@ function renderResourceInfoBar(): void {
   countEl.textContent = '· 当前集共 - 个来源';
 }
 
-function getVideoCover(): string {
+export function getVideoCover(): string {
   try {
     var info = StorageService.getCurrentVideoInfo();
     if (info && typeof info.cover === 'string' && info.cover.indexOf('http') === 0) return info.cover;
@@ -82,7 +89,7 @@ function escTextField(str: unknown): string {
 }
 
 // 编辑标题与简介：m3u8 直链等没有元数据的视频，手动补全后写回详情与观看历史
-function showEditVideoInfoModal(): void {
+export function showEditVideoInfoModal(): void {
   var info: Record<string, unknown> | null = null;
   try { info = StorageService.getCurrentVideoInfo(); } catch (e) { console.warn('[LeLeTV] 读取视频详情失败:', e); }
   info = info || {};
@@ -132,7 +139,7 @@ function showEditVideoInfoModal(): void {
 }
 
 function saveVideoInfoEdits(oldTitle: string, nextTitle: string, nextDesc: string, info: Record<string, unknown>): void {
-  currentVideoTitle = nextTitle;
+  setCurrentVideoTitle(nextTitle);
   try { localStorage.setItem('currentVideoTitle', nextTitle); } catch (e) { /* 忽略 */ }
 
   document.title = nextTitle + ' - LeLeTV播放器';
@@ -195,3 +202,14 @@ Object.assign(window, {
   getVideoCover,
   showEditVideoInfoModal
 });
+
+// 阶段 5B-3 过渡期类型桥：detail.ts 已成为 ESM 模块，index 仍以裸名调用。
+declare global {
+  function renderPlayerDetailInfo(): void;
+  function toggleDetailInfo(): void;
+  function toggleEpisodeSection(): void;
+  function updateEpisodeCollapseState(): void;
+  function renderResourceInfoBar(): void;
+  function getVideoCover(): string;
+  function showEditVideoInfoModal(): void;
+}
