@@ -1,12 +1,72 @@
 // LeLeTV — 播放器核心模块
 // HLS + ArtPlayer + 全屏 + 事件处理
 
+interface HlsInstance {
+    loadSource(url: string): void;
+    attachMedia(video: HTMLVideoElement): void;
+    on(event: string, handler: (...args: never[]) => void): void;
+    startLoad(): void;
+    recoverMediaError(): void;
+    destroy(): void;
+}
+
+interface HlsStatic {
+    new (config: Record<string, unknown>): HlsInstance;
+    isSupported(): boolean;
+    DefaultConfig: { loader: unknown };
+    Events: Record<string, string>;
+    ErrorTypes: Record<string, string>;
+}
+
+interface HlsErrorData {
+    details?: string;
+    fatal?: boolean;
+    type?: string;
+}
+
+interface ArtplayerInstance {
+    on(event: string, handler: (...args: never[]) => void): void;
+    controls: { show: boolean };
+    fullscreen: boolean;
+    currentTime: number;
+    duration: number;
+}
+
+interface ArtplayerStatic {
+    new (options: Record<string, unknown>): ArtplayerInstance;
+    CONTROL_HIDE_TIME: number;
+}
+
+interface FullScreenController {
+    hideControls(): void;
+    showBackBtn(): void;
+    hideBackBtn(): void;
+    resetHideTimer(): void;
+    handleFullScreen(isFullScreen: boolean): void;
+}
+
+interface FailoverApi {
+    markPlaying(): void;
+    watch(art: unknown): void;
+    autoSwitchLine(reason: string): Promise<boolean>;
+}
+
+interface PlayerCoreWindow extends Window {
+    LeLeFailover?: FailoverApi;
+    isSwitchingVideo?: boolean;
+}
+
+declare const Hls: HlsStatic;
+declare const Artplayer: ArtplayerStatic;
+
+const playerCoreWindow = window as PlayerCoreWindow;
+
 /**
  * iOS/iPadOS 判定。
  * iOS 上 Safari / Chrome / Firefox 全部是 WebKit 内核，表现一致；
  * iPadOS 13+ 的 UA 会伪装成 Macintosh，用触点数兜底区分。
  */
-function isIOSDevice() {
+function isIOSDevice(): boolean {
     const ua = navigator.userAgent || '';
     if (/iPhone|iPad|iPod/i.test(ua)) return true;
     return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
@@ -22,7 +82,7 @@ function isIOSDevice() {
  * - 其他平台：有 MSE 仍走 hls.js；没有 MSE 但能原生播 m3u8（如桌面 Safari）
  *   则回退原生，避免和老 iOS 一样卡在加载中。
  */
-function shouldUseNativeHls() {
+function shouldUseNativeHls(): boolean {
     if (isIOSDevice()) return true;
     if (typeof Hls === 'undefined' || !Hls.isSupported()) {
         return !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
@@ -30,7 +90,7 @@ function shouldUseNativeHls() {
     return false;
 }
 
-function createHlsConfig() {
+function createHlsConfig(): Record<string, unknown> {
     return {
         debug: false,
         loader: Hls.DefaultConfig.loader,
@@ -38,12 +98,8 @@ function createHlsConfig() {
         lowLatencyMode: true,                   // 低延迟模式加速起播
         // 坏线路要快点失败，自动换线才接得上：清单 / 分片各只等 6～8s、只重试一次
         manifestLoadingTimeOut: 6000,
-        manifestLoadingMaxRetry: 0,
-        manifestLoadingRetryDelay: 500,
         levelLoadingTimeOut: 6000,
-        levelLoadingMaxRetry: 0,
         fragLoadingTimeOut: 8000,
-        fragLoadingMaxRetry: 2,
         startFragPrefetch: true,                // manifest 加载时预取首个分片（v1.4.0+）
         backBufferLength: 30,                   // 后向缓冲30秒，释放内存
         maxBufferLength: 30,                    // 前向缓冲30秒（约7~8个分片），抗跨境链路抖动
@@ -70,7 +126,7 @@ function createHlsConfig() {
     };
 }
 
-function setupHlsCustomType(video, url, hlsConfig) {
+function setupHlsCustomType(video: HTMLVideoElement, url: string, hlsConfig: Record<string, unknown>): void {
     // 由 PlayerManager 管理 HLS 生命周期
     PlayerManager.setHlsInstance(null);
 
@@ -87,13 +143,13 @@ function setupHlsCustomType(video, url, hlsConfig) {
 
     video.addEventListener('playing', function () {
         playbackStarted = true;
-        if (window.LeLeFailover) window.LeLeFailover.markPlaying();
+        if (playerCoreWindow.LeLeFailover) playerCoreWindow.LeLeFailover.markPlaying();
 
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
         }
-        window.isSwitchingVideo = false;
+        playerCoreWindow.isSwitchingVideo = false;
 
         document.getElementById('error').style.display = 'none';
     });
@@ -119,12 +175,12 @@ function setupHlsCustomType(video, url, hlsConfig) {
     // 之后，会把 hls.js 的设置覆盖掉，导致 MSE 起播失败。
 
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
-        video.play().catch(function (e) {
+        video.play().catch(function (e: Error) {
             console.warn('[LeLeTV] 自动播放被浏览器阻止:', e.message);
         });
     });
 
-    hls.on(Hls.Events.ERROR, function (event, data) {
+    hls.on(Hls.Events.ERROR, function (event: unknown, data: HlsErrorData) {
         errorCount++;
 
         if (data.details === 'bufferAppendError') {
@@ -140,7 +196,7 @@ function setupHlsCustomType(video, url, hlsConfig) {
         if (data.fatal && !playbackStarted) {
             // 起播前线路就坏了：清单取不到（跨域被拦、404、超时）直接换线；分片连着失败两次也换；
             // 换不了（没有别的线路、已换满次数）才走原来的重试与报错
-            const failover = window.LeLeFailover;
+            const failover = playerCoreWindow.LeLeFailover;
             const manifestDead = /^(manifest|level)(Load|Parsing)/.test(data.details || '');
             const fragDead = /^frag(Load|Parsing)/.test(data.details || '') && errorCount >= 2;
             if (failover && data.type === Hls.ErrorTypes.NETWORK_ERROR && (manifestDead || fragDead)) {
@@ -178,7 +234,7 @@ function setupHlsCustomType(video, url, hlsConfig) {
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
         }
-        window.isSwitchingVideo = false;
+        playerCoreWindow.isSwitchingVideo = false;
 
     });
 
@@ -188,12 +244,12 @@ function setupHlsCustomType(video, url, hlsConfig) {
             clearTimeout(episodeSwitchTimeout);
             episodeSwitchTimeout = null;
         }
-        window.isSwitchingVideo = false;
+        playerCoreWindow.isSwitchingVideo = false;
 
     });
 }
 
-function createArtPlayerInstance(videoUrl, hlsConfig) {
+function createArtPlayerInstance(videoUrl: string, hlsConfig: Record<string, unknown>): ArtplayerInstance {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const useNativeHls = shouldUseNativeHls();
 
@@ -235,25 +291,25 @@ function createArtPlayerInstance(videoUrl, hlsConfig) {
         // 不注册 customType.m3u8 时，ArtPlayer 会把 url 直接赋给 <video src>，
         // 交给系统原生 HLS 播放（见 shouldUseNativeHls）。
         customType: useNativeHls ? {} : {
-            m3u8: function (video, url) {
+            m3u8: function (video: HTMLVideoElement, url: string) {
                 setupHlsCustomType(video, url, hlsConfig);
             }
         }
     });
 }
 
-function createFullScreenController() {
-    let hideTimer;
-    let backBtnHideTimer;
+function createFullScreenController(): FullScreenController {
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
+    let backBtnHideTimer: ReturnType<typeof setTimeout> | undefined;
 
-    function hideControls() {
+    function hideControls(): void {
         if (art && art.controls) {
             art.controls.show = false;
         }
         hideBackBtn();
     }
 
-    function showBackBtn() {
+    function showBackBtn(): void {
         const btn = document.querySelector('.player-back-btn');
         if (btn) btn.classList.add('show');
         clearTimeout(backBtnHideTimer);
@@ -262,26 +318,26 @@ function createFullScreenController() {
         }, Artplayer.CONTROL_HIDE_TIME);
     }
 
-    function hideBackBtn() {
+    function hideBackBtn(): void {
         const btn = document.querySelector('.player-back-btn');
         if (btn) btn.classList.remove('show');
         clearTimeout(backBtnHideTimer);
     }
 
-    function resetHideTimer() {
+    function resetHideTimer(): void {
         clearTimeout(hideTimer);
         hideTimer = setTimeout(() => {
             hideControls();
         }, Artplayer.CONTROL_HIDE_TIME);
     }
 
-    function handleMouseOut(e) {
+    function handleMouseOut(e: MouseEvent): void {
         if (e && !e.relatedTarget) {
             resetHideTimer();
         }
     }
 
-    function handleFullScreen(isFullScreen) {
+    function handleFullScreen(isFullScreen: boolean): void {
         const container = document.getElementById('playerContainer');
         if (isFullScreen) {
             container.classList.add('fullscreen-active');
@@ -306,7 +362,7 @@ function createFullScreenController() {
     };
 }
 
-function onPlayerReady(art, fullScreenController) {
+function onPlayerReady(art: ArtplayerInstance, fullScreenController: FullScreenController): void {
     fullScreenController.hideControls();
 
     const playerArea = document.querySelector('.player-layout-left');
@@ -335,29 +391,29 @@ function onPlayerReady(art, fullScreenController) {
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_TERTIARY);
 }
 
-function handleFullScreenChange(art, fullScreenController, isFullScreen) {
+function handleFullScreenChange(art: ArtplayerInstance, fullScreenController: FullScreenController, isFullScreen: boolean): void {
     fullScreenController.handleFullScreen(isFullScreen);
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
 }
 
-function onPlayerRestart(art) {
+function onPlayerRestart(art: ArtplayerInstance): void {
     if (episodeSwitchTimeout) {
         clearTimeout(episodeSwitchTimeout);
         episodeSwitchTimeout = null;
     }
-    window.isSwitchingVideo = false;
+    playerCoreWindow.isSwitchingVideo = false;
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_SECONDARY);
 }
 
-function onVideoLoadedMetadata(art) {
+function onVideoLoadedMetadata(art: ArtplayerInstance): void {
 
     if (episodeSwitchTimeout) {
         clearTimeout(episodeSwitchTimeout);
         episodeSwitchTimeout = null;
     }
-    window.isSwitchingVideo = false;
+    playerCoreWindow.isSwitchingVideo = false;
 
     videoHasEnded = false;
 
@@ -367,7 +423,7 @@ function onVideoLoadedMetadata(art) {
     // （NaN / 0 / Infinity），此时设置 currentTime 会让播放器卡在加载中
     const duration = Number(art.duration);
     const durationKnown = Number.isFinite(duration) && duration > 0;
-    const canRestore = (position) => durationKnown && position > 10 && position < duration - 2;
+    const canRestore = (position: number) => durationKnown && position > 10 && position < duration - 2;
 
     if (canRestore(savedPosition)) {
         art.currentTime = savedPosition;
@@ -377,7 +433,7 @@ function onVideoLoadedMetadata(art) {
             const progressKey = 'videoProgress_' + getVideoId();
             const progressStr = localStorage.getItem(progressKey);
             if (progressStr) {
-                const progress = JSON.parse(progressStr);
+                const progress = JSON.parse(progressStr) as { position?: unknown };
                 if (progress && typeof progress.position === 'number' && canRestore(progress.position)) {
                     art.currentTime = progress.position;
                     showPositionRestoreHint(progress.position);
@@ -394,21 +450,21 @@ function onVideoLoadedMetadata(art) {
     updateMediaSession();
 }
 
-function onVideoError(error) {
-    if (window.isSwitchingVideo) {
+function onVideoError(error: { message?: string }): void {
+    if (playerCoreWindow.isSwitchingVideo) {
         return;
     }
 
     showError('视频播放失败: ' + (error.message || '未知错误'));
 }
 
-function syncMediaSessionState(state) {
+function syncMediaSessionState(state: MediaSessionPlaybackState): void {
     if (navigator.mediaSession) {
         navigator.mediaSession.playbackState = state;
     }
 }
 
-function onVideoEnded(art) {
+function onVideoEnded(art: ArtplayerInstance): void {
     videoHasEnded = true;
 
     clearVideoProgress();
@@ -423,16 +479,16 @@ function onVideoEnded(art) {
     }
 }
 
-function setupPlayerEventListeners(art, fullScreenController) {
+function setupPlayerEventListeners(art: ArtplayerInstance, fullScreenController: FullScreenController): void {
     art.on('ready', () => {
         onPlayerReady(art, fullScreenController);
     });
 
-    art.on('fullscreenWeb', function (isFullScreen) {
+    art.on('fullscreenWeb', function (isFullScreen: boolean) {
         handleFullScreenChange(art, fullScreenController, isFullScreen);
     });
 
-    art.on('fullscreen', function (isFullScreen) {
+    art.on('fullscreen', function (isFullScreen: boolean) {
         // 浏览器全屏 API（requestFullscreen）由浏览器管理全屏元素
         // 不切换 fullscreen-active，避免 main.container display:none 影响恢复
         // 只需处理下一集按钮
@@ -444,11 +500,11 @@ function setupPlayerEventListeners(art, fullScreenController) {
         onPlayerRestart(art);
     });
 
-    art.on('video:loadedmetadata', function() {
+    art.on('video:loadedmetadata', function () {
         onVideoLoadedMetadata(art);
     });
 
-    art.on('video:error', function (error) {
+    art.on('video:error', function (error: { message?: string }) {
         onVideoError(error);
     });
 
@@ -469,9 +525,10 @@ function setupPlayerEventListeners(art, fullScreenController) {
  * 监听浏览器原生全屏变化（区别于 ArtPlayer 的 fullscreen/fullscreenWeb）
  * 用于在华为等浏览器原生视频播放器全屏时关闭高耗 CSS 效果，防止卡顿和屏闪
  */
-function setupNativeFullscreenHandler() {
-    function onNativeFullScreenChange() {
-        const fsElement = document.fullscreenElement || document.webkitFullscreenElement;
+function setupNativeFullscreenHandler(): void {
+    function onNativeFullScreenChange(): void {
+        const fsElement = document.fullscreenElement
+            || (document as Document & { webkitFullscreenElement?: Element | null }).webkitFullscreenElement;
         const isNativeFullscreen = !!fsElement;
 
         // 排除 ArtPlayer 自身的全屏：ArtPlayer 在播放器容器上调用 requestFullscreen
@@ -489,7 +546,7 @@ function setupNativeFullscreenHandler() {
     document.addEventListener('webkitfullscreenchange', onNativeFullScreenChange);
 }
 
-function initPlayer(videoUrl) {
+function initPlayer(videoUrl: string): void {
     if (!videoUrl) {
         return
     }
@@ -501,7 +558,7 @@ function initPlayer(videoUrl) {
 
     art = createArtPlayerInstance(videoUrl, hlsConfig);
     PlayerManager.setInstance(art);
-    if (window.LeLeFailover) window.LeLeFailover.watch(art);
+    if (playerCoreWindow.LeLeFailover) playerCoreWindow.LeLeFailover.watch(art);
 
     const fullScreenController = createFullScreenController();
 
