@@ -435,10 +435,11 @@ function showSourceImportConfirm(parsed: ParsedSourceList): void {
                 </div>
             `;
             // 摘要只含数字与固定文案，用 textContent 避免任何注入面
-            body.querySelector('.v2-confirm-text').textContent = summary;
+            const summaryEl = body.querySelector('.v2-confirm-text');
+            if (summaryEl) summaryEl.textContent = summary;
 
-            body.querySelector('[data-role="cancel"]').addEventListener('click', () => modal.remove());
-            body.querySelector('[data-role="confirm"]').addEventListener('click', () => {
+            body.querySelector('[data-role="cancel"]')?.addEventListener('click', () => modal.remove());
+            body.querySelector('[data-role="confirm"]')?.addEventListener('click', () => {
                 modal.remove();
                 const result = applyImportedSources(parsed.sources);
                 const parts: string[] = [];

@@ -140,6 +140,7 @@ export function resetDataSourceLogic(): void {
 // 初始化API复选框
 export function initAPICheckboxes(): void {
     const container = document.getElementById('apiCheckboxes');
+    if (!container) return;
 
     // 强制重新创建所有UI元素，确保每次刷新都能更新
     container.innerHTML = '';
@@ -188,10 +189,11 @@ export function initAPICheckboxes(): void {
             <span class="v2-switch" aria-hidden="true"></span>
             <span class="v2-src-name"></span>
         `;
-        checkbox.querySelector('.v2-src-name').textContent = api.name;
+        const nameEl = checkbox.querySelector('.v2-src-name');
+        if (nameEl) nameEl.textContent = api.name;
         normaldiv.appendChild(checkbox);
 
-        checkbox.querySelector('[data-role="api-toggle"]').addEventListener('change', function () {
+        checkbox.querySelector('[data-role="api-toggle"]')?.addEventListener('change', function () {
             updateSelectedAPIs();
             checkHiddenAPIsSelected();
         });
@@ -340,7 +342,7 @@ export function renderCustomAPIsList(): void {
             </div>
         `;
         container.appendChild(apiItem);
-        apiItem.querySelector('[data-role="api-toggle"]').addEventListener('change', function () {
+        apiItem.querySelector('[data-role="api-toggle"]')?.addEventListener('change', function () {
             updateSelectedAPIs();
             checkHiddenAPIsSelected();
         });
@@ -396,7 +398,7 @@ export function updateCustomApi(index: number): void {
     urlInput.value = '';
     if (detailInput) detailInput.value = '';
     if (isHiddenInput) isHiddenInput.checked = false;
-    document.getElementById('addCustomApiForm').classList.add('hidden');
+    document.getElementById('addCustomApiForm')?.classList.add('hidden');
     showToast('已保存：' + name, 'success');
 }
 
@@ -410,7 +412,7 @@ export function cancelEditCustomApi(): void {
     if (isHiddenInput) isHiddenInput.checked = false;
 
     // 隐藏表单
-    document.getElementById('addCustomApiForm').classList.add('hidden');
+    document.getElementById('addCustomApiForm')?.classList.add('hidden');
 
     // 恢复添加按钮
     restoreAddCustomApiButtons();
@@ -419,7 +421,9 @@ export function cancelEditCustomApi(): void {
 // 恢复自定义API添加按钮
 function restoreAddCustomApiButtons(): void {
     const form = document.getElementById('addCustomApiForm');
-    const buttonContainer = form.querySelector('div:last-child') as HTMLElement;
+    if (!form) return;
+    const buttonContainer = form.querySelector('div:last-child') as HTMLElement | null;
+    if (!buttonContainer) return;
     buttonContainer.innerHTML = `
         <button type="button" data-action="cancel-add-custom-api" class="v2-btn v2-btn--secondary v2-btn--sm">取消</button>
         <button type="button" data-action="add-custom-api" class="v2-btn v2-btn--primary v2-btn--sm">添加</button>
@@ -537,7 +541,7 @@ export function addCustomApi(): void {
     urlInput.value = '';
     if (detailInput) detailInput.value = '';
     if (isHiddenInput) isHiddenInput.checked = false;
-    document.getElementById('addCustomApiForm').classList.add('hidden');
+    document.getElementById('addCustomApiForm')?.classList.add('hidden');
     showToast('已添加：' + name, 'success');
 }
 
