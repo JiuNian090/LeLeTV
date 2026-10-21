@@ -135,29 +135,29 @@ ui/player/episodes.ts     <-> ui/player/ui.ts
 - 结果：core 51.4 → 47.8 KB，首屏 core+app 267.2 → 263.5 KB；首页 / 分类 / 设置 / 播放页回归通过。
 - 教训：`declare function`（仅类型声明）不是本文件实现，不能进兼容桥。
 
-### 5A-4. services 层 ESM 化（15 文件）
+### 5A-4. app bundle ESM 化（30 文件）
 
-- 同样逐个加 `export`；`sources/*`、`tmdb`、`search`、`api`、`invitation` 等注意与 `core/config` 的双向引用（5A 阶段允许保留）。
+- **状态：已完成（commit `7e317ff`）**。实际范围是 app bundle 的 30 个文件（services / ui / pages / router / main 混合），原「按层迁移」合并为「按 bundle 迁移」。
+- 14 个文件补 `window` 桥；`selectedAPIs`、`_moviesState`、`_activeSourceFilter`、`AppInit` 等可变状态用 getter/setter 同步。
+- 结果：app 215.6 → 190.7 KB，首屏 263.5 → 238.4 KB；首页 / 搜索 / 分类 / 设置 / 播放页回归通过。
 
-### 5A-5. ui 层 ESM 化（17 文件）
+### 5A-5. settings bundle ESM 化（3 文件）
 
-- 先 `toast` / `modals` / `motion-pref` / `layout-pref` / `pwa-install` 等低耦合项；player 子目录最后。
+- 范围：`src/services/theme.ts`、`src/pages/settings/admin-panel.ts`、`src/pages/settings/user-devices.ts`。
+- 沿用 5A-3/5A-4 模式：扫描对外符号 → 补桥 → `esm: true`。
+- 按需 bundle，不影响首屏。
 
-### 5A-6. pages 层 ESM 化（20 文件）
+### 5A-6. player bundle ESM 化（14 文件）
 
-- 页面入口保持「片段插入后初始化」的现有契约。
+- 范围：`src/ui/player/*` 与 `api` / `search` / `viewing-history` / `version-updater` / `cache`。
+- 注意 player 与 app 的交叉引用（`playDirectly` / `currentEpisodeIndex` 等），桥接需同时覆盖裸名与 `window.*`。
+- 验证：播放页起播、选集、线路切换、返回。
 
-### 5A-7. router / boot / main ESM 化
+### 5A-7. 构建全量收尾
 
-- `router/index.ts`、`router/page-loader.ts`、`router/prefetch.ts`、`boot.ts`、`main.ts`。
-- 这一步完成后，58 个文件均有 `export`。
-
-### 5A-8. 构建全量切换（单入口 `esbuild.build`）
-
-- `build.config.js` 增加 `entry` 字段，`files` 保留为过渡期的 import 顺序清单。
-- 全部 bundle 改为 `esbuild.build({ bundle: true, format: 'iife' })`（暂不 splitting）。
+- 5 个 bundle 全部走 `esbuild.build` 后，移除 `esm` 标记与 concat 分支。
+- `build.config.js` 的 `files` 保留为顺序清单（供 analyze / 兼容）。
 - HTML 引用逻辑不变；产物文件名仍带 hash。
-- 验证：bundle 体积、首屏预算、页面 reload、player 页。
 
 ### 5B-1. 共享状态抽离
 
