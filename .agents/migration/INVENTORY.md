@@ -390,7 +390,7 @@
 | 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
 | 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | pending | — |
 | 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
-| 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | pending | — |
+| 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | verified | IIFE 原样迁移，LeLeThemeStore / LeLeThemeSystem 接口不变 |
 | 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
 | 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
 | 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | verified | 公开函数名保持不变，历史分组与播放跳转逻辑原样迁移 |
@@ -485,6 +485,7 @@
 | 388 | `src/services/search-history.ts` | 搜索历史读写与下拉渲染（迁移自 `js/ui/ui-search-history.js`） | keep | — | — | — | done | 阶段 4 第 19 条迁移目标 |
 | 389 | `src/services/search.ts` | 跨源聚合搜索与结果缓存（迁移自 `js/api/search.js`） | keep | — | — | — | done | 阶段 4 第 20 条迁移目标 |
 | 390 | `src/services/viewing-history.ts` | 观看历史读写与历史页渲染（迁移自 `js/ui/ui-viewing-history.js`） | keep | — | — | — | done | 阶段 4 第 21 条迁移目标 |
+| 391 | `src/services/theme.ts` | 主题配色、色盘与换色过渡（迁移自 `js/ui/theme-system.js`） | keep | — | — | — | done | 阶段 4 第 22 条迁移目标 |
 
 ## workers/（红区）
 

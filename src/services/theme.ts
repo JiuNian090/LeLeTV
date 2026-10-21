@@ -16,8 +16,112 @@
  * 刷新时的首帧由 index.html / player.html 的 head 内联脚本先行应用：主色按同一套算法现算，
  * 派生变量直接读存档（避免先闪默认色再切到目标色），改动主色派生算法时三处需同步。
  */
+
+interface ThemePresetColor {
+    name: string;
+    hex: string;
+}
+
+interface ThemePreset {
+    key: string;
+    name: string;
+    main: ThemePresetColor | null;
+    aux: ThemePresetColor | null;
+    bg?: string;
+    word?: 'main' | 'aux';
+    blush?: 'aux';
+}
+
+interface ThemePalette {
+    hex: string;
+    rgb: number[];
+    ramp: number[][];
+    p300: string;
+    p400: string;
+    p600: string;
+}
+
+interface ThemeVars {
+    [key: string]: string;
+}
+
+interface Theme {
+    key: string;
+    pal: ThemePalette;
+    aux: string;
+    vars: ThemeVars;
+}
+
+interface ThemeState {
+    key: string;
+    hex: string;
+    aux: string;
+    vars: ThemeVars | null;
+}
+
+interface PickerState {
+    el: HTMLElement;
+    swatch: HTMLElement;
+    name: HTMLElement;
+    hexText: HTMLElement;
+    rampRow: HTMLElement;
+    ramp: HTMLElement;
+    rampAux: HTMLElement;
+    rampLabel: HTMLElement;
+    rampAuxLabel: HTMLElement;
+    plane: HTMLElement;
+    planeDot: HTMLElement;
+    hue: HTMLElement;
+    hueDot: HTMLElement;
+    rgbBox: HTMLElement;
+    r: HTMLInputElement;
+    g: HTMLInputElement;
+    b: HTMLInputElement;
+    hexBox: HTMLElement;
+    hexInput: HTMLInputElement;
+    custom: boolean;
+    presetKey: string;
+    presetName: string;
+    presetHex?: string;
+    auxHex: string;
+    auxBaseHex: string;
+    h: number;
+    s: number;
+    v: number;
+}
+
+interface BurstParticle {
+    a0: number;
+    r0: number;
+    ring: number;
+    r1: number;
+    swirl: number;
+    size: number;
+    delay: number;
+}
+
+interface ThemeWindow extends Window {
+    LeLeThemeStore?: { KEYS: string[]; isKey: (key: string) => boolean };
+    LeLeThemeSystem?: { render: () => void };
+    LeLeMotion?: { reduced: () => boolean };
+    LeLeBrandCanvas?: {
+        draw: (
+            ctx: CanvasRenderingContext2D,
+            x: number,
+            y: number,
+            size: number,
+            rgb: number[],
+            alpha: number,
+            scale: number
+        ) => boolean;
+    };
+    _themeRgbCache?: number[] | null;
+}
+
 (function () {
     'use strict';
+
+    const themeWindow = window as ThemeWindow;
 
     // ===================== 常量 =====================
 
@@ -28,7 +132,7 @@
 
     // 键名对外暴露一份，供设置项的导入/导出等模块复用（键名在这里是唯一来源，
     // 免得别处再抄一遍字符串、两边不同步）
-    window.LeLeThemeStore = {
+    themeWindow.LeLeThemeStore = {
         KEYS: [KEY_NORMAL, KEY_HIDDEN],
         isKey: function (key) { return key === KEY_NORMAL || key === KEY_HIDDEN; }
     };
@@ -44,7 +148,7 @@
      *   word：导航字标颜色，'main' 取主色、'aux' 取辅助色，缺省取主色的浅色
      *   blush：主色浅色的替代值，'aux' 表示直接用辅助色（樱花白本就是霓虹粉的浅色）
      */
-    var PRESETS = [
+    var PRESETS: ThemePreset[] = [
         { key: 'neon', name: '霓虹夜场', main: { name: '霓虹粉', hex: '#EC4899' }, aux: { name: '樱花白', hex: '#FFE4F1' }, bg: '#0A0A0B', word: 'aux', blush: 'aux' },
         { key: 'screening', name: '私人放映厅', main: { name: '黄铜金', hex: '#F0B862' }, aux: { name: '丝绒红', hex: '#6E1F38' }, bg: '#0E0B0A', word: 'main' },
         { key: 'aurora', name: '极光穹顶', main: { name: '极光紫', hex: '#8B7BFF' }, aux: { name: '极光青', hex: '#46E3D0' }, bg: '#07070F' },
@@ -67,7 +171,7 @@
     // 除主色外，由配色派生、写在 <html> 行内样式上的变量（首帧脚本按同一份名单读存档）
     var EXTRA_VARS = ['--v2-blush', '--v2-word', '--v2-aux', '--v2-aux-rgb', '--v2-glow-2', '--v2-tile', '--v2-on-accent', '--v2-bg'];
 
-    function presetOf(key) {
+    function presetOf(key: string): ThemePreset | null {
         for (var i = 0; i < PRESETS.length; i++) {
             if (PRESETS[i].key === key) return PRESETS[i];
         }
@@ -95,10 +199,10 @@
 
     // ===================== 颜色工具 =====================
 
-    function clamp(v, min, max) { return v < min ? min : (v > max ? max : v); }
+    function clamp(v: number, min: number, max: number): number { return v < min ? min : (v > max ? max : v); }
 
     /** 十六进制（#rgb / #rrggbb）→ [r, g, b]，非法值返回 null */
-    function hexToRgb(hex) {
+    function hexToRgb(hex: unknown): number[] | null {
         var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex == null ? '' : hex).trim());
         if (!m) return null;
         var h = m[1];
@@ -106,14 +210,14 @@
         return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
     }
 
-    function rgbToHex(rgb) {
+    function rgbToHex(rgb: number[]): string {
         return '#' + rgb.map(function (v) {
             return clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0');
         }).join('');
     }
 
     /** [r, g, b] → [h(0-360), s(0-1), v(0-1)] */
-    function rgbToHsv(rgb) {
+    function rgbToHsv(rgb: number[]): number[] {
         var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
         var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
         var h = 0;
@@ -127,7 +231,7 @@
     }
 
     /** [h(0-360), s(0-1), v(0-1)] → [r, g, b]（0-255 浮点） */
-    function hsvToRgb(h, s, v) {
+    function hsvToRgb(h: number, s: number, v: number): number[] {
         h = ((h % 360) + 360) % 360;
         var c = v * s;
         var x = c * (1 - Math.abs(((h / 60) % 2) - 1));
@@ -143,7 +247,7 @@
     }
 
     /** [r, g, b] → [h(0-360), s(0-100), l(0-100)] */
-    function rgbToHsl(rgb) {
+    function rgbToHsl(rgb: number[]): number[] {
         var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
         var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
         var l = (mx + mn) / 2, d = mx - mn;
@@ -159,7 +263,7 @@
     }
 
     /** [h(0-360), s(0-100), l(0-100)] → [r, g, b]（0-255 浮点） */
-    function hslToRgb(h, s, l) {
+    function hslToRgb(h: number, s: number, l: number): number[] {
         h = ((h % 360) + 360) % 360;
         s /= 100;
         l /= 100;
@@ -181,8 +285,10 @@
      * 只调整亮度、保留原色相与饱和度：无彩色主色（灰色系）自然得到灰阶，
      * 彩色主色则得到与霓虹粉同構的明度层次。
      */
-    function buildPalette(hex) {
-        var rgb = hexToRgb(hex) || hexToRgb(presetOf(DEFAULT_KEY).main.hex);
+    function buildPalette(hex: string): ThemePalette {
+        var fallbackPreset = presetOf(DEFAULT_KEY);
+        var fallbackHex = (fallbackPreset && fallbackPreset.main) ? fallbackPreset.main.hex : '#EC4899';
+        var rgb = hexToRgb(hex) || hexToRgb(fallbackHex) || [236, 72, 153];
         var hsl = rgbToHsl(rgb);
         var h = hsl[0];
         var s = clamp(hsl[1], 0, 100);
@@ -200,26 +306,26 @@
     }
 
     /** WCAG 相对亮度 */
-    function relLum(rgb) {
-        var f = function (v) {
+    function relLum(rgb: number[]): number {
+        var f = function (v: number) {
             v /= 255;
             return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
         };
         return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
     }
 
-    function contrastRatio(a, b) {
+    function contrastRatio(a: number[], b: number[]): number {
         var x = relLum(a), y = relLum(b);
         return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
     }
 
     /** 两色按比例混合，t 为 a 的占比 */
-    function mixRgb(a, b, t) {
+    function mixRgb(a: number[], b: number[], t: number): number[] {
         return [0, 1, 2].map(function (i) { return a[i] * t + b[i] * (1 - t); });
     }
 
     /** 自定义主色没有配套的辅助色：取主色的浅色，和霓虹粉 / 樱花白的关系一致 */
-    function defaultAuxFor(pal, preset) {
+    function defaultAuxFor(pal: ThemePalette, preset: ThemePreset | null): string {
         if (preset && preset.aux) return preset.aux.hex;
         return rgbToHex(mixRgb(pal.rgb, [255, 255, 255], 0.16));
     }
@@ -234,8 +340,8 @@
      *   --v2-on-accent  主色按钮上的文字：白字对比度不到 3:1（黄铜金、萤火绿这类浅色）改用深色字
      *   --v2-bg         页面底色
      */
-    function deriveVars(pal, auxHex, preset) {
-        var aux = hexToRgb(auxHex) || hexToRgb(defaultAuxFor(pal, preset));
+    function deriveVars(pal: ThemePalette, auxHex: string, preset: ThemePreset | null): ThemeVars {
+        var aux = hexToRgb(auxHex) || hexToRgb(defaultAuxFor(pal, preset)) || [255, 228, 241];
         var auxRgb = aux.map(function (v) { return Math.round(v); });
         var auxL = relLum(aux);
         var blush = (preset && preset.blush === 'aux') ? rgbToHex(aux) : rgbToHex(mixRgb(pal.rgb, [255, 255, 255], 0.18));
@@ -244,7 +350,7 @@
         else if (preset && preset.word === 'aux') word = rgbToHex(aux);
         var glowA = clamp(0.15 + (0.35 - auxL) * 0.6, 0.15, 0.36);
         var tile = mixRgb(aux, TILE_BASE, clamp(0.5 - auxL * 1.1, 0.1, 0.5));
-        var btnMid = mixRgb(hexToRgb(pal.p400), hexToRgb(pal.p600), 0.5);
+        var btnMid = mixRgb(hexToRgb(pal.p400) || [0, 0, 0], hexToRgb(pal.p600) || [0, 0, 0], 0.5);
         return {
             '--v2-blush': blush.toUpperCase(),
             '--v2-word': word.toUpperCase(),
@@ -258,7 +364,7 @@
     }
 
     /** 一套完整配色：{ key, pal（主色派生）, aux, vars（其余派生变量） } */
-    function buildTheme(key, mainHex, auxHex) {
+    function buildTheme(key: string, mainHex: string, auxHex: string): Theme {
         var preset = presetOf(key);
         var pal = buildPalette(mainHex);
         var auxRgb = hexToRgb(auxHex);
@@ -268,7 +374,7 @@
 
     // ===================== 应用 / 清除主题变量 =====================
 
-    function applyTheme(theme) {
+    function applyTheme(theme: Theme): void {
         applyPalette(theme.pal);
         var st = document.documentElement.style;
         EXTRA_VARS.forEach(function (name) {
@@ -278,15 +384,15 @@
     }
 
     /** 把派生色写进 <html> 的行内样式：行内样式优先级高于 css 的 html[data-hidden-mode] 规则 */
-    function applyPalette(pal) {
+    function applyPalette(pal: ThemePalette): void {
         var st = document.documentElement.style;
         st.setProperty('--color-primary', pal.hex);
         st.setProperty('--color-primary-rgb', pal.rgb.join(', '));
         st.setProperty('--color-primary-300', pal.p300);
         st.setProperty('--color-primary-400', pal.p400);
-        st.setProperty('--color-primary-400-rgb', hexToRgb(pal.p400).join(', '));
+        st.setProperty('--color-primary-400-rgb', (hexToRgb(pal.p400) || [0, 0, 0]).join(', '));
         st.setProperty('--color-primary-600', pal.p600);
-        st.setProperty('--color-primary-600-rgb', hexToRgb(pal.p600).join(', '));
+        st.setProperty('--color-primary-600-rgb', (hexToRgb(pal.p600) || [0, 0, 0]).join(', '));
         RAMP_STOPS.forEach(function (stop, i) {
             st.setProperty('--tw-pink-' + stop + '-rgb', pal.ramp[i].map(function (v) {
                 return Math.round(v);
@@ -295,7 +401,7 @@
     }
 
     /** 撤掉覆盖，回落到 css 的默认色（正常 = 霓虹夜场，私密 = 铜色） */
-    function clearPalette() {
+    function clearPalette(): void {
         var st = document.documentElement.style;
         BASE_VARS.concat(RAMP_STOPS_SET, EXTRA_VARS).forEach(function (name) {
             st.removeProperty(name);
@@ -303,7 +409,7 @@
     }
 
     /** 当前主色（取 CSS 变量的真实值，取不到时回落到霓虹粉） */
-    function readPrimaryRgb() {
+    function readPrimaryRgb(): number[] {
         try {
             var v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary-rgb').trim();
             var parts = v.split(',').map(function (n) { return parseInt(n, 10); });
@@ -314,22 +420,22 @@
 
     // ===================== 持久化（按模式各存一套） =====================
 
-    function isHiddenMode() {
+    function isHiddenMode(): boolean {
         try { return document.documentElement.hasAttribute(MODE_ATTR); } catch (e) { return false; }
     }
 
-    function storageKey() { return isHiddenMode() ? KEY_HIDDEN : KEY_NORMAL; }
+    function storageKey(): string { return isHiddenMode() ? KEY_HIDDEN : KEY_NORMAL; }
 
     /**
      * 读取当前模式已保存的配色：{ key, hex, aux, vars }；从未设置过返回 null。
      * 旧版存档只有 { key, hex }，且色系已换成配色方案：撤下的旧色系（红色系、棕褐色系……）
      * 保留用户选过的颜色，归到「自定义」。
      */
-    function loadState() {
+    function loadState(): ThemeState | null {
         try {
             var raw = localStorage.getItem(storageKey());
             if (!raw) return null;
-            var st = JSON.parse(raw);
+            var st = JSON.parse(raw) as Record<string, unknown>;
             var rgb = st && hexToRgb(st.hex);
             if (!rgb) return null;
             var key = String(st.key || 'custom');
@@ -339,12 +445,12 @@
                 key: key,
                 hex: rgbToHex(rgb),
                 aux: auxRgb ? rgbToHex(auxRgb) : '',
-                vars: (st.vars && typeof st.vars === 'object') ? st.vars : null
+                vars: (st.vars && typeof st.vars === 'object') ? st.vars as ThemeVars : null
             };
         } catch (e) { return null; }
     }
 
-    function saveTheme(theme) {
+    function saveTheme(theme: Theme): void {
         try {
             localStorage.setItem(storageKey(), JSON.stringify({
                 key: theme.key,
@@ -355,12 +461,12 @@
         } catch (e) { /* 隐私模式等场景忽略 */ }
     }
 
-    function clearState() {
+    function clearState(): void {
         try { localStorage.removeItem(storageKey()); } catch (e) { /* 忽略 */ }
     }
 
     /** 已保存配色对应的完整主题；没存过返回 null */
-    function savedTheme() {
+    function savedTheme(): Theme | null {
         var saved = loadState();
         return saved ? buildTheme(saved.key, saved.hex, saved.aux) : null;
     }
@@ -368,21 +474,21 @@
     // ===================== 配色卡片 =====================
 
     /** 色盘显示的主色：自定义且没存过自定义色时用彩虹占位 */
-    function discColorOf(preset) {
+    function discColorOf(preset: ThemePreset): string {
         if (preset.key !== 'custom') return preset.main.hex;
         var saved = loadState();
         return (saved && saved.key === 'custom') ? saved.hex : CUSTOM_PLACEHOLDER;
     }
 
     /** 色盘显示的辅助色：自定义且没存过时留空，让主色占满整圆 */
-    function auxColorOf(preset) {
+    function auxColorOf(preset: ThemePreset): string {
         if (preset.key !== 'custom') return preset.aux.hex;
         var saved = loadState();
         return (saved && saved.key === 'custom' && saved.aux) ? saved.aux : 'transparent';
     }
 
     /** 方案卡片第二行：预设写主色名与辅助色名；自定义写已存的色值，没存过就提示可自选 */
-    function subtitleOf(preset) {
+    function subtitleOf(preset: ThemePreset): string {
         if (preset.main) return preset.main.name + ' · ' + preset.aux.name;
         var saved = loadState();
         if (saved && saved.key === 'custom') return saved.hex.toUpperCase() + (saved.aux ? ' · ' + saved.aux.toUpperCase() : '');
@@ -390,7 +496,7 @@
     }
 
     /** 方案卡片的颜色：大圆是主色，右下角的小圆是辅助色；没有辅助色（自定义未设置）时只画主色 */
-    function paintScheme(btn, preset) {
+    function paintScheme(btn: HTMLElement, preset: ThemePreset): void {
         var aux = auxColorOf(preset);
         btn.style.setProperty('--disc-color', discColorOf(preset));
         btn.style.setProperty('--disc-aux', aux);
@@ -399,7 +505,7 @@
         if (sub) sub.textContent = subtitleOf(preset);
     }
 
-    function renderCard() {
+    function renderCard(): void {
         var grid = document.getElementById('themeDiscGrid');
         if (!grid) return;
         grid.textContent = ''; // 内容全部由代码生成（无用户输入），先清空避免重复渲染
@@ -434,18 +540,18 @@
     }
 
     /** 高亮当前生效的配色（从未设置过时，正常模式与默认配色算作选中） */
-    function syncSelection() {
+    function syncSelection(): void {
         var grid = document.getElementById('themeDiscGrid');
         if (!grid) return;
         var saved = loadState();
         var activeKey = saved ? saved.key : (isHiddenMode() ? '' : DEFAULT_KEY);
-        Array.prototype.forEach.call(grid.querySelectorAll('.theme-scheme'), function (btn) {
+        Array.prototype.forEach.call(grid.querySelectorAll('.theme-scheme'), function (btn: HTMLElement) {
             var on = btn.getAttribute('data-theme-key') === activeKey;
             btn.classList.toggle('is-active', on);
             btn.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
-        var custom = grid.querySelector('.theme-scheme[data-theme-key="custom"]');
-        if (custom) paintScheme(custom, presetOf('custom'));
+        var custom = grid.querySelector('.theme-scheme[data-theme-key="custom"]') as HTMLElement | null;
+        if (custom) paintScheme(custom, presetOf('custom') as ThemePreset);
         var reset = document.getElementById('themeResetBtn');
         if (reset) reset.hidden = !saved;
     }
@@ -467,12 +573,12 @@
     var RING_OUT = 1.55;         // 星环外径 / 基准半径
     var RING_SPIN = 0.00025;     // 星环整体缓慢自转（弧度/毫秒）
 
-    function reducedMotion() {
-        if (window.LeLeMotion) return window.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
+    function reducedMotion(): boolean {
+        if (themeWindow.LeLeMotion) return themeWindow.LeLeMotion.reduced();   // 设置里可强制开启 / 关闭
         try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
     }
 
-    function playThemeBurst(oldRgb, newRgb, switchTheme, onDone) {
+    function playThemeBurst(oldRgb: number[], newRgb: number[], switchTheme: () => void, onDone?: () => void): void {
         var done = function () { if (onDone) onDone(); };
         if (reducedMotion()) { switchTheme(); done(); return; }
 
@@ -496,7 +602,7 @@
         var brandSize = clamp(w * 0.15, 26, 82);   // 与首屏占位字样的 clamp(26px, 15vw, 82px) 对齐
         var ringBase = brandSize * 1.5;            // 与加载动画 drawRing 的 brandRadius 同值
         var count = clamp(Math.round((w * h) / 2000), 320, 900);
-        var parts = [];
+        var parts: BurstParticle[] = [];
         for (var i = 0; i < count; i++) {
             var rnd = Math.random();
             parts.push({
@@ -515,7 +621,7 @@
         var total = burstAt + PHASE_BURST_MS + PHASE_FADE_MS;
         var start = 0, switched = false, useRgb = oldRgb;
 
-        function frame(now) {
+        function frame(now: number): void {
             if (!start) start = now;
             var t = now - start;
             ctx.clearRect(0, 0, w, h);
@@ -536,7 +642,7 @@
 
             for (var i = 0; i < parts.length; i++) {
                 var q = parts[i];
-                var lp, le, r, alpha, a;
+                var lp: number, le: number, r: number, alpha: number, a: number;
                 // 每颗粒子有自己的环半径：在内径与外径之间铺开，环带所以有厚度、外围也更散
                 var ringR = q.ring * ringBase;
                 // 三段共用同一套角度：起始角 + 一点旋进 + 整体自转。
@@ -587,10 +693,10 @@
         }
 
         /** 中心 logo：圆角方块里的乐字 + 字标（brand-canvas.js，路径取自页面的品牌 sprite）；取不到 sprite 时退回文字 */
-        function drawBrand(alpha, scale) {
-            var brand = window.LeLeBrandCanvas;
+        function drawBrand(alpha: number, scale: number): void {
+            var brand = themeWindow.LeLeBrandCanvas;
             if (brand && brand.draw(ctx, cx, cy, brandSize * 1.1, useRgb, alpha, scale)) return;
-            var rgba = function (v) { return 'rgba(' + useRgb[0] + ',' + useRgb[1] + ',' + useRgb[2] + ',' + v + ')'; };
+            var rgba = function (v: number) { return 'rgba(' + useRgb[0] + ',' + useRgb[1] + ',' + useRgb[2] + ',' + v + ')'; };
             ctx.save();
             ctx.globalAlpha = alpha;
             ctx.translate(cx, cy);
@@ -619,22 +725,22 @@
     }
 
     /** app-routing.js 在模块顶层缓存了主题色；换色后置空，让它的粒子下次重新读取新色 */
-    function resetParticleThemeCache() {
-        try { if (window._themeRgbCache !== undefined) window._themeRgbCache = null; } catch (e) { /* 忽略 */ }
+    function resetParticleThemeCache(): void {
+        try { if (themeWindow._themeRgbCache !== undefined) themeWindow._themeRgbCache = null; } catch (e) { /* 忽略 */ }
     }
 
     // ===================== Popover ColorPicker =====================
 
-    var _picker = null;
-    var _dragging = null;
-    var _dragCleanup = null;
+    var _picker: PickerState | null = null;
+    var _dragging: string | null = null;
+    var _dragCleanup: (() => void) | null = null;
     var _busy = false; // 过渡动画进行中：忽略重复提交
     var _openedAt = 0; // 气泡打开的时刻：滚动事件是异步派发的，点击前那下滚动可能在打开之后才到，得放过
 
-    function currentPickerRgb() { return hsvToRgb(_picker.h, _picker.s, _picker.v); }
-    function currentPickerHex() { return rgbToHex(currentPickerRgb()); }
+    function currentPickerRgb(): number[] { return hsvToRgb(_picker.h, _picker.s, _picker.v); }
+    function currentPickerHex(): string { return rgbToHex(currentPickerRgb()); }
 
-    function ensurePicker() {
+    function ensurePicker(): PickerState {
         if (_picker) return _picker;
 
         var el = document.createElement('div');
@@ -676,16 +782,18 @@
             '</div>';
         document.body.appendChild(el);
 
-        var q = function (role) { return el.querySelector('[data-role="' + role + '"]'); };
-        var p = {
+        var q = function <T extends HTMLElement>(role: string): T {
+            return el.querySelector('[data-role="' + role + '"]') as T;
+        };
+        var p: PickerState = {
             el: el,
             swatch: q('swatch'), name: q('name'), hexText: q('hex'),
             rampRow: q('rampRow'), ramp: q('ramp'), rampAux: q('rampAux'),
             rampLabel: q('rampLabel'), rampAuxLabel: q('rampAuxLabel'),
             plane: q('plane'), planeDot: q('planeDot'),
             hue: q('hue'), hueDot: q('hueDot'),
-            rgbBox: q('rgbBox'), r: q('r'), g: q('g'), b: q('b'),
-            hexBox: q('hexBox'), hexInput: q('hexInput'),
+            rgbBox: q('rgbBox'), r: q<HTMLInputElement>('r'), g: q<HTMLInputElement>('g'), b: q<HTMLInputElement>('b'),
+            hexBox: q('hexBox'), hexInput: q<HTMLInputElement>('hexInput'),
             custom: false, presetKey: '', presetName: '',
             auxHex: '#FFE4F1', auxBaseHex: '#FFE4F1',
             h: 330, s: 0.8, v: 0.93
@@ -702,8 +810,8 @@
         }
 
         // --- 拖动取色：二维板（饱和度 × 明度）与色相条 ---
-        var startDrag = function (kind) {
-            return function (e) {
+        var startDrag = function (kind: string) {
+            return function (e: PointerEvent) {
                 e.preventDefault();
                 _dragging = kind;
                 updateFromPointer(kind, e);
@@ -712,7 +820,7 @@
                 window.addEventListener('pointercancel', endDrag);
             };
         };
-        function onDragMove(e) { if (_dragging) updateFromPointer(_dragging, e); }
+        function onDragMove(e: PointerEvent) { if (_dragging) updateFromPointer(_dragging, e); }
         function endDrag() {
             _dragging = null;
             window.removeEventListener('pointermove', onDragMove);
@@ -725,7 +833,8 @@
 
         // --- 梯度色块：点一下即取该档颜色（主色改取色点，辅助色只换辅助色）---
         p.ramp.addEventListener('click', function (e) {
-            var swatch = e.target.closest ? e.target.closest('[data-ramp-index]') : null;
+            var target = e.target as HTMLElement;
+            var swatch = target.closest ? target.closest('[data-ramp-index]') : null;
             if (!swatch) return;
             var idx = parseInt(swatch.getAttribute('data-ramp-index'), 10);
             var rgb = buildPalette(_picker.presetHex).ramp[idx];
@@ -738,7 +847,8 @@
         });
 
         p.rampAux.addEventListener('click', function (e) {
-            var swatch = e.target.closest ? e.target.closest('[data-ramp-index]') : null;
+            var target = e.target as HTMLElement;
+            var swatch = target.closest ? target.closest('[data-ramp-index]') : null;
             if (!swatch) return;
             var idx = parseInt(swatch.getAttribute('data-ramp-index'), 10);
             var rgb = buildPalette(_picker.auxBaseHex).ramp[idx];
@@ -798,7 +908,7 @@
         return p;
     }
 
-    function updateFromPointer(kind, e) {
+    function updateFromPointer(kind: string, e: PointerEvent): void {
         var p = _picker;
         if (!p) return;
         if (kind === 'plane') {
@@ -819,7 +929,7 @@
      * syncInputs=true 时回写 RGB / HEX 输入框，但跳过当前正在编辑的那一格，
      * 这样 RGB 与 HEX 能互相同步、又不会打断正在敲的输入。
      */
-    function paintPicker(syncInputs) {
+    function paintPicker(syncInputs: boolean): void {
         var p = _picker;
         if (!p) return;
         var hex = currentPickerHex();
@@ -846,7 +956,7 @@
     }
 
     /** 辅助色色块：预设按该方案辅助色的色相铺十档，自定义按主色铺开；最接近当前辅助色的一档高亮 */
-    function paintAuxRamp() {
+    function paintAuxRamp(): void {
         var p = _picker;
         if (!p) return;
         var ramp = buildPalette(p.auxBaseHex).ramp;
@@ -856,7 +966,7 @@
             var d = Math.sqrt(Math.pow(rgb[0] - target[0], 2) + Math.pow(rgb[1] - target[1], 2) + Math.pow(rgb[2] - target[2], 2));
             if (d < bestD) { bestD = d; best = i; }
         });
-        var swatches = p.rampAux.children;
+        var swatches = p.rampAux.children as HTMLCollectionOf<HTMLElement>;
         for (var i = 0; i < swatches.length && i < ramp.length; i++) {
             var hex = rgbToHex(ramp[i]);
             swatches[i].style.background = hex;
@@ -865,7 +975,7 @@
         }
     }
 
-    function buildRamp(presetHex) {
+    function buildRamp(presetHex: string): void {
         var p = _picker;
         var ramp = buildPalette(presetHex).ramp;
         p.ramp.textContent = '';
@@ -882,7 +992,7 @@
         p.ramp.appendChild(frag);
     }
 
-    function positionPicker(anchorEl) {
+    function positionPicker(anchorEl: HTMLElement): void {
         var p = _picker;
         var el = p.el;
         var rect = anchorEl.getBoundingClientRect();
@@ -899,10 +1009,10 @@
         el.style.top = top + 'px';
     }
 
-    function openPicker(anchorEl, preset) {
+    function openPicker(anchorEl: HTMLElement, preset: ThemePreset): void {
         var p = ensurePicker();
         var saved = loadState();
-        var baseHex;
+        var baseHex: string;
         if (preset.key === 'custom') {
             baseHex = (saved && saved.key === 'custom' && saved.hex) ? saved.hex : rgbToHex(readPrimaryRgb());
         } else {
@@ -914,7 +1024,7 @@
         p.presetName = preset.name;
         p.presetHex = baseHex;
 
-        var hsv = rgbToHsv(hexToRgb(baseHex));
+        var hsv = rgbToHsv(hexToRgb(baseHex) || [236, 72, 153]);
         p.h = hsv[0];
         p.s = hsv[1];
         p.v = hsv[2];
@@ -947,7 +1057,7 @@
         _openedAt = Date.now();
     }
 
-    function closePicker() {
+    function closePicker(): void {
         if (!_picker) return;
         if (_dragging && _dragCleanup) _dragCleanup();
         _dragging = null;
@@ -960,7 +1070,7 @@
      * 应用配色：存档后原地播放过渡动画，由它在"爆开"那一刻把新色落到页面上。
      * 全程不重载、不动 DOM —— 页面保持静止，只有那层过渡画布在动。
      */
-    function commitTheme(key, mainHex, auxHex) {
+    function commitTheme(key: string, mainHex: string, auxHex: string): void {
         if (_busy) return;
         var theme = buildTheme(key, mainHex, auxHex);
         var oldRgb = readPrimaryRgb();
@@ -977,10 +1087,11 @@
     }
 
     /** 恢复默认：删掉当前模式的存档、撤掉覆盖，回落到 css 默认配色 */
-    function resetTheme() {
+    function resetTheme(): void {
         if (_busy) return;
         var oldRgb = readPrimaryRgb();
-        var target = isHiddenMode() ? HIDDEN_DEFAULT_RGB : hexToRgb(buildTheme(DEFAULT_KEY, presetOf(DEFAULT_KEY).main.hex, '').pal.hex);
+        var defaultPreset = presetOf(DEFAULT_KEY) as ThemePreset;
+        var target = isHiddenMode() ? HIDDEN_DEFAULT_RGB : (hexToRgb(buildTheme(DEFAULT_KEY, defaultPreset.main.hex, '').pal.hex) || [236, 72, 153]);
         _busy = true;
         clearState();
         playThemeBurst(oldRgb, target, function () {
@@ -998,12 +1109,13 @@
     var _gridBound = false;
 
     /** 只绑定设置页片段内的元素（幂等）：片段插入后由 renderForSettings() 补一次 */
-    function bindGridEvents() {
+    function bindGridEvents(): void {
         var grid = document.getElementById('themeDiscGrid');
         if (grid && !_gridBound) {
             _gridBound = true;
             grid.addEventListener('click', function (e) {
-                var btn = e.target.closest ? e.target.closest('.theme-scheme') : null;
+                var target = e.target as HTMLElement;
+                var btn = target.closest ? target.closest('.theme-scheme') as HTMLElement : null;
                 if (!btn) return;
                 var preset = presetOf(btn.getAttribute('data-theme-key'));
                 if (!preset) return;
@@ -1019,7 +1131,7 @@
         }
     }
 
-    function bindGlobalEvents() {
+    function bindGlobalEvents(): void {
         bindGridEvents();
         if (_globalBound) return;
         _globalBound = true;
@@ -1027,8 +1139,9 @@
         // 点击气泡外部关闭（方案卡片自身除外，否则会被立即关掉）
         document.addEventListener('pointerdown', function (e) {
             if (!_picker || !_picker.el.classList.contains('is-open')) return;
-            if (_picker.el.contains(e.target)) return;
-            if (e.target.closest && e.target.closest('.theme-scheme')) return;
+            if (_picker.el.contains(e.target as Node)) return;
+            var target = e.target as HTMLElement;
+            if (target.closest && target.closest('.theme-scheme')) return;
             closePicker();
         }, true);
 
@@ -1052,13 +1165,13 @@
     // ===================== 初始化 =====================
 
     /** 设置页片段插入后补渲染：页面脚本可能与片段并行加载，首次 init 时网格还不存在 */
-    function renderForSettings() {
+    function renderForSettings(): void {
         renderCard();
         bindGlobalEvents();
     }
-    window.LeLeThemeSystem = { render: renderForSettings };
+    themeWindow.LeLeThemeSystem = { render: renderForSettings };
 
-    function init() {
+    function init(): void {
         // 已保存过配色才写覆盖；否则保持 css 默认（正常霓虹夜场 / 私密铜色）
         var theme = savedTheme();
         if (theme) applyTheme(theme);

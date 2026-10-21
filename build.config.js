@@ -62,7 +62,7 @@ export const BUNDLES = [
     name: 'leletv-settings',
     firstScreen: false,
     files: [
-      'js/ui/theme-system.js', 'js/auth/admin-panel.js', 'js/auth/user-devices.js',
+      'src/services/theme.ts', 'js/auth/admin-panel.js', 'js/auth/user-devices.js',
     ],
   },
   {
