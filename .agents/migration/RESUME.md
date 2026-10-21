@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：阶段 5B 完成（5B-5 清理 commit + 文档 commit，见 git log）
+> 最新提交：strictNullChecks 分批 3（category / settings 三个文件，见 git log）
 
 ---
 
@@ -32,6 +32,7 @@
 | 类型收紧 1 | **完成**：`tsconfig.json` 开启 `noImplicitAny`；修复 294 处隐式 any（category 94、services 85、router 120、pages/settings 34、search 25、ui 3、home 2）。`npm run typecheck` 全绿，页面回归通过。下一步可评估 `strictNullChecks` |
 | strictNullChecks 分批 1 | **完成**：给 `src/services/theme.ts`（66 处）与 `src/ui/player/ui.ts`（58 处）补齐 null 收窄；主题取色器、播放器进度条拖动、长按倍速/快捷键提示回归通过。剩余 305 处，继续按 search/router/player bridge 分批 |
 | strictNullChecks 分批 2 | **完成**：`pages/search/index.ts`（45）、`router/index.ts`（37）、`ui/player/bridge.ts`（36）清零；首页启动、搜索、关于/README、播放续播与长按回归通过。剩余 187 处（category 25、settings 35、player detail/index 22、其余 105） |
+| strictNullChecks 分批 3 | **完成（3 个 commit）**：`pages/category/index.ts`（25）、`pages/settings/admin-panel.ts`（21）、`pages/settings/user-devices.ts`（14）清零；分类页列表/筛选/分页、设置页邀请码/设备/主题取色器、播放页起播回归通过。剩余 127 处：player 35（detail 12、index 10、core 5、shortcuts 4、episodes 2、quality 1、failover 1）、services 49、pages/home 23、pages/search/cards 6、ui 9、router/page-loader 4、main 1 |
 
 ---
 
