@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`361728c refactor: 迁移 app 主装配到 src/main.ts`
+> 最新提交：`1627896 refactor: 迁移 views 样式到 src/styles/views.css`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：64 / 85 条已验证**（第 64 条 index.html 暂缓） |
+| 4 | **进行中：67 / 85 条已验证**（第 64 条 index.html 暂缓） |
 
 ---
 
-## 阶段 4 已完成（MAP 1–63、65）
+## 阶段 4 已完成（MAP 1–63、65–68）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -88,29 +88,29 @@
 | 62 | `js/app/app-routing.js` | `src/router/index.ts` | 路由与切页行为不变 |
 | 63 | `js/app/page-loader.js` | `src/router/page-loader.ts` | `LeLePages` 接口不变 |
 | 65 | `js/app/app.js` | `src/main.ts` | 全局入口与启动信号不变 |
+| 66 | `css/v2/base.css` | `src/styles/base.css` | HTML link 与 CRITICAL_STYLES 已同步 |
+| 67 | `css/v2/tokens.css` | `src/styles/variables.css` | HTML link、CRITICAL_STYLES 与注释已同步 |
+| 68 | `css/v2/views.css` | `src/styles/views.css` | page-loader STYLES 与 orphans 白名单已同步 |
 
 ---
 
 ## 下一步
 
-**MAP 第 66 条**：`css/v2/base.css → src/styles/base.css`
+**MAP 第 69 条起**：public 层（17 条：Geist 字体、品牌图标、logo、manifest.json）
+
+> 与 C-1「保持 Cloudflare Pages 构建输出目录 `/`，不引入 `public/`」存在字面冲突：
+> 迁移会新建 `public/` 并改变字体 / 图标 / manifest 的公开 URL。
+> 恢复会话后先向用户确认 public 层策略。
 
 > 第 64 条 `index.html → src/index.html` 已与用户确认**暂缓**：根 `index.html` 是
-> Cloudflare Pages 默认入口，迁移会与 C-1（根目录部署、不改 wrangler）冲突。
-> 恢复会话后如需处理，先向用户确认部署策略。
-
-之后：
-
-- 第 67 条 `css/v2/tokens.css → src/styles/variables.css`
-- 第 68 条 `css/v2/views.css → src/styles/views.css`（page-loader STYLES 需同步）
-- 第 69 条起 public（17 条静态资源）
+> Cloudflare Pages 默认入口，迁移会与 C-1 冲突。
 
 > `pages/` 目录已清空；`js/` 仅剩 2 个 `.js`（app-init / boot-sequence，未在 MAP 队列）。
 
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 66 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 69 条继续。
 
 ---
 
@@ -135,7 +135,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **267.1 KB**（预算 275 KB）；`js/` 剩余 `.js` **2**；tracked 370 / inventory 434。
+基线：首屏 core+app **267.1 KB**（预算 275 KB）；`js/` 剩余 `.js` **2**；tracked 370 / inventory 437。
 
 ---
 
