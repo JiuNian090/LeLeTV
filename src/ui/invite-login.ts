@@ -3,6 +3,8 @@
  * 注册在 DOMContentLoaded，执行顺序保持在 boot-sequence 之后。
  */
 
+import { showToast } from './toast';
+
 interface InviteAuthApi {
     isLocalMode(): boolean;
     isVerified(): boolean;
@@ -18,8 +20,6 @@ interface DisclaimerState {
     pending?: boolean;
     handled?: boolean;
 }
-
-declare function showToast(message: string, type?: string): void;
 
 // 邀请码登录弹窗
 // 线上（配置了 Worker 地址）：校验邀请码；本地版：只保留视觉框架，点「进入」即放行（见 js/auth/invite-auth.js 的本地模式）
