@@ -113,9 +113,8 @@ storybook-static
 .netlify
 .vercel
 
-# 技能锁文件与文档（不纳入版本控制）
+# 技能锁文件（不纳入版本控制）
 skills-lock.json
-docs/
 
 # .agents/ 内的本机状态（含本机绝对路径），不纳入版本控制
 .agents/tools.json

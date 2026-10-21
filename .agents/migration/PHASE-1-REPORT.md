@@ -371,6 +371,21 @@ Pages 项目是在 Cloudflare 控制台 / Git 集成里配置的，构建输出�
 
 ---
 
+### 12.1 人类决策记录（2026-10-21）
+
+| 编号 | 决策 |
+|---|---|
+| C-1 | **保持 Cloudflare Pages 构建输出目录为 `/`**，不改 `wrangler.toml`，不引入 `public/`。静态资源继续从仓库根提供；`dist/` 只放 bundle。 |
+| C-2 | **接受重写构建链路**：阶段 3 改为 esbuild `build` + `splitting`；构建从 `src/` 模板装配根目录 HTML，根 HTML 不再手工编辑。 |
+| C-3 | **阶段 2 只拆剩余首屏负担**：约 761 行内联脚本、9 个模态框、启动动画；不重复拆分已完成的 `pages/*.html`。 |
+| C-4 | **保留 PWA 安装到桌面**：保留 `manifest.json`、`js/ui/pwa-install.js`，并补齐 iOS / Windows 安装适配；`service-worker.js` 继续保持退役 kill-switch，不恢复离线缓存。 |
+| C-5 | **解除 `.gitignore` 对 `docs/` 的忽略**，`docs/` 纳入版本控制。 |
+| C-6 | **现有资产全部纳入目标结构并保留**：`libs/` 作为第三方库目录；`server.mjs` / `nodemon.json` 作为本地开发工具；`_routes.json` 作为 Functions 配置；`pages/{movies,history,about,readme}.html` 纳入页面层；现有 19 个技能保留。 |
+
+> C-1 + C-2 的组合意味着：`src/` 只承载源码（JS/TS、页面模板、样式），根目录 HTML 仍是对外部署入口，由构建装配；不追求把整个站点搬进 `public/`。
+
+---
+
 ## 13. 阶段 -1 产出清单
 
 | 文件 | 说明 |
