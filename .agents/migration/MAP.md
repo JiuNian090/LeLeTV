@@ -86,7 +86,7 @@
 | 58 | pages | `js/auth/admin-panel.js` | `src/pages/settings/admin-panel.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成；重复 helper 与 user-devices 一致，已去重 |
 | 59 | pages | `css/v2/admin.css` | `src/pages/settings/style.css` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成；page-loader STYLES 已同步 |
 | 60 | pages | `pages/settings.html` | `src/pages/settings/template.html` | verified | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单；2026-10-21 迁移完成 |
-| 61 | pages | `js/auth/user-devices.js` | `src/pages/settings/user-devices.ts` | pending | 第 8 节 页面导航 | — |
+| 61 | pages | `js/auth/user-devices.js` | `src/pages/settings/user-devices.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 62 | router | `js/app/app-routing.js` | `src/router/index.ts` | pending | 第 8 节 页面导航 | — |
 | 63 | router | `js/app/page-loader.js` | `src/router/page-loader.ts` | pending | 第 8 节 页面导航 | — |
 | 64 | entry | `index.html` | `src/index.html` | pending | 第 0 节通用前置 | — |

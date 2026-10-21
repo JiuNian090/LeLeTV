@@ -359,7 +359,7 @@
 | 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | verified | 已迁移至 `src/core/crypto.ts`；类型检查通过 |
 | 286 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | verified | 已迁移至 `src/core/http.ts`；类型检查通过 |
 | 287 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | merge | `src/core/crypto.ts` | `src/core/crypto.ts` | AP-001 | verified | 与 `crypto.ts` 的 sha256 重复，已合并；删除原文件 |
-| 288 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | pending | — |
+| 288 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | verified | 面板入口与接口调用不变 |
 | 289 | `js/core/cache-manager.js` | 本地存储缓存管理与 24h 清理 | migrated | `src/core/cache.ts` | — | — | verified | 已迁移至 `src/core/cache.ts`；类型检查与回归通过 |
 | 290 | `js/core/config.js` | 全局常量与 API_SITES 基础配置 | migrated | `src/core/config.ts` | — | — | verified | 已迁移至 `src/core/config.ts`；类型检查与回归通过 |
 | 291 | `js/core/leletv-global.js` | 全局命名空间适配器 | migrated | `src/core/global.ts` | — | — | verified | 已迁移至 `src/core/global.ts`；类型检查通过 |
@@ -525,6 +525,7 @@
 | 428 | `src/pages/settings/admin-panel.ts` | 邀请码管理面板（迁移自 `js/auth/admin-panel.js`） | keep | — | — | — | done | 阶段 4 第 58 条迁移目标 |
 | 429 | `src/pages/settings/style.css` | 设置/管理面板样式（迁移自 `css/v2/admin.css`） | keep | — | — | — | done | 阶段 4 第 59 条迁移目标 |
 | 430 | `src/pages/settings/template.html` | 设置页片段（迁移自 `pages/settings.html`） | keep | — | — | — | done | 阶段 4 第 60 条迁移目标 |
+| 431 | `src/pages/settings/user-devices.ts` | 设备管理面板（迁移自 `js/auth/user-devices.js`） | keep | — | — | — | done | 阶段 4 第 61 条迁移目标 |
 
 ## workers/（红区）
 

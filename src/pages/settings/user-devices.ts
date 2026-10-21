@@ -4,15 +4,47 @@
  * 显示在设置页面，用户可查看自己的邀请码和名下设备
  */
 
+interface DeviceInfo {
+  device_fingerprint?: string;
+  device_name?: string;
+  browser?: string;
+  last_active_at?: number;
+  [key: string]: unknown;
+}
+
+interface MyDevicesResponse {
+  ok?: boolean;
+  code?: string;
+  device_count?: number;
+  max_devices?: number;
+  devices?: DeviceInfo[];
+  [key: string]: unknown;
+}
+
+interface InviteAuthApi {
+  getAuth: () => { code?: string; device_fingerprint?: string } | null | undefined;
+  computeDeviceSignature: (name: string) => Promise<string>;
+  updateLocalDeviceName: (name: string, signature: string) => void;
+  logout: () => void;
+}
+
+interface UserDevicesWindow extends Window {
+  __ENV__?: { TMDB_WORKER_URL?: string };
+  INVITE_AUTH?: InviteAuthApi;
+  USER_DEVICES_PANEL?: unknown;
+}
+
+const devicesWindow = window as UserDevicesWindow;
+
 const USER_DEVICES_PANEL = {
   _inviteUrl(path) {
-    const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
+    const workerBase = devicesWindow.__ENV__?.TMDB_WORKER_URL || '';
     if (workerBase) return `${workerBase}${path}`;
     return `/api${path}`;
   },
 
   async fetchMyDevices() {
-    const auth = window.INVITE_AUTH?.getAuth();
+    const auth = devicesWindow.INVITE_AUTH?.getAuth();
     if (!auth) return null;
 
     try {
@@ -24,7 +56,7 @@ const USER_DEVICES_PANEL = {
           device_fingerprint: auth.device_fingerprint
         })
       });
-      const data = await res.json();
+      const data: MyDevicesResponse = await res.json();
       return data.ok ? data : null;
     } catch {
       return null;
@@ -32,7 +64,7 @@ const USER_DEVICES_PANEL = {
   },
 
   async removeDevice(targetFingerprint) {
-    const auth = window.INVITE_AUTH?.getAuth();
+    const auth = devicesWindow.INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
     try {
@@ -45,7 +77,7 @@ const USER_DEVICES_PANEL = {
           target_fingerprint: targetFingerprint
         })
       });
-      const data = await res.json();
+      const data: MyDevicesResponse = await res.json();
       return data.ok;
     } catch {
       return false;
@@ -53,13 +85,13 @@ const USER_DEVICES_PANEL = {
   },
 
   async renameDevice(newName) {
-    const auth = window.INVITE_AUTH?.getAuth();
+    const auth = devicesWindow.INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
     // 签名叠加了设备名：改名后必须重算并上报，否则「设备 ID 丢失找回」会对不上
     let newSignature = '';
     try {
-      newSignature = await window.INVITE_AUTH.computeDeviceSignature(newName);
+      newSignature = await devicesWindow.INVITE_AUTH.computeDeviceSignature(newName);
     } catch {
       newSignature = '';
     }
@@ -75,9 +107,9 @@ const USER_DEVICES_PANEL = {
           new_signature: newSignature
         })
       });
-      const data = await res.json();
+      const data: MyDevicesResponse = await res.json();
       if (data.ok) {
-        window.INVITE_AUTH.updateLocalDeviceName(newName, newSignature);
+        devicesWindow.INVITE_AUTH.updateLocalDeviceName(newName, newSignature);
         return true;
       }
       return false;
@@ -132,8 +164,8 @@ const USER_DEVICES_PANEL = {
       showToast('已刷新', 'success');
     });
     container.querySelector('#userDeviceLogoutBtn').addEventListener('click', () => {
-      if (window.INVITE_AUTH && confirm('确定退出登录吗？')) {
-        window.INVITE_AUTH.logout();
+      if (devicesWindow.INVITE_AUTH && confirm('确定退出登录吗？')) {
+        devicesWindow.INVITE_AUTH.logout();
       }
     });
     this._refresh(container);
@@ -145,7 +177,7 @@ const USER_DEVICES_PANEL = {
     const codeEl = container.querySelector('#userDeviceCode');
     const countEl = container.querySelector('#userDeviceCount');
     const maxEl = container.querySelector('#userDeviceMax');
-    const currentFingerprint = window.INVITE_AUTH?.getAuth()?.device_fingerprint;
+    const currentFingerprint = devicesWindow.INVITE_AUTH?.getAuth()?.device_fingerprint;
 
     if (!data) {
       listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">加载失败</p>';
@@ -212,7 +244,7 @@ const USER_DEVICES_PANEL = {
         const isCurrent = btn.dataset.current === 'true';
         
         if (isCurrent) {
-          if (window.INVITE_AUTH) window.INVITE_AUTH.logout();
+          if (devicesWindow.INVITE_AUTH) devicesWindow.INVITE_AUTH.logout();
           return;
         }
         
@@ -312,4 +344,4 @@ function _deviceIcon(browser) {
   return '📱';
 }
 
-window.USER_DEVICES_PANEL = USER_DEVICES_PANEL;
+devicesWindow.USER_DEVICES_PANEL = USER_DEVICES_PANEL;
