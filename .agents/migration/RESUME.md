@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：strictNullChecks 分批 5（pages/home + search/cards 29 处清零，见 git log）
+> 最新提交：strictNullChecks 分批 6（ui/router/main 14 处清零，仅剩 player 35 处，见 git log）
 
 ---
 
@@ -35,6 +35,7 @@
 | strictNullChecks 分批 3 | **完成（3 个 commit）**：`pages/category/index.ts`（25）、`pages/settings/admin-panel.ts`（21）、`pages/settings/user-devices.ts`（14）清零；分类页列表/筛选/分页、设置页邀请码/设备/主题取色器、播放页起播回归通过。剩余 127 处：player 35（detail 12、index 10、core 5、shortcuts 4、episodes 2、quality 1、failover 1）、services 49、pages/home 23、pages/search/cards 6、ui 9、router/page-loader 4、main 1 |
 | strictNullChecks 分批 4 | **完成（6 个 commit）**：services 层 49 处清零 —— api/balancer/line-probe/search（10）、config/version-updater（7）、invitation（9）、tmdb（8）、sources/config + sources/port（12）、viewing-history（6）；搜索、设置数据源开关、首页继续观看与续播、分类筛选/分页、播放页回归通过。剩余 78 处：ui/player 35（detail 12、index 10、core 5、shortcuts 4、episodes 2、quality 1、failover 1）、pages/home 23（shelves 9、nav-search 9、recent 4、hero-glass 1）、pages/search/cards 6、ui 9（index 4、pwa-install 3、nav-scroll 2）、router/page-loader 4、main 1 |
 | strictNullChecks 分批 5 | **完成（2 个 commit）**：`pages/search/cards.ts`（6）、`pages/home/recent.ts`（4）、`pages/home/hero-glass.ts`（1）、`pages/home/shelves.ts`（9）、`pages/home/nav-search.ts`（9）清零；首页继续观看/四行最近更新/聚合动效、导航搜索展开与提交、结果卡片渲染回归通过。剩余 49 处：ui/player 35、ui/index 4、router/page-loader 4、ui/pwa-install 3、ui/nav-scroll 2、main 1 |
+| strictNullChecks 分批 6 | **完成（2 个 commit）**：`ui/index.ts`（4）、`ui/pwa-install.ts`（3）、`ui/nav-scroll.ts`（2）、`router/page-loader.ts`（4）、`main.ts`（1）清零；导航滚动、历史/关于/设置懒加载切页、导入配置弹窗、PWA 接口回归通过。剩余 35 处，全部在 `ui/player`：detail 12、index 10、core 5、shortcuts 4、episodes 2、quality 1、failover 1 |
 
 ---
 
