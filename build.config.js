@@ -41,7 +41,7 @@ export const BUNDLES = [
       'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
       'src/services/version-updater.ts', 'src/core/cache.ts',
       'src/pages/home/hub-flow.ts', 'src/ui/brand-canvas.ts', 'js/ui/home-shelves.js', 'src/pages/home/hero-glass.ts',
-      'js/ui/home-recent.js', 'js/ui/nav-search.js', 'src/ui/pwa-install.ts', 'src/ui/layout-pref.ts',
+      'js/ui/home-recent.js', 'src/pages/home/nav-search.ts', 'src/ui/pwa-install.ts', 'src/ui/layout-pref.ts',
       'src/ui/nav-scroll.ts',
       // 导航 hover / focus 预取页面片段与按需 bundle
       'src/router/prefetch.ts',

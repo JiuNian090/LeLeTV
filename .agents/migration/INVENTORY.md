@@ -387,7 +387,7 @@
 | 313 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | verified | IIFE 原样迁移，window.LeLeLineProbe 接口不变 |
 | 314 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeMotion 接口不变 |
 | 315 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | verified | 全局入口与 `_moviesState` 读取方式不变 |
-| 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
+| 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | verified | 交互与 search() 入口不变 |
 | 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | verified | `window.LeLePwa` 接口不变 |
 | 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
 | 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | verified | IIFE 原样迁移，LeLeThemeStore / LeLeThemeSystem 接口不变 |
@@ -511,6 +511,7 @@
 | 414 | `src/pages/history/template.html` | 历史页片段（迁移自 `pages/history.html`） | keep | — | — | — | done | 阶段 4 第 45 条迁移目标 |
 | 415 | `src/pages/home/hero-glass.ts` | 首页主视觉光效（迁移自 `js/ui/hero-glass.js`） | keep | — | — | — | done | 阶段 4 第 46 条迁移目标 |
 | 416 | `src/pages/home/hub-flow.ts` | 首页聚合动效（迁移自 `js/effects/hub-flow.js`） | keep | — | — | — | done | 阶段 4 第 47 条迁移目标 |
+| 417 | `src/pages/home/nav-search.ts` | 导航栏迷你搜索（迁移自 `js/ui/nav-search.js`） | keep | — | — | — | done | 阶段 4 第 48 条迁移目标 |
 
 ## workers/（红区）
 

@@ -9,20 +9,20 @@
 
   const MOBILE_QUERY = '(max-width: 720px)';
 
-  function isMobile() {
+  function isMobile(): boolean {
     try { return window.matchMedia(MOBILE_QUERY).matches; } catch (e) { return false; }
   }
 
-  function init() {
+  function init(): void {
     const form = document.getElementById('navSearch');
     if (!form) return;
-    const input = form.querySelector('.nav-search-input');
-    const btn = form.querySelector('.nav-search-btn');
+    const input = form.querySelector('.nav-search-input') as HTMLInputElement | null;
+    const btn = form.querySelector('.nav-search-btn') as HTMLElement | null;
     if (!input || !btn) return;
 
-    const isOpen = () => form.classList.contains('is-open');
+    const isOpen = (): boolean => form.classList.contains('is-open');
 
-    function open() {
+    function open(): void {
       form.classList.add('is-open');
       btn.setAttribute('aria-expanded', 'true');
       input.tabIndex = 0;
@@ -30,17 +30,17 @@
       requestAnimationFrame(() => input.focus({ preventScroll: true }));
     }
 
-    function close() {
+    function close(): void {
       form.classList.remove('is-open');
       btn.setAttribute('aria-expanded', 'false');
       input.tabIndex = -1;
       input.value = '';
     }
 
-    function submit() {
+    function submit(): void {
       const query = input.value.trim();
       if (!query) { close(); return; }
-      const home = document.getElementById('searchInput');
+      const home = document.getElementById('searchInput') as HTMLInputElement | null;
       if (home) home.value = query;
       close();
       if (typeof search === 'function') search();
@@ -65,7 +65,7 @@
     });
     // 点到别处就收起
     document.addEventListener('pointerdown', event => {
-      if (isOpen() && !form.contains(event.target)) close();
+      if (isOpen() && !form.contains(event.target as Node)) close();
     }, true);
   }
 
