@@ -372,7 +372,7 @@
 | 298 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | verified | 公开函数保持不变，HLS/ArtPlayer 使用最小本地接口声明 |
 | 299 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | verified | 公开函数保持不变，详情渲染与编辑逻辑原样迁移 |
 | 300 | `js/player/player-episodes.js` | 剧集列表与选集 | migrated | `src/ui/player/episodes.ts` | — | — | verified | 公开函数保持不变，选集与无缝切换逻辑原样迁移 |
-| 301 | `js/player/player-failover.js` | 起播失败自动换线 | migrated | `src/ui/player/failover.ts` | — | — | pending | — |
+| 301 | `js/player/player-failover.js` | 起播失败自动换线 | migrated | `src/ui/player/failover.ts` | — | — | verified | IIFE 原样迁移，LeLeFailover 接口不变 |
 | 302 | `js/player/player-lights.js` | 播放页氛围灯/背景 | migrated | `src/ui/player/lights.ts` | — | — | pending | — |
 | 303 | `js/player/player-manager.js` | 播放器生命周期管理 | migrated | `src/ui/player/manager.ts` | — | — | pending | — |
 | 304 | `js/player/player-quality.js` | 清晰度切换 | migrated | `src/ui/player/quality.ts` | — | — | pending | — |
@@ -496,6 +496,7 @@
 | 399 | `src/ui/player/core.ts` | HLS + ArtPlayer 核心初始化（迁移自 `js/player/player-core.js`） | keep | — | — | — | done | 阶段 4 第 30 条迁移目标 |
 | 400 | `src/ui/player/detail.ts` | 播放页详情/海报信息（迁移自 `js/player/player-detail.js`） | keep | — | — | — | done | 阶段 4 第 31 条迁移目标 |
 | 401 | `src/ui/player/episodes.ts` | 剧集列表与选集（迁移自 `js/player/player-episodes.js`） | keep | — | — | — | done | 阶段 4 第 32 条迁移目标 |
+| 402 | `src/ui/player/failover.ts` | 起播失败自动换线（迁移自 `js/player/player-failover.js`） | keep | — | — | — | done | 阶段 4 第 33 条迁移目标 |
 
 ## workers/（红区）
 

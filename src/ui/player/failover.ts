@@ -7,8 +7,49 @@
 //   3. 校验通过才走 switchToResource 跳转；试过的线路记在 sessionStorage，整页跳转后不重复试，最多换 3 次
 //   4. 已经播起来的（currentTime > 1s）不换，交给播放器自己的重试
 
+interface FailoverState {
+    title: string;
+    tried: string[];
+    attempts: number;
+    switchedTo: string;
+}
+
+interface FailoverCandidate {
+    key: string;
+    vodId: string;
+    name: string;
+}
+
+interface FailoverSource {
+    key: string;
+    name: string;
+}
+
+interface FailoverSearchResult {
+    [key: string]: unknown;
+    vod_name?: string;
+    vod_id?: string | number;
+    source_code?: string;
+    source_name?: string;
+    source_latency?: number;
+    type_name?: string;
+}
+
+interface FailoverLineProbe {
+    check(source: string, vodId: string, index?: number): Promise<boolean>;
+    cached(source: string, vodId: string, index?: number): boolean | undefined;
+}
+
+interface FailoverWindow extends Window {
+    API_SITES?: Record<string, ApiSite>;
+    LeLeLineProbe?: FailoverLineProbe;
+    LeLeFailover?: FailoverApi;
+}
+
 (function () {
     'use strict';
+
+    const failoverWindow = window as FailoverWindow;
 
     const STATE_KEY = 'leletv_line_failover';
     const SEARCH_CACHE_KEY = 'leletv_search_cache';
@@ -18,50 +59,50 @@
 
     let busy = false;
     let playing = false;
-    let watchdog = 0;
+    let watchdog: ReturnType<typeof setTimeout> | 0 = 0;
 
-    function normTitle(name) {
+    function normTitle(name: unknown): string {
         return String(name || '').split('$')[0].toLowerCase()
             .replace(/[（(【\[][^）)】\]]*[）)】\]]\s*$/, '')
             .replace(/[\s　·•・:：,，.。!！?？'"“”‘’()（）【】\[\]《》<>\-—_~～]/g, '');
     }
 
-    function currentSource() {
+    function currentSource(): string {
         return new URLSearchParams(window.location.search).get('source') || '';
     }
 
-    function currentTitle() {
+    function currentTitle(): string {
         return (typeof currentVideoTitle === 'string' && currentVideoTitle)
             || new URLSearchParams(window.location.search).get('title') || '';
     }
 
-    function readState() {
+    function readState(): FailoverState {
         try {
-            const st = JSON.parse(sessionStorage.getItem(STATE_KEY) || 'null');
+            const st = JSON.parse(sessionStorage.getItem(STATE_KEY) || 'null') as FailoverState | null;
             if (st && st.title === currentTitle()) return st;
         } catch (e) { /* 忽略 */ }
         return { title: currentTitle(), tried: [], attempts: 0, switchedTo: '' };
     }
 
-    function writeState(st) {
+    function writeState(st: FailoverState): void {
         try { sessionStorage.setItem(STATE_KEY, JSON.stringify(st)); } catch (e) { /* 忽略 */ }
     }
 
-    function sourceName(key) {
+    function sourceName(key: string): string {
         if (String(key).startsWith('custom_')) {
             const info = typeof getCustomApiInfo === 'function' ? getCustomApiInfo(String(key).replace('custom_', '')) : null;
             return (info && info.name) || '自定义资源';
         }
-        const site = window.API_SITES && window.API_SITES[key];
+        const site = failoverWindow.API_SITES && failoverWindow.API_SITES[key];
         return (site && site.name) || key;
     }
 
-    function withTimeout(promise, ms) {
-        return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+    function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+        return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
     }
 
     /** 同一部片的判定：片名规范化后相同；或以它开头、后面只多几个字（沪语版、2023、第一季……），且不是短剧 */
-    function sameShow(r, want) {
+    function sameShow(r: FailoverSearchResult, want: string): number {
         const n = normTitle(r.vod_name);
         if (!n || !want) return 0;
         if (n === want) return 2;
@@ -70,43 +111,44 @@
     }
 
     /** 结果页缓存里同一部片的其它片源：片名完全一致的在前，再按搜索时的响应快慢排 */
-    function candidatesFromCache(tried) {
+    function candidatesFromCache(tried: string[]): FailoverCandidate[] {
         try {
-            const cache = JSON.parse(sessionStorage.getItem(SEARCH_CACHE_KEY) || 'null');
+            const cache = JSON.parse(sessionStorage.getItem(SEARCH_CACHE_KEY) || 'null') as { results?: FailoverSearchResult[] } | null;
             if (!cache || !Array.isArray(cache.results)) return [];
             const want = normTitle(currentTitle());
             if (!want) return [];
-            const seen = {};
+            const seen: Record<string, boolean> = {};
             return cache.results
                 .map(r => ({ r, score: r && r.vod_id && r.source_code ? sameShow(r, want) : 0 }))
                 .filter(x => x.score > 0)
-                .filter(x => !tried.includes(String(x.r.source_code)) && !seen[x.r.source_code] && (seen[x.r.source_code] = true))
+                .filter(x => !tried.includes(String(x.r.source_code)) && !seen[String(x.r.source_code)] && (seen[String(x.r.source_code)] = true))
                 .sort((a, b) => (b.score - a.score) || ((a.r.source_latency || 1e9) - (b.r.source_latency || 1e9)))
-                .map(x => ({ key: String(x.r.source_code), vodId: String(x.r.vod_id), name: x.r.source_name || sourceName(x.r.source_code) }));
+                .map(x => ({ key: String(x.r.source_code), vodId: String(x.r.vod_id), name: x.r.source_name || sourceName(String(x.r.source_code)) }));
         } catch (e) { return []; }
     }
 
     /** 缓存里没有：搜片名，取最像的一条 */
-    async function searchCandidate(src) {
+    async function searchCandidate(src: FailoverSource): Promise<FailoverCandidate | null> {
         if (typeof searchByAPIAndKeyWord !== 'function') return null;
         const title = currentTitle();
         const want = normTitle(title);
-        const results = await withTimeout(searchByAPIAndKeyWord(src.key, title), SEARCH_TIMEOUT_MS);
+        const results = await withTimeout(searchByAPIAndKeyWord(src.key, title), SEARCH_TIMEOUT_MS) as unknown as FailoverSearchResult[];
         if (!Array.isArray(results)) return null;
-        let best = null, bestScore = 0;
+        let best: FailoverSearchResult | null = null, bestScore = 0;
         results.forEach(r => { const sc = r && r.vod_id ? sameShow(r, want) : 0; if (sc > bestScore) { best = r; bestScore = sc; } });
         return best ? { key: src.key, vodId: String(best.vod_id), name: src.name } : null;
     }
 
     /** 真实校验一条候选线路：详情有集数、当前集 m3u8 能按 CORS 取到（逻辑在 LeLeLineProbe，与结果页预检共用缓存） */
-    function validate(candidate) {
-        if (!window.LeLeLineProbe) return Promise.resolve(false);
+    function validate(candidate: FailoverCandidate): Promise<boolean> {
+        const probe = failoverWindow.LeLeLineProbe;
+        if (!probe) return Promise.resolve(false);
         const index = (typeof currentEpisodeIndex === 'number' && currentEpisodeIndex > 0) ? currentEpisodeIndex : 0;
-        return LeLeLineProbe.check(candidate.key, candidate.vodId, index);
+        return probe.check(candidate.key, candidate.vodId, index);
     }
 
     /** 一批候选并行校验，按优先顺序取第一条通过的；校验失败的记进 tried */
-    async function firstValid(cands, st) {
+    async function firstValid(cands: FailoverCandidate[], st: FailoverState): Promise<FailoverCandidate | null> {
         if (!cands.length) return null;
         const checks = cands.map(c => validate(c).catch(() => false));
         for (let i = 0; i < cands.length; i++) {
@@ -121,7 +163,7 @@
      * 换线入口：起播前线路失败时由播放器错误处理调用。
      * 返回 true 表示已开始跳转到新线路（页面即将离开）
      */
-    async function autoSwitchLine(reason) {
+    async function autoSwitchLine(reason: string): Promise<boolean> {
         if (busy || playing) return false;
         try {
             if (typeof art !== 'undefined' && art && art.video && art.video.currentTime > 1) return false;
@@ -140,11 +182,12 @@
             let pick = await firstValid(candidatesFromCache(st.tried), st);
             // 2) 缓存里没有能播的：并行搜其它片源（4 个一批），搜到就校验
             if (!pick) {
-                const scanSources = (typeof getResourceScanSources === 'function' ? getResourceScanSources() : [])
-                    .filter(src => !st.tried.includes(String(src.key)));
-                for (let i = 0; i < scanSources.length && !pick; i += 4) {
-                    const batch = scanSources.slice(i, i + 4);
-                    const found = (await Promise.all(batch.map(src => searchCandidate(src).catch(() => null)))).filter(Boolean);
+                const scanSources = (typeof getResourceScanSources === 'function' ? getResourceScanSources() : []) as FailoverSource[];
+                const pendingSources = scanSources.filter(src => !st.tried.includes(String(src.key)));
+                for (let i = 0; i < pendingSources.length && !pick; i += 4) {
+                    const batch = pendingSources.slice(i, i + 4);
+                    const found = (await Promise.all(batch.map(src => searchCandidate(src).catch(() => null))))
+                        .filter((c): c is FailoverCandidate => !!c);
                     batch.forEach(src => { if (!found.some(c => c.key === src.key)) { st.tried.push(String(src.key)); } });
                     writeState(st);
                     pick = await firstValid(found, st);
@@ -167,10 +210,10 @@
     }
 
     /** 播放器建好后挂上：起播就停表；原生 HLS 出错、或 15 秒没起播都换线 */
-    function watch(player) {
+    function watch(player: unknown): void {
         playing = false;
         clearTimeout(watchdog);
-        const video = player && player.video;
+        const video = (player as { video?: HTMLVideoElement } | null)?.video;
         if (!video) return;
         const onPlaying = () => {
             playing = true;
@@ -194,7 +237,7 @@
             const params = new URLSearchParams(window.location.search);
             const vodId = params.get('id');
             const index = (typeof currentEpisodeIndex === 'number' && currentEpisodeIndex > 0) ? currentEpisodeIndex : (parseInt(params.get('index') || '0', 10) || 0);
-            if (vodId && window.LeLeLineProbe && LeLeLineProbe.cached(currentSource(), vodId, index) === false) {
+            if (vodId && failoverWindow.LeLeLineProbe && failoverWindow.LeLeLineProbe.cached(currentSource(), vodId, index) === false) {
                 setTimeout(() => { if (!playing) autoSwitchLine('当前线路预检未通过'); }, 0);
             }
         } catch (e) { /* 忽略 */ }
@@ -209,5 +252,5 @@
         }
     }
 
-    window.LeLeFailover = { autoSwitchLine, watch, markPlaying() { playing = true; clearTimeout(watchdog); } };
+    failoverWindow.LeLeFailover = { autoSwitchLine, watch, markPlaying() { playing = true; clearTimeout(watchdog); } };
 })();
