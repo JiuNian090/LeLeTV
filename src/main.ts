@@ -466,3 +466,46 @@ var AppInit = (function () {
 if (typeof mainWindow.LeLeTV !== 'undefined') {
     mainWindow.LeLeTV.AppInit = AppInit;
 }
+
+// 阶段 5A-4 过渡期兼容桥：app bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  setupEmailClickHandlers,
+  initSettingsPage
+});
+
+Object.defineProperty(window, '_activeSourceFilter', {
+  get: () => _activeSourceFilter,
+  set: (v) => { _activeSourceFilter = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, '_lastAllResults', {
+  get: () => _lastAllResults,
+  set: (v) => { _lastAllResults = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, '_searchReady', {
+  get: () => _searchReady,
+  set: (v) => { _searchReady = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, '_filterConfig', {
+  get: () => _filterConfig,
+  set: (v) => { _filterConfig = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, '_searchThrottled', {
+  get: () => _searchThrottled,
+  set: (v) => { _searchThrottled = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, 'AppInit', {
+  get: () => AppInit,
+  set: (v) => { AppInit = v; },
+  configurable: true,
+});

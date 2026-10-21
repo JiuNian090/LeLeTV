@@ -335,3 +335,19 @@ function clearSearchHistory(): void {
         showToast('清除搜索历史失败:', 'error');
     }
 }
+
+// 阶段 5A-4 过渡期兼容桥：app bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  getSearchHistory,
+  saveSearchHistory,
+  showSearchHistory,
+  repositionSearchHistory,
+  hideSearchHistory,
+  navigateSearchHistory,
+  getActiveHistoryQuery,
+  clearHistoryNavHighlight,
+  renderMobileSearchHistory,
+  deleteSingleSearchHistory,
+  clearSearchHistory
+});

@@ -36,6 +36,8 @@ export const BUNDLES = [
   {
     name: 'leletv-app',
     firstScreen: true,
+    // 阶段 5A-4：由 files 顺序生成 ESM 入口，走 esbuild.build；对外符号由各文件的 window 兼容桥承接
+    esm: true,
     files: [
       'src/services/sources/config.ts', 'src/services/balancer.ts',
       'src/services/search-history.ts', 'src/services/viewing-history.ts', 'src/ui/index.ts',

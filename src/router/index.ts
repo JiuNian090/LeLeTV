@@ -1366,3 +1366,36 @@ function shareInviteInfo(targetCode?: string) {
     console.warn("[LeLeTV] 未处理的 Promise 错误:", msg);
   });
 })();
+
+// 阶段 5A-4 过渡期兼容桥：app bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  rememberPageForReload,
+  playParticleDissolve,
+  dissolveThenRemove,
+  playHomeIntro,
+  isCategoryPageBlocked,
+  clearSearchResidueFromUrl,
+  showPage,
+  handlePageLoad,
+  ensureMarked,
+  toggleHistory,
+  parseChangelogMarkdown,
+  openDisclaimerModal,
+  closeDisclaimerModal,
+  openInviteGuideModal,
+  closeInviteGuideModal,
+  shareInviteInfo
+});
+
+Object.defineProperty(window, 'PARTICLE_SWEEP_KEY', {
+  get: () => PARTICLE_SWEEP_KEY,
+  set: (v) => { PARTICLE_SWEEP_KEY = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, '_themeRgbCache', {
+  get: () => _themeRgbCache,
+  set: (v) => { _themeRgbCache = v; },
+  configurable: true,
+});

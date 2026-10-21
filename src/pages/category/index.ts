@@ -1027,3 +1027,26 @@ window.loadMoviesResults = loadMoviesResults;
 window.initMoviesPage = initMoviesPage;
 window.moviesPageBack = moviesPageBack;
 window.restoreMoviesFromCache = restoreMoviesFromCache;
+
+// 阶段 5A-4 过渡期兼容桥：app bundle 切 ESM 入口后，
+// 未改造的模块仍通过裸名 / window 访问这些符号。5B 全部改为 import 后删除本段。
+Object.assign(window, {
+  showMoviesResults,
+  openMoviesPage,
+  restoreMoviesFromCache,
+  initMoviesPage,
+  moviesPageBack,
+  initMoviesPageBindings
+});
+
+Object.defineProperty(window, '_moviesState', {
+  get: () => _moviesState,
+  set: (v) => { _moviesState = v; },
+  configurable: true,
+});
+
+Object.defineProperty(window, '_moviesEpoch', {
+  get: () => _moviesEpoch,
+  set: (v) => { _moviesEpoch = v; },
+  configurable: true,
+});
