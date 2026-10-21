@@ -31,6 +31,7 @@
 | 5B-5 | **完成**：删除 `files` / `esm` / concat / 临时入口，5 个 bundle 使用持久入口（`core-entry.ts`、`main.ts`、`category/entry.ts`、`settings/entry.ts`、`player-entry.ts`）；`check-deps` 改为真实 import 图（179 边 / 0 运行时环）并跳过 type-only；`check-budget` 按 metafile 闭包统计；全局桥收敛为 `docs/GLOBAL-BRIDGES.md`。首屏 253.3 KB |
 | 类型收紧 1 | **完成**：`tsconfig.json` 开启 `noImplicitAny`；修复 294 处隐式 any（category 94、services 85、router 120、pages/settings 34、search 25、ui 3、home 2）。`npm run typecheck` 全绿，页面回归通过。下一步可评估 `strictNullChecks` |
 | strictNullChecks 分批 1 | **完成**：给 `src/services/theme.ts`（66 处）与 `src/ui/player/ui.ts`（58 处）补齐 null 收窄；主题取色器、播放器进度条拖动、长按倍速/快捷键提示回归通过。剩余 305 处，继续按 search/router/player bridge 分批 |
+| strictNullChecks 分批 2 | **完成**：`pages/search/index.ts`（45）、`router/index.ts`（37）、`ui/player/bridge.ts`（36）清零；首页启动、搜索、关于/README、播放续播与长按回归通过。剩余 187 处（category 25、settings 35、player detail/index 22、其余 105） |
 
 ---
 
