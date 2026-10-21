@@ -20,7 +20,7 @@ var LeLePages = (function () {
         movies: 'src/pages/movies/template.html',
         category: 'src/pages/category/template.html',
         history: 'src/pages/history/template.html',
-        settings: 'pages/settings.html',
+        settings: 'src/pages/settings/template.html',
         about: 'src/pages/about/template.html',
         readme: 'src/pages/readme/template.html'
     };

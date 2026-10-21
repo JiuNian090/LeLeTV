@@ -429,7 +429,7 @@
 | 340 | `pages/history.html` | 历史页片段 | migrated | `src/pages/history/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 341 | `pages/movies.html` | 影片结果页片段 | migrated | `src/pages/movies/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 342 | `pages/readme.html` | README/说明页片段 | migrated | `src/pages/readme/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 343 | `pages/settings.html` | 设置页片段 | migrated | `src/pages/settings/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 343 | `pages/settings.html` | 设置页片段 | migrated | `src/pages/settings/template.html` | — | — | verified | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 
 ## scripts/
 
@@ -524,6 +524,7 @@
 | 427 | `src/pages/search/index.ts` | 搜索流程与结果页编排（迁移自 `js/app/app-search.js`） | keep | — | — | — | done | 阶段 4 第 57 条迁移目标 |
 | 428 | `src/pages/settings/admin-panel.ts` | 邀请码管理面板（迁移自 `js/auth/admin-panel.js`） | keep | — | — | — | done | 阶段 4 第 58 条迁移目标 |
 | 429 | `src/pages/settings/style.css` | 设置/管理面板样式（迁移自 `css/v2/admin.css`） | keep | — | — | — | done | 阶段 4 第 59 条迁移目标 |
+| 430 | `src/pages/settings/template.html` | 设置页片段（迁移自 `pages/settings.html`） | keep | — | — | — | done | 阶段 4 第 60 条迁移目标 |
 
 ## workers/（红区）
 
