@@ -291,7 +291,7 @@
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 240 | `css/v2/admin.css` | 设置/管理面板样式（运行时按需加载） | migrated | `src/pages/settings/style.css` | — | — | pending | page-loader.js 运行时插入 <link>，属动态引用白名单 |
+| 240 | `css/v2/admin.css` | 设置/管理面板样式（运行时按需加载） | migrated | `src/pages/settings/style.css` | — | — | verified | 无相对资源引用 |
 | 241 | `css/v2/base.css` | 全局基础样式/布局/组件 | migrated | `src/styles/base.css` | — | — | pending | — |
 | 242 | `css/v2/home.css` | 首页样式 | migrated | `src/pages/home/style.css` | — | — | verified | 相对图片路径已同步 |
 | 243 | `css/v2/player.css` | 播放页样式 | migrated | `src/pages/player/style.css` | — | — | verified | 无相对资源引用 |
@@ -523,6 +523,7 @@
 | 426 | `src/pages/search/cards.ts` | 搜索结果卡片渲染（迁移自 `js/ui/search-cards.js`） | keep | — | — | — | done | 阶段 4 第 56 条迁移目标 |
 | 427 | `src/pages/search/index.ts` | 搜索流程与结果页编排（迁移自 `js/app/app-search.js`） | keep | — | — | — | done | 阶段 4 第 57 条迁移目标 |
 | 428 | `src/pages/settings/admin-panel.ts` | 邀请码管理面板（迁移自 `js/auth/admin-panel.js`） | keep | — | — | — | done | 阶段 4 第 58 条迁移目标 |
+| 429 | `src/pages/settings/style.css` | 设置/管理面板样式（迁移自 `css/v2/admin.css`） | keep | — | — | — | done | 阶段 4 第 59 条迁移目标 |
 
 ## workers/（红区）
 
