@@ -66,8 +66,8 @@ interface MoviesGroupsData {
   version: MovieGroup[];
   short: MovieGroup[];
   related: MovieGroup[];
-  hero?: { groups: MovieGroup[]; exact: boolean };
-  [key: string]: MovieGroup[] | { groups: MovieGroup[]; exact: boolean } | undefined;
+  hero?: { groups: MovieGroup[]; exact: boolean } | null;
+  [key: string]: MovieGroup[] | { groups: MovieGroup[]; exact: boolean } | null | undefined;
 }
 
 interface MoviesState {
@@ -121,7 +121,7 @@ let _moviesState: MoviesState = {
 let _moviesEpoch = 0;
 
 // TMDB 类型名 → 各采集站常见分类别名（分类兜底时按序尝试）
-const GENRE_CLASS_ALIASES = {
+const GENRE_CLASS_ALIASES: Record<string, string[]> = {
   '动作':   ['动作片', '动作'],
   '冒险':   ['冒险片', '冒险'],
   '动画':   ['动漫', '动画片', '动画'],
@@ -168,14 +168,14 @@ const SHELF_DEFS = [
   { key: 'related', title: '相关影片', note: '片名与关键词相近' }
 ];
 
-function _escapeHtml(s) {
+function _escapeHtml(s: unknown): string {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function _plainText(s) {
+function _plainText(s: unknown): string {
   return String(s == null ? '' : s)
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]+>/g, '')
@@ -184,7 +184,7 @@ function _plainText(s) {
     .trim();
 }
 
-function _isValidSource(id) {
+function _isValidSource(id: string): boolean {
   if (id.indexOf('custom_') === 0) {
     var i = parseInt(id.replace('custom_', ''), 10);
     return i >= 0 && i < customAPIs.length;
@@ -193,9 +193,9 @@ function _isValidSource(id) {
 }
 
 // 源排序规则：与搜索页一致 —— 负载均衡平均响应时间短的（快源）在前
-function _orderSourcesByLoad(ids) {
+function _orderSourcesByLoad(ids: string[]): string[] {
   var stats = categoryWindow.loadBalancer ? categoryWindow.loadBalancer.apiStats : null;
-  return ids.slice().sort(function (a, b) {
+  return ids.slice().sort(function (a: string, b: string) {
     var sa = stats && stats.get(a) ? (stats.get(a).averageResponseTime || 9999) : 9999;
     var sb = stats && stats.get(b) ? (stats.get(b).averageResponseTime || 9999) : 9999;
     return sa - sb;
@@ -205,9 +205,9 @@ function _orderSourcesByLoad(ids) {
 // 结果排序统一到 search-cards.js 的 _sortResultsByLatencyThenName：
 // 源本次搜索延迟升序 → 片名(去季/部/集) → 季序 → 源名
 
-function _getSourceCounts(results) {
-  var counts = {};
-  results.forEach(function (r) {
+function _getSourceCounts(results: MovieItem[]): Record<string, number> {
+  var counts: Record<string, number> = {};
+  results.forEach(function (r: MovieItem) {
     counts[r.source_code] = (counts[r.source_code] || 0) + 1;
   });
   return counts;
@@ -215,10 +215,10 @@ function _getSourceCounts(results) {
 
 // ===================== 结果分组：最佳匹配 / 其他版本 / 衍生短剧 / 相关影片 =====================
 
-function _cnNum(s) {
+function _cnNum(s: string | number): number {
   s = String(s || '');
   if (/^\d+$/.test(s)) return parseInt(s, 10);
-  var digits = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+  var digits: Record<string, number> = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
   var pos = s.indexOf('十');
   if (pos < 0) return digits[s] || 0;
   var tens = pos === 0 ? 1 : (digits[s[0]] || 0);
@@ -227,7 +227,7 @@ function _cnNum(s) {
 }
 
 /** 片名里的季序：「第二季 / 第2部 / S2 / Season 2」，base 是去掉季序后的片名 */
-function _seasonOf(name) {
+function _seasonOf(name: string): { base: string; season: number | null } {
   name = String(name || '').trim();
   var m = name.match(/第\s*([0-9一二三四五六七八九十两]+)\s*[季部]/);
   if (m) return { base: name.replace(m[0], ' ').replace(/\s+/g, ' ').trim(), season: _cnNum(m[1]) };
@@ -236,13 +236,13 @@ function _seasonOf(name) {
   return { base: name, season: null };
 }
 
-function _seasonLabel(n) {
+function _seasonLabel(n: number): string {
   var cn = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
   return '第' + (n >= 1 && n <= 10 ? cn[n - 1] : n) + '季';
 }
 
 /** 去掉关键词后剩下的片段是否只由版本词组成（前面还允许带一个季序） */
-function _isVersionRest(rest) {
+function _isVersionRest(rest: string): boolean {
   rest = String(rest || '').replace(/^(第?[0-9一二三四五六七八九十两]+[季部集话]|s\d{1,2})/, '');
   var guard = 0;
   while (rest && guard++ < 8) {
@@ -256,12 +256,12 @@ function _isVersionRest(rest) {
   return !rest;
 }
 
-function _isShortDrama(item) {
+function _isShortDrama(item: MovieItem): boolean {
   return /短剧|微剧|微短剧|竖屏/.test(String(item.type_name || ''));
 }
 
 /** 展示用片名：去掉资源站接在后面的别名（「片名$别名」） */
-function _displayName(name) {
+function _displayName(name: unknown): string {
   return String(name || '').split('$')[0].trim();
 }
 
@@ -269,22 +269,22 @@ function _displayName(name) {
  * 衍生作品：关键词后面紧跟「之」或标点再接别的名字（庆余年之大赵逍遥王、庆余年，全世界都以为……），
  * 或者分类本身就是短剧
  */
-function _isDerivative(name, keyword, item) {
+function _isDerivative(name: string, keyword: string, item: MovieItem): boolean {
   var kwEsc = String(keyword || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   if (!kwEsc) return false;
   if (new RegExp('^' + kwEsc + '\\s*[之：:，,、·\\-—~～（(【\\[]').test(name)) return true;
   return _isShortDrama(item) && _normTitle(name).indexOf(_normTitle(keyword)) >= 0;
 }
 
-function _firstPic(items) {
+function _firstPic(items: MovieItem[]): string {
   for (var i = 0; i < items.length; i++) {
     var pic = items[i].vod_pic;
-    if (pic && /^https?:\/\//.test(pic)) return pic;
+    if (typeof pic === 'string' && /^https?:\/\//.test(pic)) return pic;
   }
   return '';
 }
 
-function _bySeason(a, b) {
+function _bySeason(a: MovieGroup, b: MovieGroup): number {
   var sa = a.season === null ? 0 : a.season;
   var sb = b.season === null ? 0 : b.season;
   if (sa !== sb) return sa - sb;
@@ -299,11 +299,11 @@ function _bySeason(a, b) {
  *   related  其余（片名相近、简介命中等）
  * 没有精确命中时，片源最多的那组顶上当最佳匹配
  */
-function _groupMoviesResults(results, keyword) {
+function _groupMoviesResults(results: MovieItem[], keyword: string): MoviesGroupsData {
   var groups = _mergeResultsByTitle(results);
   var kw = _normTitle(keyword);
-  var out = { all: groups, main: [], version: [], short: [], related: [], hero: null };
-  groups.forEach(function (g) {
+  var out: MoviesGroupsData = { all: groups, main: [], version: [], short: [], related: [], hero: null };
+  groups.forEach(function (g: MovieGroup) {
     var name = _displayName(g.lead.vod_name);
     var se = _seasonOf(name);
     g.name = name;
@@ -321,7 +321,7 @@ function _groupMoviesResults(results, keyword) {
     else if (_isDerivative(name, keyword, g.lead)) kind = 'short';
     else kind = 'related';
     g.kind = kind;
-    out[kind].push(g);
+    (out[kind] as MovieGroup[]).push(g);
   });
   if (out.main.length) {
     out.hero = { groups: out.main.slice().sort(_bySeason), exact: true };
@@ -329,7 +329,7 @@ function _groupMoviesResults(results, keyword) {
     var best = groups.slice().sort(function (a, b) { return b.items.length - a.items.length; })[0];
     out.hero = { groups: [best], exact: false };
     // 顶上来的这组从货架里挪走，不重复出现
-    out[best.kind] = out[best.kind].filter(function (g) { return g !== best; });
+    out[best.kind] = (out[best.kind] as MovieGroup[]).filter(function (g: MovieGroup) { return g !== best; });
   }
   return out;
 }
@@ -362,8 +362,8 @@ function renderMoviesPageHeader() {
   var n = _moviesState.results.length;
   var srcCount = 0;
   if (n > 0) {
-    var seen = {};
-    _moviesState.results.forEach(function (r) { seen[r.source_code] = 1; });
+    var seen: Record<string, number> = {};
+    _moviesState.results.forEach(function (r: MovieItem) { seen[r.source_code || ''] = 1; });
     srcCount = Object.keys(seen).length;
   }
   var titles = n > 0 ? _moviesGroups().all.length : 0;
@@ -380,11 +380,11 @@ function renderMoviesPageHeader() {
 
 // ===================== 筛选一行：分段 + 来源 =====================
 
-function renderMoviesSegments(data) {
+function renderMoviesSegments(data: MoviesGroupsData | null | undefined): void {
   var box = document.getElementById('moviesSegs');
   if (!box) return;
   if (!data) { box.innerHTML = ''; return; }
-  var counts = { all: data.all.length, main: data.main.length, version: data.version.length, short: data.short.length, related: data.related.length };
+  var counts: Record<string, number> = { all: data.all.length, main: data.main.length, version: data.version.length, short: data.short.length, related: data.related.length };
   // 当前分段已经没有内容（结果边搜边变）：退回全部
   if (_moviesState.segment !== 'all' && !counts[_moviesState.segment]) _moviesState.segment = 'all';
   var seg = _moviesState.segment || 'all';
@@ -429,17 +429,17 @@ function renderMoviesSidebar() {
 
 // ===================== 最佳匹配 =====================
 
-function _playAttrs(item) {
+function _playAttrs(item: MovieItem): string {
   var sid = (item.vod_id || '').toString().replace(/[^\w-]/g, '');
   var au = item.api_url ? ' data-api-url="' + _escapeHtml(item.api_url) + '"' : '';
   return 'data-action="play-directly" data-id="' + sid + '" data-name="' + _escapeHtml(String(item.vod_name || '').trim()) + '" data-source="' + _escapeHtml(item.source_code || '') + '"' + au;
 }
 
 /** 预检判死的线路挪到最后（其余顺序不变）：播放按钮永远指向第一条没判死的 */
-function _sortDeadLast(items) {
+function _sortDeadLast(items: MovieItem[]): MovieItem[] {
   if (!categoryWindow.LeLeLineProbe || !items || items.length < 2) return items;
-  var alive = [], dead = [];
-  items.forEach(function (it) {
+  var alive: MovieItem[] = [], dead: MovieItem[] = [];
+  items.forEach(function (it: MovieItem) {
     (categoryWindow.LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false ? dead : alive).push(it);
   });
   return dead.length ? alive.concat(dead) : items;
@@ -447,10 +447,10 @@ function _sortDeadLast(items) {
 
 /** 起播前预检：最佳匹配一渲染就并行探前 3 条线路；判死的正好是播放按钮指向的那条，就重绘换到下一条（重绘会接着探新的前 3 条）。
  *  只有一条线路也探：判死的结论进缓存，播放页一进来就直接换线，不用等清单超时 */
-function _probeHeroLine(g) {
+function _probeHeroLine(g: MovieGroup): void {
   if (!categoryWindow.LeLeLineProbe || !g || !g.items || !g.items.length) return;
   var keyword = _moviesState.keyword;
-  g.items.slice(0, 3).forEach(function (it) {
+  g.items.slice(0, 3).forEach(function (it: MovieItem) {
     if (!it.vod_id || !it.source_code) return;
     var source = String(it.source_code), vodId = String(it.vod_id);
     if (categoryWindow.LeLeLineProbe.cached(source, vodId, 0) !== undefined) return;
@@ -463,11 +463,11 @@ function _probeHeroLine(g) {
   });
 }
 
-function _cssUrl(url) {
+function _cssUrl(url: string): string {
   return 'url(&quot;' + _escapeHtml(String(url).replace(/["\\\n\r]/g, '')) + '&quot;)';
 }
 
-function renderMoviesHero(data) {
+function renderMoviesHero(data: MoviesGroupsData): void {
   var el = document.getElementById('moviesHero');
   if (!el) return;
   var st = _moviesState;
@@ -476,11 +476,11 @@ function renderMoviesHero(data) {
   if (!hero || (seg !== 'all' && seg !== 'main')) { el.hidden = true; return; }
 
   var groups = hero.groups;
-  var idx;
-  if (!st.seasonPicked && groups.length > 1 && groups.every(function (x) { return x.season === null; })) {
+  var idx: number;
+  if (!st.seasonPicked && groups.length > 1 && groups.every(function (x: MovieGroup) { return x.season === null; })) {
     // 不是真正的分季、用户也没手选：默认显示线路最多的那个版本，起播更稳
     idx = 0;
-    groups.forEach(function (x, i) { if (x.items.length > groups[idx].items.length) idx = i; });
+    groups.forEach(function (x: MovieGroup, i: number) { if (x.items.length > groups[idx].items.length) idx = i; });
   } else {
     idx = Math.min(Math.max(0, st.season || 0), groups.length - 1);
   }
@@ -488,13 +488,13 @@ function renderMoviesHero(data) {
   var g = groups[idx];
   g.items = _sortDeadLast(g.items);
   var lead = g.items[0];
-  var pic = g.pic || _firstPic(groups.reduce(function (acc, x) { return acc.concat(x.items); }, []));
-  var years = groups.map(function (x) { return String(x.year || '').trim(); }).filter(Boolean).sort();
+  var pic = g.pic || _firstPic(groups.reduce(function (acc: MovieItem[], x: MovieGroup) { return acc.concat(x.items); }, []));
+  var years = groups.map(function (x: MovieGroup) { return String(x.year || '').trim(); }).filter(Boolean).sort();
   var yearText = years.length ? (years[0] === years[years.length - 1] ? years[0] : years[0] + ' – ' + years[years.length - 1]) : '';
-  var seen = {};
-  groups.forEach(function (x) { x.items.forEach(function (it) { seen[it.source_code] = 1; }); });
+  var seen: Record<string, number> = {};
+  groups.forEach(function (x: MovieGroup) { x.items.forEach(function (it: MovieItem) { seen[it.source_code || ''] = 1; }); });
   var srcCount = Object.keys(seen).length;
-  var multiNull = groups.filter(function (x) { return x.season === null; }).length > 1;
+  var multiNull = groups.filter(function (x: MovieGroup) { return x.season === null; }).length > 1;
   var title = hero.exact ? (groups[0].base || g.name) : g.name;
   var meta = [_plainText(lead.type_name), yearText, groups.length > 1 ? groups.length + ' 季' : '', srcCount + ' 个片源'].filter(Boolean).join(' · ');
   var desc = _plainText(lead.vod_content || lead.vod_blurb || '');
@@ -512,7 +512,7 @@ function renderMoviesHero(data) {
   if (meta) h += '<p class="movies-hero-meta">' + _escapeHtml(meta) + '</p>';
   if (groups.length > 1) {
     h += '<div class="movies-seasons" role="tablist" aria-label="选季">';
-    groups.forEach(function (x, i) {
+    groups.forEach(function (x: MovieGroup, i: number) {
       var label = x.season !== null ? _seasonLabel(x.season) : (multiNull ? (x.year ? x.year + ' 版' : x.name) : '正片');
       var sub = [x.year, x.remarks, x.items.length + ' 条线路'].filter(Boolean).join(' · ');
       h += '<button type="button" class="movies-season' + (i === idx ? ' is-active' : '') + '" role="tab" aria-selected="' + (i === idx) + '" data-season="' + i + '">' +
@@ -530,7 +530,7 @@ function renderMoviesHero(data) {
   if (g.remarks) h += '<span class="movies-hero-remarks">' + _escapeHtml(g.remarks) + '</span>';
   h += '</div>';
   h += '<div class="movies-lines"' + (st.linesOpen ? '' : ' hidden') + '>';
-  g.items.forEach(function (it) {
+  g.items.forEach(function (it: MovieItem) {
     var dead = !!categoryWindow.LeLeLineProbe && categoryWindow.LeLeLineProbe.cached(String(it.source_code), String(it.vod_id), 0) === false;
     var lvl = dead ? 'bad' : (typeof _latencyLevel === 'function' ? _latencyLevel(it.source_latency) : '');
     var lat = dead ? '不可用' : (lvl ? _latencyText(it.source_latency) : '');
@@ -552,15 +552,15 @@ function renderMoviesHero(data) {
 // ===================== 卡片与货架 =====================
 
 // 一张卡：2:3 海报，右上角源数（多个片源合并时），左下角集数备注；片名 + 年份·类型。点击播放最快的片源
-function _buildGroupCard(g) {
+function _buildGroupCard(g: MovieGroup): string {
   g.items = _sortDeadLast(g.items);
   var item = g.items[0];
   var nameRaw = String(g.name || item.vod_name || '').trim();
   var sn = _escapeHtml(nameRaw);
   var cover = item.vod_pic && /^https?:\/\//.test(item.vod_pic) ? item.vod_pic : (g.pic || '');
   var remarks = g.remarks !== undefined ? g.remarks : _plainText(item.vod_remarks);
-  var meta = [item.vod_year, item.type_name].filter(Boolean).map(function (v) { return _escapeHtml(_plainText(v)); }).join(' · ');
-  var srcNames = g.items.map(function (o) { return o.source_name; }).filter(Boolean).join('、');
+  var meta = [item.vod_year, item.type_name].filter(Boolean).map(function (v: unknown) { return _escapeHtml(_plainText(v)); }).join(' · ');
+  var srcNames = g.items.map(function (o: MovieItem) { return o.source_name; }).filter(Boolean).join('、');
 
   var h = '<article class="v2-pcard v2-rcard search-result-card card-hover" role="button" tabindex="0" ' + _playAttrs(item) + ' aria-label="播放 ' + sn + '">';
   // 片名首字占位垫在最下层：资源站的图床普遍偏慢，图片到之前卡片也不是一块黑
@@ -577,7 +577,7 @@ function _buildGroupCard(g) {
   return h;
 }
 
-function _shelfHtml(def, groups) {
+function _shelfHtml(def: { key: string; title: string; note: string }, groups: MovieGroup[]): string {
   if (!groups || !groups.length) return '';
   return '<section class="movies-shelf" data-kind="' + def.key + '">' +
     '<div class="movies-shelf-head"><h3>' + def.title + '</h3><span>' + groups.length + '</span>' + (def.note ? '<p>' + def.note + '</p>' : '') + '</div>' +
@@ -598,9 +598,9 @@ function _moviesEmptyHtml() {
  * 边搜边出会反复重建卡片：封面已经在缓存里的直接标成加载完成，不再从占位淡入一遍；
  * 入场动画也只在这个关键词第一次出结果时做
  */
-function _settleCachedPosters(root) {
+function _settleCachedPosters(root: Element | null): void {
   if (!root) return;
-  Array.prototype.forEach.call(root.querySelectorAll('.v2-poster > img:not(.loaded)'), function (img) {
+  Array.prototype.forEach.call(root.querySelectorAll('.v2-poster > img:not(.loaded)'), function (img: HTMLImageElement) {
     if (img.complete && img.naturalWidth > 0 && typeof _posterLoaded === 'function') _posterLoaded(img);
   });
 }
@@ -674,10 +674,10 @@ function renderMoviesGrid() {
   var seg = st.segment || 'all';
   var h = '';
   if (seg === 'all') {
-    SHELF_DEFS.forEach(function (def) { h += _shelfHtml(def, data[def.key]); });
+    SHELF_DEFS.forEach(function (def) { h += _shelfHtml(def, data[def.key] as MovieGroup[]); });
   } else if (seg !== 'main') {
     var def = SHELF_DEFS.filter(function (d) { return d.key === seg; })[0];
-    h = def ? _shelfHtml(def, data[seg]) : '';
+    h = def ? _shelfHtml(def, data[seg] as MovieGroup[]) : '';
   }
   grid.innerHTML = h;
   _settleCachedPosters(grid);
@@ -712,7 +712,7 @@ function _discardStaleSearchCache() {
   try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (e) { /* 隐私模式等场景忽略 */ }
 }
 
-function _freshState(keyword, results, opts, mode, loading) {
+function _freshState(keyword: string, results: MovieItem[] | null | undefined, opts: { from?: string; fallbackGenres?: string[] }, mode: string, loading: boolean): MoviesState {
   return {
     keyword: keyword,
     results: results || [],
@@ -730,7 +730,7 @@ function _freshState(keyword, results, opts, mode, loading) {
 }
 
 // 搜索结果完成后统一进入结果页（search() 调用）
-function showMoviesResults(keyword, results, opts) {
+function showMoviesResults(keyword: string, results: MovieItem[], opts?: { from?: string; fallbackGenres?: string[] }): void {
   opts = opts || {};
   _discardStaleSearchCache();
   // 作为一次新的结果页渲染，作废仍在途的旧加载管道
@@ -750,7 +750,7 @@ function showMoviesResults(keyword, results, opts) {
 }
 
 // 类别入口（tmdb.js 调用）：直接进入结果页并独立发起搜索
-function openMoviesPage(keyword, opts) {
+function openMoviesPage(keyword: string, opts?: { from?: string; fallbackGenres?: string[] }): void {
   opts = opts || {};
   _discardStaleSearchCache();
   // 新入口发起：作废仍在途的旧搜索/旧加载管道（后发起者优先）
@@ -782,7 +782,7 @@ async function loadMoviesResults() {
   var ordered = _orderSourcesByLoad((selectedAPIs || []).filter(_isValidSource));
   var DEADLINE_MS = 12000;
   var startedAt = Date.now();
-  var allResults = [];
+  var allResults: MovieItem[] = [];
   var renderQueued = false;
 
   // 多个片源几乎同时返回时合并成一帧重绘
@@ -848,7 +848,7 @@ async function loadMoviesResults() {
 
 // ===================== 混合兜底：按分类拉取 =====================
 
-async function _runCategoryFallback(ordered) {
+async function _runCategoryFallback(ordered: string[]): Promise<void> {
   var genre = (_moviesState.fallbackGenres && _moviesState.fallbackGenres[0]) || '';
   var aliases = GENRE_CLASS_ALIASES[genre] || (genre ? [genre] : []);
   var epoch = _moviesState.epoch || 0;
@@ -866,7 +866,7 @@ async function _runCategoryFallback(ordered) {
   renderMoviesPageHeader();
   renderMoviesSidebar();
 
-  var allResults = [];
+  var allResults: MovieItem[] = [];
   if (ordered && ordered.length) {
     for (var i = 0; i < ordered.length; i++) {
       if (epoch !== _moviesEpoch) return;
@@ -905,7 +905,7 @@ async function _runCategoryFallback(ordered) {
 
 // ===================== 播放页返回恢复 =====================
 
-function restoreMoviesFromCache(cached) {
+function restoreMoviesFromCache(cached: { keyword?: string; results?: MovieItem[]; from?: string; activeFilter?: string } | null): boolean {
   if (!cached || !cached.keyword || !Array.isArray(cached.results) || cached.results.length === 0) return false;
   _moviesState = _freshState(cached.keyword, cached.results, { from: cached.from || 'home' }, 'search', false);
   _moviesState.activeSource = cached.activeFilter || 'all';
