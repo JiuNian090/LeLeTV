@@ -45,7 +45,7 @@
     <!-- 样式：变量与背景 → 通用组件 → 首页。
          views.css（内页）与 admin.css（设置页面板）改由 js/app/page-loader.js
          在首次进入对应页面时加载，不再占用首屏。 -->
-    <link rel="stylesheet" href="css/v2/tokens.css?v=v4.1.2">
+    <link rel="stylesheet" href="src/styles/variables.css?v=v4.1.2">
     <link rel="stylesheet" href="src/styles/base.css?v=v4.1.2">
     <link rel="stylesheet" href="src/pages/home/style.css?v=v4.1.2">
 
@@ -78,7 +78,7 @@
     </style>
 
     <!-- 主题：私密模式标记 + 已保存的主题色，均在首帧之前落到 <html> 上
-     · 私密模式：css/variables.css 的 html[data-hidden-mode] 据此把默认色切成铜色
+     · 私密模式：src/styles/variables.css 的 html[data-hidden-mode] 据此把默认色切成铜色
      · 自定义主题色：把派生色写进行内样式（优先级高于上面的样式表规则），
        避免先闪默认色再切到目标色；算法与 js/ui/theme-system.js 一致，改动需同步 -->
 <script>
@@ -199,7 +199,7 @@
          首帧就是最终背景（深色底 + 霓虹粉/樱花白径向光晕），不依赖外部 CSS；
          随后由 body 首部的内联脚本播放「玻璃五角星 → LeLeTV 逐字母显影」入场。 -->
     <style>
-        /* 底色兜底：样式表（tokens.css 的 --v2-bg）还在路上时，html/body 的默认背景是白色，
+        /* 底色兜底：样式表（src/styles/variables.css 的 --v2-bg）还在路上时，html/body 的默认背景是白色，
            解析过程中的任何一次重绘都会露出白。先写死深色底，让第一次绘制就是启动层的基底 */
         html, body { background: #0A0A0B; }
         /* 占位期间页面尚未样式化，先按住滚动，避免出现临时滚动条；元素移除后规则自动失效 */
@@ -594,7 +594,7 @@
         // ---------- 加载进度 ----------
         // 阶段由 js/app/boot-sequence.js 推进，这里只负责画：
         //   启动层出现 → 关键样式 12% → DOM 20% → 鉴权 22~35% → 首页 40~95% → 进入 100%
-        var CRITICAL_STYLES = ['v2/tokens.css', 'src/styles/base.css', 'src/pages/home/style.css'];
+        var CRITICAL_STYLES = ['src/styles/variables.css', 'src/styles/base.css', 'src/pages/home/style.css'];
         var progress = 0;
         var lastProgressAt = now();
         var stall = 0;               // 停滞兜底：缓慢缓推，避免进度条看起来卡死
@@ -1021,7 +1021,7 @@
     })();
     </script>
 
-    <!-- 全站背景：三团缓慢漂移的径向光，参数见 css/v2/tokens.css -->
+    <!-- 全站背景：三团缓慢漂移的径向光，参数见 src/styles/variables.css -->
     <div class="v2-glow" aria-hidden="true"><span class="g-main"></span><span class="g-blush"></span><span class="g-deep"></span></div>
     <!-- 品牌 sprite：图形与字标各一份，颜色由使用处的 currentColor 决定 -->
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">

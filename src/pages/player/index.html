@@ -18,7 +18,7 @@
     <link rel="manifest" href="/manifest.json">
     
     <!-- 样式：变量与背景 → 通用组件 → 播放页 -->
-    <link rel="stylesheet" href="/css/v2/tokens.css?v=v4.1.2">
+    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.1.2">
     <link rel="stylesheet" href="/src/styles/base.css?v=v4.1.2">
     <link rel="stylesheet" href="/src/pages/player/style.css?v=v4.1.2">
     
@@ -27,7 +27,7 @@
     <meta http-equiv="Expires" content="0">
 
 <!-- 主题：私密模式标记 + 已保存的主题色，均在首帧之前落到 <html> 上
-     · 私密模式：css/variables.css 的 html[data-hidden-mode] 据此把默认色切成铜色
+     · 私密模式：src/styles/variables.css 的 html[data-hidden-mode] 据此把默认色切成铜色
      · 自定义主题色：把派生色写进行内样式（优先级高于上面的样式表规则），
        避免先闪默认色再切到目标色；算法与 js/ui/theme-system.js 一致，改动需同步 -->
 <script>
@@ -122,7 +122,7 @@
 </script>
 </head>
 <body class="player-page">
-    <!-- 全站背景：三团缓慢漂移的径向光，参数见 css/v2/tokens.css -->
+    <!-- 全站背景：三团缓慢漂移的径向光，参数见 src/styles/variables.css -->
     <div class="v2-glow" aria-hidden="true"><span class="g-main"></span><span class="g-blush"></span><span class="g-deep"></span></div>
     
     <main class="player-main">
