@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`a110e74 refactor: 迁移 invite-auth 到 src/services/invitation.ts`
+> 最新提交：`ea7cc50 refactor: 迁移 player-ui 到 src/ui/player/ui.ts`
 
 ---
 
@@ -70,16 +70,12 @@
 
 **MAP 第 40 条**：`js/ui/pwa-install.js → src/ui/pwa-install.ts`
 
-ui 层剩余 2 条（pwa-install、ui-core）。
-- `js/ui/line-probe.js → src/services/line-probe.ts`
-- `js/ui/ui-search-history.js → src/services/search-history.ts`
-- `js/api/search.js → src/services/search.ts`
-- `js/ui/ui-viewing-history.js → src/services/viewing-history.ts`
-- `js/ui/theme-system.js → src/services/theme.ts`
-- `js/utils/version-updater.js → src/services/version-updater.ts`
-- `js/api/tmdb.js → src/services/tmdb.ts`
+之后：
 
-然后进入 ui（17）、pages（20）、router（2）、entry（2）、styles（3）、public（17）。
+- 第 41 条 `js/ui/ui-core.js → src/ui/toast.ts`（ui 层收尾）
+- 第 42 条起进入 pages 层（20 条），再 router（2）、entry（2）、styles（3）、public（17）
+
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 40 条继续。
 
 ---
 
@@ -104,7 +100,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **264.5 KB**（预算 275 KB）；`js/` 剩余 `.js` **42**。
+基线：首屏 core+app **265.2 KB**（预算 275 KB）；`js/` 剩余 `.js` **17**；tracked 369 / inventory 408。
 
 ---
 
