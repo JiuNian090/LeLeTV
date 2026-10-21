@@ -486,13 +486,12 @@ function bindTypeSwitch(): void {
   document.querySelectorAll<HTMLElement>('.tmdb-type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const type = btn.dataset.type;
-      if (type !== TMDB_STATE.type) {
-        TMDB_STATE.type = type;
-        resetTmdbFilters();
-        renderTmdbFilters();
-        loadTmdbResults();
-        saveTmdbState();
-      }
+      if (!type || type === TMDB_STATE.type) return;
+      TMDB_STATE.type = type;
+      resetTmdbFilters();
+      renderTmdbFilters();
+      loadTmdbResults();
+      saveTmdbState();
     });
   });
 }
@@ -526,14 +525,17 @@ function bindFilterTags(): void {
       if (genre === TMDB_STATE.selectedGenre) return;
       TMDB_STATE.selectedGenre = genre;
     } else if (btn.hasAttribute('data-country')) {
-      if (btn.dataset.country === TMDB_STATE.originCountry) return;
-      TMDB_STATE.originCountry = btn.dataset.country;
+      const country = btn.dataset.country;
+      if (!country || country === TMDB_STATE.originCountry) return;
+      TMDB_STATE.originCountry = country;
     } else if (btn.hasAttribute('data-status')) {
-      if (btn.dataset.status === TMDB_STATE.tvStatus) return;
-      TMDB_STATE.tvStatus = btn.dataset.status;
+      const status = btn.dataset.status;
+      if (!status || status === TMDB_STATE.tvStatus) return;
+      TMDB_STATE.tvStatus = status;
     } else if (btn.hasAttribute('data-language')) {
-      if (btn.dataset.language === TMDB_STATE.originalLanguage) return;
-      TMDB_STATE.originalLanguage = btn.dataset.language;
+      const language = btn.dataset.language;
+      if (!language || language === TMDB_STATE.originalLanguage) return;
+      TMDB_STATE.originalLanguage = language;
     } else if (btn.hasAttribute('data-year-toggle')) {
       TMDB_STATE._yearExpanded = !TMDB_STATE._yearExpanded;
       renderTmdbFilters();
@@ -543,14 +545,17 @@ function bindFilterTags(): void {
       renderTmdbFilters();
       return;
     } else if (btn.hasAttribute('data-year')) {
-      if (btn.dataset.year === TMDB_STATE.selectedYear) return;
-      TMDB_STATE.selectedYear = btn.dataset.year;
+      const year = btn.dataset.year;
+      if (!year || year === TMDB_STATE.selectedYear) return;
+      TMDB_STATE.selectedYear = year;
     } else if (btn.hasAttribute('data-rating')) {
-      if (btn.dataset.rating === TMDB_STATE.voteRating) return;
-      TMDB_STATE.voteRating = btn.dataset.rating;
+      const rating = btn.dataset.rating;
+      if (!rating || rating === TMDB_STATE.voteRating) return;
+      TMDB_STATE.voteRating = rating;
     } else if (btn.hasAttribute('data-sort')) {
-      if (btn.dataset.sort === TMDB_STATE.selectedSort) return;
-      TMDB_STATE.selectedSort = btn.dataset.sort;
+      const sort = btn.dataset.sort;
+      if (!sort || sort === TMDB_STATE.selectedSort) return;
+      TMDB_STATE.selectedSort = sort;
     } else {
       return;
     }
@@ -710,7 +715,7 @@ function renderTmdbCards(items: TmdbResultItem[]): void {
     // 片名首字占位垫在下面，封面到了再淡入覆盖
     const posterHtml = `<div class="v2-poster-empty"><b>${safeTitle.charAt(0) || '·'}</b><span>${safeTitle}</span></div>`
       + (posterPath ? `<img src="${posterPath}" alt="" data-title="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="_cardImgFallback(this)">` : '');
-    const ratingHtml = item.vote_count >= 20 && item.vote_average ? `<span class="v2-badge">★ ${voteAverage}</span>` : '';
+    const ratingHtml = (item.vote_count ?? 0) >= 20 && item.vote_average ? `<span class="v2-badge">★ ${voteAverage}</span>` : '';
     const langHtml = langLabel ? `<span class="v2-lang">${langLabel.label}</span>` : '';
 
     // 整张卡片是按钮：点击后按片名去各片源检索（沿用 data-action="tmdb-search-video"）
