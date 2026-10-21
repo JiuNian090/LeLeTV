@@ -12,6 +12,22 @@ import {
   setSearchThrottled,
 } from '../../core/state';
 import type { SearchFilterConfig } from '../../core/state';
+import { openMobileSearch, closeMobileSearch, importConfig, exportConfig } from '../../services/config';
+import { searchByAPIAndKeyWord } from '../../services/search';
+import {
+  clearHistoryNavHighlight,
+  clearSearchHistory,
+  deleteSingleSearchHistory,
+  getActiveHistoryQuery,
+  hideSearchHistory,
+  navigateSearchHistory,
+  renderMobileSearchHistory,
+  repositionSearchHistory,
+  saveSearchHistory,
+  showSearchHistory,
+} from '../../services/search-history';
+import { playFromHistory } from '../../services/viewing-history';
+import { showToast, showLoading, hideLoading, showModal } from '../../ui/toast';
 import {
   _applySourceFilter,
   _buildSearchCardsHtml,
@@ -54,19 +70,7 @@ function getCurrentSearchKeyword() {
 // 跳转播放页前缓存搜索结果，返回结果页/首页时直接渲染
 function cacheSearchContext() {
     try {
-        // 优先缓存结果页状态（搜索/类别统一入口）
-        if (typeof _moviesState !== 'undefined' && _moviesState && _moviesState.keyword && _moviesState.results && _moviesState.results.length) {
-            const payload = {
-                keyword: _moviesState.keyword,
-                results: _moviesState.results.slice(0, SEARCH_CACHE_MAX),
-                activeFilter: _moviesState.activeSource || 'all',
-                from: _moviesState.from || 'home',
-                sourcePage: 'movies',
-                timestamp: Date.now()
-            };
-            sessionStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(payload));
-            return;
-        }
+        // 结果快照统一读 core/state，不再依赖 pages/category 的 _moviesState
         if (!lastAllResults || lastAllResults.length === 0) return;
         const keyword = getCurrentSearchKeyword() || (document.getElementById('searchInput') as HTMLInputElement).value.trim();
         if (!keyword) return;
