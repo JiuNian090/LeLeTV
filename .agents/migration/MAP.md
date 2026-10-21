@@ -51,7 +51,7 @@
 | 23 | services | `js/utils/version-updater.js` | `src/services/version-updater.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，window 入口不变 |
 | 24 | services | `js/ui/ui-viewing-history.js` | `src/services/viewing-history.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
 | 25 | ui | `js/ui/brand-canvas.js` | `src/ui/brand-canvas.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
-| 26 | ui | `js/ui/ui.js` | `src/ui/index.ts` | pending | 第 0 节通用前置 | — |
+| 26 | ui | `js/ui/ui.js` | `src/ui/index.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 27 | ui | `js/ui/layout-pref.js` | `src/ui/layout-pref.ts` | pending | 第 0 节通用前置 | — |
 | 28 | ui | `js/ui/motion-pref.js` | `src/ui/motion-pref.ts` | pending | 第 0 节通用前置 | — |
 | 29 | ui | `js/player/player-bridge.js` | `src/ui/player/bridge.ts` | pending | 第 7 节 播放器 | — |

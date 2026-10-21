@@ -394,7 +394,7 @@
 | 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
 | 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
 | 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | verified | 公开函数名保持不变，历史分组与播放跳转逻辑原样迁移 |
-| 323 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | pending | — |
+| 323 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | verified | showSourceImportBox / showImportBox 接口不变 |
 | 324 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | verified | 公开函数与 window 入口保持不变 |
 
 ## libs/
@@ -489,6 +489,7 @@
 | 392 | `src/services/version-updater.ts` | 版本检测与更新提示（迁移自 `js/utils/version-updater.js`） | keep | — | — | — | done | 阶段 4 第 23 条迁移目标 |
 | 393 | `src/services/tmdb.ts` | TMDB 分类 / 详情接口封装（迁移自 `js/api/tmdb.js`） | keep | — | — | — | done | 阶段 4 第 24 条迁移目标 |
 | 394 | `src/ui/brand-canvas.ts` | 品牌组合 canvas 绘制（迁移自 `js/ui/brand-canvas.js`） | keep | — | — | — | done | 阶段 4 第 25 条迁移目标 |
+| 395 | `src/ui/index.ts` | 通用 UI 工具与导入弹窗（迁移自 `js/ui/ui.js`） | keep | — | — | — | done | 阶段 4 第 26 条迁移目标 |
 
 ## workers/（红区）
 

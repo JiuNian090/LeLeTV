@@ -34,7 +34,7 @@ export const BUNDLES = [
     firstScreen: true,
     files: [
       'src/services/sources/config.ts', 'src/services/balancer.ts',
-      'src/services/search-history.ts', 'src/services/viewing-history.ts', 'js/ui/ui.js',
+      'src/services/search-history.ts', 'src/services/viewing-history.ts', 'src/ui/index.ts',
       'src/services/api.ts', 'src/services/search.ts',
       'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
       'js/app/app-search.js', 'src/services/config.ts', 'src/services/sources/port.ts', 'js/app/app.js',

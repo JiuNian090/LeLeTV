@@ -1,9 +1,5 @@
 // 添加显示/隐藏 loading 的函数
 
-
-
-
-
 /**
  * 统一模态框创建方法
  * @param {Object} options
@@ -25,19 +21,15 @@
 
 // 固定定位：计算下拉菜单位置（相对于视口，覆盖所有内容）
 
-
 // 隐藏搜索历史下拉菜单
 
 // 移动端全屏搜索覆盖层 - 渲染搜索历史
 
 // 搜索框底部变平，与下拉菜单无缝衔接
 
-
 // 删除单条搜索历史记录
 
 // 增加清除搜索历史功能
-
-
 
 // 格式化时间戳为友好的日期时间格式
 
@@ -46,7 +38,6 @@
 // 加载观看历史并渲染
 
 // 渲染单个历史卡片 - 左1/4封面 + 右3/4信息
-
 
 // 格式化播放时间为 mm:ss 格式
 
@@ -60,6 +51,8 @@
 
 // 清空观看历史
 
+type FileHandler = (file: File) => void;
+
 // 点击外部关闭历史面板
 document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
@@ -67,8 +60,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const historyButton = document.querySelector('button[onclick="toggleHistory(event)"]');
 
         if (historyPanel && historyButton &&
-            !historyPanel.contains(e.target) &&
-            !historyButton.contains(e.target) &&
+            !historyPanel.contains(e.target as Node) &&
+            !historyButton.contains(e.target as Node) &&
             historyPanel.classList.contains('show')) {
             historyPanel.classList.remove('show');
         }
@@ -78,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 清除本地存储缓存并刷新页面
 
 // 显示视频源导入页面（LibreTV 源列表 JSON / 裸数组 / 旧版源配置）
-function showSourceImportBox(fun) {
+function showSourceImportBox(fun: FileHandler): void {
     showModal({
         title: '导入视频源',
         content: (body) => {
@@ -98,7 +91,7 @@ function showSourceImportBox(fun) {
                 </div>
             `;
             const dropZone = document.getElementById('sourceDropZone');
-            const fileInput = document.getElementById('sourceFileInput');
+            const fileInput = document.getElementById('sourceFileInput') as HTMLInputElement | null;
             if (dropZone) {
                 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('is-over'); });
                 dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('is-over'); });
@@ -121,7 +114,7 @@ function showSourceImportBox(fun) {
 }
 
 // 显示配置文件导入页面
-function showImportBox(fun) {
+function showImportBox(fun: FileHandler): void {
     const overlay = showModal({
         title: '导入配置',
         content: (body, modal) => {
@@ -143,7 +136,7 @@ function showImportBox(fun) {
             `;
             // 拖拽文件事件
             const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('ChooseFile');
+            const fileInput = document.getElementById('ChooseFile') as HTMLInputElement | null;
             if (dropZone) {
                 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('is-over'); });
                 dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('is-over'); });
