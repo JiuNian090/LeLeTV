@@ -1,5 +1,7 @@
 // 添加显示/隐藏 loading 的函数
 
+import { showModal } from './toast';
+
 /**
  * 统一模态框创建方法
  * @param {Object} options
@@ -71,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 清除本地存储缓存并刷新页面
 
 // 显示视频源导入页面（LibreTV 源列表 JSON / 裸数组 / 旧版源配置）
-function showSourceImportBox(fun: FileHandler): void {
+export function showSourceImportBox(fun: FileHandler): void {
     showModal({
         title: '导入视频源',
         content: (body) => {
@@ -114,7 +116,7 @@ function showSourceImportBox(fun: FileHandler): void {
 }
 
 // 显示配置文件导入页面
-function showImportBox(fun: FileHandler): void {
+export function showImportBox(fun: FileHandler): void {
     const overlay = showModal({
         title: '导入配置',
         content: (body, modal) => {

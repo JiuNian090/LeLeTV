@@ -113,6 +113,11 @@ export async function importConfigFromUrl() {
 }
 
 export async function importConfig() {
+    // services 不能 import ui：导入框由 ui/index.ts 挂在 window 上（跨层契约）
+    const showImportBox = (window as Window & {
+        showImportBox?: (onSelect: (file: File) => void) => void;
+    }).showImportBox;
+    if (typeof showImportBox !== 'function') return;
     showImportBox(async (file) => {
         try {
             if (file.size > 1024 * 1024 * 20) throw new Error('文件大小超过 20MB');
