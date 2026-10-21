@@ -29,6 +29,7 @@
     "dev": "nodemon server.mjs",
     "start": "node server.mjs",
     "build": "node scripts/generate-version.mjs && node scripts/build-bundles.mjs",
+    "analyze": "node scripts/analyze.js",
     "setup:hooks": "node scripts/setup-hooks.mjs",
     "test": "echo 'Running tests...'",
     "lint": "echo 'Linting code...'",
