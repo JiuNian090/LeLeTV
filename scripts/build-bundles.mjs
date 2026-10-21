@@ -102,8 +102,8 @@ async function main() {
 
   console.log('\n[build] updating HTML...');
 
-  // --- index.html ---
-  let idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  // --- index.html：源在 src/index.html，装配结果写根 index.html（Cloudflare Pages 入口）---
+  let idx = fs.readFileSync(path.join(ROOT, 'src/index.html'), 'utf8');
   const idxEol = detectEol(idx);
   idx = stripJsScripts(idx);
   const envMarker = '    <!-- \u73af\u5883\u53d8\u91cf\u6ce8\u5165\u811a\u672c -->';
@@ -120,7 +120,7 @@ async function main() {
   idx = idx.replace(/<meta name="leletv-page-bundles"[^>]*>/, '<meta name="leletv-page-bundles" content=\'' + pageBundles + '\'>');
   idx = collapseBlankLines(idx);
   fs.writeFileSync(path.join(ROOT, 'index.html'), idx, 'utf8');
-  console.log('[index.html] -> dist/' + coreFile + ' + dist/' + appFile);
+  console.log('[src/index.html -> index.html] -> dist/' + coreFile + ' + dist/' + appFile);
   console.log('[page bundles] -> dist/' + categoryFile + ' + dist/' + settingsFile);
 
   // --- src/pages/player/index.html ---

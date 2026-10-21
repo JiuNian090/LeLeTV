@@ -42,7 +42,7 @@
 | 9 | `_headers` | Cloudflare Pages 缓存与 CSP 配置（红区） | keep | — | — | — | done | — |
 | 10 | `_routes.json` | Cloudflare Pages Functions 路由配置（红区） | keep | — | — | — | done | — |
 | 11 | `build.config.js` | 构建配置 / bundle 清单单一来源（阶段 3 新增） | keep | — | — | — | done | — |
-| 12 | `index.html` | 应用壳 + 首页骨架 + 启动动画 | migrated | `src/index.html` | — | — | pending | — |
+| 12 | `index.html` | 应用壳 + 首页骨架 + 启动动画（Cloudflare Pages 入口） | migrated | `src/index.html` | — | — | verified | 第 64 条：源已迁入 `src/index.html`，根文件由 `build-bundles.mjs` 装配生成，不再手工编辑 |
 | 13 | `manifest.json` | PWA 清单 | migrated | `public/manifest.json` | — | — | pending | — |
 | 14 | `nodemon.json` | nodemon 开发配置 | keep | — | — | — | done | — |
 | 15 | `package.json` | 依赖与 scripts | keep | — | — | — | done | — |
@@ -532,6 +532,7 @@
 | 435 | `src/styles/base.css` | 全局基础样式（迁移自 `css/v2/base.css`） | keep | — | — | — | done | 阶段 4 第 66 条迁移目标 |
 | 436 | `src/styles/variables.css` | 设计令牌与主题变量（迁移自 `css/v2/tokens.css`） | keep | — | — | — | done | 阶段 4 第 67 条迁移目标 |
 | 437 | `src/styles/views.css` | 内页共享视图样式（迁移自 `css/v2/views.css`） | keep | — | — | — | done | 阶段 4 第 68 条迁移目标 |
+| 438 | `src/index.html` | 应用壳 + 首页骨架 + 启动动画（迁移自 `index.html`） | keep | — | — | — | done | 阶段 4 第 64 条迁移目标；根 `index.html` 由 `build-bundles.mjs` 装配生成 |
 
 ## workers/（红区）
 

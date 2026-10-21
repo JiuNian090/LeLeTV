@@ -60,7 +60,9 @@ try {
       warn(\`generate-version.mjs 不存在: \${syncScript}\`);
     } else {
       execSync(\`node "\${syncScript}"\`, { cwd: ROOT, stdio: 'inherit' });
-      const filesToStage = ['index.html', 'src/pages/player/index.html', 'service-worker.js']
+      // 根 index.html 由 src/index.html 装配生成，版本注入后必须重新装配
+      execSync('node scripts/build-bundles.mjs', { cwd: ROOT, stdio: 'inherit' });
+      const filesToStage = ['index.html', 'src/index.html', 'src/pages/player/index.html', 'service-worker.js']
         .filter(f => fs.existsSync(path.join(ROOT, f)));
       if (filesToStage.length > 0) {
         run(\`git add \${filesToStage.join(' ')}\`);
@@ -103,8 +105,8 @@ function main() {
 
   if (fs.existsSync(preCommitPath)) {
     const existingContent = fs.readFileSync(preCommitPath, 'utf8');
-    // 用 'build-bundles' 作为新版本 hook 的标志
-    if (existingContent.includes('build-bundles')) {
+    // 用 'src/index.html' 作为新版本 hook 的标志（带根页面重新装配）
+    if (existingContent.includes('src/index.html')) {
       info('pre-commit 钩子已是最新版本（含 bundle 自动构建），跳过安装');
       process.exit(0);
     }

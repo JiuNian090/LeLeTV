@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <!-- 源文件：根 index.html 由 scripts/build-bundles.mjs 从本文件装配生成，请勿直接编辑根文件。 -->
     <!-- 首帧即黑：必须紧跟 charset，早于一切外部资源与脚本。
          PWA 从桌面/主屏图标冷启动时，浏览器在拉到样式表之前有一个"默认白底"窗口，
          这段内联样式让第一次绘制就是黑底，杜绝白屏闪烁。 -->
@@ -45,9 +46,9 @@
     <!-- 样式：变量与背景 → 通用组件 → 首页。
          views.css（内页）与 admin.css（设置页面板）改由 js/app/page-loader.js
          在首次进入对应页面时加载，不再占用首屏。 -->
-    <link rel="stylesheet" href="src/styles/variables.css?v=v4.1.2">
-    <link rel="stylesheet" href="src/styles/base.css?v=v4.1.2">
-    <link rel="stylesheet" href="src/pages/home/style.css?v=v4.1.2">
+    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.1.2">
+    <link rel="stylesheet" href="/src/styles/base.css?v=v4.1.2">
+    <link rel="stylesheet" href="/src/pages/home/style.css?v=v4.1.2">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -1238,7 +1239,7 @@
     </footer>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="libs/sha256.min.js?v=v4.1.2"></script>
+    <script src="/libs/sha256.min.js?v=v4.1.2"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
