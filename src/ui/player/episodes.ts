@@ -120,7 +120,8 @@ export function playEpisode(index: number): void {
     }
 
     // 首先隐藏之前可能显示的错误
-    document.getElementById('error').style.display = 'none';
+    const errorEl = document.getElementById('error');
+    if (errorEl) errorEl.style.display = 'none';
 
     // 获取 sourceCode
     const urlParams2 = new URLSearchParams(window.location.search);
@@ -175,7 +176,7 @@ export function playEpisode(index: number): void {
             art.url = url;
         } catch (e) {
             console.warn('[LeLeTV] 剧集无缝切换失败，回退重建播放器:', e);
-            clearTimeout(episodeSwitchTimeout);
+            if (episodeSwitchTimeout) clearTimeout(episodeSwitchTimeout);
             setEpisodeSwitchTimeout(null);
             episodesWindow.isSwitchingVideo = false;
             PlayerManager.destroy();

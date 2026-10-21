@@ -137,7 +137,10 @@ interface FailoverWindow extends Window {
         const results = await withTimeout(searchByAPIAndKeyWord(src.key, title), SEARCH_TIMEOUT_MS) as unknown as FailoverSearchResult[];
         if (!Array.isArray(results)) return null;
         let best: FailoverSearchResult | null = null, bestScore = 0;
-        results.forEach(r => { const sc = r && r.vod_id ? sameShow(r, want) : 0; if (sc > bestScore) { best = r; bestScore = sc; } });
+        for (const r of results) {
+            const sc = r && r.vod_id ? sameShow(r, want) : 0;
+            if (sc > bestScore) { best = r; bestScore = sc; }
+        }
         return best ? { key: src.key, vodId: String(best.vod_id), name: src.name } : null;
     }
 

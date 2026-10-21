@@ -40,7 +40,7 @@ export function setupQualitySwitcher(hls: QualityHls): void {
 }
 
 function addQualityButton(hls: QualityHls): void {
-  var art = (window as QualityWindow).art;
+  const art = (window as QualityWindow).art;
   if (!art || _hlsLevels.length <= 1) return;
 
   var btn = document.createElement('div');
