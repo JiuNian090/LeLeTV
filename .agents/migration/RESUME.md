@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`21582c2 refactor: 迁移 settings 页片段到 src/pages/settings/template.html`
+> 最新提交：`894e2b6 refactor: 迁移 page-loader 到 src/router/page-loader.ts`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：60 / 85 条已验证** |
+| 4 | **进行中：63 / 85 条已验证** |
 
 ---
 
-## 阶段 4 已完成（MAP 1–60）
+## 阶段 4 已完成（MAP 1–63）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -84,25 +84,31 @@
 | 58 | `js/auth/admin-panel.js` | `src/pages/settings/admin-panel.ts` | 面板接口不变；与 user-devices 完全相同的重复 helper 已去重 |
 | 59 | `css/v2/admin.css` | `src/pages/settings/style.css` | page-loader STYLES 已同步 |
 | 60 | `pages/settings.html` | `src/pages/settings/template.html` | FRAGMENTS 映射已同步 |
+| 61 | `js/auth/user-devices.js` | `src/pages/settings/user-devices.ts` | 面板接口不变 |
+| 62 | `js/app/app-routing.js` | `src/router/index.ts` | 路由与切页行为不变 |
+| 63 | `js/app/page-loader.js` | `src/router/page-loader.ts` | `LeLePages` 接口不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 61 条**：`js/auth/user-devices.js → src/pages/settings/user-devices.ts`
+**MAP 第 64 条**：`index.html → src/index.html`（待确认部署策略）
+
+> 与 C-1「Cloudflare Pages 根目录直接部署、不改 wrangler」冲突：
+> 根 `index.html` 是 Pages 的默认入口，搬到 `src/` 需要构建复制或改部署配置（红区）。
 
 之后：
 
-- 第 62/63 条 router：`app-routing.js → src/router/index.ts`、`page-loader.js → src/router/page-loader.ts`
-- 第 64/65 条 entry：`index.html → src/index.html`、`app.js → src/main.ts`
-- 第 66–68 条 styles，第 69 条起 public
+- 第 65 条 `js/app/app.js → src/main.ts`
+- 第 66–68 条 styles（base / tokens / views）
+- 第 69 条起 public（17 条静态资源）
 
-> `pages/` 目录已清空，所有页面片段都已迁到 `src/pages/`。
+> `pages/` 与 `js/ui`、`js/app` 下的主要模块已迁完；`js/` 仅剩 3 个 `.js`。
 
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 61 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 64 条继续。
 
 ---
 
@@ -127,7 +133,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **266.8 KB**（预算 275 KB）；`js/` 剩余 `.js` **6**；tracked 370 / inventory 430。
+基线：首屏 core+app **267.0 KB**（预算 275 KB）；`js/` 剩余 `.js` **3**；tracked 370 / inventory 433。
 
 ---
 
