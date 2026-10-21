@@ -540,6 +540,7 @@
 | 443 | `.agents/migration/PHASE-5-GRAPH.md` | 阶段 5B 依赖复核与拆环方案 | keep | — | — | — | done | 阶段 5B-1 只读复核产物 |
 | 444 | `src/ui/player/state.ts` | 播放器共享状态（15 个可变状态 + 选集推进 hook） | keep | — | — | — | done | 阶段 5B-2 新增；index.ts 保留 window 代理 |
 | 445 | `src/ui/player/session.ts` | 播放器会话辅助（getVideoId） | keep | — | — | — | done | 阶段 5B-2b 新增；后续迁入进度/历史函数 |
+| 446 | `src/ui/player/utils.ts` | 播放器纯工具（escHtml） | keep | — | — | — | done | 阶段 5B-2c 新增；拆 detail ↔ ui |
 
 ## workers/（红区）
 

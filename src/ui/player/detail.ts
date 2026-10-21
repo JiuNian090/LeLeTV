@@ -72,10 +72,6 @@ function getVideoCover(): string {
   return '/image/logo-black.png';
 }
 
-function escHtml(str: unknown): string {
-  return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 // 表单值转义：连 & 一起转，避免标题/简介里的实体写法被浏览器二次解析
 function escTextField(str: unknown): string {
   return String(str == null ? '' : str)
@@ -197,6 +193,5 @@ Object.assign(window, {
   updateEpisodeCollapseState,
   renderResourceInfoBar,
   getVideoCover,
-  escHtml,
   showEditVideoInfoModal
 });
