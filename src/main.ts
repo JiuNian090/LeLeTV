@@ -12,6 +12,7 @@ import {
     setSearchReady,
     setSearchThrottled,
 } from './core/state';
+import type { LeLeTVAdapter } from './core/global';
 
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
 // var selectedAPIs / customAPIs 已在 src/services/sources/config.ts 中声明

@@ -22,7 +22,7 @@ interface TrackedListener {
     options?: boolean | AddEventListenerOptions;
 }
 
-class ListenerTracker {
+export class ListenerTracker {
     private _listeners: TrackedListener[] = [];
 
     /**
@@ -105,3 +105,11 @@ class ListenerTracker {
 Object.assign(window, {
   ListenerTracker
 });
+
+// 阶段 5B-3 过渡期类型桥：listener-tracker.ts 已成为 ESM 模块，尚未改为 import 的
+// 调用方仍以裸名访问。
+type ListenerTrackerCtor = typeof ListenerTracker;
+declare global {
+  const ListenerTracker: ListenerTrackerCtor;
+  type ListenerTracker = InstanceType<ListenerTrackerCtor>;
+}

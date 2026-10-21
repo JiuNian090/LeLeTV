@@ -12,7 +12,12 @@
  * @namespace window.LeLeTV
  */
 
-interface LeLeTVAdapter {
+// 阶段 5B-3：只依赖 core 内的 state / listener-tracker；跨层的 AppInit / PlayerManager / showToast
+// 仍通过 window 读取，避免 core 反向 import 上层。
+import { scopedKey } from './state';
+import { ListenerTracker } from './listener-tracker';
+
+export interface LeLeTVAdapter {
     selectedAPIs: string[];
     customAPIs: unknown[];
     player: unknown;
