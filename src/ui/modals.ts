@@ -1,7 +1,7 @@
 /**
  * 全局 UI 层：模态框 / Toast / 加载层 / 移动搜索层 / 搜索历史下拉。
- * 阶段 2 从 index.html 抽出，在 core bundle 中、ui-core.js 之前注入，
- * 因为 ui-core.js 在模块顶层就会查找 #toast / #modal。
+ * 阶段 2 从 index.html 抽出，在 core bundle 中、src/ui/toast.ts 之前注入，
+ * 因为 toast 模块在初始化时会查找 #toast / #modal。
  */
 
 (function mountGlobalUi(): void {

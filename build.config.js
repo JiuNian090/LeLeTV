@@ -18,7 +18,7 @@ export const BUNDLES = [
     name: 'leletv-core',
     firstScreen: true,
     files: [
-      // 全局模态框 / Toast 必须在 ui-core.js 之前注入：ui-core.js 在模块顶层就查找 #toast / #modal
+      // 全局模态框 / Toast 必须在 src/ui/toast.ts 之前注入：toast 模块在初始化时就查找 #toast / #modal
       'src/ui/modals.ts',
       // remote-sources 必须排在 config.ts 之后（依赖 API_SITES / extendAPISites / isHiddenContentMode），
       // 且要在 app.js 与 player.js 之前（两个页面启动时都会调用它）
@@ -26,7 +26,7 @@ export const BUNDLES = [
       'src/core/global.ts', 'src/core/storage.ts',
       'src/core/listener-tracker.ts', 'src/core/timing.ts',
       'src/core/http.ts', 'src/core/crypto.ts', 'src/services/invitation.ts',
-      'js/ui/ui-core.js', 'src/ui/motion-pref.ts', 'src/services/line-probe.ts',
+      'src/ui/toast.ts', 'src/ui/motion-pref.ts', 'src/services/line-probe.ts',
     ],
   },
   {

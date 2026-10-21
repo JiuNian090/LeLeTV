@@ -1,10 +1,31 @@
-// Toast queue variables (moved from ui.js for self-containment)
-const toastQueue = [];
-let isShowingToast = false;
-let currentToastTimeout = null;
-let loadingTimeoutId = null;
+/**
+ * 通用 UI 反馈：Toast 队列、加载遮罩、模态框与时间格式化
+ *   - 全局脚本：showToast / showLoading / hideLoading / closeModal / showModal /
+ *     formatTimestamp / formatPlaybackTime / clearLocalStorage 由其它模块按全局名直接调用
+ *   - 必须排在 src/ui/modals.ts 之后注入（modals 负责预置 #toast / #modal 结构）
+ */
 
-function showToast(message, type = 'error', duration = 3000) {
+interface ToastItem {
+    message: string;
+    type: string;
+    duration: number;
+}
+
+interface ModalOptions {
+    title?: string;
+    content?: string | ((body: HTMLElement, overlay: HTMLElement) => void);
+    width?: string;
+    closeOnBackdrop?: boolean;
+    onClose?: () => void;
+}
+
+// Toast queue variables (moved from ui.js for self-containment)
+const toastQueue: ToastItem[] = [];
+let isShowingToast = false;
+let currentToastTimeout: number | null = null;
+let loadingTimeoutId: number | null = null;
+
+function showToast(message: string, type = 'error', duration = 3000): void {
     if (!message || typeof message !== 'string') {
         console.warn('Invalid toast message:', message);
         return;
@@ -24,7 +45,8 @@ function showToast(message, type = 'error', duration = 3000) {
         dot.setAttribute('aria-hidden', 'true');
         const text = document.createElement('p');
         text.id = 'toastMessage';
-        toast.append(dot, text);
+        toast.appendChild(dot);
+        toast.appendChild(text);
         document.body.appendChild(toast);
     }
 
@@ -40,7 +62,7 @@ function showToast(message, type = 'error', duration = 3000) {
     }
 }
 
-function showNextToast() {
+function showNextToast(): void {
     if (toastQueue.length === 0) {
         isShowingToast = false;
         return;
@@ -52,10 +74,10 @@ function showNextToast() {
     }
 
     isShowingToast = true;
-    const { message, type, duration } = toastQueue.shift();
+    const { message, type, duration } = toastQueue.shift() as ToastItem;
 
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
+    const toast = document.getElementById('toast') as HTMLElement;
+    const toastMessage = document.getElementById('toastMessage') as HTMLElement;
 
     // 类型只决定左侧状态点的颜色：success / error / warning / info
     toast.dataset.type = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
@@ -63,50 +85,50 @@ function showNextToast() {
 
     requestAnimationFrame(() => toast.classList.add('is-visible'));
 
-    currentToastTimeout = setTimeout(() => {
+    currentToastTimeout = window.setTimeout(() => {
         toast.classList.remove('is-visible');
-        setTimeout(() => {
+        window.setTimeout(() => {
             showNextToast();
         }, 220);
     }, duration);
 }
 
-function showLoading(message = '正在加载') {
+function showLoading(message = '正在加载'): void {
     // 清除任何现有的超时
     if (loadingTimeoutId) {
         clearTimeout(loadingTimeoutId);
     }
 
-    const loading = document.getElementById('loading');
-    const messageEl = loading.querySelector('p');
+    const loading = document.getElementById('loading') as HTMLElement;
+    const messageEl = loading.querySelector('p') as HTMLElement;
     messageEl.textContent = message;
     loading.style.display = 'flex';
 
     // 设置30秒后自动关闭loading，防止无限loading
-    loadingTimeoutId = setTimeout(() => {
+    loadingTimeoutId = window.setTimeout(() => {
         hideLoading();
         showToast('操作超时，请稍后重试', 'warning');
     }, 30000);
 }
 
-function hideLoading() {
+function hideLoading(): void {
     // 清除超时
     if (loadingTimeoutId) {
         clearTimeout(loadingTimeoutId);
         loadingTimeoutId = null;
     }
 
-    const loading = document.getElementById('loading');
+    const loading = document.getElementById('loading') as HTMLElement;
     loading.style.display = 'none';
 }
 
-function closeModal() {
-    document.getElementById('modal').classList.add('hidden');
+function closeModal(): void {
+    (document.getElementById('modal') as HTMLElement).classList.add('hidden');
     // 清除 iframe 内容
-    document.getElementById('modalContent').innerHTML = '';
+    (document.getElementById('modalContent') as HTMLElement).innerHTML = '';
 }
 
-function showModal(options) {
+function showModal(options: ModalOptions): HTMLElement {
     const { title, content, width = 'narrow', closeOnBackdrop = true, onClose } = options;
 
     // 移除已有模态框
@@ -153,7 +175,7 @@ function showModal(options) {
         bodyEl.innerHTML = content;
     }
 
-    const close = () => {
+    const close = (): void => {
         overlay.remove();
         if (onClose) onClose();
     };
@@ -170,10 +192,10 @@ function showModal(options) {
     return overlay;
 }
 
-function formatTimestamp(timestamp) {
+function formatTimestamp(timestamp: number | string): string {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = now - date;
+    const diff = now.getTime() - date.getTime();
 
     // 小于1小时，显示"X分钟前"
     if (diff < 3600000) {
@@ -203,7 +225,7 @@ function formatTimestamp(timestamp) {
     return `${year}-${month}-${day} ${hour}:${minute}`;
 }
 
-function formatPlaybackTime(seconds) {
+function formatPlaybackTime(seconds: number): string {
     if (!seconds || isNaN(seconds)) return '00:00';
 
     const minutes = Math.floor(seconds / 60);
@@ -212,7 +234,7 @@ function formatPlaybackTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function clearLocalStorage() {
+function clearLocalStorage(): void {
     const overlay = showModal({
         title: '清除本地数据',
         content: (body, modal) => {
@@ -223,7 +245,7 @@ function clearLocalStorage() {
                     <button type="button" id="confirmClearBtn" class="v2-btn v2-btn--danger">清除</button>
                 </div>
             `;
-            modal.querySelector('#confirmClearBtn').addEventListener('click', function () {
+            (modal.querySelector('#confirmClearBtn') as HTMLElement).addEventListener('click', function () {
                 // 清除所有localStorage数据
                 localStorage.clear();
                 // 清除所有cookie
@@ -242,14 +264,14 @@ function clearLocalStorage() {
                 const countdownInterval = setInterval(() => {
                     countdown--;
                     if (countdown >= 0 && countdownElement) {
-                        countdownElement.textContent = countdown;
+                        countdownElement.textContent = String(countdown);
                     } else {
                         clearInterval(countdownInterval);
                         window.location.reload();
                     }
                 }, 1000);
             });
-            modal.querySelector('#cancelClearBtn').addEventListener('click', () => overlay.remove());
+            (modal.querySelector('#cancelClearBtn') as HTMLElement).addEventListener('click', () => overlay.remove());
         },
         closeOnBackdrop: true
     });

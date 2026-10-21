@@ -391,7 +391,7 @@
 | 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | verified | `window.LeLePwa` 接口不变 |
 | 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
 | 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | verified | IIFE 原样迁移，LeLeThemeStore / LeLeThemeSystem 接口不变 |
-| 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
+| 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | verified | 全局函数名不变 |
 | 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
 | 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | verified | 公开函数名保持不变，历史分组与播放跳转逻辑原样迁移 |
 | 323 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | verified | showSourceImportBox / showImportBox 接口不变 |
@@ -504,6 +504,7 @@
 | 407 | `src/ui/player/shortcuts.ts` | 播放器键盘快捷键（迁移自 `js/player/player-shortcuts.js`） | keep | — | — | — | done | 阶段 4 第 38 条迁移目标 |
 | 408 | `src/ui/player/ui.ts` | 播放器覆盖层/进度条/资源切换（迁移自 `js/player/player-ui.js`） | keep | — | — | — | done | 阶段 4 第 39 条迁移目标 |
 | 409 | `src/ui/pwa-install.ts` | PWA 安装提示（迁移自 `js/ui/pwa-install.js`） | keep | — | — | — | done | 阶段 4 第 40 条迁移目标 |
+| 410 | `src/ui/toast.ts` | Toast / 加载遮罩 / 模态框 / 时间格式化（迁移自 `js/ui/ui-core.js`） | keep | — | — | — | done | 阶段 4 第 41 条迁移目标 |
 
 ## workers/（红区）
 

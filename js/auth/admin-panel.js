@@ -205,7 +205,7 @@ const INVITE_ADMIN_PANEL = {
    * 生成弹窗必须挂在 document.body 下：
    * 设置页容器 .page-content.active 带 transform: translateY(0)，会让内部
    * position: fixed 的包含块变成整个页面内容（而不是视口），弹窗就会跑到长页面正中，
-   * 需要往上翻才能看到。挂到 body 后与 ui-core 的 showModal 行为一致。
+   * 需要往上翻才能看到。挂到 body 后与 toast 模块的 showModal 行为一致。
    * 注意：必须在事件绑定之后调用，否则 container.querySelector 找不到弹窗内元素。
    */
   _mountGenModal(container) {
