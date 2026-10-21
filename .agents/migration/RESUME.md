@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`5799648 refactor: 迁移 about 页片段到 src/pages/about/template.html`
+> 最新提交：`7467d36 refactor: 迁移 movies-page 到 src/pages/category/index.ts`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：42 / 85 条已验证** |
+| 4 | **进行中：43 / 85 条已验证** |
 
 ---
 
-## 阶段 4 已完成（MAP 1–42）
+## 阶段 4 已完成（MAP 1–43）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -66,20 +66,20 @@
 | 40 | `js/ui/pwa-install.js` | `src/ui/pwa-install.ts` | `window.LeLePwa` 接口不变 |
 | 41 | `js/ui/ui-core.js` | `src/ui/toast.ts` | 全局函数名不变 |
 | 42 | `pages/about.html` | `src/pages/about/template.html` | FRAGMENTS 映射已同步，fetch 路径为 `src/pages/about/template.html` |
+| 43 | `js/ui/movies-page.js` | `src/pages/category/index.ts` | 全局入口与 `_moviesState` 读取方式不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 43 条**：`js/ui/movies-page.js → src/pages/category/index.ts`
+**MAP 第 44 条**：`pages/category.html → src/pages/category/template.html`
 
 之后：
 
-- 第 44 条 `pages/category.html → src/pages/category/template.html`
 - 第 45 条 `pages/history.html → src/pages/history/template.html`
 - pages 层共 20 条，再 router（2）、entry（2）、styles（3）、public（17）
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 43 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 44 条继续。
 
 ---
 
@@ -104,7 +104,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **265.3 KB**（预算 275 KB）；`js/` 剩余 `.js` **15**；tracked 369 / inventory 410。
+基线：首屏 core+app **265.5 KB**（预算 275 KB）；`js/` 剩余 `.js` **14**；tracked 369 / inventory 412。
 
 ---
 
