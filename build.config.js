@@ -71,7 +71,7 @@ export const BUNDLES = [
     files: [
       'src/services/api.ts', 'src/services/search.ts',
       'src/services/viewing-history.ts',
-      'js/player/player-manager.js', 'js/player/player-shortcuts.js',
+      'src/ui/player/manager.ts', 'js/player/player-shortcuts.js',
       'src/ui/player/core.ts', 'src/ui/player/episodes.ts',
       'js/player/player-ui.js', 'src/ui/player/failover.ts', 'src/ui/player/lights.ts',
       'src/ui/player/detail.ts', 'js/player/player-quality.js', 'src/ui/player/index.ts',

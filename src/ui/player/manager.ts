@@ -10,34 +10,38 @@
  *   - 为未来播放器实例无全局化提供接入点
  */
 
+interface PlayerManagerArt extends ArtplayerInstance {
+    destroy?: (removeDom?: boolean) => void;
+}
+
 const PlayerManager = {
-    _art: null,
-    _hls: null,
-    _intervals: [],
-    _timeouts: [],
-    _tracker: null,
+    _art: null as PlayerManagerArt | null,
+    _hls: null as HlsInstance | null,
+    _intervals: [] as number[],
+    _timeouts: [] as number[],
+    _tracker: null as ListenerTracker | null,
 
     /** @returns {Artplayer|null} */
-    getInstance() {
+    getInstance(): PlayerManagerArt | null {
         return this._art;
     },
 
     /** @returns {Hls|null} */
-    getHlsInstance() {
+    getHlsInstance(): HlsInstance | null {
         return this._hls;
     },
 
     /**
      * @param {Artplayer|null} instance
      */
-    setInstance(instance) {
+    setInstance(instance: PlayerManagerArt | null): void {
         this._art = instance;
     },
 
     /**
      * @param {Hls|null} instance
      */
-    setHlsInstance(instance) {
+    setHlsInstance(instance: HlsInstance | null): void {
         // 销毁旧的 HLS 实例
         if (this._hls && this._hls !== instance) {
             try { this._hls.destroy(); } catch (e) { /* 静默处理 */ }
@@ -53,7 +57,7 @@ const PlayerManager = {
      * 获取或创建 ListenerTracker 实例
      * @returns {Object}
      */
-    getTracker() {
+    getTracker(): ListenerTracker | null {
         if (!this._tracker && typeof ListenerTracker !== 'undefined') {
             this._tracker = new ListenerTracker();
         }
@@ -63,11 +67,11 @@ const PlayerManager = {
     /**
      * 销毁当前播放器（ArtPlayer + HLS + 清理所有定时器和事件）
      */
-    destroy() {
+    destroy(): void {
         // 销毁 ArtPlayer
         if (this._art) {
             try {
-                this._art.destroy(true);
+                this._art.destroy?.(true);
             } catch (e) {
                 console.warn('PlayerManager: ArtPlayer 销毁时出错:', e);
             }
@@ -115,7 +119,7 @@ const PlayerManager = {
      * @param {number|null|undefined} id
      * @returns {number|null|undefined}
      */
-    trackInterval(id) {
+    trackInterval(id: number | null | undefined): number | null | undefined {
         if (id != null) {
             this._intervals.push(id);
         }
@@ -127,7 +131,7 @@ const PlayerManager = {
      * @param {number|null|undefined} id
      * @returns {number|null|undefined}
      */
-    trackTimeout(id) {
+    trackTimeout(id: number | null | undefined): number | null | undefined {
         if (id != null) {
             this._timeouts.push(id);
         }
@@ -135,7 +139,7 @@ const PlayerManager = {
     },
 
     /** 清空所有追踪的定时器 */
-    _clearAllTimers() {
+    _clearAllTimers(): void {
         this._intervals.forEach(function (id) {
             try { clearInterval(id); } catch (e) { /* 静默处理 */ }
         });

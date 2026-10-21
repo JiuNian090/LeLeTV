@@ -374,7 +374,7 @@
 | 300 | `js/player/player-episodes.js` | 剧集列表与选集 | migrated | `src/ui/player/episodes.ts` | — | — | verified | 公开函数保持不变，选集与无缝切换逻辑原样迁移 |
 | 301 | `js/player/player-failover.js` | 起播失败自动换线 | migrated | `src/ui/player/failover.ts` | — | — | verified | IIFE 原样迁移，LeLeFailover 接口不变 |
 | 302 | `js/player/player-lights.js` | 播放页氛围灯/背景 | migrated | `src/ui/player/lights.ts` | — | — | verified | IIFE 原样迁移，LeLeLights 接口不变 |
-| 303 | `js/player/player-manager.js` | 播放器生命周期管理 | migrated | `src/ui/player/manager.ts` | — | — | pending | — |
+| 303 | `js/player/player-manager.js` | 播放器生命周期管理 | migrated | `src/ui/player/manager.ts` | — | — | verified | PlayerManager 接口与全局兼容行为不变 |
 | 304 | `js/player/player-quality.js` | 清晰度切换 | migrated | `src/ui/player/quality.ts` | — | — | pending | — |
 | 305 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | pending | — |
 | 306 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | pending | — |
@@ -499,6 +499,7 @@
 | 402 | `src/ui/player/failover.ts` | 起播失败自动换线（迁移自 `js/player/player-failover.js`） | keep | — | — | — | done | 阶段 4 第 33 条迁移目标 |
 | 403 | `src/ui/player/index.ts` | 播放页入口与返回导航（迁移自 `js/player/player.js`） | keep | — | — | — | done | 阶段 4 第 34 条迁移目标 |
 | 404 | `src/ui/player/lights.ts` | 播放页氛围灯/背景（迁移自 `js/player/player-lights.js`） | keep | — | — | — | done | 阶段 4 第 35 条迁移目标 |
+| 405 | `src/ui/player/manager.ts` | 播放器生命周期管理（迁移自 `js/player/player-manager.js`） | keep | — | — | — | done | 阶段 4 第 36 条迁移目标 |
 
 ## workers/（红区）
 

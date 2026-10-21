@@ -61,7 +61,7 @@
 | 33 | ui | `js/player/player-failover.js` | `src/ui/player/failover.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 34 | ui | `js/player/player.js` | `src/ui/player/index.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 35 | ui | `js/player/player-lights.js` | `src/ui/player/lights.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
-| 36 | ui | `js/player/player-manager.js` | `src/ui/player/manager.ts` | pending | 第 7 节 播放器 | — |
+| 36 | ui | `js/player/player-manager.js` | `src/ui/player/manager.ts` | verified | 第 7 节 播放器 | 2026-10-21 迁移完成 |
 | 37 | ui | `js/player/player-quality.js` | `src/ui/player/quality.ts` | pending | 第 7 节 播放器 | — |
 | 38 | ui | `js/player/player-shortcuts.js` | `src/ui/player/shortcuts.ts` | pending | 第 7 节 播放器 | — |
 | 39 | ui | `js/player/player-ui.js` | `src/ui/player/ui.ts` | pending | 第 7 节 播放器 | — |
