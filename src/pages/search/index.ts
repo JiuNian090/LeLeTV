@@ -1158,7 +1158,8 @@ export async function search() {
 
     } catch (error) {
         console.error('搜索错误:', error);
-        if (error.name === 'AbortError') {
+        const errorName = String((error as { name?: unknown } | null)?.name || '');
+        if (errorName === 'AbortError') {
             showToast('搜索请求超时，请检查网络连接', 'error');
         } else {
             showToast('搜索请求失败，请稍后重试', 'error');

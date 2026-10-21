@@ -398,7 +398,8 @@ function handleSourceImportFile(file: File): void {
         try {
             parsed = parseSourceListJson(String(reader.result || ''));
         } catch (error) {
-            showToast(error && error.message ? error.message : '源文件格式错误', 'error');
+            const message = (error as { message?: unknown } | null)?.message;
+            showToast(message ? String(message) : '源文件格式错误', 'error');
             return;
         }
 

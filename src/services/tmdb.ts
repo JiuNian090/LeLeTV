@@ -655,7 +655,8 @@ export async function loadTmdbResults(): Promise<void> {
     restoreTmdbScroll();
   } catch (err) {
     console.error('TMDB 加载失败:', err);
-    const safeMessage = String(err && err.message || '未知错误').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const rawMessage = (err as { message?: unknown } | null)?.message;
+    const safeMessage = String(rawMessage || '未知错误').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     container.innerHTML = `
       <div class="v2-state is-error">
         <span class="v2-state-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 8v4.5m0 3.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>

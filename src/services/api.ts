@@ -26,6 +26,14 @@ function normalizePlayUrl(url: string): string {
     return url;
 }
 
+/** 把 catch 到的 unknown 归一成可读消息（DOMException 等非 Error 对象也带 message） */
+function errorMessage(error: unknown): string {
+    if (error && typeof error === 'object' && 'message' in error) {
+        return String((error as { message?: unknown }).message);
+    }
+    return String(error);
+}
+
 async function handleApiRequest(url: URL): Promise<string> {
     const customApi = url.searchParams.get('customApi') || '';
     const customDetail = url.searchParams.get('customDetail') || '';
@@ -233,7 +241,7 @@ async function handleApiRequest(url: URL): Promise<string> {
         console.error('API处理错误:', error);
         return JSON.stringify({
             code: 400,
-            msg: error.message || '请求处理失败',
+            msg: errorMessage(error) || '请求处理失败',
             list: [],
             episodes: [],
         });
@@ -339,7 +347,7 @@ async function handleSpecialDetail通用(id: string, sourceConfig: { detailUrl: 
         // 返回标准化的错误响应
         return JSON.stringify({
             code: 500,
-            msg: `${sourceConfig.sourceName}详情获取失败: ${error.message}`,
+            msg: `${sourceConfig.sourceName}详情获取失败: ${errorMessage(error)}`,
             episodes: [],
             videoInfo: null
         });
@@ -487,7 +495,7 @@ async function handleAggregatedSearch(searchQuery: string): Promise<string> {
         console.error('聚合搜索处理错误:', error);
         return JSON.stringify({
             code: 400,
-            msg: '聚合搜索处理失败: ' + error.message,
+            msg: '聚合搜索处理失败: ' + errorMessage(error),
             list: []
         });
     }
@@ -590,7 +598,7 @@ async function handleMultipleCustomSearch(searchQuery: string, customApiUrls: st
         console.error('自定义API聚合搜索处理错误:', error);
         return JSON.stringify({
             code: 400,
-            msg: '自定义API聚合搜索处理失败: ' + error.message,
+            msg: '自定义API聚合搜索处理失败: ' + errorMessage(error),
             list: []
         });
     }

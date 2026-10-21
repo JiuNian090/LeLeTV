@@ -822,10 +822,11 @@ async function testVideoSourceSpeed(sourceKey: string, vodId: string): Promise<S
         }
 
     } catch (error) {
+        const errorName = String((error as { name?: unknown } | null)?.name || '');
         return {
             speed: -1,
             // AbortSignal.timeout() 抛的是 TimeoutError，两种都要认
-            error: (error.name === 'TimeoutError' || error.name === 'AbortError') ? '超时' : '测试失败'
+            error: (errorName === 'TimeoutError' || errorName === 'AbortError') ? '超时' : '测试失败'
         };
     }
 }
