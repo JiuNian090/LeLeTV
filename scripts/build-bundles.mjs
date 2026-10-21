@@ -17,6 +17,8 @@ console.log('[build] version:', version);
 const CORE = {
   name: 'leletv-core',
   files: [
+    // 全局模态框 / Toast 必须在 ui-core.js 之前注入：ui-core.js 在模块顶层就查找 #toast / #modal
+    'src/ui/modals.ts',
     // remote-sources 必须排在 config.js 之后（依赖 API_SITES / extendAPISites / isHiddenContentMode），
     // 且要在 app.js 与 player.js 之前（两个页面启动时都会调用它）
     'js/core/config.js', 'js/api/remote-sources.js',
@@ -39,8 +41,11 @@ const APP = {
     'js/utils/version-updater.js', 'js/core/cache-manager.js',
     'js/effects/hub-flow.js', 'js/ui/brand-canvas.js', 'js/ui/home-shelves.js', 'js/ui/hero-glass.js',
     'js/ui/home-recent.js', 'js/ui/nav-search.js', 'js/ui/pwa-install.js', 'js/ui/layout-pref.js',
+    'src/ui/nav-scroll.ts',
     // 启动编排必须最后执行：它要等所有首页模块与路由注册完成后再开始鉴权 / 首页加载
     'js/app/boot-sequence.js',
+    // 邀请码弹窗逻辑注册 DOMContentLoaded，保持在 boot-sequence 之后（与拆分前顺序一致）
+    'src/ui/invite-login.ts',
   ],
 };
 
@@ -99,7 +104,8 @@ async function buildBundle(config) {
   const result = await esbuild.transform(content, {
     minify: true,
     sourcemap: true,
-    sourcefile: config.name + '.js',
+    sourcefile: config.name + '.ts',
+    loader: 'ts',
     target: ['es2020'],
   });
 

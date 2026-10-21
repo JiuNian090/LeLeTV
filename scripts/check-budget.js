@@ -10,14 +10,17 @@ import path from 'node:path';
 const DIST = 'dist';
 
 // 单位 KB（1024 字节）；超预算即失败
+// 阶段 2：全局模态框/Toast 从 index.html 外置到 core bundle（约 +13 KB），
+// index.html 同步减少约 21 KB；因此 core 与首屏 JS 预算按"HTML→JS 迁移"上调，
+// 阶段 3 完成真正的按需加载后再收紧。
 const BUDGETS = [
-  { prefix: 'leletv-core', max: 45, firstScreen: true },
+  { prefix: 'leletv-core', max: 55, firstScreen: true },
   { prefix: 'leletv-app', max: 240, firstScreen: true },
   { prefix: 'leletv-category', max: 30, firstScreen: false },
   { prefix: 'leletv-settings', max: 50, firstScreen: false },
   { prefix: 'leletv-player', max: 120, firstScreen: false },
 ];
-const FIRST_SCREEN_MAX = 260;
+const FIRST_SCREEN_MAX = 275;
 
 if (!fs.existsSync(DIST)) {
   console.warn('[budget] dist/ 不存在，先运行 npm run build');
