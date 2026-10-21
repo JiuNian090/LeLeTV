@@ -29,8 +29,11 @@ interface AdminInvite {
 interface AdminApiResponse {
   ok?: boolean;
   code?: string;
-  codes?: string[];
+  codes?: AdminInvite[];
   error?: string;
+  total_codes?: number;
+  total_devices?: number;
+  recent_active_devices?: number;
   [key: string]: unknown;
 }
 
@@ -87,7 +90,7 @@ const INVITE_ADMIN_PANEL = {
         headers: { 'Authorization': `Bearer ${this._getAdminToken()}` }
       });
       const data: AdminApiResponse = await response.json();
-      return data.ok ? data.codes : [];
+      return data.ok && data.codes ? data.codes : [];
     } catch {
       return [];
     }
@@ -272,10 +275,14 @@ const INVITE_ADMIN_PANEL = {
     
     const result = await this.generateCode();
     if (result.ok) {
-      if (remark) await this.setRemark(result.code, remark);
-      const display = remark ? `${result.code}（${remark}）` : result.code;
-      showToast(`邀请码已生成: ${display}`, 'success');
-      this._refresh(container);
+      if (result.code) {
+        if (remark) await this.setRemark(result.code, remark);
+        const display = remark ? `${result.code}（${remark}）` : result.code;
+        showToast(`邀请码已生成: ${display}`, 'success');
+        this._refresh(container);
+      } else {
+        showToast('生成失败', 'error');
+      }
     } else {
       showToast(result.error || '生成失败', 'error');
     }
@@ -293,11 +300,13 @@ const INVITE_ADMIN_PANEL = {
     
     if (stats) {
       const recentActive = stats.recent_active_devices ?? 0;
+      const totalCodes = stats.total_codes ?? 0;
+      const totalDevices = stats.total_devices ?? 0;
       statsEl.innerHTML = `
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#f472b6">${stats.total_codes}</div><div class="invite-stat-label">总邀请码</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#60a5fa">${stats.total_devices}</div><div class="invite-stat-label">总设备数</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#f472b6">${totalCodes}</div><div class="invite-stat-label">总邀请码</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#60a5fa">${totalDevices}</div><div class="invite-stat-label">总设备数</div></div>
         <div class="invite-stat-card"><div class="invite-stat-value" style="color:#22c55e">${recentActive}</div><div class="invite-stat-label">最近活跃</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#9ca3af">${stats.total_devices - recentActive}</div><div class="invite-stat-label">不活跃</div></div>
+        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#9ca3af">${totalDevices - recentActive}</div><div class="invite-stat-label">不活跃</div></div>
       `;
     }
     

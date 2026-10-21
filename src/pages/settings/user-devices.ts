@@ -191,18 +191,20 @@ const USER_DEVICES_PANEL = {
     }
 
     if (codeEl) {
-      codeEl.textContent = data.code;
-      codeEl.dataset.code = data.code;
+      const code = data.code || '';
+      codeEl.textContent = code;
+      codeEl.dataset.code = code;
     }
-    if (countEl) countEl.textContent = data.device_count;
-    if (maxEl) maxEl.textContent = data.max_devices;
+    if (countEl) countEl.textContent = data.device_count != null ? String(data.device_count) : '';
+    if (maxEl) maxEl.textContent = data.max_devices != null ? String(data.max_devices) : '';
 
-    if (data.devices.length === 0) {
+    const devices = data.devices || [];
+    if (devices.length === 0) {
       listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">暂无设备</p>';
       return;
     }
 
-    listEl.innerHTML = data.devices.map((d: DeviceInfo) => {
+    listEl.innerHTML = devices.map((d: DeviceInfo) => {
       const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
       const safeName = (d.device_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return `
