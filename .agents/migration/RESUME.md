@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`5a54131 refactor: 阶段 5A-5 settings bundle 切换 ESM 入口`
+> 最新提交：`9d9668d refactor: 阶段 5A-6 player bundle 切换 ESM 入口`
 
 ---
 
@@ -22,6 +22,8 @@
 | 5A-3 | **完成**：core bundle（14 文件）切 ESM 入口 + 10 个文件补 window 桥；core 47.8 KB，首屏 263.5 KB |
 | 5A-4 | **完成**：app bundle（30 文件）切 ESM 入口 + 14 个文件补桥（可变状态用 getter/setter）；app 190.7 KB，首屏 238.4 KB |
 | 5A-5 | **完成**：settings bundle（3 文件）切 ESM 入口；settings 40.5 KB，设置页 / 主题 / 邀请码 / 设备面板回归通过 |
+| 5A-6 | **完成**：player bundle（15 文件）切 ESM 入口 + 8 个文件补桥（15 个播放器状态用 getter/setter）；player 94.2 KB |
+| 5A-7 | **已达成**：5 个 bundle 全部走 esbuild.build；concat 分支暂留作回退 |
 
 ---
 
@@ -115,9 +117,9 @@
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-阶段 5A-5 已完成：settings bundle 切 ESM 入口。
-下一步：阶段 5A-6（player bundle，14 文件），完成后 5 个 bundle 全部走 esbuild.build。
-新会话开场：读本文件与 `PHASE-5-PLAN.md` → 从 5A-6 继续 → `npm start` 启动一次服务器。
+阶段 5A 已完成：5 个 bundle 全部走 esbuild.build，首屏 238.4 KB。
+下一步：阶段 5B-1（抽 `src/core/state.ts` 收敛共享状态与双向引用），再逐模块改 import、启用 splitting。
+新会话开场：读本文件与 `PHASE-5-PLAN.md` → 从 5B-1 继续 → `npm start` 启动一次服务器。
 
 ---
 
@@ -142,7 +144,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **238.4 KB**（预算 275 KB）；core **47.8 KB**；app **190.7 KB**；category **19.1 KB**；settings **40.5 KB**；`js/` 剩余 `.js` **0**；tracked 372 / inventory 441。
+基线：首屏 core+app **238.4 KB**（预算 275 KB）；core **47.8 KB**；app **190.7 KB**；category **19.1 KB**；settings **40.5 KB**；player **94.2 KB**；`js/` 剩余 `.js` **0**；tracked 372 / inventory 441。
 
 ---
 

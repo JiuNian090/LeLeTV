@@ -148,15 +148,17 @@ ui/player/episodes.ts     <-> ui/player/ui.ts
 - 仅 `_timeAgo` / `_deviceIcon` 需要桥（admin-panel 裸名复用）；两个面板已用 `window.*` 显式导出。
 - 按需 bundle，不影响首屏。
 
-### 5A-6. player bundle ESM 化（14 文件）
+### 5A-6. player bundle ESM 化（15 文件）
 
+- **状态：已完成（commit `9d9668d`）**。player 104.5 → 94.2 KB；续播 / 选集 / 空格暂停 / 关灯回归通过。
 - 范围：`src/ui/player/*` 与 `api` / `search` / `viewing-history` / `version-updater` / `cache`。
-- 注意 player 与 app 的交叉引用（`playDirectly` / `currentEpisodeIndex` 等），桥接需同时覆盖裸名与 `window.*`。
-- 验证：播放页起播、选集、线路切换、返回。
+- 8 个文件补桥；`art`、`currentEpisodeIndex`、`currentEpisodes` 等 15 个播放器状态用 getter/setter。
+- `search.ts` / `viewing-history.ts` 复用 5A-4 已加的桥，未重复。
 
 ### 5A-7. 构建全量收尾
 
-- 5 个 bundle 全部走 `esbuild.build` 后，移除 `esm` 标记与 concat 分支。
+- **状态：已达成**：5 个 bundle 全部走 `esbuild.build`（core / app / category / settings / player）。
+- concat 分支暂留作回退路径；5B 完成后移除 `esm` 标记与 `concatFiles`。
 - `build.config.js` 的 `files` 保留为顺序清单（供 analyze / 兼容）。
 - HTML 引用逻辑不变；产物文件名仍带 hash。
 
