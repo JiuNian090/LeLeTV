@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：28 / 85 条已验证** |
+| 4 | **进行中：29 / 85 条已验证** |
 
 ---
 
@@ -52,14 +52,15 @@
 | 26 | `js/ui/ui.js` | `src/ui/index.ts` | 导入弹窗入口不变 |
 | 27 | `js/ui/layout-pref.js` | `src/ui/layout-pref.ts` | LeLeLayout 接口不变 |
 | 28 | `js/ui/motion-pref.js` | `src/ui/motion-pref.ts` | LeLeMotion 接口不变 |
+| 29 | `js/player/player-bridge.js` | `src/ui/player/bridge.ts` | 公开函数与全局播放状态不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 29 条**：`js/player/player-bridge.js → src/ui/player/bridge.ts`
+**MAP 第 30 条**：`js/player/player-core.js → src/ui/player/core.ts`
 
-ui 层剩余 13 条。
+ui 层剩余 12 条。
 - `js/ui/line-probe.js → src/services/line-probe.ts`
 - `js/ui/ui-search-history.js → src/services/search-history.ts`
 - `js/api/search.js → src/services/search.ts`

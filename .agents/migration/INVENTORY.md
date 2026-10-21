@@ -368,7 +368,7 @@
 | 294 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | verified | 已迁移至 `src/core/timing.ts`；类型检查通过 |
 | 295 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | pending | — |
 | 296 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | verified | fetch 路径已同步为 `/src/services/adfilter-config.json` |
-| 297 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | pending | — |
+| 297 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | verified | 公开函数与全局播放状态变量保持不变 |
 | 298 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | pending | — |
 | 299 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | pending | — |
 | 300 | `js/player/player-episodes.js` | 剧集列表与选集 | migrated | `src/ui/player/episodes.ts` | — | — | pending | — |
@@ -492,6 +492,7 @@
 | 395 | `src/ui/index.ts` | 通用 UI 工具与导入弹窗（迁移自 `js/ui/ui.js`） | keep | — | — | — | done | 阶段 4 第 26 条迁移目标 |
 | 396 | `src/ui/layout-pref.ts` | 首页与导航布局偏好（迁移自 `js/ui/layout-pref.js`） | keep | — | — | — | done | 阶段 4 第 27 条迁移目标 |
 | 397 | `src/ui/motion-pref.ts` | 动态效果偏好（迁移自 `js/ui/motion-pref.js`） | keep | — | — | — | done | 阶段 4 第 28 条迁移目标 |
+| 398 | `src/ui/player/bridge.ts` | 播放页与搜索/详情接口桥接（迁移自 `js/player/player-bridge.js`） | keep | — | — | — | done | 阶段 4 第 29 条迁移目标 |
 
 ## workers/（红区）
 

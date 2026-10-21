@@ -1,5 +1,42 @@
+interface VideoInfo {
+    [key: string]: unknown;
+    source_name?: string;
+    desc?: string;
+    type?: string;
+    year?: string;
+    area?: string;
+    director?: string;
+    actor?: string;
+    remarks?: string;
+}
+
+interface DetailData {
+    [key: string]: unknown;
+    videoInfo?: VideoInfo;
+    episodes?: string[];
+}
+
+interface DetailResult {
+    data?: DetailData;
+    error?: string;
+}
+
+interface PlayerBridgeWindow extends Window {
+    renderEpisodes?: (vodName: string, sourceCode: string, vodId: string) => string;
+    copyLinks?: () => void;
+    toggleEpisodeOrder?: (sourceCode: string, vodId: string) => void;
+    playPreviousEpisode?: (sourceCode: string) => void;
+    playNextEpisode?: (sourceCode: string) => void;
+}
+
+declare function showLoading(): void;
+declare function hideLoading(): void;
+declare function cacheSearchContext(): void;
+
+const bridgeWindow = window as unknown as PlayerBridgeWindow;
+
 // 构建API参数并获取视频详情（提取自 playDirectly 和 showDetails 的重复逻辑）
-async function buildApiParamsAndFetch(id, sourceCode) {
+async function buildApiParamsAndFetch(id: string, sourceCode: string): Promise<DetailResult> {
     let apiParams = '';
     if (sourceCode.startsWith('custom_')) {
         const customIndex = sourceCode.replace('custom_', '');
@@ -20,7 +57,7 @@ async function buildApiParamsAndFetch(id, sourceCode) {
     const cacheBuster = `&_t=${timestamp}`;
     try {
         const response = await fetch(`/api/detail?id=${encodeURIComponent(id)}${apiParams}${cacheBuster}`);
-        const data = await response.json();
+        const data = await response.json() as DetailData;
         return { data };
     } catch (error) {
         return { error: '网络请求失败，请稍后重试' };
@@ -30,7 +67,7 @@ async function buildApiParamsAndFetch(id, sourceCode) {
 // 构建播放页返回地址：直接取当前页完整 URL（含 hash 与查询参数），保证返回精确回到点击来源页。
 // 特例：结果页（#movies）若由类别页发起的搜索进入，返回时应跳过结果页直达类别页，
 // 因此改写为 #category 并附 returnTo 标记，供 goHome 判断本次不能用 history.back()。
-function buildPlayerBackUrl() {
+function buildPlayerBackUrl(): string {
     try {
         if (location.hash === '#movies'
             && typeof _moviesState !== 'undefined' && _moviesState
@@ -45,7 +82,7 @@ function buildPlayerBackUrl() {
 
 // 跳转播放页前写入哨兵：标记本次为站内同标签页导航。
 // 播放页返回时据此决定走 history.back()（历史栈紧邻条目必为来源页，可命中 bfcache 秒回）
-function navigateToPlayer(playerUrl) {
+function navigateToPlayer(playerUrl: string): void {
     try {
         sessionStorage.setItem('leletv_player_from_tab', '1');
     } catch (e) { /* 忽略 sessionStorage 不可用 */ }
@@ -53,7 +90,7 @@ function navigateToPlayer(playerUrl) {
 }
 
 // 点击搜索结果直接跳转播放器（立即跳转，不等待API响应）
-async function playDirectly(id, vod_name, sourceCode) {
+async function playDirectly(id: string, vod_name: string, sourceCode: string): Promise<void> {
     if (!id) {
         showToast('视频ID无效', 'error');
         return;
@@ -67,7 +104,7 @@ async function playDirectly(id, vod_name, sourceCode) {
         localStorage.removeItem('currentVideoInfo');
         localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
         localStorage.setItem('currentSourceCode', sourceCode || '');
-        localStorage.setItem('lastPlayTime', Date.now());
+        localStorage.setItem('lastPlayTime', String(Date.now()));
         localStorage.setItem('lastSearchPage', window.location.href);
     } catch (e) {
         console.error('保存播放状态失败:', e);
@@ -83,7 +120,7 @@ async function playDirectly(id, vod_name, sourceCode) {
 }
 
 // 显示详情 - 修改为支持自定义API
-async function showDetails(id, vod_name, sourceCode) {
+async function showDetails(id: string, vod_name: string, sourceCode: string): Promise<void> {
     if (!id) {
         showToast('视频ID无效', 'error');
         return;
@@ -145,7 +182,7 @@ async function showDetails(id, vod_name, sourceCode) {
 
             currentEpisodes = data.episodes;
             currentEpisodeIndex = 0;
-            
+
             // 保存视频详细信息到localStorage
             try {
                 localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
@@ -174,7 +211,7 @@ async function showDetails(id, vod_name, sourceCode) {
                     </button>
                 </div>
                 <div id="episodesGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                    ${renderEpisodes(vod_name, sourceCode, id)}
+                    ${bridgeWindow.renderEpisodes!(vod_name, sourceCode, id)}
                 </div>
             `;
         } else {
@@ -196,7 +233,7 @@ async function showDetails(id, vod_name, sourceCode) {
     }
 }
 
-function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
+function playVideo(url: string, vod_name: string, sourceCode: string, episodeIndex = 0, vodId = ''): void {
 
     let playerUrl = `player.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 
@@ -207,9 +244,9 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
     try {
         localStorage.setItem('currentVideoTitle', vod_name || '未知视频');
         localStorage.setItem('currentEpisodes', JSON.stringify(currentEpisodes));
-        localStorage.setItem('currentEpisodeIndex', episodeIndex);
+        localStorage.setItem('currentEpisodeIndex', String(episodeIndex));
         localStorage.setItem('currentSourceCode', sourceCode || '');
-        localStorage.setItem('lastPlayTime', Date.now());
+        localStorage.setItem('lastPlayTime', String(Date.now()));
         localStorage.setItem('lastSearchPage', window.location.href);
         localStorage.setItem('lastPageUrl', window.location.href);
     } catch (e) {
@@ -220,26 +257,26 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0, vodId = '') {
 }
 
 // 播放上一集
-function playPreviousEpisode(sourceCode) {
+bridgeWindow.playPreviousEpisode = function (sourceCode: string): void {
     if (currentEpisodeIndex > 0) {
         const prevIndex = currentEpisodeIndex - 1;
         const prevUrl = currentEpisodes[prevIndex];
         playVideo(prevUrl, currentVideoTitle, sourceCode, prevIndex);
     }
-}
+};
 
 // 播放下一集
-function playNextEpisode(sourceCode) {
+bridgeWindow.playNextEpisode = function (sourceCode: string): void {
     if (currentEpisodeIndex < currentEpisodes.length - 1) {
         const nextIndex = currentEpisodeIndex + 1;
         const nextUrl = currentEpisodes[nextIndex];
         playVideo(nextUrl, currentVideoTitle, sourceCode, nextIndex);
     }
-}
+};
 
 
 // 辅助函数用于渲染剧集按钮（使用当前的排序状态）
-function renderEpisodes(vodName, sourceCode, vodId) {
+bridgeWindow.renderEpisodes = function (vodName: string, sourceCode: string, vodId: string): string {
     const episodes = episodesReversed ? [...currentEpisodes].reverse() : currentEpisodes;
     return episodes.map((episode, index) => {
         // 根据倒序状态计算真实的剧集索引
@@ -251,10 +288,10 @@ function renderEpisodes(vodName, sourceCode, vodId) {
             </button>
         `;
     }).join('');
-}
+};
 
 // 复制视频链接到剪贴板
-function copyLinks() {
+bridgeWindow.copyLinks = function (): void {
     const episodes = episodesReversed ? [...currentEpisodes].reverse() : currentEpisodes;
     const linkList = episodes.join('\r\n');
     navigator.clipboard.writeText(linkList).then(() => {
@@ -262,15 +299,15 @@ function copyLinks() {
     }).catch(err => {
         showToast('复制失败，请检查浏览器权限', 'error');
     });
-}
+};
 
 // 切换排序状态的函数
-function toggleEpisodeOrder(sourceCode, vodId) {
+bridgeWindow.toggleEpisodeOrder = function (sourceCode: string, vodId: string): void {
     episodesReversed = !episodesReversed;
     // 重新渲染剧集区域，使用 currentVideoTitle 作为视频标题
     const episodesGrid = document.getElementById('episodesGrid');
     if (episodesGrid) {
-        episodesGrid.innerHTML = renderEpisodes(currentVideoTitle, sourceCode, vodId);
+        episodesGrid.innerHTML = bridgeWindow.renderEpisodes!(currentVideoTitle, sourceCode, vodId);
     }
 
     // 更新按钮文本和箭头方向
@@ -282,4 +319,4 @@ function toggleEpisodeOrder(sourceCode, vodId) {
             arrowIcon.style.transform = episodesReversed ? 'rotate(180deg)' : 'rotate(0deg)';
         }
     }
-}
+};
