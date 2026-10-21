@@ -366,7 +366,7 @@
 | 293 | `js/core/storage-service.js` | 统一存储服务（localStorage 封装） | migrated | `src/core/storage.ts` | — | — | verified | 已迁移至 `src/core/storage.ts`；类型检查通过 |
 | 294 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | verified | 已迁移至 `src/core/timing.ts`；类型检查通过 |
 | 295 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | pending | — |
-| 296 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | pending | 运行时 fetch /js/filter-config.json，迁移后需同步 fetch 路径 |
+| 296 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | verified | fetch 路径已同步为 `/src/services/adfilter-config.json` |
 | 297 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | pending | — |
 | 298 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | pending | — |
 | 299 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | pending | — |
@@ -472,6 +472,7 @@
 | 375 | `src/core/listener-tracker.ts` | 事件监听追踪器（迁移自 `js/core/listener-tracker.js`） | keep | — | — | — | done | 阶段 4 第 6 条迁移目标 |
 | 376 | `src/core/storage.ts` | 统一存储服务（迁移自 `js/core/storage-service.js`） | keep | — | — | — | done | 阶段 4 第 8 条迁移目标 |
 | 377 | `src/core/timing.ts` | 时间常量配置（迁移自 `js/core/timing.js`） | keep | — | — | — | done | 阶段 4 第 9 条迁移目标 |
+| 378 | `src/services/adfilter-config.json` | 广告过滤规则配置（迁移自 `js/filter-config.json`） | keep | — | — | — | done | 阶段 4 第 10 条迁移目标 |
 
 ## workers/（红区）
 

@@ -35,7 +35,7 @@
 | 7 | core | `js/auth/sha256.js` | `src/core/crypto.ts` | verified | 第 0 节通用前置 | 已合并（AP-001） |
 | 8 | core | `js/core/storage-service.js` | `src/core/storage.ts` | verified | 第 0 节通用前置 | — |
 | 9 | core | `js/core/timing.js` | `src/core/timing.ts` | verified | 第 0 节通用前置 | — |
-| 10 | services | `js/filter-config.json` | `src/services/adfilter-config.json` | pending | 对应功能节（2 / 5 / 6 / 9） | 运行时 fetch /js/filter-config.json，迁移后需同步 fetch 路径 |
+| 10 | services | `js/filter-config.json` | `src/services/adfilter-config.json` | verified | 第 6 节 广告过滤 | fetch 路径已同步 |
 | 11 | services | `js/api/api.js` | `src/services/api.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 12 | services | `js/api/loadBalancer.js` | `src/services/balancer.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 13 | services | `js/app/app-config.js` | `src/services/config.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |

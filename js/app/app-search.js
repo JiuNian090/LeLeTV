@@ -101,7 +101,7 @@ function restoreSearchFromCache() {
 async function loadFilterConfig() {
     if (_filterConfig) return _filterConfig;
     try {
-        const res = await fetch('/js/filter-config.json');
+        const res = await fetch('/src/services/adfilter-config.json');
         _filterConfig = await res.json();
     } catch (e) {
         console.warn('过滤配置加载失败，使用默认空配置:', e);
