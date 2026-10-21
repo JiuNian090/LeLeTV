@@ -1,5 +1,5 @@
 // SHA-256 实现，可用 Web Crypto API，HTTP 下降级到 js-sha256
-async function sha256(message: string): Promise<string> {
+export async function sha256(message: string): Promise<string> {
     if (window.crypto && crypto.subtle && crypto.subtle.digest) {
         const msgBuffer = new TextEncoder().encode(message);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -21,3 +21,9 @@ async function sha256(message: string): Promise<string> {
 Object.assign(window, {
   sha256
 });
+
+// 阶段 5B-3 过渡期类型桥：crypto.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问（运行时由上方 window 兼容桥提供）。
+declare global {
+  function sha256(message: string): Promise<string>;
+}

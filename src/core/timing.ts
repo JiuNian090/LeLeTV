@@ -9,7 +9,7 @@
  *   setInterval(fn, TIMING.PROGRESS_SAVE_INTERVAL);
  */
 
-const TIMING = {
+export const TIMING = {
 
     // ==================== 动画 ====================
 
@@ -140,3 +140,9 @@ if (typeof timingHost !== 'undefined') {
 Object.assign(window, {
   TIMING
 });
+
+// 阶段 5B-3 过渡期类型桥：timing.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问（运行时由上方 window 兼容桥提供）。
+declare global {
+  const TIMING: Record<string, number>;
+}
