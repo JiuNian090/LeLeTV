@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：14 / 85 条已验证** |
+| 4 | **进行中：15 / 85 条已验证** |
 
 ---
 
@@ -38,16 +38,16 @@
 | 12 | `js/api/loadBalancer.js` | `src/services/balancer.ts` | |
 | 13 | `js/app/app-config.js` | `src/services/config.ts` | JSZip 懒加载 |
 | 14 | `js/auth/invite-auth.js` | `src/services/invitation.ts` | |
+| 15 | `js/api/api-config.js` | `src/services/sources/config.ts` | 全局脚本，调用方零改动 |
 
 ---
 
 ## 下一步
 
-**MAP 第 15 条**：`js/api/api-config.js → src/services/sources/config.ts`
+**MAP 第 16 条**：`js/api/source-port.js → src/services/sources/port.ts`
 
 之后 services 层剩余：
 
-- `js/api/source-port.js → src/services/sources/port.ts`
 - `js/api/remote-sources.js → src/services/sources/remote.ts`
 - `js/ui/line-probe.js → src/services/line-probe.ts`
 - `js/ui/ui-search-history.js → src/services/search-history.ts`
