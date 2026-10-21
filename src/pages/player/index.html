@@ -18,9 +18,9 @@
     <link rel="manifest" href="/manifest.json">
     
     <!-- 样式：变量与背景 → 通用组件 → 播放页 -->
-    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.1.2">
-    <link rel="stylesheet" href="/src/styles/base.css?v=v4.1.2">
-    <link rel="stylesheet" href="/src/pages/player/style.css?v=v4.1.2">
+    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.2.0">
+    <link rel="stylesheet" href="/src/styles/base.css?v=v4.2.0">
+    <link rel="stylesheet" href="/src/pages/player/style.css?v=v4.2.0">
     
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -256,7 +256,7 @@
     </div>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="/libs/sha256.min.js?v=v4.1.2"></script>
+    <script src="/libs/sha256.min.js?v=v4.2.0"></script>
     <script>
         // 保存原始 js‑sha256 实现，避免被 password.js 覆盖
         window._jsSha256 = window.sha256;
@@ -276,16 +276,16 @@
         })();
     </script>
     
-    <script src="/libs/hls.min.js?v=v4.1.2" defer crossorigin="anonymous"></script>
-    <script src="/libs/artplayer.min.js?v=v4.1.2" defer crossorigin="anonymous"></script>
-    <link rel="modulepreload" href="/dist/chunks/chunk-WHDQFA34.js?v=v4.1.2">
-    <link rel="modulepreload" href="/dist/chunks/chunk-MMR3DRVA.js?v=v4.1.2">
-    <link rel="modulepreload" href="/dist/chunks/chunk-BBO4XO2U.js?v=v4.1.2">
-    <link rel="modulepreload" href="/dist/chunks/chunk-TE7ZJ7GI.js?v=v4.1.2">
-    <link rel="modulepreload" href="/dist/chunks/chunk-DWOYCZYJ.js?v=v4.1.2">
-    <link rel="modulepreload" href="/dist/chunks/chunk-5TLBZB3K.js?v=v4.1.2">
-    <script type="module" src="/dist/leletv-core.GHG5CIDW.js?v=v4.1.2"></script>
-    <script type="module" src="/dist/leletv-player.WW5W464V.js?v=v4.1.2"></script>
+    <script src="/libs/hls.min.js?v=v4.2.0" defer crossorigin="anonymous"></script>
+    <script src="/libs/artplayer.min.js?v=v4.2.0" defer crossorigin="anonymous"></script>
+    <link rel="modulepreload" href="/dist/chunks/chunk-WHDQFA34.js?v=v4.2.0">
+    <link rel="modulepreload" href="/dist/chunks/chunk-MMR3DRVA.js?v=v4.2.0">
+    <link rel="modulepreload" href="/dist/chunks/chunk-BBO4XO2U.js?v=v4.2.0">
+    <link rel="modulepreload" href="/dist/chunks/chunk-TE7ZJ7GI.js?v=v4.2.0">
+    <link rel="modulepreload" href="/dist/chunks/chunk-DWOYCZYJ.js?v=v4.2.0">
+    <link rel="modulepreload" href="/dist/chunks/chunk-5TLBZB3K.js?v=v4.2.0">
+    <script type="module" src="/dist/leletv-core.GHG5CIDW.js?v=v4.2.0"></script>
+    <script type="module" src="/dist/leletv-player.WW5W464V.js?v=v4.2.0"></script>
 
     <script>
         // 创建全局环境变量对象
@@ -295,7 +295,7 @@
         // HIDDENKEY 变量将在这里被服务器端注入
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v4.1.2";
+        window.__LELETV_VERSION__ = "v4.2.0";
 
         // 确保首页按钮功能正常
         function ensureGoHome() {

@@ -28,15 +28,15 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 指标 | 数据 |
 |------|------|
-| JS 模块 | 56 个手写模块（`js/` 下 8 个子目录） |
-| 第三方库 | 4 个（`libs/`：ArtPlayer / HLS.js / marked / sha256） |
-| 样式 | 6 个手写 CSS（`css/v2/`，无构建步骤） |
-| 构建产物 | 3 个 esbuild bundle（core / app / player，带内容哈希） |
+| 源码 | 67 个 TypeScript 模块（`src/`，core / services / ui / pages / router） |
+| 第三方库 | 5 个（`libs/`：ArtPlayer / HLS.js / marked / sha256 / JSZip）+ Geist 字体 |
+| 样式 | 6 个手写 CSS（`src/styles/` + 页面级样式，无构建步骤） |
+| 构建产物 | 5 个 esbuild bundle（core / app / category / settings / player，ESM splitting + 内容哈希） |
 | 主题配色 | 11 套预设方案 + 自定义配色 |
 | 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
-| 页面 | `index.html`（SPA，1524 行）+ `player.html`（独立播放页，310 行） |
+| 页面 | `src/index.html`（SPA，1307 行）+ `src/pages/player/index.html`（独立播放页，331 行） |
 | 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
-| 代码图谱 | CodeGraph 172 文件 / 4,917 节点 / 19,152 边 |
+| 代码图谱 | CodeGraph 219 文件 / 6,157 节点 / 23,010 边 |
 
 ## ⚠️ 重要声明
 
@@ -155,9 +155,9 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 文件 | 说明 |
 |------|------|
-| `js/auth/invite-auth.js` | 指纹生成、验证、心跳、登录状态、管理员 token 计算 |
-| `js/auth/admin-panel.js` | 管理员面板：生成/启停/删除邀请码、统计、备注、设备管理 |
-| `js/auth/user-devices.js` | 普通用户设备面板：查看邀请码与设备、重命名、剔除设备 |
+| `src/services/invitation.ts` | 指纹生成、验证、心跳、登录状态、管理员 token 计算 |
+| `src/pages/settings/admin-panel.ts` | 管理员面板：生成/启停/删除邀请码、统计、备注、设备管理 |
+| `src/pages/settings/user-devices.ts` | 普通用户设备面板：查看邀请码与设备、重命名、剔除设备 |
 | `workers/tmdb-worker.js` | Worker 端 `/invite/*` API（verify / heartbeat / generate / list / toggle / stats / my-devices / remove-device / set-remark / rename-device / delete-code）、`/api-sites` 数据源下发、`/admin` 管理面板 |
 | `migrations/001_create_tables.sql` | D1 表结构（`invitation_codes` + `devices`） |
 | `migrations/002_add_remark.sql` | 邀请码备注字段 |
@@ -170,10 +170,10 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 层 | 技术 | 说明 |
 |------|------|------|
-| 前端 | HTML5 + CSS3 + JavaScript (ES6+) | 无框架，纯原生 |
-| 样式 | 原生 CSS（`css/v2/` 分层：tokens → base → home → views → admin → player） | CSS 变量驱动主题配色 |
+| 前端 | HTML5 + CSS3 + TypeScript / JavaScript (ES6+) | 无框架，纯原生 |
+| 样式 | 原生 CSS（`src/styles/` 的 variables → base → views，加页面级样式） | CSS 变量驱动主题配色 |
 | 播放器 | ArtPlayer + HLS.js | M3U8 播放 + 广告过滤 |
-| 构建 | esbuild + Node 脚本 | 3 个 bundle + 版本注入 |
+| 构建 | esbuild + Node 脚本 | 5 个 ESM bundle + 版本注入 |
 | 本地服务 | Node.js + Express 5 | 静态服务 + 视频代理 + TMDB 代理 |
 | 托管 | Cloudflare Pages | 静态资源 |
 | 边缘函数 | Pages Functions | HTML 注入 + 视频/图片代理 |
@@ -248,24 +248,24 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 ```bash
 npm run build
 # ├─ node scripts/generate-version.mjs   # 读取 VERSION.txt，注入 {{LELETV_VERSION}} 与 ?v= 缓存参数
-# └─ node scripts/build-bundles.mjs      # 按 CORE / APP / PLAYER 拼接，并生成分类页 / 设置页按需 bundle → dist/
+# └─ node scripts/build-bundles.mjs      # 多入口 esbuild.build（splitting）→ dist/，并装配根 index.html
 ```
 
 打包分组：
 
 | Bundle | 内容 | 引用方 |
 |--------|------|--------|
-| `leletv-core.*.js` | `js/core`、`js/api/remote-sources.js`、`js/auth`、`js/ui/ui-core.js`、`js/ui/motion-pref.js`、`js/ui/line-probe.js` | `index.html` + `player.html` |
-| `leletv-app.*.js` | `js/api`、`js/ui`、`js/app`、`js/effects`、`js/utils` | `index.html` |
-| `leletv-player.*.js` | `js/player` + 播放页所需的 api/ui 模块 | `player.html` |
-| `leletv-category.*.js` | `js/api/tmdb.js` | 首次进入分类页时按需加载 |
-| `leletv-settings.*.js` | `js/ui/theme-system.js`、`js/auth/admin-panel.js`、`js/auth/user-devices.js` | 首次进入设置页时按需加载 |
+| `leletv-core.*.js` | `src/core-entry.ts`：core 配置/状态/存储、远端源、邀请码、Toast、动效偏好、线路预检 | `index.html` + 播放页 |
+| `leletv-app.*.js` | `src/main.ts` + `src/boot.ts`：路由、搜索、首页、UI 与 services | `index.html` |
+| `leletv-player.*.js` | `src/ui/player/*` 与播放页依赖 | 播放页 |
+| `leletv-category.*.js` | `src/pages/category/entry.ts` | 首次进入分类页时按需加载 |
+| `leletv-settings.*.js` | `src/pages/settings/entry.ts` | 首次进入设置页时按需加载 |
 
-> `dist/` 内的文件名带内容哈希，由构建生成（`.gitignore` 已忽略）。按需 bundle 的文件名由构建写入 `index.html` 的 `<meta name="leletv-page-bundles">`，供 `js/app/page-loader.js` 读取；内页片段（`pages/*.html`）与页面样式（`css/v2/views.css`、`css/v2/admin.css`）也在首次进入对应页面时再拉取。
+> `dist/` 内的文件名带内容哈希，由构建生成（`.gitignore` 已忽略）。入口与共享 chunk 由 metafile 写入根 `index.html` / `src/pages/player/index.html` 的 `modulepreload`；内页片段（`src/pages/*/template.html`）与页面样式（`src/styles/views.css`、`src/pages/settings/style.css`）由 `src/router/page-loader.ts` 在首次进入对应页面时再拉取。
 
 ### SPA 页面路由
 
-首页与共享外壳在 `index.html` 中；其余页面拆为 `pages/*.html` 片段，首次进入时由 `js/app/page-loader.js` 按需拉取片段、专属样式与脚本。
+首页与共享外壳在 `src/index.html` 中（构建装配为根 `index.html`）；其余页面拆为 `src/pages/*/template.html` 片段，首次进入时由 `src/router/page-loader.ts` 按需拉取片段、专属样式与脚本。
 
 | 页面 | 路由 | DOM 容器 |
 |------|------|----------|
@@ -275,38 +275,30 @@ npm run build
 | 设置 | JS 切换 | `#page-settings` |
 | 关于 | JS 切换 | `#page-about` |
 | 项目说明 / README | JS 切换 | 独立视图 |
-| 播放器 | `/player.html` | 独立页面 |
+| 播放器 | `/src/pages/player/index.html` | 独立页面 |
 
 ### 目录结构
 
 ```
 LeLeTV/
-├── index.html                  # SPA 主入口
-├── player.html                 # 独立播放页
+├── index.html                  # 构建产物：由 src/index.html 装配生成
+├── src/                        # 前端源码（TypeScript + CSS + HTML 片段）
+│   ├── index.html              #   SPA 源码（手工编辑）
+│   ├── main.ts                 #   应用入口（app bundle）
+│   ├── boot.ts                 #   启动编排（鉴权 → 首页 → 进入）
+│   ├── core-entry.ts           #   core bundle 入口
+│   ├── core/                   #   配置、共享状态、存储、HTTP、加密、时序
+│   ├── services/               #   采集站 API、搜索、负载均衡、TMDB、邀请码、主题、观看记录、源导入导出
+│   ├── ui/                     #   Toast/模态框、导航、品牌画布、PWA、播放器（ui/player）
+│   ├── pages/                  #   首页/分类/历史/设置/关于/项目说明片段、播放页、页面脚本与样式
+│   ├── router/                 #   路由、页面按需加载、预取
+│   └── styles/                 #   variables / base / views
 ├── server.mjs                  # 本地开发服务器（Express）
 ├── service-worker.js           # 已退役的 SW（仅用于注销旧缓存，勿添加逻辑）
 ├── manifest.json               # PWA Manifest
 ├── _headers                    # Pages 响应头（缓存策略 + CSP）
 ├── _routes.json                # Pages Functions 路由排除规则
 ├── wrangler.toml               # Cloudflare Workers 配置
-├── css/                        # 样式（v2 设计系统，无构建步骤）
-│   └── v2/
-│       ├── tokens.css          #   设计变量、配色派生、动态背景
-│       ├── base.css            #   重置与通用组件（按钮 / 输入 / 弹窗 / 页脚）
-│       ├── home.css            #   导航、首页、聚合动效、海报卡片、货架
-│       ├── views.css           #   结果页、分类、历史、设置、关于、项目说明
-│       ├── admin.css           #   设备与邀请码管理面板（线上模式）
-│       └── player.css          #   播放页
-├── js/                         # 56 个手写模块
-│   ├── core/                   #   全局配置、存储、监听器追踪、时序工具
-│   ├── api/                    #   采集站 API、负载均衡、搜索、TMDB、远端数据源同步、源导入导出
-│   ├── auth/                   #   邀请码验证、管理员面板、设备管理
-│   ├── player/                 #   播放器核心与 UI、剧集、清晰度、详情、快捷键、自动换线、关灯
-│   ├── ui/                     #   搜索结果卡片、分类页、历史、首页板块、线路预检、主题系统、PWA 安装提示
-│   ├── app/                    #   入口、路由、启动编排、搜索流程、配置管理、页面按需加载
-│   ├── effects/                #   首页聚合动效
-│   └── utils/                  #   版本检测、首页脚本
-├── pages/                      # 内页 HTML 片段（结果 / 分类 / 历史 / 设置 / 关于 / 项目说明），首次进入时按需加载
 ├── dist/                       # esbuild 构建产物（构建生成，不提交）
 ├── libs/                       # 第三方库
 ├── functions/                  # Cloudflare Pages Functions
@@ -335,7 +327,7 @@ npm install
 cp .env.example .env
 # 编辑 .env：至少填写 TMDB_WORKER_URL（线上 Worker 地址）
 
-# 构建（版本注入 + 打包 + 样式）
+# 构建（版本注入 + esbuild 打包）
 npm run build
 
 # 启动开发服务器（热重载）
@@ -352,6 +344,9 @@ npm run dev
 | `npm run dev` | nodemon 热重载开发服务器 |
 | `npm start` | 生产模式启动 |
 | `npm run build` | 版本注入 + esbuild 打包 |
+| `npm test` | 运行 `node --test` 单元测试（esbuild 打包测试入口） |
+| `npm run typecheck` | TypeScript 类型检查（strict） |
+| `npm run check` | 分层 / 体积 / 规则 / 覆盖 / 类型全量校验 |
 | `npm run setup:hooks` | 安装 Git 钩子 |
 
 ## 📦 部署指南
@@ -473,7 +468,7 @@ npm run dev
 | `/*.html`、`/` | `no-cache` | 每次回源校验 |
 | `/service-worker.js`、`/CHANGELOG.md`、`/VERSION.txt` | `no-cache` | 必须实时更新 |
 | `/manifest.json` | `no-cache` | PWA 启动屏配色更新后需及时生效 |
-| `/css/*`、`/js/*`、`/image/*`、`/libs/*` | `public, max-age=604800, immutable` | 缓存 7 天，配合 `?v=` 失效 |
+| `/image/*`、`/libs/*` | `public, max-age=604800, immutable` | 缓存 7 天，配合 `?v=` 失效 |
 | `/dist/*` | `public, max-age=31536000, immutable` | 文件名带内容哈希，缓存 1 年 |
 | `/*` | CSP | 见 `_headers` 中的 `Content-Security-Policy` |
 
@@ -497,7 +492,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.1.2`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.2.0`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -508,6 +503,13 @@ npm run dev
 ## 📝 更新日志
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
+
+### v4.2.0 (2026-10-22)
+- 🏗️ 重构 完成前端架构迁移（`js/` → `src/` TypeScript 分层），项目进入新的开发阶段
+- 🔧 修复 启动屏在加载尚未超时时误显示“网络响应较慢 / 直接进入”的问题
+- 🔧 修复 项目说明页命中缓存后 Markdown 排版丢失的问题
+- 🔧 修复 旧版观看记录无法在新播放页继续播放的问题
+- ✨ 优化 仅开启首页内容板块时，标题与搜索框上移，内容更早进入首屏
 
 ### v4.1.2 (2026-10-20)
 - 🔧 修复 iOS Safari 上播放页双指捏合缩放导致页面错乱的问题
@@ -524,13 +526,6 @@ npm run dev
 - 🔧 修复 iOS 播放页高度显示异常的问题
 - 🔧 修复 部分设备应用图标无法正常显示的问题
 
-### v4.1.0 (2026-10-19)
-- 🎉 新增 搜索框支持粘贴 m3u8 直链，自动识别后直接进入播放页，省去聚合搜索
-- 🎉 新增 页面按需加载，分类、设置、历史、关于等页面首次进入时才加载，首页打开更轻快
-- ✨ 优化 启动屏改为首帧直达 + 星轨入场动画，去掉静态启动图，冷启动画面更连贯
-- ✨ 优化 竖屏手机首页布局，搜索框与聚合动效在首屏内完整显示
-- 🔧 修复 自定义资源站列表被超长地址撑破卡片布局的问题
-
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
 ## 🤖 代码图谱与 AI 集成
@@ -539,7 +534,7 @@ npm run dev
 
 | 工具 | 能力 | 规模 |
 |------|------|------|
-| **CodeGraph** | 符号查询、调用链、影响范围 | 172 文件 / 4,917 节点 / 19,152 边 |
+| **CodeGraph** | 符号查询、调用链、影响范围 | 219 文件 / 6,157 节点 / 23,010 边 |
 
 常用命令：
 
