@@ -2,6 +2,7 @@ interface ApiSite {
     api: string;
     name: string;
     hidden?: boolean;
+    detail?: string;
 }
 
 type LeLeWindow = Window & {

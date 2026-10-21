@@ -35,7 +35,7 @@ export const BUNDLES = [
     files: [
       'js/api/api-config.js', 'js/api/loadBalancer.js',
       'js/ui/ui-search-history.js', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
-      'js/api/api.js', 'js/api/search.js',
+      'src/services/api.ts', 'js/api/search.js',
       'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
       'js/app/app-search.js', 'js/app/app-config.js', 'js/api/source-port.js', 'js/app/app.js',
       'js/app/app-init.js', 'js/app/page-loader.js', 'js/app/app-routing.js',
@@ -69,7 +69,7 @@ export const BUNDLES = [
     name: 'leletv-player',
     firstScreen: false,
     files: [
-      'js/api/api.js', 'js/api/search.js',
+      'src/services/api.ts', 'js/api/search.js',
       'js/ui/ui-viewing-history.js',
       'js/player/player-manager.js', 'js/player/player-shortcuts.js',
       'js/player/player-core.js', 'js/player/player-episodes.js',
