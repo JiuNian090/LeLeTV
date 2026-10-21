@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：18 / 85 条已验证** |
+| 4 | **进行中：19 / 85 条已验证** |
 
 ---
 
@@ -42,16 +42,17 @@
 | 16 | `js/api/source-port.js` | `src/services/sources/port.ts` | 导入/导出入口名不变 |
 | 17 | `js/api/remote-sources.js` | `src/services/sources/remote.ts` | window 入口名不变 |
 | 18 | `js/ui/line-probe.js` | `src/services/line-probe.ts` | LeLeLineProbe 接口不变 |
+| 19 | `js/ui/ui-search-history.js` | `src/services/search-history.ts` | 全局函数名不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 19 条**：`js/ui/ui-search-history.js → src/services/search-history.ts`
+**MAP 第 20 条**：`js/api/search.js → src/services/search.ts`
 
 之后 services 层剩余：
 
-- `js/api/search.js → src/services/search.ts`
+- `js/ui/ui-viewing-history.js → src/services/viewing-history.ts`
 - `js/ui/line-probe.js → src/services/line-probe.ts`
 - `js/ui/ui-search-history.js → src/services/search-history.ts`
 - `js/api/search.js → src/services/search.ts`
