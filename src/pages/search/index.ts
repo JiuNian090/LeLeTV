@@ -17,6 +17,7 @@ import {
 import type { SearchFilterConfig } from '../../core/state';
 import { openMobileSearch, closeMobileSearch, importConfig, exportConfig } from '../../services/config';
 import { searchByAPIAndKeyWord } from '../../services/search';
+import type { SearchResultItem } from '../../core/state';
 import {
   clearHistoryNavHighlight,
   clearSearchHistory,
@@ -88,7 +89,7 @@ const moviesPage = window as unknown as MoviesPageBridge;
 const routerBridge = window;
 
 // 点击卡片跳转播放页的延迟定时器：保证流星动画循环可见后再跳转
-let _pendingPlayDirectTimer = null;
+let _pendingPlayDirectTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 获取当前搜索关键词（从 URL /s= 或 ?s= 提取）
 function getCurrentSearchKeyword() {
@@ -183,25 +184,25 @@ async function loadFilterConfig() {
     return searchFilterConfig;
 }
 
-async function applyFilter(results) {
+async function applyFilter(results: SearchResultItem[]): Promise<SearchResultItem[]> {
     if (!results || results.length === 0) return results;
     const config = await loadFilterConfig();
     if (config.mode === 'whitelist') {
         // 白名单模式：只保留分类在白名单中的结果
-        return results.filter(item => {
+        return results.filter((item: SearchResultItem) => {
             const typeName = (item.type_name || '').toLowerCase();
             return config.whitelist.some(w => typeName.includes(w.toLowerCase()));
         });
     }
     // 黑名单模式（默认）：过滤掉匹配黑名单的结果
-    return results.filter(item => {
+    return results.filter((item: SearchResultItem) => {
         const typeName = (item.type_name || '').toLowerCase();
         return !config.blacklist.some(k => typeName.includes(k.toLowerCase()));
     });
 }
 
 // 循环水波纹加载反馈：从点击位置注入 3 个错峰波纹环（配合卡片按压缩放）
-function addCardRipple(el, e) {
+function addCardRipple(el: HTMLElement, e: MouseEvent): void {
     const rect = el.getBoundingClientRect();
     const rx = e.clientX - rect.left;
     const ry = e.clientY - rect.top;
@@ -762,7 +763,7 @@ function resetSearchArea() {
 
 // 在捕获阶段拦下接下来 600ms 内的一次 click，不让它落到任何元素上
 function swallowNextClick() {
-    const stop = e => {
+    const stop = (e: Event): void => {
         e.preventDefault();
         e.stopPropagation();
         document.removeEventListener('click', stop, true);
@@ -817,7 +818,7 @@ function clearSearchInput() {
 
 // m3u8 直链识别：搜索框允许直接粘贴播放列表地址（http/https，路径以 .m3u8 结尾）
 // 返回规范化后的 URL；不是直链时返回 null，继续走正常搜索
-function parseM3U8Input(input) {
+function parseM3U8Input(input: string): string | null {
     const raw = String(input || '').trim();
     if (!raw || /\s/.test(raw)) return null;
     if (!/^https?:\/\//i.test(raw)) return null;
@@ -829,7 +830,7 @@ function parseM3U8Input(input) {
 }
 
 // 从 m3u8 地址推导可读标题：优先文件名；index/master 这类通用名回退到上一级目录
-function m3u8TitleFromUrl(url) {
+function m3u8TitleFromUrl(url: string): string {
     try {
         const parsed = new URL(url);
         const segments = parsed.pathname.split('/').filter(Boolean);
@@ -846,9 +847,9 @@ function m3u8TitleFromUrl(url) {
 
 // m3u8 直链没有标题/简介元数据：先让用户确认标题（默认用 URL 推导值），
 // 播放页再用这个标题去 TMDB 补简介、海报与年份
-function playM3U8Direct(url) {
+function playM3U8Direct(url: string): void {
     const defaultTitle = m3u8TitleFromUrl(url);
-    const escapeAttr = (value) => String(value == null ? '' : value)
+    const escapeAttr = (value: unknown): string => String(value == null ? '' : value)
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
@@ -895,7 +896,7 @@ function playM3U8Direct(url) {
 }
 
 // 把 m3u8 链接交给播放页：与点卡片播放走同一条链路，仅省去聚合搜索
-function openM3U8Player(url, title) {
+function openM3U8Player(url: string, title: string): void {
     try {
         localStorage.setItem('currentVideoTitle', title);
         localStorage.setItem('lastPlayTime', String(Date.now()));
@@ -1012,7 +1013,7 @@ export async function search() {
         saveSearchHistory(query);
 
         // 从所有选中的API源搜索（渐进式渲染）
-        let allResults = [];
+        let allResults: SearchResultItem[] = [];
         // 正常域过滤黑名单内容（"伦理片"等）；隐藏域不过滤——隐藏内容正是要看的内容
         const hiddenFilterEnabled = !isHiddenContentMode();
 
@@ -1163,14 +1164,14 @@ export async function search() {
 // 搜索结果提前退出策略（阈值定义在 config.js，与播放页换源共用）：
 // 到达 CUTOFF_MS 时，若已有 >= MIN_SOURCES 个源返回了结果，就不再等待剩余源。
 // 被放弃的源其 HTTP 请求仍会跑完并写入搜索缓存，下次搜索即可秒回，不会白费。
-async function performTraditionalSearch(query) {
+async function performTraditionalSearch(query: string): Promise<SearchResultItem[]> {
     let doneCount = 0;
 
-    const searchPromises = selectedAPIs.map(apiId => new Promise(resolve => {
+    const searchPromises = selectedAPIs.map((apiId: string) => new Promise<SearchResultItem[]>(resolve => {
         let settled = false;
-        let cutoffTimer = null;
+        let cutoffTimer: ReturnType<typeof setTimeout> | null = null;
 
-        const finish = (value) => {
+        const finish = (value: SearchResultItem[]): void => {
             if (settled) return;
             settled = true;
             if (cutoffTimer) clearTimeout(cutoffTimer);
@@ -1190,7 +1191,7 @@ async function performTraditionalSearch(query) {
     // 等待所有搜索请求完成（或按上面的策略提前结束）
     const resultsArray = await Promise.all(searchPromises);
     
-    let allResults = [];
+    let allResults: SearchResultItem[] = [];
     resultsArray.forEach(results => {
         if (Array.isArray(results) && results.length > 0) {
             allResults = allResults.concat(results);

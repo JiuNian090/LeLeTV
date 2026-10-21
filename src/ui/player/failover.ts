@@ -188,7 +188,7 @@ interface FailoverWindow extends Window {
                 const pendingSources = scanSources.filter(src => !st.tried.includes(String(src.key)));
                 for (let i = 0; i < pendingSources.length && !pick; i += 4) {
                     const batch = pendingSources.slice(i, i + 4);
-                    const found = (await Promise.all(batch.map(src => searchCandidate(src).catch(() => null))))
+                    const found = (await Promise.all(batch.map(src => searchCandidate(src).catch((): null => null))))
                         .filter((c): c is FailoverCandidate => !!c);
                     batch.forEach(src => { if (!found.some(c => c.key === src.key)) { st.tried.push(String(src.key)); } });
                     writeState(st);

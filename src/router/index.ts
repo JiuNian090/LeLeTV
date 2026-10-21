@@ -44,11 +44,26 @@ declare const marked: { parse: (md: string) => string };
 
 let currentPage = 'home';
 
+interface ParticleSeed {
+  fx: number; fy: number; tx: number; ty: number;
+  delay: number; life: number; amp: number; freq: number; phase: number;
+  wind: number; swirl: number; size: number; color: number;
+  px: number; py: number; alpha: number;
+}
+
+interface DomainParticle {
+  a0: number; r0: number; r1: number; spin: number; size: number;
+  color: number; delay: number; a1: number; px: number; py: number; alpha: number;
+}
+
+type PaintParticle = { px: number; py: number; size: number; color: number; alpha: number };
+type Point = { x: number; y: number };
+
 // 整页重载（如切换隐藏/正常内容模式）前记录目标页，重载后恢复到该页
 const RELOAD_RESUME_PAGE_KEY = 'leletv_reload_resume_page';
 
 // 记录重载后应停留的页面：URL 只保留目标页 hash（丢掉搜索残留），并用 sessionStorage 兜底
-export function rememberPageForReload(page) {
+export function rememberPageForReload(page: string): void {
   try {
     sessionStorage.setItem(RELOAD_RESUME_PAGE_KEY, page);
     // 只保留目标页 hash：清掉 /s=关键词 路径与 ?s= 查询串这类搜索残留，
@@ -81,7 +96,7 @@ var PARTICLE_GUST = 0.3;           // 阵风幅度：整体风力的周期性强
 var PARTICLE_ALPHA_STEPS = 32;     // 透明度量化档数（预生成颜色串，避免逐帧拼接字符串）
 // 粒子只用主题色本身，不掺白色/浅灰：色调完全跟随所选主题色与当前模式，
 // 层次感由粒子的尺寸与透明度随机给出。rgb 为 null 占位，首次构建颜色表时填充（见 _particleColorTable）
-var PARTICLE_PALETTE = [
+var PARTICLE_PALETTE: Array<{ rgb: number[] | null; weight: number }> = [
   { rgb: null, weight: 1 }
 ];
 
@@ -93,7 +108,7 @@ var PARTICLE_PALETTE = [
 // ===== 主题色取值（正常模式霓虹粉 / 私密模式鸿蒙便签黄）=====
 // 结果缓存一次：模式切换会整页重载，页面生命周期内不会变，
 // 避免逐帧 getComputedStyle 触发布局/样式重算
-var _themeRgbCache = null;
+var _themeRgbCache: number[] | null = null;
 function _themeRgbParts() {
   if (_themeRgbCache) return _themeRgbCache;
   var parts = null;
@@ -108,7 +123,7 @@ function _themeRgbParts() {
   _themeRgbCache = parts;
   return parts;
 }
-function _themeRgba(alpha) {
+function _themeRgba(alpha: number): string {
   var c = _themeRgbParts();
   return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + alpha + ')';
 }
@@ -147,7 +162,7 @@ function _particleReducedMotion() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
 }
 
-function _particleCards() {
+function _particleCards(): Element[] {
   return Array.prototype.slice.call(document.querySelectorAll(PARTICLE_CARD_SELECTOR));
 }
 
@@ -171,7 +186,7 @@ function _particleNewCanvas() {
   return { ctx: ctx, canvas: cv };
 }
 
-function _particleDropCanvas(canvas) {
+function _particleDropCanvas(canvas: HTMLCanvasElement | null): void {
   if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
 }
 
@@ -187,11 +202,11 @@ function _particlePickColor() {
 }
 
 // 预生成 rgba 字符串（透明度量化 × 调色板）：粒子多时避免每帧拼接字符串造成 GC 抖动
-var _particleColorCache = null;
+var _particleColorCache: string[][] | null = null;
 function _particleColorTable() {
   if (_particleColorCache) return _particleColorCache;
   if (!PARTICLE_PALETTE[0].rgb) PARTICLE_PALETTE[0].rgb = _themeRgbParts();
-  var table = [];
+  var table: string[][] = [];
   PARTICLE_PALETTE.forEach(function (p) {
     var row = [];
     for (var i = 0; i <= PARTICLE_ALPHA_STEPS; i++) {
@@ -205,11 +220,11 @@ function _particleColorTable() {
 
 // 采样：在元素区域按网格生成粒子种子，记录"元素内位置 → 向上飘散终点"、延迟、寿命与摆动参数。
 // duration / riseBase 可覆盖：删除单项这类小场景用更短时长、更低的飘散高度。
-function _particleSeeds(elements, duration?: number, riseBase?: number) {
+function _particleSeeds(elements: Element[], duration?: number, riseBase?: number): ParticleSeed[] {
   var total = duration || PARTICLE_SWEEP_MS;
   var baseRise = riseBase || PARTICLE_RISE;
-  var boxes = [];
-  elements.forEach(function (element) {
+  var boxes: DOMRect[] = [];
+  elements.forEach(function (element: Element) {
     var r = element.getBoundingClientRect();
     if (r.width > 8 && r.height > 8) boxes.push(r);
   });
@@ -221,8 +236,8 @@ function _particleSeeds(elements, duration?: number, riseBase?: number) {
   if (area < 90000) step = 4; // 小区域（历史条目、下拉项…）采样更细，保证粒子密度
   while (area / (step * step) > PARTICLE_MAX && step < 26) step += 1;
 
-  var seeds = [];
-  boxes.forEach(function (r) {
+  var seeds: ParticleSeed[] = [];
+  boxes.forEach(function (r: DOMRect) {
     for (var y = r.top + step / 2; y < r.bottom; y += step) {
       for (var x = r.left + step / 2; x < r.right; x += step) {
         // 越靠上的粒子飘散距离越短，接近"被上方气流抽走的尘埃"
@@ -255,7 +270,7 @@ function _particleSeeds(elements, duration?: number, riseBase?: number) {
 
 // 推进粒子：reverse=false 为消散（进度 0→1），true 为逆向回收（1→0），透明度与位移同步反演。
 // 消散叠加"风"：整体推力 + 个体受风系数 + 双频湍流摆 + 阵风 —— 看起来是被风吹散，而非直上直下
-function _particleUpdate(seeds, elapsed, reverse) {
+function _particleUpdate(seeds: ParticleSeed[], elapsed: number, reverse: boolean): void {
   // 阵风：所有粒子共用相位，才有"一阵风扫过"的整体感
   var gust = 1 + PARTICLE_GUST * Math.sin(elapsed * 0.005);
   for (var i = 0; i < seeds.length; i++) {
@@ -277,7 +292,7 @@ function _particleUpdate(seeds, elapsed, reverse) {
   }
 }
 
-function _particlePaint(ctx, seeds) {
+function _particlePaint(ctx: CanvasRenderingContext2D, seeds: PaintParticle[]): void {
   ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   var table = _particleColorTable();
   for (var i = 0; i < seeds.length; i++) {
@@ -312,7 +327,7 @@ function _resetPanel() {
 }
 
 // 重载前：卡片化作细密粒子向上飘散湮灭；动画结束或超时兜底后回调（用于触发 reload）
-export function playParticleDissolve(onDone) {
+export function playParticleDissolve(onDone?: () => void): void {
   var finished = false;
   function finish() {
     if (finished) return;
@@ -348,7 +363,7 @@ export function playParticleDissolve(onDone) {
   var ctx = view.ctx;
   var start = _particleNow();
 
-  function frame(now) {
+  function frame(now: number) {
     var elapsed = now - start;
     _particleUpdate(seeds, elapsed, false);
     _particlePaint(ctx, seeds);
@@ -376,7 +391,7 @@ var DISSOLVE_ITEM_RISE = 38;   // 单项删除的飘散高度基准（px）
 
 // 把元素"化作粒子"向上飘散，元素同步淡出；动画结束（或超时兜底）后回调，
 // 由调用方在回调里真正删除数据 / 重渲染列表 —— 删除场景统一走这里
-function dissolveElement(el, onDone) {
+function dissolveElement(el: HTMLElement, onDone?: () => void): void {
   var finished = false;
   function finish() {
     if (finished) return;
@@ -397,7 +412,7 @@ function dissolveElement(el, onDone) {
   var ctx = view.ctx;
   var start = _particleNow();
 
-  function frame(now) {
+  function frame(now: number) {
     var elapsed = now - start;
     _particleUpdate(seeds, elapsed, false);
     _particlePaint(ctx, seeds);
@@ -424,12 +439,12 @@ function dissolveElement(el, onDone) {
 }
 
 // 删除动作的统一入口：有元素就先播消散，播完再执行删除；元素缺失/降级时直接删除
-export function dissolveThenRemove(el, action) {
+export function dissolveThenRemove(el: Element, action: () => void): void {
   if (!el || typeof dissolveElement !== 'function') {
     if (typeof action === 'function') action();
     return;
   }
-  dissolveElement(el, action);
+  dissolveElement(el as HTMLElement, action);
 }
 
 // ===================== 首次访问的首页入场 =====================
@@ -437,7 +452,7 @@ var HOME_INTRO_FADE_MS = 340;   // 爆开后覆盖层淡出时长
 
 // 覆盖层背景：优先取页面背景色（含主题变量 --color-bg），取不到时用深色兜底，避免与首页有色差
 function _homeIntroBackground() {
-  function usable(v) {
+  function usable(v: unknown): boolean {
     return !!v && v !== 'rgba(0, 0, 0, 0)' && v !== 'transparent';
   }
   var bg = '';
@@ -494,7 +509,7 @@ export function playHomeIntro() {
     requestAnimationFrame(frame);
   }
 
-  function frame(now) {
+  function frame(now: number) {
     var elapsed = now - start;
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
@@ -581,7 +596,7 @@ function _domainCenter() {
 }
 
 // 生成粒子：随机角度 + 随机起始半径（远离中心），螺旋收拢到字样外圈的小环带 → 即"星环"
-function _domainParticles(brandRadius) {
+function _domainParticles(brandRadius: number): DomainParticle[] {
   var c = _domainCenter();
   var list = [];
   for (var i = 0; i < DOMAIN_PARTICLE_MAX; i++) {
@@ -603,7 +618,7 @@ function _domainParticles(brandRadius) {
 }
 
 // 聚集：半径由 r0 螺旋收拢到 r1（角度持续旋转，靠近中心时形成明亮的星环）
-function _domainUpdateGather(particles, elapsed, center) {
+function _domainUpdateGather(particles: DomainParticle[], elapsed: number, center: Point): void {
   var span = Math.max(1, DOMAIN_GATHER_MS);
   for (var i = 0; i < particles.length; i++) {
     var p = particles[i];
@@ -620,7 +635,7 @@ function _domainUpdateGather(particles, elapsed, center) {
 }
 
 // 爆开：自收拢半径快速向外扩散并湮灭
-function _domainUpdateBurst(particles, elapsed, center) {
+function _domainUpdateBurst(particles: DomainParticle[], elapsed: number, center: Point): void {
   var t = Math.min(1, elapsed / Math.max(1, DOMAIN_BURST_MS));
   var ease = 1 - Math.pow(1 - t, 2);
   for (var i = 0; i < particles.length; i++) {
@@ -635,7 +650,7 @@ function _domainUpdateBurst(particles, elapsed, center) {
 }
 
 // 星环：中心向外的粉色光环（随聚集收缩、成型后稳定、爆开时扩散淡出）
-function _domainDrawRing(ctx, center, radius, alpha) {
+function _domainDrawRing(ctx: CanvasRenderingContext2D, center: Point, radius: number, alpha: number): void {
   if (alpha <= 0.01) return;
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -654,7 +669,7 @@ function _domainDrawRing(ctx, center, radius, alpha) {
 
 // 中心 logo：圆角方块里的乐字 + 字标（brand-canvas.js，路径取自页面的品牌 sprite）；
 // 取不到 sprite 时退回旧的 MapleMono 文字
-function _domainDrawBrand(ctx, center, fontSize, scale, alpha) {
+function _domainDrawBrand(ctx: CanvasRenderingContext2D, center: Point, fontSize: number, scale: number, alpha: number): void {
   if (alpha <= 0.01) return;
   var brand = routerWindow.LeLeBrandCanvas;
   if (brand && brand.draw(ctx, center.x, center.y, fontSize * 1.1, _themeRgbParts(), alpha, scale)) return;
@@ -737,7 +752,7 @@ function playDomainTransition() {
     requestAnimationFrame(frame);
   }
 
-  function frame(now) {
+  function frame(now: number) {
     var elapsed = now - start;
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
@@ -798,11 +813,11 @@ function playDomainTransition() {
 }
 
 // 私密模式下分类页整体隐藏（入口按钮 + 页面本身，见 css/variables.css）
-export function isCategoryPageBlocked(n) {
+export function isCategoryPageBlocked(n: string): boolean {
   return n === 'category' && typeof isHiddenContentMode === 'function' && isHiddenContentMode();
 }
 
-export function switchPage(a) {
+export function switchPage(a: string): void {
   // 任何入口（导航按钮、switch-to-category 动作、影片页返回）都回落到首页
   if (isCategoryPageBlocked(a)) a = 'home';
   // 离开搜索状态时清掉 URL 里的搜索残留，避免刷新后重放上次搜索
@@ -823,7 +838,7 @@ function saveCategoryFilterPrefs() {
   try {
     var tmdbState = routerWindow.TMDB_STATE;
     if (!tmdbState) return;
-    var payload = {};
+    var payload: Record<string, unknown> = {};
     CATEGORY_FILTER_FIELDS.forEach(function (k) {
       if (k in tmdbState) payload[k] = tmdbState[k];
     });
@@ -870,7 +885,7 @@ export function handleHashChange() {
 // 当前显示的页面在片段加载完成后才落地，token 用于丢弃过期的加载回调
 var _pageShowToken = 0;
 
-export function showPage(n) {
+export function showPage(n: string): void {
   // 私密模式下分类页不可达：hash 直达或重载落点落在分类页时回落首页（不加载 TMDB 分类数据）
   if (isCategoryPageBlocked(n)) {
     n = 'home';
@@ -912,8 +927,10 @@ export function showPage(n) {
       var transition = document.startViewTransition(_apply);
       // 连着切页（或页面切到后台）时，上一次过渡会被浏览器中止，这几个 promise 会以 InvalidStateError 拒绝，
       // 属于正常情况，不让它冒成「未处理的 Promise 错误」
-      ['ready', 'finished', 'updateCallbackDone'].forEach(function (key) {
-        if (transition && transition[key] && typeof transition[key].catch === 'function') transition[key].catch(function () {});
+      var trans = transition as unknown as Record<string, Promise<void> | undefined>;
+      ['ready', 'finished', 'updateCallbackDone'].forEach(function (key: string) {
+        var task = trans[key];
+        if (task && typeof task.catch === 'function') task.catch(function () {});
       });
     } else {
       _apply();
@@ -929,7 +946,7 @@ export function showPage(n) {
   _show();
 }
 
-function updateNavButtons(a) {
+function updateNavButtons(a: string): void {
   document.querySelectorAll<HTMLElement>('.nav-btn[data-page]').forEach(function(b) {
     var page = b.getAttribute('data-page');
     // 私密模式下分类入口不显示：样式表负责首帧，这里兜底，避免样式表被缓存时漏出来
@@ -943,7 +960,7 @@ function updateNavButtons(a) {
   });
 }
 
-export function handlePageLoad(n) {
+export function handlePageLoad(n: string): void {
   switch(n) {
     case 'category':
       // 先按持久化的标签选择注入会话状态，再由 tmdb.js 统一恢复并加载
@@ -1021,7 +1038,7 @@ function loadReadmePage() {
 var README_CACHE_KEY = 'leletv_readme_cache';
 var README_CACHE_TTL = 24 * 60 * 60 * 1000;   // 24h
 
-function renderReadme(content, md) {
+function renderReadme(content: HTMLElement, md: string): void {
   if (typeof marked !== 'undefined') {
     content.innerHTML = marked.parse(md);
   } else {
@@ -1038,7 +1055,7 @@ function readReadmeCache() {
   } catch (e) { return null; }
 }
 
-function writeReadmeCache(md) {
+function writeReadmeCache(md: string): void {
   try {
     localStorage.setItem(README_CACHE_KEY, JSON.stringify({ md: md, at: Date.now() }));
   } catch (e) { /* 配额满 / 不可写：静默降级，下次照常走网络 */ }
@@ -1047,7 +1064,7 @@ function writeReadmeCache(md) {
 // README 正文：同域 /README.md 优先 —— 部署产物里根目录就有 README.md，
 // 与 CHANGELOG.md 一样走 CDN，没有跨境等待，且内容与当前版本一致；
 // 同域拿不到再回退 GitHub raw（main 分支最新）
-function fetchReadmeMd() {
+function fetchReadmeMd(): Promise<string> {
   return fetch('/README.md', { cache: 'no-store' })
     .then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1068,7 +1085,7 @@ function fetchReadmeMd() {
 }
 
 // 按需加载 marked.js（仅 README 弹窗用）。失败也 resolve —— README 内容本身照常显示，只是不渲染 Markdown
-var _markedLoading = null;
+var _markedLoading: Promise<void> | null = null;
 export function ensureMarked() {
   if (typeof marked !== 'undefined') return Promise.resolve();
   if (_markedLoading) return _markedLoading;
@@ -1098,7 +1115,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-export function switchToAbout(s) {
+export function switchToAbout(s?: string): void {
   switchPage('about');
   if (s) setTimeout(function() {
     var el = document.getElementById(s);
@@ -1106,8 +1123,8 @@ export function switchToAbout(s) {
   }, 100);
 }
 
-export function toggleHistory(e) { if (e) e.stopPropagation(); switchPage('history'); }
-export function toggleSettings(e) { if (e) e.stopPropagation(); switchPage('settings'); }
+export function toggleHistory(e?: Event): void { if (e) e.stopPropagation(); switchPage('history'); }
+export function toggleSettings(e?: Event): void { if (e) e.stopPropagation(); switchPage('settings'); }
 export function focusSearch() { switchPage('home'); setTimeout(function() { var si = document.getElementById('searchInput'); if (si) si.focus(); }, 100); }
 
 function loadAboutPageChangelog() {
@@ -1126,8 +1143,8 @@ function loadAboutPageChangelog() {
     });
 }
 
-export function parseChangelogMarkdown(md) {
-  var entries = [], cur = null;
+export function parseChangelogMarkdown(md: string): Array<{ version: string; date: string; content: string }> {
+  var entries: Array<{ version: string; date: string; content: string }> = [], cur: { version: string; date: string; content: string } | null = null;
   md.split('\n').forEach(function(line) {
     if (line.indexOf('### ') === 0) {
       if (cur) entries.push(cur);
@@ -1146,7 +1163,7 @@ export function parseChangelogMarkdown(md) {
   return entries;
 }
 
-function renderVersionHistory(entries) {
+function renderVersionHistory(entries: Array<{ version: string; date: string; content: string }>): HTMLElement {
   var html = '<div class="changelog-timeline">';
   entries.forEach(function(e, i) {
     var latest = i === 0;
@@ -1159,7 +1176,7 @@ function renderVersionHistory(entries) {
   html += '</div>';
   var d = document.createElement('div');
   d.innerHTML = html;
-  return d.firstElementChild;
+  return d.firstElementChild as HTMLElement;
 }
 
 export function openDisclaimerModal() {
@@ -1277,7 +1294,7 @@ export function shareInviteInfo(targetCode?: string) {
 
 // ===================== 移动端滑动手势 =====================
 (function() {
-  var startX, startY, startTime;
+  var startX: number, startY: number, startTime: number;
   var SWIPE_THRESHOLD = 100;   // px - 必须划过此距离才切换页面，避免轻微滑动误触
   var VERTICAL_LIMIT = 30;     // px - 垂直偏移超过此值不触发水平滑动
   var MAX_TIME = 500;          // ms - 超过此时间不触发（距离变长后放宽时间）
@@ -1362,7 +1379,7 @@ export function shareInviteInfo(targetCode?: string) {
 
 // ===================== 全局错误边界 =====================
 (function() {
-  var reportedErrors = {};
+  var reportedErrors: Record<string, boolean> = {};
   
   window.addEventListener("error", function(e) {
     // 过滤常见无害错误

@@ -191,7 +191,7 @@ export const HomeRecent: HomeRecentApi = (function (): HomeRecentApi {
         .filter(item => item && item.poster_path && (item.title || item.name))
         .slice(0, LIMIT)
         .map(item => normalize(type, item)))
-      .catch(err => {
+      .catch((err): NormalizedItem[] => {
         console.warn('[home] 最近更新加载失败', type, err);
         return [];
       });

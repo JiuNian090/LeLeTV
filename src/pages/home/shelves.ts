@@ -110,7 +110,7 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
           rating: item.vote_count >= 100 && item.vote_average ? item.vote_average.toFixed(1) : '',
           img: tmdbImage(item.poster_path)
         })))
-      .catch(err => {
+      .catch((err): TrendPoster[] => {
         console.warn('[home] 本周热门加载失败', err);
         return [];
       });

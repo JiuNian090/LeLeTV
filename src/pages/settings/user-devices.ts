@@ -40,7 +40,7 @@ const showToast = (window as Window & { showToast: (message: string, type?: stri
 const themeColor = (window as Window & { themeColor?: () => string }).themeColor;
 
 const USER_DEVICES_PANEL = {
-  _inviteUrl(path) {
+  _inviteUrl(path: string): string {
     const workerBase = devicesWindow.__ENV__?.TMDB_WORKER_URL || '';
     if (workerBase) return `${workerBase}${path}`;
     return `/api${path}`;
@@ -66,7 +66,7 @@ const USER_DEVICES_PANEL = {
     }
   },
 
-  async removeDevice(targetFingerprint) {
+  async removeDevice(targetFingerprint: string) {
     const auth = INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
@@ -87,7 +87,7 @@ const USER_DEVICES_PANEL = {
     }
   },
 
-  async renameDevice(newName) {
+  async renameDevice(newName: string) {
     const auth = INVITE_AUTH?.getAuth();
     if (!auth) return false;
 
@@ -121,7 +121,7 @@ const USER_DEVICES_PANEL = {
     }
   },
 
-  async render(container) {
+  async render(container: HTMLElement) {
     container.innerHTML = `
       <div class="dash-card">
         <div class="dash-card-header">
@@ -174,10 +174,10 @@ const USER_DEVICES_PANEL = {
     this._refresh(container);
   },
 
-  async _refresh(container) {
+  async _refresh(container: HTMLElement) {
     const data = await this.fetchMyDevices();
     const listEl = container.querySelector('#userDeviceList');
-    const codeEl = container.querySelector('#userDeviceCode');
+    const codeEl = container.querySelector<HTMLElement>('#userDeviceCode');
     const countEl = container.querySelector('#userDeviceCount');
     const maxEl = container.querySelector('#userDeviceMax');
     const currentFingerprint = INVITE_AUTH?.getAuth()?.device_fingerprint;
@@ -199,7 +199,7 @@ const USER_DEVICES_PANEL = {
       return;
     }
 
-    listEl.innerHTML = data.devices.map(d => {
+    listEl.innerHTML = data.devices.map((d: DeviceInfo) => {
       const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
       const safeName = d.device_name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return `
@@ -241,7 +241,7 @@ const USER_DEVICES_PANEL = {
     }
 
     // 绑定删除/退出事件
-    listEl.querySelectorAll('.del-device-btn').forEach(btn => {
+    listEl.querySelectorAll<HTMLElement>('.del-device-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const fp = btn.dataset.fp;
         const isCurrent = btn.dataset.current === 'true';
@@ -263,7 +263,7 @@ const USER_DEVICES_PANEL = {
     });
 
     // 绑定当前设备名点击编辑
-    listEl.querySelectorAll('.invite-name-editable').forEach(el => {
+    listEl.querySelectorAll<HTMLElement>('.invite-name-editable').forEach(el => {
       el.addEventListener('click', function onClickEdit() {
         const fp = this.dataset.fp;
         if (!fp) return;
@@ -315,7 +315,7 @@ const USER_DEVICES_PANEL = {
   }
 };
 
-export function _timeAgo(ts) {
+export function _timeAgo(ts: number): string {
   const diff = Date.now() - ts;
   if (diff < 60000) return '刚刚';
 
@@ -338,7 +338,7 @@ export function _timeAgo(ts) {
   return parts.slice(0, 2).join('') + '前';
 }
 
-export function _deviceIcon(browser) {
+export function _deviceIcon(browser?: string): string {
   if (!browser) return '📱';
   if (browser.includes('Chrome')) return '🌐';
   if (browser.includes('Firefox')) return '🦊';

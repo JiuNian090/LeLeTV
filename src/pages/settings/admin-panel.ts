@@ -7,6 +7,25 @@
 
 import { _deviceIcon, _timeAgo } from './user-devices';
 
+interface AdminDevice {
+  device_fingerprint?: string;
+  device_name?: string;
+  browser?: string;
+  last_active_at?: number;
+  [key: string]: unknown;
+}
+
+interface AdminInvite {
+  code: string;
+  remark?: string;
+  is_active?: boolean;
+  created_at?: number;
+  device_count?: number;
+  max_devices?: number;
+  devices?: AdminDevice[];
+  [key: string]: unknown;
+}
+
 interface AdminApiResponse {
   ok?: boolean;
   code?: string;
@@ -26,7 +45,7 @@ const adminWindow = window as AdminPanelWindow;
 const showToast = (window as Window & { showToast: (message: string, type?: string) => void }).showToast;
 
 const INVITE_ADMIN_PANEL = {
-  _baseUrl(path) {
+  _baseUrl(path: string): string {
     const workerBase = adminWindow.__ENV__?.TMDB_WORKER_URL || '';
     if (workerBase) {
       return `${workerBase}${path}`;
@@ -74,7 +93,7 @@ const INVITE_ADMIN_PANEL = {
     }
   },
   
-  async toggleCode(code, isActive) {
+  async toggleCode(code: string, isActive: boolean) {
     try {
       const response = await fetch(this._baseUrl('/invite/toggle'), {
         method: 'POST',
@@ -103,7 +122,7 @@ const INVITE_ADMIN_PANEL = {
     }
   },
   
-  async deleteDevice(code, targetFingerprint) {
+  async deleteDevice(code: string, targetFingerprint: string) {
     try {
       const response = await fetch(this._baseUrl('/invite/remove-device'), {
         method: 'POST',
@@ -119,7 +138,7 @@ const INVITE_ADMIN_PANEL = {
     }
   },
 
-  async deleteCode(code) {
+  async deleteCode(code: string) {
     try {
       const response = await fetch(this._baseUrl('/invite/delete-code'), {
         method: 'POST',
@@ -135,7 +154,7 @@ const INVITE_ADMIN_PANEL = {
     }
   },
 
-  async setRemark(code, remark) {
+  async setRemark(code: string, remark: string) {
     try {
       const response = await fetch(this._baseUrl('/invite/set-remark'), {
         method: 'POST',
@@ -151,7 +170,7 @@ const INVITE_ADMIN_PANEL = {
     }
   },
 
-  async render(container) {
+  async render(container: HTMLElement) {
     // 上一次渲染时弹窗被挂到了 body 下（见 _mountGenModal），重建前先移除，避免残留多个 #inviteGenModal
     const staleGenModal = document.getElementById('inviteGenModal');
     if (staleGenModal) staleGenModal.remove();
@@ -228,7 +247,7 @@ const INVITE_ADMIN_PANEL = {
    * 需要往上翻才能看到。挂到 body 后与 toast 模块的 showModal 行为一致。
    * 注意：必须在事件绑定之后调用，否则 container.querySelector 找不到弹窗内元素。
    */
-  _mountGenModal(container) {
+  _mountGenModal(container: HTMLElement) {
     const modal = container.querySelector('#inviteGenModal');
     if (modal) document.body.appendChild(modal);
   },
@@ -246,7 +265,7 @@ const INVITE_ADMIN_PANEL = {
     if (modal) modal.classList.remove('show');
   },
   
-  async _confirmGenerate(container) {
+  async _confirmGenerate(container: HTMLElement) {
     const remark = (document.getElementById('inviteGenRemarkInput') as HTMLInputElement | null)?.value?.trim() || '';
     this._closeGenModal();
     
@@ -261,7 +280,7 @@ const INVITE_ADMIN_PANEL = {
     }
   },
   
-  async _refresh(container) {
+  async _refresh(container: HTMLElement) {
     const statsEl = container.querySelector('#inviteStats');
     const listEl = container.querySelector('#inviteCodeList');
     
@@ -285,7 +304,7 @@ const INVITE_ADMIN_PANEL = {
       return;
     }
     
-    listEl.innerHTML = codes.map(invite => {
+    listEl.innerHTML = codes.map((invite: AdminInvite) => {
       const devices = invite.devices || [];
       const lastActive = devices.length > 0 ? devices[0].last_active_at : null;
       const recentDot = lastActive ? _recentDot(lastActive) : '';
@@ -324,14 +343,14 @@ const INVITE_ADMIN_PANEL = {
     }).join('');
     
     // 分享该邀请码（与关于页「分享」同一入口，此处把本卡片的邀请码传进去）
-    listEl.querySelectorAll('.share-code-btn').forEach(btn => {
+    listEl.querySelectorAll<HTMLElement>('.share-code-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (typeof window.shareInviteInfo === 'function') window.shareInviteInfo(btn.dataset.code);
       });
     });
 
     // 启用/禁用
-    listEl.querySelectorAll('.toggle-btn').forEach(btn => {
+    listEl.querySelectorAll<HTMLElement>('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
         const isActive = btn.dataset.active === 'true';
@@ -342,7 +361,7 @@ const INVITE_ADMIN_PANEL = {
     });
     
     // 点击邀请码复制
-    listEl.querySelectorAll('.invite-code-text').forEach(el => {
+    listEl.querySelectorAll<HTMLElement>('.invite-code-text').forEach(el => {
       el.addEventListener('click', async () => {
         const code = el.dataset.code;
         try {
@@ -361,7 +380,7 @@ const INVITE_ADMIN_PANEL = {
     });
     
     // 编辑备注
-    listEl.querySelectorAll('.remark-btn').forEach(el => {
+    listEl.querySelectorAll<HTMLElement>('.remark-btn').forEach(el => {
       el.addEventListener('click', async () => {
         const code = el.dataset.code;
         const current = el.closest('.invite-card')?.querySelector('.invite-remark-text')?.textContent?.replace(/[（）]/g, '').trim() || '';
@@ -374,7 +393,7 @@ const INVITE_ADMIN_PANEL = {
     });
 
     // 删除设备
-    listEl.querySelectorAll('.delete-device-btn').forEach(btn => {
+    listEl.querySelectorAll<HTMLElement>('.delete-device-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
         const fp = btn.dataset.fp;
@@ -391,7 +410,7 @@ const INVITE_ADMIN_PANEL = {
     });
 
     // 删除邀请码
-    listEl.querySelectorAll('.delete-code-btn').forEach(btn => {
+    listEl.querySelectorAll<HTMLElement>('.delete-code-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const code = btn.dataset.code;
         if (!confirm(`确定删除邀请码「${code}」？关联的设备也将一并删除。`)) return;
@@ -407,12 +426,12 @@ const INVITE_ADMIN_PANEL = {
     });
   },
   
-  async _handleGenerate(container) {
+  async _handleGenerate(container: HTMLElement) {
     this._openGenModal();
   }
 };
 
-function _formatTime(ts) {
+function _formatTime(ts: number): string {
   const d = new Date(ts);
   return `${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
@@ -424,7 +443,7 @@ const _RECENT_DOT_GREEN = '<span class="invite-recent-dot" style="color:#22c55e;
 const _RECENT_DOT_FADED = '<span class="invite-recent-dot" style="color:#22c55e80;">●</span>';
 const _RECENT_DOT_YELLOW = '<span class="invite-recent-dot" style="color:#eab30880;">●</span>';
 
-function _recentDot(ts) {
+function _recentDot(ts: number): string {
   const diff = Date.now() - ts;
   if (diff < 3600000) return _RECENT_DOT_GREEN;      // < 1h
   if (diff < 86400000) return _RECENT_DOT_FADED;     // < 24h
@@ -432,7 +451,7 @@ function _recentDot(ts) {
   return '';
 }
 
-function _isRecentlyActive(ts) {
+function _isRecentlyActive(ts: number): boolean {
   return Date.now() - ts < 86400000;  // 24h 内
 }
 

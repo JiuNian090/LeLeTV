@@ -23,7 +23,7 @@ const pageLoaderWindow = window as PageLoaderWindow;
 export const LeLePages = (function () {
     'use strict';
 
-    var FRAGMENTS = {
+    var FRAGMENTS: Record<string, string> = {
         movies: 'src/pages/movies/template.html',
         category: 'src/pages/category/template.html',
         history: 'src/pages/history/template.html',
@@ -33,12 +33,12 @@ export const LeLePages = (function () {
     };
 
     // 页面专属样式：首页不需要，首次进入内页时才下载
-    var STYLES = {
+    var STYLES: Record<string, string> = {
         views: 'src/styles/views.css',
         admin: 'src/pages/settings/style.css'
     };
 
-    var PAGE_STYLES = {
+    var PAGE_STYLES: Record<string, string[]> = {
         movies: ['views'],
         category: ['views'],
         history: ['views'],
@@ -50,9 +50,9 @@ export const LeLePages = (function () {
     // 页面专属脚本 bundle：路径由构建脚本写入 meta
     var PAGE_SCRIPTS = readBundles();
 
-    var _pagePromises = {};
-    var _scriptPromises = {};
-    var _stylePromises = {};
+    var _pagePromises: Record<string, Promise<void>> = {};
+    var _scriptPromises: Record<string, Promise<void>> = {};
+    var _stylePromises: Record<string, Promise<void>> = {};
 
     function readBundles() {
         try {
@@ -70,15 +70,15 @@ export const LeLePages = (function () {
         return v ? '?v=' + encodeURIComponent(v) : '';
     }
 
-    function has(name) {
+    function has(name: string): boolean {
         return !!FRAGMENTS[name];
     }
 
-    function isLoaded(name) {
+    function isLoaded(name: string): boolean {
         return !!(name && document.getElementById('page-' + name));
     }
 
-    function loadStyle(key) {
+    function loadStyle(key: string): Promise<void> {
         if (_stylePromises[key]) return _stylePromises[key];
         var href = STYLES[key];
         if (!href) return Promise.resolve();
@@ -99,7 +99,7 @@ export const LeLePages = (function () {
         return _stylePromises[key];
     }
 
-    function loadScript(name) {
+    function loadScript(name: string): Promise<void> {
         var src = PAGE_SCRIPTS[name];
         if (!src) return Promise.resolve();
         if (_scriptPromises[name]) return _scriptPromises[name];
@@ -120,7 +120,7 @@ export const LeLePages = (function () {
         return _scriptPromises[name];
     }
 
-    function fetchFragment(name) {
+    function fetchFragment(name: string): Promise<void> {
         return fetch(FRAGMENTS[name] + versionQuery(), { credentials: 'same-origin' })
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -138,7 +138,7 @@ export const LeLePages = (function () {
             });
     }
 
-    function showFallback(name) {
+    function showFallback(name: string): void {
         if (document.getElementById('page-' + name)) return;
         var main = document.querySelector('.main-container');
         if (!main) return;
@@ -156,7 +156,7 @@ export const LeLePages = (function () {
      * 确保页面片段、样式与页面脚本都就绪。
      * 返回的 Promise 永远 resolve（失败时显示占位页），因此路由不需要额外兜底。
      */
-    function ensure(name) {
+    function ensure(name: string): Promise<void> {
         if (!has(name)) return Promise.resolve();
         if (isLoaded(name)) return Promise.resolve();
         if (_pagePromises[name]) return _pagePromises[name];
@@ -168,20 +168,20 @@ export const LeLePages = (function () {
             Promise.all(styles),
             loadScript(name)
         ]).then(function () {
-            return name;
+            return;
         }, function (err) {
             console.warn('页面加载失败:', name, err);
             // 允许下次进入时重试
             delete _pagePromises[name];
             showFallback(name);
-            return name;
+            return;
         });
 
         return _pagePromises[name];
     }
 
     /** 空闲时预取（如搜索框聚焦时提前拉结果页），不参与首屏关键路径 */
-    function prefetch(name) {
+    function prefetch(name: string): void {
         if (!has(name) || isLoaded(name) || _pagePromises[name]) return;
         function run() { ensure(name); }
         if (window.requestIdleCallback) {
