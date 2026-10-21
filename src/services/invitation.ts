@@ -92,7 +92,7 @@ export const INVITE_AUTH = {
   },
 
   /** 设备实例 ID 形态：d_ + 32 位十六进制 */
-  _isDeviceId(value: unknown): boolean {
+  _isDeviceId(value: unknown): value is string {
     return typeof value === 'string' && /^d_[0-9a-f]{32}$/.test(value);
   },
 
@@ -322,9 +322,12 @@ export const INVITE_AUTH = {
       if (loginModal) {
         // 重置错误提示
         document.getElementById('inviteLoginError')?.classList.add('hidden');
-        (document.getElementById('inviteDeviceName') as HTMLInputElement | null) && ((document.getElementById('inviteDeviceName') as HTMLInputElement | null).value = '');
-        (document.getElementById('inviteCodeInput') as HTMLInputElement | null) && ((document.getElementById('inviteCodeInput') as HTMLInputElement | null).value = '');
-        (document.getElementById('inviteLoginBtn') as HTMLButtonElement | null) && ((document.getElementById('inviteLoginBtn') as HTMLButtonElement | null).disabled = false);
+        const deviceNameInput = document.getElementById('inviteDeviceName') as HTMLInputElement | null;
+        if (deviceNameInput) deviceNameInput.value = '';
+        const codeInput = document.getElementById('inviteCodeInput') as HTMLInputElement | null;
+        if (codeInput) codeInput.value = '';
+        const loginBtn = document.getElementById('inviteLoginBtn') as HTMLButtonElement | null;
+        if (loginBtn) loginBtn.disabled = false;
 
         loginModal.style.display = 'flex';
 
@@ -369,8 +372,10 @@ export const INVITE_AUTH = {
       const loginModal = document.getElementById('inviteLoginModal');
       if (!loginModal) return;
 
-      (document.getElementById('inviteLoginBtn') as HTMLButtonElement | null) && ((document.getElementById('inviteLoginBtn') as HTMLButtonElement | null).disabled = false);
-      (document.getElementById('inviteCodeInput') as HTMLInputElement | null) && ((document.getElementById('inviteCodeInput') as HTMLInputElement | null).value = '');
+      const loginBtn = document.getElementById('inviteLoginBtn') as HTMLButtonElement | null;
+      if (loginBtn) loginBtn.disabled = false;
+      const codeInput = document.getElementById('inviteCodeInput') as HTMLInputElement | null;
+      if (codeInput) codeInput.value = '';
 
       const loginError = document.getElementById('inviteLoginError');
       if (loginError) {
@@ -467,7 +472,7 @@ export const INVITE_AUTH = {
             code: code.trim().toUpperCase(),
             device_name: name,
             device_fingerprint: deviceId,
-            device_signature: signature
+            device_signature: signature ?? undefined
           });
           document.dispatchEvent(new CustomEvent('passwordVerified'));
           return { ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' };
@@ -477,7 +482,7 @@ export const INVITE_AUTH = {
           code: code.trim().toUpperCase(),
           device_name: name,
           device_fingerprint: deviceId,
-          device_signature: signature
+          device_signature: signature ?? undefined
         });
 
         // 启动心跳：延后一拍，让首页数据请求先发出去，避免登录后立刻抢占连接
