@@ -603,7 +603,7 @@
         var stageText = '';          // 启动编排给出的阶段文案（优先于默认阈值文案）
         var STALL_AFTER_MS = 2500;
         var STALL_RATE = 0.09;
-        var SLOW_HINT_MS = 6000;
+        var SLOW_HINT_MS = 8000;
         var HARD_MAX_MS = 20000;
 
         function mark(value) {
@@ -970,12 +970,25 @@
         if (hintBtn) hintBtn.addEventListener('click', forceArrive);
 
         var hintShown = false;
-        function showHint() {
-            if (hintShown || released) return;
-            hintShown = true;
-            if (hintEl) hintEl.classList.add('is-visible');
+        // 只有「确实停滞」才提示网络慢：等待登录、或进度已接近完成都不算
+        function hintDue() {
+            if (released || waitingAuth) return false;
+            if (progress >= 0.9) return false;
+            return now() - lastProgressAt >= STALL_AFTER_MS;
         }
-        setTimeout(showHint, SLOW_HINT_MS);
+        function scheduleSlowHint(delay) {
+            setTimeout(function () {
+                if (hintShown || released) return;
+                if (hintDue()) {
+                    hintShown = true;
+                    if (hintEl) hintEl.classList.add('is-visible');
+                    return;
+                }
+                // 本次还不算慢：等登录结束或进度继续推进后再检查
+                scheduleSlowHint(1000);
+            }, delay);
+        }
+        scheduleSlowHint(SLOW_HINT_MS);
         setTimeout(function () { forceArrive(); }, HARD_MAX_MS);
 
         // ---------- 启动 ----------
