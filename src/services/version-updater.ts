@@ -47,18 +47,20 @@ async function unregisterServiceWorker(): Promise<void> {
 }
 
 async function sendClearCacheMessage(): Promise<boolean> {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  const controller = 'serviceWorker' in navigator ? navigator.serviceWorker.controller : null;
+  if (controller) {
+    const registration = navigator.serviceWorker;
     return new Promise(resolve => {
       const timeout = setTimeout(() => resolve(false), 3000);
       const handler = (event: MessageEvent) => {
         if (event.data && event.data.type === 'CACHES_CLEARED') {
           clearTimeout(timeout);
-          navigator.serviceWorker.removeEventListener('message', handler);
+          registration.removeEventListener('message', handler);
           resolve(true);
         }
       };
-      navigator.serviceWorker.addEventListener('message', handler);
-      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_ALL_CACHES' });
+      registration.addEventListener('message', handler);
+      controller.postMessage({ type: 'CLEAR_ALL_CACHES' });
     });
   }
   return false;
@@ -279,9 +281,10 @@ function bindUpdateModal(): void {
 
   var btn = document.getElementById('updateModalBtn') as HTMLButtonElement | null;
   if (btn) {
-    btn.addEventListener('click', function () {
-      btn.disabled = true;
-      btn.textContent = '正在更新';
+    const updateBtn = btn;
+    updateBtn.addEventListener('click', function () {
+      updateBtn.disabled = true;
+      updateBtn.textContent = '正在更新';
       performUpdate();
     });
   }
@@ -384,7 +387,8 @@ async function showUpdateModal(newVersion: string, oldVersion: string | null): P
   if (logEl) logEl.innerHTML = '<p>正在加载更新内容…</p>';
 
   bindUpdateModal();
-  whenHomeReady(function () { modal.style.display = 'flex'; });
+  const modalEl = modal;
+  whenHomeReady(function () { modalEl.style.display = 'flex'; });
 
   var entries = await fetchChangelogEntries();
   var list = pickNewEntries(entries, oldVersion);

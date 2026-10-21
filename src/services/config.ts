@@ -80,7 +80,7 @@ export async function importConfigFromUrl() {
                     <button type="button" id="confirmUrlImport" class="v2-btn v2-btn--primary">导入</button>
                 </div>
             `;
-            overlay.querySelector('#confirmUrlImport').addEventListener('click', async () => {
+            overlay.querySelector('#confirmUrlImport')?.addEventListener('click', async () => {
                 const url = (document.getElementById('configUrl') as HTMLInputElement).value.trim();
                 if (!url) { showToast('请输入配置文件URL', 'warning'); return; }
                 try {
@@ -107,7 +107,7 @@ export async function importConfigFromUrl() {
                     overlay.remove();
                 }
             });
-            overlay.querySelector('#cancelUrlImport').addEventListener('click', () => overlay.remove());
+            overlay.querySelector('#cancelUrlImport')?.addEventListener('click', () => overlay.remove());
         }
     });
 }
@@ -138,7 +138,7 @@ export async function importConfig() {
  * 解析备份文件（ZIP 或旧版 JSON），校验后写入 localStorage
  */
 async function processBackupFile(file: Blob & { name?: string }): Promise<void> {
-    const isZip = file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
+    const isZip = (file.name || '').endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
 
     let settingsData = null;
     let userData = null;
