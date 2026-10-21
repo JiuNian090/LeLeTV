@@ -3,6 +3,8 @@
  * 智能分配API请求，避免单一源过载
  */
 
+import { API_SITES, scopedKey } from '../core/config';
+
 interface ApiStat {
     apiKey: string;
     isCustom: boolean;
@@ -33,7 +35,7 @@ interface LoadBalancerConfig {
     recentSuccessBonus: number;
 }
 
-class LoadBalancer {
+export class LoadBalancer {
     apiStats: Map<string, ApiStat>;
     activeRequests: Map<string, number>;
     saveTimeout: ReturnType<typeof setTimeout> | null;
@@ -476,3 +478,11 @@ class LoadBalancer {
 Object.assign(window, {
   LoadBalancer
 });
+
+// 阶段 5B-3 过渡期类型桥：balancer.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问。
+type LoadBalancerCtor = typeof LoadBalancer;
+declare global {
+  const LoadBalancer: LoadBalancerCtor;
+  type LoadBalancer = InstanceType<LoadBalancerCtor>;
+}
