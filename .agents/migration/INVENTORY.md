@@ -62,6 +62,7 @@
 | 24 | `.agents/migration/INVENTORY.md` | 阶段 -1 全量文件登记表（本阶段新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
 | 25 | `.agents/migration/MAP.md` | 迁移任务队列（阶段 1 新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
 | 26 | `.agents/migration/PHASE-1-REPORT.md` | 阶段 -1 勘察报告（本阶段新增） | keep | — | — | — | done | 阶段 -1 新增资产，纳入后续阶段维护 |
+| 383 | `.agents/migration/RESUME.md` | 重构续接状态（分支 / 进度 / 下一步 / 验证命令） | keep | — | — | — | done | 阶段 4 续接文件，压缩上下文或重开会话时先读它 |
 | 27 | `.agents/rules/01-layering.md` | 架构规则：分层与依赖 | keep | — | — | — | done | 阶段 1 新增架构规则，长期保留 |
 | 28 | `.agents/rules/02-page-structure.md` | 架构规则：页面结构 | keep | — | — | — | done | 阶段 1 新增架构规则，长期保留 |
 | 29 | `.agents/rules/03-chunking.md` | 架构规则：代码分割 | keep | — | — | — | done | 阶段 1 新增架构规则，长期保留 |
