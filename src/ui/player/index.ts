@@ -64,6 +64,7 @@ import {
     setProgressSaveInterval,
     setEpisodeSwitchTimeout,
     setControlsLocked,
+    setEpisodeAdvanceHandler,
 } from './state';
 import type { PlayerArtInstance } from './state';
 import { getVideoId } from './session';
@@ -197,6 +198,10 @@ async function fetchTmdbPlayerDetail(title: string): Promise<PlayerTmdbInfo | nu
 
 // 页面加载
 document.addEventListener('DOMContentLoaded', function () {
+    // core.ts 在自然播放结束时通过 state 的 hook 推进下一集，避免 core 反向 import episodes。
+    setEpisodeAdvanceHandler(function () {
+        if (typeof playNextEpisode === 'function') playNextEpisode();
+    });
     // 远端数据源：播放页只用本地缓存同步合并，不发起网络请求。
     // 首页已经负责拉取并写缓存；播放页为首屏速度让路（尤其从收藏直接打开播放页时）。
     if (typeof window.applyRemoteApiSitesFromCache === 'function') {

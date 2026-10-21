@@ -1,6 +1,23 @@
 // LeLeTV — 播放器核心模块
 // HLS + ArtPlayer + 全屏 + 事件处理
 
+// 阶段 5B-2：状态从 ui/player/state.ts 读取，选集推进改为回调，core 不再反向依赖 episodes。
+import {
+    art,
+    autoFullscreened,
+    autoplayEnabled,
+    currentEpisodeIndex,
+    currentEpisodes,
+    currentVideoTitle,
+    episodeSwitchTimeout,
+    videoHasEnded,
+    advanceEpisode,
+    setArt,
+    setAutoFullscreened,
+    setEpisodeSwitchTimeout,
+    setVideoHasEnded,
+} from './state';
+
 interface HlsInstance {
     loadSource(url: string): void;
     attachMedia(video: HTMLVideoElement): void;
@@ -82,7 +99,7 @@ function isIOSDevice(): boolean {
  * - 其他平台：有 MSE 仍走 hls.js；没有 MSE 但能原生播 m3u8（如桌面 Safari）
  *   则回退原生，避免和老 iOS 一样卡在加载中。
  */
-function shouldUseNativeHls(): boolean {
+export function shouldUseNativeHls(): boolean {
     if (isIOSDevice()) return true;
     if (typeof Hls === 'undefined' || !Hls.isSupported()) {
         return !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
@@ -147,7 +164,7 @@ function setupHlsCustomType(video: HTMLVideoElement, url: string, hlsConfig: Rec
 
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
-            episodeSwitchTimeout = null;
+            setEpisodeSwitchTimeout(null);
         }
         playerCoreWindow.isSwitchingVideo = false;
 
@@ -232,7 +249,7 @@ function setupHlsCustomType(video: HTMLVideoElement, url: string, hlsConfig: Rec
 
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
-            episodeSwitchTimeout = null;
+            setEpisodeSwitchTimeout(null);
         }
         playerCoreWindow.isSwitchingVideo = false;
 
@@ -242,7 +259,7 @@ function setupHlsCustomType(video: HTMLVideoElement, url: string, hlsConfig: Rec
 
         if (episodeSwitchTimeout) {
             clearTimeout(episodeSwitchTimeout);
-            episodeSwitchTimeout = null;
+            setEpisodeSwitchTimeout(null);
         }
         playerCoreWindow.isSwitchingVideo = false;
 
@@ -349,7 +366,7 @@ function createFullScreenController(): FullScreenController {
             document.removeEventListener('mouseout', handleMouseOut);
             clearTimeout(hideTimer);
             clearTimeout(backBtnHideTimer);
-            autoFullscreened = false;
+            setAutoFullscreened(false);
         }
     }
 
@@ -375,11 +392,11 @@ function onPlayerReady(art: ArtplayerInstance, fullScreenController: FullScreenC
             if (window.innerWidth > 640 || window.innerHeight > 640) return;
             const isLandscape = window.screen.orientation.type.includes('landscape');
             if (isLandscape && !art.fullscreen) {
-                autoFullscreened = true;
+                setAutoFullscreened(true);
                 art.fullscreen = true;
             } else if (!isLandscape && art.fullscreen && autoFullscreened) {
                 art.fullscreen = false;
-                autoFullscreened = false;
+                setAutoFullscreened(false);
             }
         });
     }
@@ -400,7 +417,7 @@ function handleFullScreenChange(art: ArtplayerInstance, fullScreenController: Fu
 function onPlayerRestart(art: ArtplayerInstance): void {
     if (episodeSwitchTimeout) {
         clearTimeout(episodeSwitchTimeout);
-        episodeSwitchTimeout = null;
+        setEpisodeSwitchTimeout(null);
     }
     playerCoreWindow.isSwitchingVideo = false;
     setTimeout(() => addNextEpisodeDirectly(art), TIMING.NEXT_EPISODE_BTN_DELAY);
@@ -411,11 +428,11 @@ function onVideoLoadedMetadata(art: ArtplayerInstance): void {
 
     if (episodeSwitchTimeout) {
         clearTimeout(episodeSwitchTimeout);
-        episodeSwitchTimeout = null;
+        setEpisodeSwitchTimeout(null);
     }
     playerCoreWindow.isSwitchingVideo = false;
 
-    videoHasEnded = false;
+    setVideoHasEnded(false);
 
     const urlParams = new URLSearchParams(window.location.search);
     const savedPosition = parseInt(urlParams.get('position') || '0');
@@ -465,14 +482,14 @@ function syncMediaSessionState(state: MediaSessionPlaybackState): void {
 }
 
 function onVideoEnded(art: ArtplayerInstance): void {
-    videoHasEnded = true;
+    setVideoHasEnded(true);
 
     clearVideoProgress();
 
     if (autoplayEnabled && currentEpisodeIndex < currentEpisodes.length - 1) {
         setTimeout(() => {
-            playNextEpisode();
-            videoHasEnded = false;
+            advanceEpisode();
+            setVideoHasEnded(false);
         }, 1000);
     } else {
         art.fullscreen = false;
@@ -546,7 +563,7 @@ function setupNativeFullscreenHandler(): void {
     document.addEventListener('webkitfullscreenchange', onNativeFullScreenChange);
 }
 
-function initPlayer(videoUrl: string): void {
+export function initPlayer(videoUrl: string): void {
     if (!videoUrl) {
         return
     }
@@ -556,7 +573,7 @@ function initPlayer(videoUrl: string): void {
 
     const hlsConfig = createHlsConfig();
 
-    art = createArtPlayerInstance(videoUrl, hlsConfig);
+    setArt(createArtPlayerInstance(videoUrl, hlsConfig));
     PlayerManager.setInstance(art);
     if (playerCoreWindow.LeLeFailover) playerCoreWindow.LeLeFailover.watch(art);
 
@@ -577,3 +594,43 @@ Object.assign(window, {
   shouldUseNativeHls,
   initPlayer
 });
+
+// 阶段 5B-2 过渡期类型桥：core.ts 已成为 ESM 模块，未改造的 player 模块仍以裸名
+// 访问这些函数与类型（运行时由上方 window 兼容桥提供）。5B-3 改为 import 后删除。
+declare global {
+  function shouldUseNativeHls(): boolean;
+  function initPlayer(videoUrl: string): void;
+  interface HlsInstance {
+    loadSource(url: string): void;
+    attachMedia(video: HTMLVideoElement): void;
+    on(event: string, handler: (...args: never[]) => void): void;
+    startLoad(): void;
+    recoverMediaError(): void;
+    destroy(): void;
+  }
+  interface ArtplayerInstance {
+    on(event: string, handler: (...args: never[]) => void): void;
+    controls: { show: boolean };
+    fullscreen: boolean;
+    currentTime: number;
+    duration: number;
+  }
+  interface ArtplayerStatic {
+    new (options: Record<string, unknown>): ArtplayerInstance;
+    CONTROL_HIDE_TIME: number;
+  }
+  interface HlsStatic {
+    new (config: Record<string, unknown>): HlsInstance;
+    isSupported(): boolean;
+    DefaultConfig: { loader: unknown };
+    Events: Record<string, string>;
+    ErrorTypes: Record<string, string>;
+  }
+  const Hls: HlsStatic;
+  const Artplayer: ArtplayerStatic;
+  interface FailoverApi {
+    markPlaying(): void;
+    watch(art: unknown): void;
+    autoSwitchLine(reason: string): Promise<boolean>;
+  }
+}
