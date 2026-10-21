@@ -392,7 +392,7 @@
 | 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
 | 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | pending | — |
 | 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
-| 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | pending | — |
+| 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
 | 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | pending | — |
 | 323 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | pending | — |
 | 324 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | pending | — |
@@ -482,6 +482,7 @@
 | 385 | `src/services/sources/port.ts` | 视频源导入 / 导出（迁移自 `js/api/source-port.js`） | keep | — | — | — | done | 阶段 4 第 16 条迁移目标 |
 | 386 | `src/services/sources/remote.ts` | 远端数据源同步与合并（迁移自 `js/api/remote-sources.js`） | keep | — | — | — | done | 阶段 4 第 17 条迁移目标 |
 | 387 | `src/services/line-probe.ts` | 线路可用性探测（迁移自 `js/ui/line-probe.js`） | keep | — | — | — | done | 阶段 4 第 18 条迁移目标 |
+| 388 | `src/services/search-history.ts` | 搜索历史读写与下拉渲染（迁移自 `js/ui/ui-search-history.js`） | keep | — | — | — | done | 阶段 4 第 19 条迁移目标 |
 
 ## workers/（红区）
 

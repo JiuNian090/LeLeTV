@@ -41,7 +41,7 @@
 | 13 | services | `js/app/app-config.js` | `src/services/config.ts` | verified | 第 10 节 配置导入导出 | — |
 | 14 | services | `js/auth/invite-auth.js` | `src/services/invitation.ts` | verified | 第 1 节 邀请码与准入 | — |
 | 15 | services | `js/ui/line-probe.js` | `src/services/line-probe.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，LeLeLineProbe 接口不变 |
-| 16 | services | `js/ui/ui-search-history.js` | `src/services/search-history.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
+| 16 | services | `js/ui/ui-search-history.js` | `src/services/search-history.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
 | 17 | services | `js/api/search.js` | `src/services/search.ts` | pending | 对应功能节（2 / 5 / 6 / 9） | — |
 | 18 | services | `js/api/api-config.js` | `src/services/sources/config.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |
 | 19 | services | `js/api/source-port.js` | `src/services/sources/port.ts` | verified | 对应功能节（2 / 5 / 6 / 9） | 2026-10-21 迁移完成，调用方零改动 |

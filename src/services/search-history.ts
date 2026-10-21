@@ -1,27 +1,32 @@
-function getSearchHistory() {
+interface SearchHistoryEntry {
+    text: string;
+    timestamp: number;
+}
+
+function getSearchHistory(): SearchHistoryEntry[] {
     try {
         const data = localStorage.getItem(scopedKey(SEARCH_HISTORY_KEY));
         if (!data) return [];
 
-        const parsed = JSON.parse(data);
+        const parsed = JSON.parse(data) as unknown;
 
         // 检查是否是数组
         if (!Array.isArray(parsed)) return [];
 
         // 支持旧格式（字符串数组）和新格式（对象数组）
-        return parsed.map(item => {
+        return parsed.map((item): SearchHistoryEntry | null => {
             if (typeof item === 'string') {
                 return { text: item, timestamp: 0 };
             }
-            return item;
-        }).filter(item => item && item.text);
+            return item as SearchHistoryEntry | null;
+        }).filter((item): item is SearchHistoryEntry => !!item && !!item.text);
     } catch (e) {
         console.error('获取搜索历史出错:', e);
         return [];
     }
 }
 
-function saveSearchHistory(query) {
+function saveSearchHistory(query: string): void {
     if (!query || !query.trim()) return;
 
     // 清理输入，防止XSS
@@ -34,13 +39,11 @@ function saveSearchHistory(query) {
 
     // 过滤掉超过2个月的记录（约60天，60*24*60*60*1000 = 5184000000毫秒）
     history = history.filter(item =>
-        typeof item === 'object' && item.timestamp && (now - item.timestamp < 5184000000)
+        !!item.timestamp && (now - item.timestamp < 5184000000)
     );
 
     // 删除已存在的相同项
-    history = history.filter(item =>
-        typeof item === 'object' ? item.text !== query : item !== query
-    );
+    history = history.filter(item => item.text !== query);
 
     // 新项添加到开头，包含时间戳
     history.unshift({
@@ -71,12 +74,12 @@ function saveSearchHistory(query) {
 // 桌面下拉（#searchHistoryDropdown）与移动列表（#mobileSearchHistoryList）共用同一套
 // 条目结构与过滤逻辑，只有外层容器、id 前缀和空态文案不同，避免两处各自维护。
 
-function _escapeHistoryText(text) {
+function _escapeHistoryText(text: unknown): string {
     return String(text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // 单条历史。itemId 供键盘导航的 aria-activedescendant 引用
-function _historyItemHtml(item, itemId) {
+function _historyItemHtml(item: SearchHistoryEntry, itemId: string): string {
     const safeText = _escapeHistoryText(item.text);
     const attr = safeText.replace(/"/g, '&quot;');
     return `
@@ -94,7 +97,7 @@ function _historyItemHtml(item, itemId) {
         `;
 }
 
-function _historyListHtml(history, idPrefix) {
+function _historyListHtml(history: SearchHistoryEntry[], idPrefix: string): string {
     let html = '';
     history.forEach((item, index) => { html += _historyItemHtml(item, idPrefix + index); });
     html += '<button class="search-history-clear" type="button">清空搜索历史</button>';
@@ -102,12 +105,12 @@ function _historyListHtml(history, idPrefix) {
 }
 
 // 历史内容指纹：只有内容真的变了才重建 DOM
-function _historyFingerprint(history) {
+function _historyFingerprint(history: SearchHistoryEntry[]): string {
     return history.map(item => item.text || '').join('\u0001');
 }
 
 // 重建（必要时）+ 记录指纹；空历史写入空态
-function _renderHistoryInto(container, history, idPrefix, emptyHtml) {
+function _renderHistoryInto(container: HTMLElement | null, history: SearchHistoryEntry[], idPrefix: string, emptyHtml: string): void {
     if (!container) return;
     if (history.length === 0) {
         container.innerHTML = emptyHtml || '';
@@ -123,27 +126,27 @@ function _renderHistoryInto(container, history, idPrefix, emptyHtml) {
 
 // 关键字过滤：只切 display，不重建 DOM。
 // 这样输入法组合期间（拼音逐个字母触发 input）列表不会跟着闪烁重建。
-function _filterHistoryIn(container, filterText) {
+function _filterHistoryIn(container: HTMLElement | null, filterText: string): boolean {
     if (!container) return false;
     const query = (filterText || '').trim().toLowerCase();
     let hasVisible = false;
-    container.querySelectorAll('.search-history-item').forEach(el => {
+    container.querySelectorAll<HTMLElement>('.search-history-item').forEach(el => {
         const text = (el.dataset.query || '').toLowerCase();
         const match = !query || text.includes(query);
         el.style.display = match ? '' : 'none';
         if (match) hasVisible = true;
     });
-    const clearBtn = container.querySelector('.search-history-clear');
+    const clearBtn = container.querySelector<HTMLElement>('.search-history-clear');
     if (clearBtn) clearBtn.style.display = hasVisible ? '' : 'none';
     return hasVisible;
 }
 
-function renderSearchHistory() {
+function renderSearchHistory(): void {
     const dropdown = document.getElementById('searchHistoryDropdown');
     _renderHistoryInto(dropdown, getSearchHistory(), 'history-item-', '');
 }
 
-function showSearchHistory(filterText) {
+function showSearchHistory(filterText: string): void {
     const dropdown = document.getElementById('searchHistoryDropdown');
     if (!dropdown) return;
 
@@ -173,8 +176,8 @@ function showSearchHistory(filterText) {
     }
 }
 
-function _positionDropdown(dropdown) {
-    var searchBar = document.querySelector('[data-searchbar]');
+function _positionDropdown(dropdown: HTMLElement): void {
+    var searchBar = document.querySelector<HTMLElement>('[data-searchbar]');
     if (!searchBar) return;
     var rect = searchBar.getBoundingClientRect();
     dropdown.style.left = rect.left + 'px';
@@ -183,8 +186,8 @@ function _positionDropdown(dropdown) {
 }
 
 // 滚动/缩放会高频触发，用 rAF 合并成每帧一次定位
-var _repositionFrame = null;
-function repositionSearchHistory() {
+var _repositionFrame: number | null = null;
+function repositionSearchHistory(): void {
     var dropdown = document.getElementById('searchHistoryDropdown');
     if (!dropdown || dropdown.classList.contains('hidden')) return;
     if (_repositionFrame) return;
@@ -195,7 +198,7 @@ function repositionSearchHistory() {
     });
 }
 
-function hideSearchHistory() {
+function hideSearchHistory(): void {
     const dropdown = document.getElementById('searchHistoryDropdown');
     if (dropdown) {
         dropdown.classList.add('hidden');
@@ -208,25 +211,25 @@ function hideSearchHistory() {
 
 let _historyActiveIndex = -1;
 
-function _visibleHistoryItems() {
+function _visibleHistoryItems(): HTMLElement[] {
     const dropdown = document.getElementById('searchHistoryDropdown');
     if (!dropdown || dropdown.classList.contains('hidden')) return [];
-    return Array.from(dropdown.querySelectorAll('.search-history-item'))
+    return Array.from(dropdown.querySelectorAll<HTMLElement>('.search-history-item'))
         .filter(el => el.style.display !== 'none');
 }
 
-function _syncSearchInputAria(expanded) {
+function _syncSearchInputAria(expanded: boolean): void {
     const input = document.getElementById('searchInput');
     if (input) input.setAttribute('aria-expanded', expanded ? 'true' : 'false');
 }
 
-function _applyActiveHistoryItem(items, index) {
+function _applyActiveHistoryItem(items: HTMLElement[], index: number): void {
     items.forEach((el, i) => {
         const active = i === index;
         el.classList.toggle('is-active', active);
         el.setAttribute('aria-selected', active ? 'true' : 'false');
     });
-    const input = document.getElementById('searchInput');
+    const input = document.getElementById('searchInput') as HTMLInputElement | null;
     if (!input) return;
     if (index >= 0 && items[index]) {
         input.setAttribute('aria-activedescendant', items[index].id);
@@ -241,7 +244,7 @@ function _applyActiveHistoryItem(items, index) {
 }
 
 // 返回 true 表示按键已被下拉消费
-function navigateSearchHistory(delta) {
+function navigateSearchHistory(delta: number): boolean {
     const items = _visibleHistoryItems();
     if (items.length === 0) return false;
     const next = Math.max(0, Math.min(items.length - 1, _historyActiveIndex + delta));
@@ -254,32 +257,32 @@ function navigateSearchHistory(delta) {
 }
 
 // 当前高亮的搜索词（没有高亮时返回 null，调用方回退到输入框内容）
-function getActiveHistoryQuery() {
+function getActiveHistoryQuery(): string | null {
     const items = _visibleHistoryItems();
     if (_historyActiveIndex < 0 || !items[_historyActiveIndex]) return null;
     return items[_historyActiveIndex].dataset.query || null;
 }
 
 // 清掉高亮（用于手动输入后），但不动 aria-expanded —— 下拉可能仍然打开
-function clearHistoryNavHighlight() {
+function clearHistoryNavHighlight(): void {
     _historyActiveIndex = -1;
     const input = document.getElementById('searchInput');
     if (input) input.removeAttribute('aria-activedescendant');
     const dropdown = document.getElementById('searchHistoryDropdown');
     if (dropdown) {
-        dropdown.querySelectorAll('.search-history-item').forEach(el => {
+        dropdown.querySelectorAll<HTMLElement>('.search-history-item').forEach(el => {
             el.classList.remove('is-active');
             el.setAttribute('aria-selected', 'false');
         });
     }
 }
 
-function resetSearchHistoryNav() {
+function resetSearchHistoryNav(): void {
     clearHistoryNavHighlight();
     _syncSearchInputAria(false);
 }
 
-function renderMobileSearchHistory(filterText) {
+function renderMobileSearchHistory(filterText: string): void {
     const container = document.getElementById('mobileSearchHistoryList');
     if (!container) return;
 
@@ -299,17 +302,17 @@ function renderMobileSearchHistory(filterText) {
     }
 }
 
-function _addSearchBarFlush() {
+function _addSearchBarFlush(): void {
     const searchBar = document.querySelector('[data-searchbar]');
     if (searchBar) searchBar.classList.add('search-bar-flush');
 }
 
-function _removeSearchBarFlush() {
+function _removeSearchBarFlush(): void {
     const searchBar = document.querySelector('[data-searchbar]');
     if (searchBar) searchBar.classList.remove('search-bar-flush');
 }
 
-function deleteSingleSearchHistory(query) {
+function deleteSingleSearchHistory(query: string): void {
     // 当url中包含删除的关键词时，页面刷新后会自动加入历史记录，导致误认为删除功能有bug。此问题无需修复，功能无实际影响。
     try {
         let history = getSearchHistory();
@@ -322,7 +325,7 @@ function deleteSingleSearchHistory(query) {
     }
 }
 
-function clearSearchHistory() {
+function clearSearchHistory(): void {
     try {
         localStorage.removeItem(scopedKey(SEARCH_HISTORY_KEY));
         hideSearchHistory();
