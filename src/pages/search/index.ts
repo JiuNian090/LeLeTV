@@ -12,6 +12,14 @@ import {
   setSearchThrottled,
 } from '../../core/state';
 import type { SearchFilterConfig } from '../../core/state';
+import {
+  _applySourceFilter,
+  _buildSearchCardsHtml,
+  _initFilterTabs,
+  _renderSourceFilterTabs,
+  _sortResultsByLatencyThenName,
+  _updateAllTabCount,
+} from './cards';
 
 const SEARCH_CACHE_KEY = 'leletv_search_cache';
 const SEARCH_CACHE_MAX = 800; // 缓存结果条数上限（控制 sessionStorage 体积）

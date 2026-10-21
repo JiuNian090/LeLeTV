@@ -1,29 +1,14 @@
 // LeLeTV — 搜索结果卡片渲染模块
 // 从 app-search.js 拆分
 
-type ResultItem = SharedResultItem;
+import { lastAllResults, setActiveSourceFilter } from '../../core/state';
+import type { MergeGroup, SearchResultItem } from '../../core/state';
+import { prefersReducedMotion } from '../../ui/motion-pref';
 
-interface MergeGroup {
-  lead: ResultItem;
-  items: ResultItem[];
-  year?: string;
-  // 结果页（src/pages/category/index.ts）在合并结果上补齐的分组字段
-  name?: string;
-  base?: string;
-  season?: number | null;
-  remarks?: string;
-  pic?: string;
-  kind?: string;
-}
-
-interface SearchCardsWindow extends Window {
-  LeLeMotion?: { reduced: () => boolean };
-}
-
-const cardsWindow = window as SearchCardsWindow;
+type ResultItem = SearchResultItem;
 
 // 封面加载失败：去掉图片，露出下面的片名首字占位（没有占位层的卡片现补一个）
-function _cardImgFallback(img: HTMLImageElement): void {
+export function _cardImgFallback(img: HTMLImageElement): void {
   img.onerror = null;
   var box = img.parentElement;
   if (!box) return;
@@ -43,7 +28,7 @@ function _cardImgFallback(img: HTMLImageElement): void {
 }
 
 // 封面加载完成：明显不是竖版 2:3 的（横版、方图）改成完整居中 + 同图模糊垫底
-function _posterLoaded(img: HTMLImageElement): void {
+export function _posterLoaded(img: HTMLImageElement): void {
   img.classList.add('loaded');
   var w = img.naturalWidth, h = img.naturalHeight;
   if (!w || !h || w / h <= 0.8) return;
@@ -53,24 +38,24 @@ function _posterLoaded(img: HTMLImageElement): void {
   box.style.setProperty('--poster', 'url("' + (img.currentSrc || img.src).replace(/["\\\n\r]/g, '') + '")');
 }
 
-function _escAttr(s: unknown): string {
+export function _escAttr(s: unknown): string {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 // 片源速度分档：<1s 快 / 1-2s 中 / ≥2s 慢（与播放页线路列表同一口径）
-function _latencyLevel(lat: unknown): string {
+export function _latencyLevel(lat: unknown): string {
   if (typeof lat !== 'number' || lat <= 0) return '';
   return lat < 1000 ? 'fast' : (lat < 2000 ? 'mid' : 'slow');
 }
 
-function _latencyText(lat: unknown): string {
+export function _latencyText(lat: unknown): string {
   if (typeof lat !== 'number' || lat <= 0) return '';
   // 秒数向下取整到 0.1s，避免 1999ms 与 2000ms 显示成同一个 "2.0s"
   return lat < 1000 ? (lat + 'ms') : ((Math.floor(lat / 100) / 10).toFixed(1) + 's');
 }
 
 // 合并用的片名：去掉空白、标点和大小写差异
-function _normTitle(name: unknown): string {
+export function _normTitle(name: unknown): string {
   return String(name || '').toLowerCase()
     .replace(/[\s　·•・:：,，.。!！?？'"“”‘’()（）【】\[\]《》<>\-—_~～]/g, '');
 }
@@ -79,7 +64,7 @@ function _normTitle(name: unknown): string {
  * 合并用的键：有的资源站把别名接在片名后面（「片名$别名」或「片名（别名）」），
  * 去掉别名再规范化，同一部片在各站的写法才对得上
  */
-function _mergeKey(name: unknown): string {
+export function _mergeKey(name: unknown): string {
   var main = String(name || '').split('$')[0].trim().replace(/[（(【\[][^）)】\]]*[）)】\]]\s*$/, '');
   return _normTitle(main);
 }
@@ -89,7 +74,7 @@ function _mergeKey(name: unknown): string {
  * 传入的列表已按片源速度排好序，组内第一条就是最快的片源，点卡片即播放它；
  * 其余片源在播放页的「线路切换」里可以换。
  */
-function _mergeResultsByTitle(items: ResultItem[]): MergeGroup[] {
+export function _mergeResultsByTitle(items: ResultItem[]): MergeGroup[] {
   var groups: MergeGroup[] = [];
   var byName: Record<string, MergeGroup[]> = {};
   (items || []).forEach(function(item) {
@@ -115,7 +100,7 @@ function _mergeResultsByTitle(items: ResultItem[]): MergeGroup[] {
 }
 
 // 单张结果卡片：2:3 海报 + 片名 + 年份类型；左下角标最快片源与速度，合并了多个片源时标 +N
-function _buildResultCard(item: ResultItem, sameTitle?: ResultItem[] | null): string {
+export function _buildResultCard(item: ResultItem, sameTitle?: ResultItem[] | null): string {
   var sid = (item.vod_id || '').toString().replace(/[^\w-]/g, '');
   var nameRaw = (item.vod_name || '').toString().trim();
   var sn = _escAttr(nameRaw);
@@ -150,7 +135,7 @@ function _buildResultCard(item: ResultItem, sameTitle?: ResultItem[] | null): st
 }
 
 /** 结果卡片列表。opts.merge 为 true 时先按片名合并（「全部」视图），单个片源的视图不合并 */
-function _buildSearchCardsHtml(items: ResultItem[], opts?: { merge?: boolean }): string {
+export function _buildSearchCardsHtml(items: ResultItem[], opts?: { merge?: boolean }): string {
   opts = opts || {};
   if (opts.merge) {
     return _mergeResultsByTitle(items).map(function(g) { return _buildResultCard(g.lead, g.items); }).join('');
@@ -168,7 +153,7 @@ document.addEventListener('keydown', function(e) {
   card.click();
 });
 
-function _chineseToNumber(str: string): number {
+export function _chineseToNumber(str: string): number {
   var n: Record<string, number> = {零:0, 一:1, 二:2, 三:3, 四:4, 五:5, 六:6, 七:7, 八:8, 九:9, 十:10, 百:100, 千:1000};
   if (/^d+$/.test(str)) return parseInt(str, 10);
   var r = 0, t = 0;
@@ -180,7 +165,7 @@ function _chineseToNumber(str: string): number {
   return r + t;
 }
 
-function _extractSeasonInfo(title: string): { base: string; season: number | null } {
+export function _extractSeasonInfo(title: string): { base: string; season: number | null } {
   var m = title.match(/第([一二三四五六七八九十百千d]+)(季|部|集)/);
   if (m) return { base: title.replace(m[0], "").replace(/s+$/, ""), season: _chineseToNumber(m[1]) };
   var sm = title.match(/S(d+)/i);
@@ -192,7 +177,7 @@ function _extractSeasonInfo(title: string): { base: string; season: number | nul
 // 依据：本次搜索的实时耗时 source_latency（与卡片上「快/中/慢」标签同一数据源）
 
 /** 每个源本次搜索的最快耗时。同源结果通常共享同一次请求的耗时，取最小以兼容逐条计时的源 */
-function _sourceFastestLatency(results?: ResultItem[]): Record<string, number> {
+export function _sourceFastestLatency(results?: ResultItem[]): Record<string, number> {
   var fastest: Record<string, number> = {};
   (results || []).forEach(function(item) {
     var code = item.source_code;
@@ -204,7 +189,7 @@ function _sourceFastestLatency(results?: ResultItem[]): Record<string, number> {
 }
 
 /** 源顺序：本次延迟升序；无本次延迟数据的源交给 fallbackSort 兜底（缺省保持原序） */
-function _orderSourcesByLatency(codes?: string[], fastest?: Record<string, number>, fallbackSort?: (ids: string[]) => string[]): string[] {
+export function _orderSourcesByLatency(codes?: string[], fastest?: Record<string, number>, fallbackSort?: (ids: string[]) => string[]): string[] {
   var known: string[] = [], unknown: string[] = [];
   (codes || []).forEach(function(c) {
     if (fastest && typeof fastest[c] === 'number') known.push(c); else unknown.push(c);
@@ -218,7 +203,7 @@ function _orderSourcesByLatency(codes?: string[], fastest?: Record<string, numbe
  * 无 source_latency 的结果（类别兜底、传统搜索）没有可比延迟，沉到末尾后按片名排序。
  * 注意不用 Infinity 参与减法（Infinity - Infinity 为 NaN 会破坏比较器）。
  */
-function _sortResultsByLatencyThenName(list?: ResultItem[]): ResultItem[] {
+export function _sortResultsByLatencyThenName(list?: ResultItem[]): ResultItem[] {
   var arr = (list || []).slice();
   var fastest = _sourceFastestLatency(arr);
   return arr.sort(function(a, b) {
@@ -242,7 +227,7 @@ function _sortResultsByLatencyThenName(list?: ResultItem[]): ResultItem[] {
   });
 }
 
-function _getSourceLabel(apiId: string, results?: ResultItem[]): string {
+export function _getSourceLabel(apiId: string, results?: ResultItem[]): string {
   if (results) { var m = results.find(function(r) { return r.source_code === apiId; }); if (m && m.source_name) return m.source_name; }
   if (apiId.indexOf("custom_") === 0) { var i = parseInt(apiId.replace("custom_", "")); var a = customAPIs[i]; return a ? a.name : "自定义源" + (i+1); }
   if (API_SITES[apiId]) return API_SITES[apiId].name;
@@ -250,7 +235,7 @@ function _getSourceLabel(apiId: string, results?: ResultItem[]): string {
 }
 
 
-function _initFilterTabs(): void {
+export function _initFilterTabs(): void {
   var ct = document.getElementById('sourceFilterTabs');
   if (!ct) return;
   if (!selectedAPIs || selectedAPIs.length === 0) { ct.innerHTML = ''; return; }
@@ -267,55 +252,55 @@ function _initFilterTabs(): void {
   ct.innerHTML = h;
 }
 
-function _renderSourceFilterTabs(totalCount?: number): void {
+export function _renderSourceFilterTabs(totalCount?: number): void {
   var ct = document.getElementById('sourceFilterTabs');
   if (!ct) return;
-  if (!_lastAllResults || _lastAllResults.length === 0) { ct.innerHTML = ''; return; }
-  var ac = totalCount || _lastAllResults.length;
+  if (!lastAllResults || lastAllResults.length === 0) { ct.innerHTML = ''; return; }
+  var ac = totalCount || lastAllResults.length;
   var seen = new Set<string>(), uniq: string[] = [];
-  _lastAllResults.forEach(function(item: ResultItem) { var c = item.source_code; if (c && !seen.has(c)) { seen.add(c); uniq.push(c); } });
+  lastAllResults.forEach(function(item: ResultItem) { var c = item.source_code; if (c && !seen.has(c)) { seen.add(c); uniq.push(c); } });
   // 标签顺序：本次搜索延迟快的源在前（与结果排序同一口径）
-  uniq = _orderSourcesByLatency(uniq, _sourceFastestLatency(_lastAllResults));
+  uniq = _orderSourcesByLatency(uniq, _sourceFastestLatency(lastAllResults));
   var h = '<button class="source-filter-tab active" data-source="all">\u5168\u90e8 (' + ac + ')</button>';
   uniq.forEach(function(code) {
-    var label = _getSourceLabel(code, _lastAllResults);
-    var cnt = _lastAllResults.filter(function(r: ResultItem) { return r.source_code === code; }).length;
+    var label = _getSourceLabel(code, lastAllResults);
+    var cnt = lastAllResults.filter(function(r: ResultItem) { return r.source_code === code; }).length;
     h += '<button class="source-filter-tab" data-source="' + code + '">' + label + ' (' + cnt + ')</button>';
   });
   ct.innerHTML = h;
 }
 
-function _updateAllTabCount(count: number): void {
+export function _updateAllTabCount(count: number): void {
   var t = document.querySelector('#sourceFilterTabs .source-filter-tab[data-source="all"]');
   if (t) t.textContent = '\u5168\u90e8 (' + count + ')';
   var ct = document.getElementById('sourceFilterTabs');
-  if (!ct || !_lastAllResults) return;
+  if (!ct || !lastAllResults) return;
   ct.querySelectorAll('.source-filter-tab:not([data-source="all"])').forEach(function(tab) {
     var el = tab as HTMLElement;
     var code = el.dataset.source;
-    var cnt = _lastAllResults.filter(function(r: ResultItem) { return r.source_code === code; }).length;
-    el.textContent = _getSourceLabel(code, _lastAllResults) + ' (' + cnt + ')';
+    var cnt = lastAllResults.filter(function(r: ResultItem) { return r.source_code === code; }).length;
+    el.textContent = _getSourceLabel(code, lastAllResults) + ' (' + cnt + ')';
   });
 }
 
-function _applySourceFilter(sourceFilter: string): void {
-  _activeSourceFilter = sourceFilter;
+export function _applySourceFilter(sourceFilter: string): void {
+  setActiveSourceFilter(sourceFilter);
   document.querySelectorAll('#sourceFilterTabs .source-filter-tab').forEach(function(tab) {
     var el = tab as HTMLElement;
     tab.classList.toggle('active', el.dataset.source === sourceFilter);
   });
-  var fr = _lastAllResults;
-  if (sourceFilter !== 'all') fr = _lastAllResults.filter(function(r: ResultItem) { return r.source_code === sourceFilter; });
+  var fr = lastAllResults;
+  if (sourceFilter !== 'all') fr = lastAllResults.filter(function(r: ResultItem) { return r.source_code === sourceFilter; });
   (document.getElementById('results') as HTMLElement).innerHTML = _buildSearchCardsHtml(fr);
   animateCardEntrance();
   var ra = document.getElementById('resultsArea');
   if (ra) ra.scrollIntoView({ behavior: 'instant', block: 'start' });
 }
 
-function animateCardEntrance(containerSel?: string): void {
+export function animateCardEntrance(containerSel?: string): void {
   var root = document.querySelector(containerSel || '#results');
   if (!root) return;
-  if (cardsWindow.LeLeMotion ? cardsWindow.LeLeMotion.reduced() : (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  if (prefersReducedMotion()) return;
   root.querySelectorAll('.card-hover').forEach(function(card, i) {
     if (i > 24) return;   // 只给首屏附近的卡片做入场，列表很长时不拖慢
     (card as HTMLElement).animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }],
@@ -324,7 +309,7 @@ function animateCardEntrance(containerSel?: string): void {
 }
 
 // 加载中的海报骨架，与首页海报卡片同一形状
-function generateSkeletonCards(count?: number): string {
+export function generateSkeletonCards(count?: number): string {
   var n = count || 12;
   var html = '';
   for (var i = 0; i < n; i++) {

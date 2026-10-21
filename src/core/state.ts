@@ -200,6 +200,19 @@ export interface SearchResultItem {
     api_url?: string;
 }
 
+/** 同名结果合并后的分组（原 pages/search/cards.ts 的 MergeGroup，跨页面共享） */
+export interface MergeGroup {
+    lead: SearchResultItem;
+    items: SearchResultItem[];
+    year?: string;
+    name?: string;
+    base?: string;
+    season?: number | null;
+    remarks?: string;
+    pic?: string;
+    kind?: string;
+}
+
 export let activeSourceFilter = 'all';
 export function setActiveSourceFilter(v: string): void {
     activeSourceFilter = v;
@@ -264,4 +277,29 @@ declare global {
     function isHiddenContentMode(): boolean;
     function scopedKey(key: string): string;
     function extendAPISites(newSites: Record<string, ApiSite>): void;
+
+    // 过渡：cards.ts 已模块化，category/index.ts 尚未改 import，仍以裸名调用这些函数。
+    // 运行时由 cards.ts 末尾的 window 桥承接；category 改造后删除本段。
+    interface MergeGroup {
+        lead: SharedResultItem;
+        items: SharedResultItem[];
+        year?: string;
+        name?: string;
+        base?: string;
+        season?: number | null;
+        remarks?: string;
+        pic?: string;
+        kind?: string;
+    }
+    function _normTitle(name: unknown): string;
+    function _mergeResultsByTitle(items: SharedResultItem[]): MergeGroup[];
+    function _latencyLevel(lat: unknown): string;
+    function _latencyText(lat: unknown): string;
+    function _sourceFastestLatency(results?: SharedResultItem[]): Record<string, number>;
+    function _orderSourcesByLatency(codes?: string[], fastest?: Record<string, number>, fallbackSort?: (ids: string[]) => string[]): string[];
+    function _sortResultsByLatencyThenName(list?: SharedResultItem[]): SharedResultItem[];
+    function _getSourceLabel(apiId: string, results?: SharedResultItem[]): string;
+    function _posterLoaded(img: HTMLImageElement): void;
+    function generateSkeletonCards(count?: number): string;
+    function animateCardEntrance(containerSel?: string): void;
 }
