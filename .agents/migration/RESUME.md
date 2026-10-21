@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`2044e92 refactor: 迁移 app-search 到 src/pages/search/index.ts`
+> 最新提交：`21582c2 refactor: 迁移 settings 页片段到 src/pages/settings/template.html`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：57 / 85 条已验证** |
+| 4 | **进行中：60 / 85 条已验证** |
 
 ---
 
-## 阶段 4 已完成（MAP 1–57）
+## 阶段 4 已完成（MAP 1–60）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -81,23 +81,28 @@
 | 55 | `pages/readme.html` | `src/pages/readme/template.html` | FRAGMENTS 映射已同步 |
 | 56 | `js/ui/search-cards.js` | `src/pages/search/cards.ts` | 卡片渲染与排序函数不变；分享链接指向新播放页 |
 | 57 | `js/app/app-search.js` | `src/pages/search/index.ts` | 全局搜索入口与事件绑定不变 |
+| 58 | `js/auth/admin-panel.js` | `src/pages/settings/admin-panel.ts` | 面板接口不变；与 user-devices 完全相同的重复 helper 已去重 |
+| 59 | `css/v2/admin.css` | `src/pages/settings/style.css` | page-loader STYLES 已同步 |
+| 60 | `pages/settings.html` | `src/pages/settings/template.html` | FRAGMENTS 映射已同步 |
 
 ---
 
 ## 下一步
 
-**MAP 第 58 条**：`js/auth/admin-panel.js → src/pages/settings/admin-panel.ts`
+**MAP 第 61 条**：`js/auth/user-devices.js → src/pages/settings/user-devices.ts`
 
 之后：
 
-- 第 59 条 `css/v2/admin.css → src/pages/settings/style.css`
-- 第 60 条 `pages/settings.html → src/pages/settings/template.html`
-- pages 层收尾后进入 router（2）、entry（2）、styles（3）、public（17）
+- 第 62/63 条 router：`app-routing.js → src/router/index.ts`、`page-loader.js → src/router/page-loader.ts`
+- 第 64/65 条 entry：`index.html → src/index.html`、`app.js → src/main.ts`
+- 第 66–68 条 styles，第 69 条起 public
+
+> `pages/` 目录已清空，所有页面片段都已迁到 `src/pages/`。
 
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 58 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 61 条继续。
 
 ---
 
@@ -122,7 +127,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **266.8 KB**（预算 275 KB）；`js/` 剩余 `.js` **7**；tracked 370 / inventory 427。
+基线：首屏 core+app **266.8 KB**（预算 275 KB）；`js/` 剩余 `.js` **6**；tracked 370 / inventory 430。
 
 ---
 
