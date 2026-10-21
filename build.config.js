@@ -26,7 +26,7 @@ export const BUNDLES = [
       'src/core/global.ts', 'src/core/storage.ts',
       'src/core/listener-tracker.ts', 'src/core/timing.ts',
       'src/core/http.ts', 'src/core/crypto.ts', 'src/services/invitation.ts',
-      'js/ui/ui-core.js', 'js/ui/motion-pref.js', 'src/services/line-probe.ts',
+      'js/ui/ui-core.js', 'src/ui/motion-pref.ts', 'src/services/line-probe.ts',
     ],
   },
   {

@@ -5,41 +5,54 @@
  *   - 首帧由 index.html / player.html 的 head 脚本把 data-motion 打到 <html> 上，css 据此放行或停掉动画
  *   - 脚本里的判断统一走 LeLeMotion.reduced()；改了偏好会派发 leletv:motionchange
  */
+
+type MotionPref = 'auto' | 'on' | 'off';
+
+interface MotionWindow extends Window {
+  LeLeMotion?: {
+    reduced: () => boolean;
+    pref: () => MotionPref;
+    set: (p: MotionPref) => void;
+  };
+}
+
 (function () {
   'use strict';
 
+  const motionWindow = window as MotionWindow;
+
   var KEY = 'leletv_motion';
 
-  function pref() {
+  function pref(): MotionPref {
     try {
       var v = localStorage.getItem(KEY);
       return v === 'on' || v === 'off' ? v : 'auto';
     } catch (e) { return 'auto'; }
   }
 
-  function systemReduced() {
+  function systemReduced(): boolean {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
   }
 
   /** 现在该不该静止：强制开启 → 否；强制关闭 → 是；其余跟系统 */
-  function reduced() {
+  function reduced(): boolean {
     var p = pref();
     if (p === 'on') return false;
     if (p === 'off') return true;
     return systemReduced();
   }
 
-  function apply(p) {
+  function apply(p: MotionPref): void {
     var d = document.documentElement;
     if (p === 'on' || p === 'off') d.setAttribute('data-motion', p);
     else d.removeAttribute('data-motion');
   }
 
-  function syncControl() {
+  function syncControl(): void {
     var box = document.querySelector('[data-role="motion-pref"]');
     if (!box) return;
     var p = pref();
-    Array.prototype.forEach.call(box.querySelectorAll('[data-motion]'), function (btn) {
+    Array.prototype.forEach.call(box.querySelectorAll<HTMLElement>('[data-motion]'), function (btn: HTMLElement) {
       var on = btn.getAttribute('data-motion') === p;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-checked', String(on));
@@ -52,7 +65,7 @@
     }
   }
 
-  function set(p) {
+  function set(p: MotionPref): void {
     try {
       if (p === 'auto') localStorage.removeItem(KEY);
       else localStorage.setItem(KEY, p);
@@ -64,13 +77,14 @@
     } catch (e) { /* 忽略 */ }
   }
 
-  function init() {
+  function init(): void {
     apply(pref());
     syncControl();
     document.addEventListener('click', function (e) {
-      var btn = e.target.closest ? e.target.closest('[data-role="motion-pref"] [data-motion]') : null;
+      var target = e.target as HTMLElement;
+      var btn = target.closest ? target.closest('[data-role="motion-pref"] [data-motion]') as HTMLElement | null : null;
       if (!btn) return;
-      set(btn.getAttribute('data-motion'));
+      set(btn.getAttribute('data-motion') as MotionPref);
     });
     try {
       window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', function () {
@@ -83,5 +97,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  window.LeLeMotion = { reduced: reduced, pref: pref, set: set };
+  motionWindow.LeLeMotion = { reduced: reduced, pref: pref, set: set };
 })();

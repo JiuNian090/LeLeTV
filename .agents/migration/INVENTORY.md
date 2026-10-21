@@ -385,7 +385,7 @@
 | 311 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
 | 312 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeLayout 接口不变 |
 | 313 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | verified | IIFE 原样迁移，window.LeLeLineProbe 接口不变 |
-| 314 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | pending | — |
+| 314 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeMotion 接口不变 |
 | 315 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | pending | — |
 | 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
 | 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | pending | — |
@@ -491,6 +491,7 @@
 | 394 | `src/ui/brand-canvas.ts` | 品牌组合 canvas 绘制（迁移自 `js/ui/brand-canvas.js`） | keep | — | — | — | done | 阶段 4 第 25 条迁移目标 |
 | 395 | `src/ui/index.ts` | 通用 UI 工具与导入弹窗（迁移自 `js/ui/ui.js`） | keep | — | — | — | done | 阶段 4 第 26 条迁移目标 |
 | 396 | `src/ui/layout-pref.ts` | 首页与导航布局偏好（迁移自 `js/ui/layout-pref.js`） | keep | — | — | — | done | 阶段 4 第 27 条迁移目标 |
+| 397 | `src/ui/motion-pref.ts` | 动态效果偏好（迁移自 `js/ui/motion-pref.js`） | keep | — | — | — | done | 阶段 4 第 28 条迁移目标 |
 
 ## workers/（红区）
 

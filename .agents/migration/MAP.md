@@ -53,7 +53,7 @@
 | 25 | ui | `js/ui/brand-canvas.js` | `src/ui/brand-canvas.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 26 | ui | `js/ui/ui.js` | `src/ui/index.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 27 | ui | `js/ui/layout-pref.js` | `src/ui/layout-pref.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
-| 28 | ui | `js/ui/motion-pref.js` | `src/ui/motion-pref.ts` | pending | 第 0 节通用前置 | — |
+| 28 | ui | `js/ui/motion-pref.js` | `src/ui/motion-pref.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 29 | ui | `js/player/player-bridge.js` | `src/ui/player/bridge.ts` | pending | 第 7 节 播放器 | — |
 | 30 | ui | `js/player/player-core.js` | `src/ui/player/core.ts` | pending | 第 7 节 播放器 | — |
 | 31 | ui | `js/player/player-detail.js` | `src/ui/player/detail.ts` | pending | 第 7 节 播放器 | — |
