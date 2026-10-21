@@ -4,7 +4,7 @@
  * 因为 toast 模块在初始化时会查找 #toast / #modal。
  */
 
-(function mountGlobalUi(): void {
+export function mountGlobalUi(): void {
   if (document.getElementById('global-ui-root')) return;
 
   const root = document.createElement('div');
@@ -193,4 +193,6 @@
   } else {
     document.body.appendChild(root);
   }
-})();
+}
+
+mountGlobalUi();
