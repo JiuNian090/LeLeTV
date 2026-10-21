@@ -1,12 +1,25 @@
 /**
  * invite-auth.js — 邀请码验证与设备管理
- * 
+ *
  * 负责：
  * 1. 生成设备指纹
  * 2. 验证邀请码
  * 3. 设备心跳
  * 4. 登录状态管理
  */
+
+type InviteWindow = Window & {
+  __ENV__?: { TMDB_WORKER_URL?: string };
+};
+
+interface InviteVerifyResponse {
+  ok?: boolean;
+  is_admin?: boolean;
+  action?: string;
+  message?: string;
+  error?: string;
+  updated?: boolean;
+}
 
 const INVITE_AUTH = {
   // localStorage key
@@ -15,15 +28,22 @@ const INVITE_AUTH = {
   DEVICE_ID_KEY: 'leletv_device_id',
   DEVICE_ID_SESSION_KEY: 'leletv_device_id_session',
   HEARTBEAT_INTERVAL: 5 * 60 * 1000, // 5分钟
-  
+  // 基础软指纹缓存（同一会话内不变）
+  _cachedBaseSignature: '',
+  // 心跳定时器与 pagehide 监听器（运行期赋值）
+  _heartbeatTimer: null as ReturnType<typeof setInterval> | null,
+  _heartbeatBound: null as (() => void) | null,
+  _legacyMigrationTried: false,
+  _ensureHeartbeatRunning: false,
+
   _inviteUrl(path) {
-    const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
+    const workerBase = (window as InviteWindow).__ENV__?.TMDB_WORKER_URL || '';
     if (workerBase) {
       return `${workerBase}${path}`;
     }
     return `/api${path}`;
   },
-  
+
   /* ===== 设备标识 =====
    * 旧版把「软指纹」当作设备唯一标识，同型号同系统的设备（例如两台 iPad 11 / iPadOS 26）
    * 会算出同一个值，被服务端误判为同一台设备，互相覆盖设备名与活跃时间。
@@ -48,11 +68,11 @@ const INVITE_AUTH = {
     return 'fp_' + Math.abs(hash).toString(16);
   },
 
-  _readStore(name, key) {
+  _readStore(name: 'localStorage' | 'sessionStorage', key: string): string | null {
     try { return window[name].getItem(key); } catch { return null; }
   },
 
-  _writeStore(name, key, value) {
+  _writeStore(name: 'localStorage' | 'sessionStorage', key: string, value: string): boolean {
     try { window[name].setItem(key, value); return true; } catch { return false; }
   },
 
@@ -150,7 +170,7 @@ const INVITE_AUTH = {
   _gpuSignature() {
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
       if (!gl) return '';
       const parts = [];
       const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
@@ -186,7 +206,7 @@ const INVITE_AUTH = {
       (navigator.languages || []).join(','),
       navigator.platform || '',
       String(navigator.hardwareConcurrency || ''),
-      String(navigator.deviceMemory || ''),
+      String((navigator as Navigator & { deviceMemory?: number }).deviceMemory || ''),
       String(navigator.maxTouchPoints || ''),
       'gpu:' + INVITE_AUTH._gpuSignature(),
       'canvas:' + INVITE_AUTH._canvasSignature()
@@ -206,7 +226,7 @@ const INVITE_AUTH = {
    * 未传 deviceName 时返回基础指纹（兼容旧调用与管理员登录场景）。
    * 改名后需重新调用本函数并把新签名上报服务端，否则找回会失效。
    */
-  async computeDeviceSignature(deviceName) {
+  async computeDeviceSignature(deviceName?: string) {
     const base = await INVITE_AUTH._computeBaseSignature();
     const name = (deviceName || '').trim();
     if (!name) return base;
@@ -217,7 +237,7 @@ const INVITE_AUTH = {
   generateFingerprint() {
     return INVITE_AUTH.computeDeviceSignature();
   },
-  
+
   /**
    * 获取已保存的认证信息
    */
@@ -230,7 +250,7 @@ const INVITE_AUTH = {
       return null;
     }
   },
-  
+
   /**
    * 保存认证信息
    */
@@ -243,7 +263,7 @@ const INVITE_AUTH = {
       verified_at: Date.now()
     }));
   },
-  
+
   /**
    * 清除认证信息（登出）
    */
@@ -282,7 +302,7 @@ const INVITE_AUTH = {
     document.getElementById('inviteAdminContainer')?.classList.add('hidden');
     document.getElementById('userDeviceContainer')?.classList.add('hidden');
   },
-  
+
   /**
    * 清除所有登录状态（登出），保留其他数据
    * 恢复邀请码登录界面
@@ -291,23 +311,23 @@ const INVITE_AUTH = {
     try {
       // 停止心跳
       this.stopHeartbeat();
-      
+
       // 清除所有认证相关的 localStorage 并收起管理面板
       INVITE_AUTH._clearSession();
-      
+
       // 重置并显示邀请码登录弹窗
       const loginModal = document.getElementById('inviteLoginModal');
       if (loginModal) {
         // 重置错误提示
         document.getElementById('inviteLoginError')?.classList.add('hidden');
-        document.getElementById('inviteDeviceName') && (document.getElementById('inviteDeviceName').value = '');
-        document.getElementById('inviteCodeInput') && (document.getElementById('inviteCodeInput').value = '');
-        document.getElementById('inviteLoginBtn') && (document.getElementById('inviteLoginBtn').disabled = false);
-        
+        (document.getElementById('inviteDeviceName') as HTMLInputElement | null) && ((document.getElementById('inviteDeviceName') as HTMLInputElement | null).value = '');
+        (document.getElementById('inviteCodeInput') as HTMLInputElement | null) && ((document.getElementById('inviteCodeInput') as HTMLInputElement | null).value = '');
+        (document.getElementById('inviteLoginBtn') as HTMLButtonElement | null) && ((document.getElementById('inviteLoginBtn') as HTMLButtonElement | null).disabled = false);
+
         loginModal.style.display = 'flex';
-        
+
         setTimeout(() => {
-          const deviceInput = document.getElementById('inviteDeviceName');
+          const deviceInput = (document.getElementById('inviteDeviceName') as HTMLInputElement | null);
           if (deviceInput) deviceInput.focus();
         }, 150);
       }
@@ -315,7 +335,7 @@ const INVITE_AUTH = {
       console.error('退出登录出错:', e);
     }
   },
-  
+
   /** 当前浏览器是否处于管理员会话（管理员设备不在 devices 表中，心跳必然未命中） */
   _isAdminSession() {
     try {
@@ -347,8 +367,8 @@ const INVITE_AUTH = {
       const loginModal = document.getElementById('inviteLoginModal');
       if (!loginModal) return;
 
-      document.getElementById('inviteLoginBtn') && (document.getElementById('inviteLoginBtn').disabled = false);
-      document.getElementById('inviteCodeInput') && (document.getElementById('inviteCodeInput').value = '');
+      (document.getElementById('inviteLoginBtn') as HTMLButtonElement | null) && ((document.getElementById('inviteLoginBtn') as HTMLButtonElement | null).disabled = false);
+      (document.getElementById('inviteCodeInput') as HTMLInputElement | null) && ((document.getElementById('inviteCodeInput') as HTMLInputElement | null).value = '');
 
       const loginError = document.getElementById('inviteLoginError');
       if (loginError) {
@@ -357,7 +377,7 @@ const INVITE_AUTH = {
       }
 
       loginModal.style.display = 'flex';
-      setTimeout(() => document.getElementById('inviteCodeInput')?.focus(), 150);
+      setTimeout(() => (document.getElementById('inviteCodeInput') as HTMLInputElement | null)?.focus(), 150);
     } catch (e) {
       console.error('处理设备移除出错:', e);
     }
@@ -376,7 +396,7 @@ const INVITE_AUTH = {
    * 邀请码弹窗只保留视觉框架，点「进入」即放行（见 verify 开头），放行记录存在本机
    */
   isLocalMode() {
-    return !window.__ENV__?.TMDB_WORKER_URL;
+    return !(window as InviteWindow).__ENV__?.TMDB_WORKER_URL;
   },
 
   LOCAL_PREVIEW_KEY: 'leletv_local_invite_passed',
@@ -397,7 +417,7 @@ const INVITE_AUTH = {
     }
     return { ok: true, local: true, message: '欢迎使用 LeLeTV' };
   },
-  
+
   /**
    * 验证邀请码
    */
@@ -414,10 +434,10 @@ const INVITE_AUTH = {
       || currentAuth.device_name !== name
       || !currentAuth.device_signature;
     const signature = needsSignature ? await INVITE_AUTH.computeDeviceSignature(deviceName) : currentAuth.device_signature;
-    
+
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/verify');
-      
+
       const response = await INVITE_AUTH._fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -429,9 +449,9 @@ const INVITE_AUTH = {
           device_id_lost: deviceInfo.isNew
         })
       }, 8000);
-      
-      const data = await response.json();
-      
+
+      const data = await response.json() as InviteVerifyResponse;
+
       if (data.ok) {
         // 管理员登录 - 存储管理员 session，同时保存普通 auth 以便刷新时识别
         if (data.is_admin) {
@@ -450,27 +470,27 @@ const INVITE_AUTH = {
           document.dispatchEvent(new CustomEvent('passwordVerified'));
           return { ok: true, is_admin: true, action: 'admin', message: '管理员验证成功' };
         }
-        
+
         INVITE_AUTH.saveAuth({
           code: code.trim().toUpperCase(),
           device_name: name,
           device_fingerprint: deviceId,
           device_signature: signature
         });
-        
+
         // 启动心跳：延后一拍，让首页数据请求先发出去，避免登录后立刻抢占连接
         setTimeout(function () { INVITE_AUTH.ensureHeartbeat(); }, 1200);
-        
+
         return { ok: true, action: data.action, message: data.message };
       }
-      
+
       return { ok: false, error: data.error || '验证失败' };
     } catch (error) {
       console.error('邀请码验证失败:', error);
       return { ok: false, error: '网络错误，请检查后重试' };
     }
   },
-  
+
   /**
    * 发送心跳
    * 返回 { updated } —— 服务端是否仍有本机设备记录；
@@ -479,14 +499,14 @@ const INVITE_AUTH = {
   async heartbeat(fingerprint) {
     try {
       const url = INVITE_AUTH._inviteUrl('/invite/heartbeat');
-      
+
       const response = await INVITE_AUTH._fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_fingerprint: fingerprint })
       }, 8000);
       if (!response.ok) return null;
-      const data = await response.json().catch(() => null);
+      const data = await response.json().catch(() => null) as InviteVerifyResponse | null;
       if (!data || data.ok !== true) return null;
       return { updated: data.updated === true };
     } catch {
@@ -494,7 +514,7 @@ const INVITE_AUTH = {
       return null;
     }
   },
-  
+
   /**
    * 启动心跳定时器
    */
@@ -507,7 +527,7 @@ const INVITE_AUTH = {
     if (INVITE_AUTH._heartbeatBound) {
       window.removeEventListener('pagehide', INVITE_AUTH._heartbeatBound);
     }
-    
+
     INVITE_AUTH._heartbeatTimer = setInterval(async () => {
       const beat = await INVITE_AUTH.heartbeat(fingerprint);
       // 使用期间被管理员移除时同样立即踢出，不必等到下次刷新
@@ -516,12 +536,12 @@ const INVITE_AUTH = {
         INVITE_AUTH.handleDeviceRemoved();
       }
     }, INVITE_AUTH.HEARTBEAT_INTERVAL);
-    
+
     // 用 pagehide 而非 beforeunload：页面被 bfcache 冻结/卸载时均触发心跳，且不禁用 bfcache
     INVITE_AUTH._heartbeatBound = () => INVITE_AUTH.heartbeat(fingerprint);
     window.addEventListener('pagehide', INVITE_AUTH._heartbeatBound);
   },
-  
+
   /**
    * 确保心跳运行（从 localStorage 读取指纹，页面加载时调用）
    * 顺序很关键：先确认本机设备记录仍在册，再考虑旧指纹迁移。
@@ -560,7 +580,7 @@ const INVITE_AUTH = {
       INVITE_AUTH._ensureHeartbeatRunning = false;
     }
   },
-  
+
   /**
    * 停止心跳
    */
@@ -577,7 +597,7 @@ const INVITE_AUTH = {
 };
 
 // 暴露到全局
-window.INVITE_AUTH = INVITE_AUTH;
+(window as Window & { INVITE_AUTH?: typeof INVITE_AUTH }).INVITE_AUTH = INVITE_AUTH;
 
 // 本地版预览：地址带 ?invite 时清掉放行记录，邀请码弹窗会重新出现
 (function () {

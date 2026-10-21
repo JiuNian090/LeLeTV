@@ -25,7 +25,7 @@ export const BUNDLES = [
       'src/core/config.ts', 'js/api/remote-sources.js',
       'src/core/global.ts', 'src/core/storage.ts',
       'src/core/listener-tracker.ts', 'src/core/timing.ts',
-      'src/core/http.ts', 'src/core/crypto.ts', 'js/auth/invite-auth.js',
+      'src/core/http.ts', 'src/core/crypto.ts', 'src/services/invitation.ts',
       'js/ui/ui-core.js', 'js/ui/motion-pref.js', 'js/ui/line-probe.js',
     ],
   },

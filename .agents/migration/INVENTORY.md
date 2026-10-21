@@ -354,7 +354,7 @@
 | 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
 | 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
 | 283 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | pending | — |
-| 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | pending | — |
+| 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | verified | 已迁移至 `src/services/invitation.ts`；类型检查通过 |
 | 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | verified | 已迁移至 `src/core/crypto.ts`；类型检查通过 |
 | 286 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | verified | 已迁移至 `src/core/http.ts`；类型检查通过 |
 | 287 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | merge | `src/core/crypto.ts` | `src/core/crypto.ts` | AP-001 | verified | 与 `crypto.ts` 的 sha256 重复，已合并；删除原文件 |
@@ -476,6 +476,7 @@
 | 379 | `src/services/api.ts` | 采集站请求 / 详情 / 搜索 API（迁移自 `js/api/api.js`） | keep | — | — | — | done | 阶段 4 第 11 条迁移目标 |
 | 380 | `src/services/balancer.ts` | 采集站负载均衡（迁移自 `js/api/loadBalancer.js`） | keep | — | — | — | done | 阶段 4 第 12 条迁移目标 |
 | 381 | `src/services/config.ts` | 配置导入/导出与 JSZip 懒加载（迁移自 `js/app/app-config.js`） | keep | — | — | — | done | 阶段 4 第 13 条迁移目标 |
+| 382 | `src/services/invitation.ts` | 邀请码验证 / 设备指纹 / 心跳（迁移自 `js/auth/invite-auth.js`） | keep | — | — | — | done | 阶段 4 第 14 条迁移目标 |
 
 ## workers/（红区）
 
