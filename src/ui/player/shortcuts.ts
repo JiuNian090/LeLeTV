@@ -1,12 +1,17 @@
 // LeLeTV — 播放器键盘快捷键模块
 // 从 player.js 拆分
 
+// 阶段 5B-3：显式 import 状态与选集/提示函数。
+import { art, controlsLocked, currentEpisodeIndex, currentEpisodes } from './state';
+import { playPreviousEpisode, playNextEpisode } from './episodes';
+import { showShortcutHint } from './ui';
+
 interface ShortcutArt extends PlayerArtInstance {
   volume?: number;
   toggle?: () => void;
 }
 
-function handleKeyboardShortcuts(e: KeyboardEvent): void {
+export function handleKeyboardShortcuts(e: KeyboardEvent): void {
   const target = e.target as HTMLElement;
   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
   if (controlsLocked) return;
@@ -44,3 +49,8 @@ function handleKeyboardShortcuts(e: KeyboardEvent): void {
 Object.assign(window, {
   handleKeyboardShortcuts
 });
+
+// 阶段 5B-3 过渡期类型桥：shortcuts.ts 已成为 ESM 模块，index 仍以裸名注册。
+declare global {
+  function handleKeyboardShortcuts(e: KeyboardEvent): void;
+}
