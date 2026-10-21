@@ -1,3 +1,7 @@
+import { addAuthToProxyUrl } from '../core/http';
+import { API_CONFIG, API_SITES, PROXY_URL, AGGREGATED_SEARCH_CONFIG } from '../core/config';
+import { LoadBalancer } from './balancer';
+
 interface SearchResultItem {
     [key: string]: unknown;
     source_name?: string | undefined;
@@ -21,7 +25,7 @@ const searchWindow = window as SearchWindow;
 
 // 搜索缓存
 const _searchCache = new Map<string, { results: SearchResultItem[]; timestamp: number }>();
-const SEARCH_CACHE_TTL = 30 * 60 * 1000; // 缓存30分钟
+export const SEARCH_CACHE_TTL = 30 * 60 * 1000; // 缓存30分钟
 
 // 按分类拉取缓存（类别入口混合兜底用）
 const _categoryCache = new Map<string, { results: SearchResultItem[]; timestamp: number }>();
@@ -53,7 +57,7 @@ function _setCachedResult(apiId: string, query: string, results: SearchResultIte
     }
 }
 
-async function searchByAPIAndKeyWord(apiId: string, query: string): Promise<SearchResultItem[]> {
+export async function searchByAPIAndKeyWord(apiId: string, query: string): Promise<SearchResultItem[]> {
     // 检查缓存
     const cached = _getCachedResult(apiId, query);
     if (cached) {
@@ -221,7 +225,7 @@ async function searchByAPIAndKeyWord(apiId: string, query: string): Promise<Sear
 
 // 按分类拉取某源影片（MacCMS 标准 ac=videolist&class=<分类名>&pg=<页码>）
 // 用于类别入口「关键词搜索无结果」时的混合兜底，不依赖关键词
-async function searchByCategory(apiId: string, className: string, page = 1): Promise<SearchResultItem[]> {
+export async function searchByCategory(apiId: string, className: string, page = 1): Promise<SearchResultItem[]> {
     const cacheKey = apiId + '|' + className + '|' + page;
     const cached = _categoryCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CATEGORY_CACHE_TTL) {
@@ -293,3 +297,19 @@ Object.assign(window, {
   searchByAPIAndKeyWord,
   searchByCategory
 });
+
+// 阶段 5B-3 过渡期类型桥：search.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问。
+type SharedSearchResultItem = {
+  [key: string]: unknown;
+  source_name?: string | undefined;
+  source_code?: string;
+  api_url?: string | undefined;
+  source_latency?: number;
+};
+declare global {
+  const SEARCH_CACHE_TTL: number;
+  function searchByAPIAndKeyWord(apiId: string, query: string): Promise<SharedSearchResultItem[]>;
+  function searchByCategory(apiId: string, className: string, page?: number): Promise<SharedSearchResultItem[]>;
+  type SearchResultItem = SharedSearchResultItem;
+}
