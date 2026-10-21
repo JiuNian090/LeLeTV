@@ -27,22 +27,12 @@ const CATEGORY = byName('leletv-category');
 const SETTINGS = byName('leletv-settings');
 const PLAYER = byName('leletv-player');
 
-/** 生成临时 ESM 入口（无显式 entry 的 bundle）；返回 [{ in, out }] */
+/** 各 bundle 的持久 ESM 入口（阶段 5B-5：不再生成临时入口） */
 function makeEntryPoints() {
-  const entries = [];
-  for (const config of [CORE, APP, CATEGORY, SETTINGS, PLAYER]) {
-    if (config.entry) {
-      entries.push({ in: path.join(ROOT, config.entry), out: config.name });
-      continue;
-    }
-    const entryPath = path.join(DIST, '.entry-' + config.name + '.ts');
-    const imports = config.files
-      .map(f => "import '../" + f.replace(/\\/g, '/') + "';")
-      .join('\n');
-    fs.writeFileSync(entryPath, imports + '\n', 'utf8');
-    entries.push({ in: entryPath, out: config.name });
-  }
-  return entries;
+  return [CORE, APP, CATEGORY, SETTINGS, PLAYER].map(config => ({
+    in: path.join(ROOT, config.entry),
+    out: config.name,
+  }));
 }
 
 /** metafile 里的输出路径（相对 cwd）→ 相对 DIST 的 posix 路径 */
@@ -148,10 +138,12 @@ async function main() {
     throw new Error('缺少入口产物：' + JSON.stringify(entryFiles));
   }
 
-  // 临时入口只在构建期使用，产物落盘后删除，避免污染 git 状态
-  for (const f of fs.readdirSync(DIST)) {
-    if (f.startsWith('.entry-')) fs.unlinkSync(path.join(DIST, f));
-  }
+  // 供 check-budget 计算入口 + 共享 chunk 的真实体积
+  fs.writeFileSync(path.join(DIST, '.build-meta.json'), JSON.stringify({
+    outputs: result.metafile.outputs,
+    entries: entryFiles,
+    entryMeta,
+  }));
 
   console.log('\n[build] updating HTML...');
 

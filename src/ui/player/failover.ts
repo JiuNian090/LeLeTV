@@ -7,6 +7,8 @@
 //   3. 校验通过才走 switchToResource 跳转；试过的线路记在 sessionStorage，整页跳转后不重复试，最多换 3 次
 //   4. 已经播起来的（currentTime > 1s）不换，交给播放器自己的重试
 
+import type { ApiSite } from '../../core/state';
+
 interface FailoverState {
     title: string;
     tried: string[];

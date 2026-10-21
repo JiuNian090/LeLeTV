@@ -6,6 +6,8 @@
  *   只改「播放页链接」，直链记录（url 直接是 m3u8）保持原样。
  */
 
+import { scopedKey } from '../core/state';
+
 const LEGACY_PLAYER_URL = /(^|\/)player\.html(\?|$)/;
 const PLAYER_PAGE_PATH = 'src/pages/player/index.html';
 

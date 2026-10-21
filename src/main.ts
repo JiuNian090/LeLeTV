@@ -1,7 +1,42 @@
 // 阶段 5B-1：搜索共享状态已迁至 src/core/state.ts。
 // main 只保留写入点与 window 代理；search / category 改为直接 import。
+//
+// 阶段 5B-5：main.ts 就是 leletv-app 的 ESM 入口，下面按迁移前的 bundle 清单顺序
+// 导入各模块（import 会被提升到入口代码之前执行，顺序保持不变）。
+import './services/sources/config';
+import './services/balancer';
+import './services/search-history';
+import './services/viewing-history';
+import './ui/index';
+import './services/api';
+import './services/search';
+import './ui/player/bridge';
+import './pages/search/cards';
+import './pages/category/index';
+import './pages/search/index';
+import './services/config';
+import './services/sources/port';
+// main.ts 自身的代码从这里开始
+import './router/page-loader';
+import './router/index';
+import './services/version-updater';
+import './core/cache';
+import './pages/home/hub-flow';
+import './ui/brand-canvas';
+import './pages/home/shelves';
+import './pages/home/hero-glass';
+import './pages/home/recent';
+import './pages/home/nav-search';
+import './ui/pwa-install';
+import './ui/layout-pref';
+import './ui/nav-scroll';
+import './router/prefetch';
+import './boot';
+import './ui/invite-login';
+
 import {
     activeSourceFilter,
+    setSelectedAPIs,
     scopedKey,
     lastAllResults,
     searchFilterConfig,
@@ -71,8 +106,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
     if (!localStorage.getItem('hasInitializedDefaults')) {
         // 首次初始化：正常域固定 6 个默认源，隐藏域随机 5 个私密源
-        selectedAPIs = (typeof getDefaultDataSources === 'function') ? getDefaultDataSources() : [];
-        localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
+        const defaultAPIs = (typeof getDefaultDataSources === 'function') ? getDefaultDataSources() : [];
+        setSelectedAPIs(defaultAPIs);
+        localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(defaultAPIs));
         localStorage.setItem(PLAYER_CONFIG.adFilteringStorage, 'true');
         localStorage.setItem('hasInitializedDefaults', 'true');
         localStorage.setItem('dataSourceLogicVersion', DATA_SOURCE_LOGIC_VERSION);

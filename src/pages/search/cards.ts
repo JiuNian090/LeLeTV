@@ -1,7 +1,7 @@
 // LeLeTV — 搜索结果卡片渲染模块
 // 从 app-search.js 拆分
 
-import { lastAllResults, setActiveSourceFilter } from '../../core/state';
+import { API_SITES, customAPIs, lastAllResults, selectedAPIs, setActiveSourceFilter } from '../../core/state';
 import type { MergeGroup, SearchResultItem } from '../../core/state';
 import { prefersReducedMotion } from '../../ui/motion-pref';
 

@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 /**
- * LeLeTV — 构建体积分析（阶段 0 基线）
+ * LeLeTV — 构建体积分析（阶段 5B-5：基于 esbuild splitting metafile）
  *
- * 现状约束（见 REFACTOR_PLAN 阶段 -1 报告 C-2）：
- *   当前 scripts/build-bundles.mjs 是「按清单字符串拼接 + esbuild.transform」，
- *   不是 esbuild.build()，因此拿不到原生 metafile。本脚本用等价方式产出
- *   可比较的基线：逐个源文件 minify 体积 + 拼接后 bundle minify 体积 +
- *   dist/ 实际产物体积。
+ * 构建脚本会把 metafile 写到 dist/.build-meta.json；本脚本据此列出
+ * 每个入口、入口依赖闭包与共享 chunk 的体积。
  *
  * 用法：
  *   node scripts/analyze.js                 # 写入 docs/BASELINE.md
@@ -16,41 +13,47 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as esbuild from 'esbuild';
 import { BUNDLES } from '../build.config.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const DEFAULT_OUT = path.join(ROOT, 'docs', 'BASELINE.md');
 
-// bundle 清单见 build.config.js（单一来源）
-
 const kb = n => (n / 1024).toFixed(1);
 const num = n => n.toLocaleString('en-US');
 
-async function minifiedSize(content) {
-  const result = await esbuild.transform(content, {
-    minify: true,
-    target: ['es2020'],
-    sourcefile: 'module.ts',
-    loader: 'ts',
-  });
-  return Buffer.byteLength(result.code, 'utf8');
+function readMeta() {
+  const metaPath = path.join(DIST, '.build-meta.json');
+  if (!fs.existsSync(metaPath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  } catch (err) {
+    console.error('[analyze] 无法解析 dist/.build-meta.json:', err.message);
+    return null;
+  }
 }
 
-function concatFiles(files) {
-  return files.map(f => {
-    const abs = path.join(ROOT, f);
-    if (!fs.existsSync(abs)) return '';
-    return '/* ' + f + ' */\n' + fs.readFileSync(abs, 'utf8');
-  }).join('\n');
+/** 递归收集一个输出键的依赖闭包（含自身） */
+function closure(meta, key) {
+  const seen = new Set();
+  (function walk(k) {
+    if (!k || seen.has(k)) return;
+    const info = meta.outputs[k];
+    if (!info) return;
+    seen.add(k);
+    for (const imp of info.imports || []) {
+      if (imp.kind !== 'import-statement') continue;
+      walk(imp.path);
+    }
+  })(key);
+  return seen;
 }
 
-function findDist(name, distFiles) {
-  return distFiles.find(f => f.startsWith(name + '.') && f.endsWith('.js')) || null;
+function sizeOf(meta, keys) {
+  return [...keys].reduce((sum, k) => sum + (meta.outputs[k]?.bytes || 0), 0);
 }
 
-async function main() {
+function main() {
   const outIdx = process.argv.indexOf('--out');
   let outPath = DEFAULT_OUT;
   if (outIdx > -1) {
@@ -63,40 +66,34 @@ async function main() {
   }
 
   const version = fs.readFileSync(path.join(ROOT, 'VERSION.txt'), 'utf8').trim();
-  const distFiles = fs.existsSync(DIST)
-    ? fs.readdirSync(DIST).filter(f => f.endsWith('.js'))
-    : [];
-
-  const results = [];
-  for (const bundle of BUNDLES) {
-    const missing = bundle.files.filter(f => !fs.existsSync(path.join(ROOT, f)));
-    const modules = await Promise.all(bundle.files.map(async file => {
-      const abs = path.join(ROOT, file);
-      if (!fs.existsSync(abs)) return { file, raw: 0, min: 0, missing: true };
-      const src = fs.readFileSync(abs, 'utf8');
-      return { file, raw: Buffer.byteLength(src, 'utf8'), min: await minifiedSize(src), missing: false };
-    }));
-    modules.sort((a, b) => b.min - a.min);
-
-    const bundleMin = await minifiedSize(concatFiles(bundle.files));
-    const distFile = findDist(bundle.name, distFiles);
-    const distSize = distFile ? fs.statSync(path.join(DIST, distFile)).size : 0;
-    const rawTotal = modules.reduce((a, m) => a + m.raw, 0);
-    const moduleMinTotal = modules.reduce((a, m) => a + m.min, 0);
-
-    results.push({
-      ...bundle, modules, missing, distFile, bundleMin, distSize, rawTotal, moduleMinTotal,
-    });
+  const meta = readMeta();
+  if (!meta) {
+    console.error('[analyze] 缺少 dist/.build-meta.json，请先运行 npm run build');
+    process.exit(1);
   }
 
-  const firstScreen = results.filter(r => r.firstScreen);
-  const firstScreenMin = firstScreen.reduce((a, r) => a + r.bundleMin, 0);
-  const firstScreenDist = firstScreen.reduce((a, r) => a + r.distSize, 0);
+  const results = BUNDLES.map(bundle => {
+    const key = meta.entryMeta[bundle.name];
+    if (!key) return { ...bundle, key: null, deps: new Set(), entrySize: 0, closureSize: 0 };
+    const deps = closure(meta, key);
+    return {
+      ...bundle,
+      key,
+      deps,
+      entrySize: meta.outputs[key].bytes,
+      closureSize: sizeOf(meta, deps),
+    };
+  });
+
+  const chunkKeys = Object.keys(meta.outputs).filter(k => !meta.outputs[k].entryPoint && k.endsWith('.js'));
+  const firstScreen = new Set();
+  for (const r of results) if (r.firstScreen) for (const k of r.deps) firstScreen.add(k);
+  const firstScreenSize = sizeOf(meta, firstScreen);
 
   const lines = [];
   lines.push('# 构建体积基线');
   lines.push('');
-  lines.push(`> 生成命令：\`node scripts/analyze.js\``);
+  lines.push('> 生成命令：`node scripts/analyze.js`');
   lines.push('>');
   lines.push(`> 版本：\`${version}\``);
   lines.push('>');
@@ -104,50 +101,41 @@ async function main() {
   lines.push('');
   lines.push('## 口径说明');
   lines.push('');
-  lines.push('- **原始**：源文件字节数之和。');
-  lines.push('- **模块 minified**：每个源文件单独交给 `esbuild.transform({ minify: true })` 后的字节数，用于模块间排序，不等于最终 bundle 体积。');
-  lines.push('- **bundle minified**：与 `scripts/build-bundles.mjs` 相同的拼接顺序压缩后的字节数。');
-  lines.push('- **dist 实际**：`dist/` 中当前构建产物（带内容哈希）的字节数；若为 0，说明尚未构建。');
+  lines.push('- **入口**：esbuild 入口文件体积（不含 import 的共享 chunk）。');
+  lines.push('- **闭包**：入口及其静态 import 的全部 chunk（按 metafile 递归、去重）。');
+  lines.push('- **首屏**：`leletv-core` + `leletv-app` 闭包并集，共享 chunk 只计一次。');
   lines.push('');
   lines.push('## 总览');
   lines.push('');
-  lines.push('| bundle | 首屏 | 模块数 | 原始 | 模块 minified 合计 | bundle minified | dist 实际 |');
-  lines.push('|---|---|---|---|---|---|---|');
+  lines.push('| bundle | 首屏 | 入口 | 闭包 | 产物 |');
+  lines.push('|---|---|---|---|---|');
   for (const r of results) {
-    lines.push(`| \`${r.name}\` | ${r.firstScreen ? '是' : '否'} | ${r.modules.length} | ${kb(r.rawTotal)} KB | ${kb(r.moduleMinTotal)} KB | ${kb(r.bundleMin)} KB | ${r.distFile ? kb(r.distSize) + ' KB' : '未构建'} |`);
+    lines.push(`| \`${r.name}\` | ${r.firstScreen ? '是' : '否'} | ${r.entrySize ? kb(r.entrySize) + ' KB' : '未构建'} | ${r.closureSize ? kb(r.closureSize) + ' KB' : '未构建'} | ${r.key || '—'} |`);
   }
-  lines.push(`| **首屏 core + app** | 是 | — | **${kb(firstScreen.reduce((a, r) => a + r.rawTotal, 0))} KB** | — | **${kb(firstScreenMin)} KB** | **${firstScreenDist ? kb(firstScreenDist) + ' KB' : '未构建'}** |`);
+  lines.push(`| **首屏 core + app** | 是 | — | **${kb(firstScreenSize)} KB** | 共享 chunk 去重 |`);
   lines.push('');
-  lines.push('## 模块体积排序');
+  lines.push('## 共享 chunk');
   lines.push('');
-  for (const r of results) {
-    lines.push(`### ${r.name}${r.firstScreen ? '（首屏）' : ''}`);
-    lines.push('');
-    if (r.missing.length) {
-      lines.push(`> ⚠️ 缺失文件：${r.missing.map(f => '`' + f + '`').join('、')}`);
-      lines.push('');
+  if (!chunkKeys.length) {
+    lines.push('无（未启用 splitting 或只构建了单入口）。');
+  } else {
+    lines.push('| chunk | 体积 |');
+    lines.push('|---|---|');
+    for (const k of chunkKeys) {
+      lines.push(`| \`${k}\` | ${kb(meta.outputs[k].bytes)} KB |`);
     }
-    lines.push('| # | 模块 | 原始 | minified |');
-    lines.push('|---|---|---|---|');
-    r.modules.forEach((m, i) => {
-      lines.push(`| ${i + 1} | \`${m.file}\` | ${kb(m.raw)} KB | ${kb(m.min)} KB |`);
-    });
-    lines.push('');
   }
+  lines.push('');
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, lines.join('\n'), 'utf8');
 
   console.log('[analyze] version:', version);
-  console.log('[analyze] bundles:', results.length);
   for (const r of results) {
-    console.log(`[analyze] ${r.name}: raw ${num(r.rawTotal)} B, bundle-min ${num(r.bundleMin)} B, dist ${r.distSize ? num(r.distSize) + ' B' : '未构建'}`);
+    console.log(`[analyze] ${r.name}: entry ${num(r.entrySize)} B, closure ${num(r.closureSize)} B`);
   }
-  console.log(`[analyze] 首屏 core+app bundle-min: ${num(firstScreenMin)} B (${kb(firstScreenMin)} KB)`);
+  console.log(`[analyze] 首屏 core+app（含共享 chunk）: ${num(firstScreenSize)} B (${kb(firstScreenSize)} KB)`);
   console.log('[analyze] ->', path.relative(ROOT, outPath).replace(/\\/g, '/'));
 }
 
-main().catch(err => {
-  console.error('[analyze] failed:', err);
-  process.exit(1);
-});
+main();

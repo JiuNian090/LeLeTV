@@ -20,9 +20,8 @@ coverage
 .nyc_output
 
 # Production build outputs
-# dist/ 由 Cloudflare Pages 云端构建生成，无需提交到 git
-dist/*.js
-dist/*.js.map
+# dist/ 由 Cloudflare Pages 云端构建生成，无需提交到 git（含 chunks/ 与 metafile）
+dist/
 dist-ssr
 build
 out

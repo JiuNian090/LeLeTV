@@ -4,7 +4,7 @@
 // 选中单个片源时不合并，平铺该片源的结果
 // 类别入口采用混合策略：先按影片名关键词搜索，全部无结果时按分类拉取兜底
 
-import { API_SITES, isHiddenContentMode, selectedAPIs } from '../../core/state';
+import { API_SITES, customAPIs, isHiddenContentMode, selectedAPIs, setLastAllResults } from '../../core/state';
 import type { MergeGroup } from '../../core/state';
 import { searchByAPIAndKeyWord, searchByCategory } from '../../services/search';
 
@@ -840,7 +840,7 @@ async function loadMoviesResults() {
   _moviesState.results = _sortResultsByLatencyThenName(allResults);
   _moviesState.mode = 'search';
   _moviesState.loading = false;
-  _lastAllResults = _moviesState.results; // 供播放缓存兜底
+  setLastAllResults(_moviesState.results); // 供播放缓存兜底
   renderMoviesPageHeader();
   renderMoviesSidebar();
   renderMoviesGrid();
@@ -893,7 +893,7 @@ async function _runCategoryFallback(ordered) {
     _moviesState.results = _sortResultsByLatencyThenName(allResults);
     _moviesState.mode = 'search';
     _moviesState.loading = false;
-    _lastAllResults = _moviesState.results;
+    setLastAllResults(_moviesState.results);
   } else {
     _moviesState.mode = 'empty';
     _moviesState.loading = false;

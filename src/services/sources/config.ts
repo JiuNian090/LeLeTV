@@ -3,7 +3,7 @@
 
 // 阶段 5B-1：selectedAPIs / customAPIs 已迁至 src/core/state.ts。
 // 这里保留 window getter/setter 代理，旧调用方零改动。
-import { selectedAPIs, setSelectedAPIs, customAPIs, setCustomAPIs } from '../../core/state';
+import { API_SITES, selectedAPIs, setSelectedAPIs, customAPIs, setCustomAPIs, scopedKey, isHiddenContentMode } from '../../core/state';
 import type { CustomApiEntry } from '../../core/state';
 
 export type { CustomApiEntry };

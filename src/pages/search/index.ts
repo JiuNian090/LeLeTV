@@ -1,7 +1,10 @@
 // 搜索结果缓存：跳转播放页前保存，返回首页时秒开（不重新发起搜索）
 // 阶段 5B-1：搜索共享状态已迁至 src/core/state.ts。
 import {
+  HIDDEN_MODE_KEY,
   activeSourceFilter,
+  isHiddenContentMode,
+  selectedAPIs,
   lastAllResults,
   searchFilterConfig,
   searchReady,
