@@ -296,7 +296,7 @@
 | 242 | `css/v2/home.css` | 首页样式 | migrated | `src/pages/home/style.css` | — | — | verified | 相对图片路径已同步 |
 | 243 | `css/v2/player.css` | 播放页样式 | migrated | `src/pages/player/style.css` | — | — | verified | 无相对资源引用 |
 | 244 | `css/v2/tokens.css` | 设计令牌与主题变量 | migrated | `src/styles/variables.css` | — | — | verified | 无相对资源引用；HTML link 与 CRITICAL_STYLES 已同步 |
-| 245 | `css/v2/views.css` | 内页共享视图样式（运行时按需加载） | migrated | `src/styles/views.css` | — | — | pending | page-loader.js 运行时插入 <link>，属动态引用白名单 |
+| 245 | `css/v2/views.css` | 内页共享视图样式（运行时按需加载） | migrated | `src/styles/views.css` | — | — | verified | page-loader STYLES 与 orphans 白名单已同步 |
 
 ## docs/
 
@@ -531,6 +531,7 @@
 | 434 | `src/main.ts` | 应用主装配（迁移自 `js/app/app.js`） | keep | — | — | — | done | 阶段 4 第 65 条迁移目标 |
 | 435 | `src/styles/base.css` | 全局基础样式（迁移自 `css/v2/base.css`） | keep | — | — | — | done | 阶段 4 第 66 条迁移目标 |
 | 436 | `src/styles/variables.css` | 设计令牌与主题变量（迁移自 `css/v2/tokens.css`） | keep | — | — | — | done | 阶段 4 第 67 条迁移目标 |
+| 437 | `src/styles/views.css` | 内页共享视图样式（迁移自 `css/v2/views.css`） | keep | — | — | — | done | 阶段 4 第 68 条迁移目标 |
 
 ## workers/（红区）
 

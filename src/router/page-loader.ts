@@ -34,7 +34,7 @@ var LeLePages = (function () {
 
     // 页面专属样式：首页不需要，首次进入内页时才下载
     var STYLES = {
-        views: 'css/v2/views.css',
+        views: 'src/styles/views.css',
         admin: 'src/pages/settings/style.css'
     };
 

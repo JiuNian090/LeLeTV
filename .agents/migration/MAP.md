@@ -93,7 +93,7 @@
 | 65 | entry | `js/app/app.js` | `src/main.ts` | verified | 第 0 节通用前置 | 2026-10-21 迁移完成 |
 | 66 | styles | `css/v2/base.css` | `src/styles/base.css` | verified | 第 4 节 主题 | 2026-10-21 迁移完成；HTML link、CRITICAL_STYLES 已同步 |
 | 67 | styles | `css/v2/tokens.css` | `src/styles/variables.css` | verified | 第 4 节 主题 | 2026-10-21 迁移完成；HTML link、CRITICAL_STYLES 已同步 |
-| 68 | styles | `css/v2/views.css` | `src/styles/views.css` | pending | 第 4 节 主题 | page-loader.js 运行时插入 <link>，属动态引用白名单 |
+| 68 | styles | `css/v2/views.css` | `src/styles/views.css` | verified | 第 4 节 主题 | 2026-10-21 迁移完成；page-loader STYLES 已同步 |
 | 69 | public | `libs/geist/Geist-Bold.woff2` | `public/fonts/Geist-Bold.woff2` | pending | 第 3 节 PWA / 资源 | — |
 | 70 | public | `libs/geist/Geist-Medium.woff2` | `public/fonts/Geist-Medium.woff2` | pending | 第 3 节 PWA / 资源 | — |
 | 71 | public | `libs/geist/Geist-Regular.woff2` | `public/fonts/Geist-Regular.woff2` | pending | 第 3 节 PWA / 资源 | — |

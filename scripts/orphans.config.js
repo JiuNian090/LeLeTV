@@ -12,7 +12,7 @@ export default {
     'src/services/sources/**',   // 采集站按站点名动态加载
     'src/styles/themes/**',      // 主题动态切换
     'src/router/**',             // 路由动态 import 页面
-    'css/v2/views.css',          // page-loader 运行时插入 <link>
+    'src/styles/views.css',       // page-loader 运行时插入 <link>
     'css/v2/admin.css',          // page-loader 运行时插入 <link>
     'pages/**',                  // page-loader 运行时 fetch（尚未迁移的页面）
     'src/pages/**',              // page-loader 运行时 fetch（已迁移的页面模板）
