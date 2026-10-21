@@ -383,7 +383,7 @@
 | 309 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | pending | — |
 | 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
 | 311 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
-| 312 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | pending | — |
+| 312 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeLayout 接口不变 |
 | 313 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | verified | IIFE 原样迁移，window.LeLeLineProbe 接口不变 |
 | 314 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | pending | — |
 | 315 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | pending | — |
@@ -490,6 +490,7 @@
 | 393 | `src/services/tmdb.ts` | TMDB 分类 / 详情接口封装（迁移自 `js/api/tmdb.js`） | keep | — | — | — | done | 阶段 4 第 24 条迁移目标 |
 | 394 | `src/ui/brand-canvas.ts` | 品牌组合 canvas 绘制（迁移自 `js/ui/brand-canvas.js`） | keep | — | — | — | done | 阶段 4 第 25 条迁移目标 |
 | 395 | `src/ui/index.ts` | 通用 UI 工具与导入弹窗（迁移自 `js/ui/ui.js`） | keep | — | — | — | done | 阶段 4 第 26 条迁移目标 |
+| 396 | `src/ui/layout-pref.ts` | 首页与导航布局偏好（迁移自 `js/ui/layout-pref.js`） | keep | — | — | — | done | 阶段 4 第 27 条迁移目标 |
 
 ## workers/（红区）
 

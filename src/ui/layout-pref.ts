@@ -14,57 +14,78 @@
  * 首帧由 index.html 的 head 脚本把 data-home-hub / data-home-shelves / data-nav 打到 <html> 上，
  * css 据此直接隐藏，不会先渲染再收起。这里负责设置页的开关与运行时切换（派发 leletv:layoutchange）。
  */
+
+interface LayoutPrefs {
+  hub: boolean;
+  shelves: boolean;
+  navIcons: boolean;
+}
+
+type LayoutPrefKey = 'hub' | 'shelves' | 'navIcons';
+
+interface LayoutWindow extends Window {
+  LeLeLayout?: {
+    get: () => LayoutPrefs;
+    set: (key: LayoutPrefKey, value: boolean) => void;
+    refresh: () => void;
+  };
+}
+
 (function () {
   'use strict';
 
+  const layoutWindow = window as LayoutWindow;
+
   var KEY = 'leletv_layout';
   var KEY_HIDDEN = 'leletv_layout_hidden';
-  var DEFAULTS = { hub: true, shelves: true, navIcons: false };
+  var DEFAULTS: LayoutPrefs = { hub: true, shelves: true, navIcons: false };
   // 私密模式默认关掉首页聚合动效与内容板块（仍可在设置里手动打开）
-  var DEFAULTS_HIDDEN = { hub: false, shelves: false, navIcons: false };
+  var DEFAULTS_HIDDEN: LayoutPrefs = { hub: false, shelves: false, navIcons: false };
 
-  function hidden() {
+  function hidden(): boolean {
     try {
       return typeof isHiddenContentMode === 'function' ? isHiddenContentMode() : false;
     } catch (e) { return false; }
   }
 
-  function key() { return hidden() ? KEY_HIDDEN : KEY; }
-  function defaults() { return hidden() ? DEFAULTS_HIDDEN : DEFAULTS; }
+  function key(): string { return hidden() ? KEY_HIDDEN : KEY; }
+  function defaults(): LayoutPrefs { return hidden() ? DEFAULTS_HIDDEN : DEFAULTS; }
 
-  function read() {
+  function read(): LayoutPrefs {
     var def = defaults();
-    var out = { hub: def.hub, shelves: def.shelves, navIcons: def.navIcons };
+    var out: LayoutPrefs = { hub: def.hub, shelves: def.shelves, navIcons: def.navIcons };
     try {
-      var raw = JSON.parse(localStorage.getItem(key()) || '{}');
+      var raw = JSON.parse(localStorage.getItem(key()) || '{}') as Record<string, unknown>;
       if (raw && typeof raw === 'object') {
-        Object.keys(out).forEach(function (k) { if (typeof raw[k] === 'boolean') out[k] = raw[k]; });
+        (Object.keys(out) as LayoutPrefKey[]).forEach(function (k) {
+          if (typeof raw[k] === 'boolean') out[k] = raw[k] as boolean;
+        });
       }
     } catch (e) { /* 忽略坏数据 */ }
     return out;
   }
 
-  function write(prefs) {
+  function write(prefs: LayoutPrefs): void {
     var def = defaults();
     try {
       // 与默认值相同就不必落盘（读的时候回落到默认值）
-      var same = Object.keys(DEFAULTS).every(function (k) { return prefs[k] === def[k]; });
+      var same = (Object.keys(DEFAULTS) as LayoutPrefKey[]).every(function (k) { return prefs[k] === def[k]; });
       if (same) localStorage.removeItem(key());
       else localStorage.setItem(key(), JSON.stringify(prefs));
     } catch (e) { /* 忽略 */ }
   }
 
-  function apply(prefs) {
+  function apply(prefs: LayoutPrefs): void {
     var d = document.documentElement;
     if (prefs.hub) d.removeAttribute('data-home-hub'); else d.setAttribute('data-home-hub', 'off');
     if (prefs.shelves) d.removeAttribute('data-home-shelves'); else d.setAttribute('data-home-shelves', 'off');
     if (prefs.navIcons) d.setAttribute('data-nav', 'icons'); else d.removeAttribute('data-nav');
   }
 
-  function syncControls(prefs) {
-    Array.prototype.forEach.call(document.querySelectorAll('input[data-layout-pref]'), function (input) {
+  function syncControls(prefs: LayoutPrefs): void {
+    Array.prototype.forEach.call(document.querySelectorAll<HTMLInputElement>('input[data-layout-pref]'), function (input: HTMLInputElement) {
       var k = input.getAttribute('data-layout-pref');
-      if (k in prefs) input.checked = prefs[k];
+      if (k && k in prefs) input.checked = prefs[k as LayoutPrefKey];
     });
   }
 
@@ -73,8 +94,8 @@
   // 页脚不需要下滑就能看到。其他页面/布局不受影响。
   var _compactRaf = 0;
 
-  function syncCompactFooter() {
-    var layout = document.querySelector('.home-layout.v2-home');
+  function syncCompactFooter(): void {
+    var layout = document.querySelector('.home-layout.v2-home') as HTMLElement | null;
     if (!layout) return;
     var d = document.documentElement;
     var compact = d.getAttribute('data-home-hub') === 'off'
@@ -90,7 +111,7 @@
     if (h > 0) layout.style.setProperty('--home-footer-h', h + 'px');
   }
 
-  function queueCompactFooter() {
+  function queueCompactFooter(): void {
     if (_compactRaf) return;
     _compactRaf = requestAnimationFrame(function () {
       _compactRaf = 0;
@@ -98,7 +119,7 @@
     });
   }
 
-  function set(key, value) {
+  function set(key: LayoutPrefKey, value: boolean): void {
     var prefs = read();
     if (!(key in prefs)) return;
     prefs[key] = !!value;
@@ -112,7 +133,7 @@
   }
 
   /** 按当前数据域重新读一遍并应用（数据域变化后调用；正常情况下切换私密模式会整页重载，用不到） */
-  function refresh() {
+  function refresh(): void {
     var prefs = read();
     apply(prefs);
     syncControls(prefs);
@@ -122,14 +143,14 @@
     } catch (e) { /* 忽略 */ }
   }
 
-  function init() {
+  function init(): void {
     var prefs = read();
     apply(prefs);
     syncControls(prefs);
     document.addEventListener('change', function (e) {
-      var input = e.target;
+      var input = e.target as HTMLInputElement;
       if (!input || !input.getAttribute || !input.getAttribute('data-layout-pref')) return;
-      set(input.getAttribute('data-layout-pref'), input.checked);
+      set(input.getAttribute('data-layout-pref') as LayoutPrefKey, input.checked);
     });
 
     // 简洁首页的首屏高度依赖页脚实际高度：尺寸变化、字体就绪或版本信息更新后重新测量
@@ -144,5 +165,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  window.LeLeLayout = { get: read, set: set, refresh: refresh };
+  layoutWindow.LeLeLayout = { get: read, set: set, refresh: refresh };
 })();
