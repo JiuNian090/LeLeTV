@@ -376,7 +376,7 @@
 | 302 | `js/player/player-lights.js` | 播放页氛围灯/背景 | migrated | `src/ui/player/lights.ts` | — | — | verified | IIFE 原样迁移，LeLeLights 接口不变 |
 | 303 | `js/player/player-manager.js` | 播放器生命周期管理 | migrated | `src/ui/player/manager.ts` | — | — | verified | PlayerManager 接口与全局兼容行为不变 |
 | 304 | `js/player/player-quality.js` | 清晰度切换 | migrated | `src/ui/player/quality.ts` | — | — | verified | 公开函数与 HLS 清晰度切换逻辑不变 |
-| 305 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | pending | — |
+| 305 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | verified | 快捷键行为与全局播放状态访问不变 |
 | 306 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | pending | — |
 | 307 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | verified | 全局播放状态与入口函数保持不变 |
 | 308 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | verified | IIFE 原样迁移，LeLeBrandCanvas.draw 接口不变 |
@@ -501,6 +501,7 @@
 | 404 | `src/ui/player/lights.ts` | 播放页氛围灯/背景（迁移自 `js/player/player-lights.js`） | keep | — | — | — | done | 阶段 4 第 35 条迁移目标 |
 | 405 | `src/ui/player/manager.ts` | 播放器生命周期管理（迁移自 `js/player/player-manager.js`） | keep | — | — | — | done | 阶段 4 第 36 条迁移目标 |
 | 406 | `src/ui/player/quality.ts` | 清晰度切换（迁移自 `js/player/player-quality.js`） | keep | — | — | — | done | 阶段 4 第 37 条迁移目标 |
+| 407 | `src/ui/player/shortcuts.ts` | 播放器键盘快捷键（迁移自 `js/player/player-shortcuts.js`） | keep | — | — | — | done | 阶段 4 第 38 条迁移目标 |
 
 ## workers/（红区）
 

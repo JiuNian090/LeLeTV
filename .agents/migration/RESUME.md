@@ -16,7 +16,7 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：37 / 85 条已验证** |
+| 4 | **进行中：38 / 85 条已验证** |
 
 ---
 
@@ -61,14 +61,15 @@
 | 35 | `js/player/player-lights.js` | `src/ui/player/lights.ts` | LeLeLights 接口不变 |
 | 36 | `js/player/player-manager.js` | `src/ui/player/manager.ts` | PlayerManager 接口不变 |
 | 37 | `js/player/player-quality.js` | `src/ui/player/quality.ts` | 清晰度切换接口不变 |
+| 38 | `js/player/player-shortcuts.js` | `src/ui/player/shortcuts.ts` | 快捷键行为不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 38 条**：`js/player/player-shortcuts.js → src/ui/player/shortcuts.ts`
+**MAP 第 39 条**：`js/player/player-ui.js → src/ui/player/ui.ts`
 
-ui 层剩余 4 条。
+ui 层剩余 3 条。
 - `js/ui/line-probe.js → src/services/line-probe.ts`
 - `js/ui/ui-search-history.js → src/services/search-history.ts`
 - `js/api/search.js → src/services/search.ts`
