@@ -354,7 +354,7 @@
 | 280 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | pending | — |
 | 281 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
 | 282 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
-| 283 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | pending | — |
+| 283 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | verified | 面板入口与接口调用不变；移除与 user-devices 完全相同的重复函数 |
 | 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | verified | 已迁移至 `src/services/invitation.ts`；类型检查通过 |
 | 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | verified | 已迁移至 `src/core/crypto.ts`；类型检查通过 |
 | 286 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | verified | 已迁移至 `src/core/http.ts`；类型检查通过 |
@@ -522,6 +522,7 @@
 | 425 | `src/pages/readme/template.html` | README/说明页片段（迁移自 `pages/readme.html`） | keep | — | — | — | done | 阶段 4 第 55 条迁移目标 |
 | 426 | `src/pages/search/cards.ts` | 搜索结果卡片渲染（迁移自 `js/ui/search-cards.js`） | keep | — | — | — | done | 阶段 4 第 56 条迁移目标 |
 | 427 | `src/pages/search/index.ts` | 搜索流程与结果页编排（迁移自 `js/app/app-search.js`） | keep | — | — | — | done | 阶段 4 第 57 条迁移目标 |
+| 428 | `src/pages/settings/admin-panel.ts` | 邀请码管理面板（迁移自 `js/auth/admin-panel.js`） | keep | — | — | — | done | 阶段 4 第 58 条迁移目标 |
 
 ## workers/（红区）
 

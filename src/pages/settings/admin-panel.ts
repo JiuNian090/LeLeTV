@@ -5,9 +5,25 @@
  * 功能：生成邀请码、查看列表、启用/禁用、统计数据
  */
 
+interface AdminApiResponse {
+  ok?: boolean;
+  code?: string;
+  codes?: string[];
+  error?: string;
+  [key: string]: unknown;
+}
+
+interface AdminPanelWindow extends Window {
+  __ENV__?: { TMDB_WORKER_URL?: string };
+  INVITE_AUTH?: { isVerified?: () => boolean; logout: () => void };
+  INVITE_ADMIN_PANEL?: unknown;
+}
+
+const adminWindow = window as AdminPanelWindow;
+
 const INVITE_ADMIN_PANEL = {
   _baseUrl(path) {
-    const workerBase = window.__ENV__?.TMDB_WORKER_URL || '';
+    const workerBase = adminWindow.__ENV__?.TMDB_WORKER_URL || '';
     if (workerBase) {
       return `${workerBase}${path}`;
     }
@@ -32,7 +48,7 @@ const INVITE_ADMIN_PANEL = {
           'Authorization': `Bearer ${this._getAdminToken()}`
         }
       });
-      const data = await response.json();
+      const data: AdminApiResponse = await response.json();
       if (data.ok) {
         return { ok: true, code: data.code };
       }
@@ -47,7 +63,7 @@ const INVITE_ADMIN_PANEL = {
       const response = await fetch(this._baseUrl('/invite/list'), {
         headers: { 'Authorization': `Bearer ${this._getAdminToken()}` }
       });
-      const data = await response.json();
+      const data: AdminApiResponse = await response.json();
       return data.ok ? data.codes : [];
     } catch {
       return [];
@@ -64,7 +80,7 @@ const INVITE_ADMIN_PANEL = {
         },
         body: JSON.stringify({ code, is_active: isActive })
       });
-      const data = await response.json();
+      const data: AdminApiResponse = await response.json();
       return data.ok;
     } catch {
       return false;
@@ -76,7 +92,7 @@ const INVITE_ADMIN_PANEL = {
       const response = await fetch(this._baseUrl('/invite/stats'), {
         headers: { 'Authorization': `Bearer ${this._getAdminToken()}` }
       });
-      const data = await response.json();
+      const data: AdminApiResponse = await response.json();
       return data.ok ? data : null;
     } catch {
       return null;
@@ -93,7 +109,7 @@ const INVITE_ADMIN_PANEL = {
         },
         body: JSON.stringify({ code, device_fingerprint: '', target_fingerprint: targetFingerprint })
       });
-      return (await response.json()).ok;
+      return (await response.json() as AdminApiResponse).ok;
     } catch {
       return false;
     }
@@ -109,7 +125,7 @@ const INVITE_ADMIN_PANEL = {
         },
         body: JSON.stringify({ code })
       });
-      return (await response.json()).ok;
+      return (await response.json() as AdminApiResponse).ok;
     } catch {
       return false;
     }
@@ -125,7 +141,7 @@ const INVITE_ADMIN_PANEL = {
         },
         body: JSON.stringify({ code, remark })
       });
-      return (await response.json()).ok;
+      return (await response.json() as AdminApiResponse).ok;
     } catch {
       return false;
     }
@@ -182,15 +198,15 @@ const INVITE_ADMIN_PANEL = {
       showToast('已刷新', 'success');
     });
     container.querySelector('#inviteAdminLogoutBtn').addEventListener('click', () => {
-      if (window.INVITE_AUTH && confirm('确定退出登录吗？')) {
-        window.INVITE_AUTH.logout();
+      if (adminWindow.INVITE_AUTH && confirm('确定退出登录吗？')) {
+        adminWindow.INVITE_AUTH.logout();
       }
     });
     // 生成弹窗事件
     container.querySelector('#inviteGenCancel').addEventListener('click', () => this._closeGenModal());
     container.querySelector('#inviteGenConfirm').addEventListener('click', () => this._confirmGenerate(container));
     // Enter 键确认
-    const modalInput = container.querySelector('#inviteGenRemarkInput');
+    const modalInput = container.querySelector('#inviteGenRemarkInput') as HTMLInputElement;
     modalInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this._confirmGenerate(container);
     });
@@ -217,7 +233,7 @@ const INVITE_ADMIN_PANEL = {
     const modal = document.getElementById('inviteGenModal');
     if (!modal) return;
     modal.classList.add('show');
-    const input = document.getElementById('inviteGenRemarkInput');
+    const input = document.getElementById('inviteGenRemarkInput') as HTMLInputElement | null;
     if (input) { input.value = ''; setTimeout(() => input.focus(), 100); }
   },
   
@@ -227,7 +243,7 @@ const INVITE_ADMIN_PANEL = {
   },
   
   async _confirmGenerate(container) {
-    const remark = document.getElementById('inviteGenRemarkInput')?.value?.trim() || '';
+    const remark = (document.getElementById('inviteGenRemarkInput') as HTMLInputElement | null)?.value?.trim() || '';
     this._closeGenModal();
     
     const result = await this.generateCode();
@@ -397,37 +413,8 @@ function _formatTime(ts) {
   return `${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-function _timeAgo(ts) {
-  const diff = Date.now() - ts;
-  if (diff < 60000) return '刚刚';
-
-  const MS_MIN = 60000;
-  const MS_HOUR = 3600000;
-  const MS_DAY = 86400000;
-  const MS_WEEK = 604800000;
-
-  const weeks = Math.floor(diff / MS_WEEK);
-  const days = Math.floor((diff % MS_WEEK) / MS_DAY);
-  const hours = Math.floor((diff % MS_DAY) / MS_HOUR);
-  const minutes = Math.floor((diff % MS_HOUR) / MS_MIN);
-
-  const parts = [];
-  if (weeks > 0) parts.push(`${weeks}周`);
-  if (days > 0) parts.push(`${days}天`);
-  if (hours > 0) parts.push(`${hours}小时`);
-  if (minutes > 0) parts.push(`${minutes}分钟`);
-
-  return parts.slice(0, 2).join('') + '前';
-}
-
-function _deviceIcon(browser) {
-  if (!browser) return '📱';
-  if (browser.includes('Chrome')) return '🌐';
-  if (browser.includes('Firefox')) return '🦊';
-  if (browser.includes('Safari')) return '🧭';
-  if (browser.includes('Edge')) return '🌙';
-  return '📱';
-}
+// _timeAgo / _deviceIcon 与 js/auth/user-devices.js 同名：该文件在 settings bundle 中后加载，
+// 运行时全局函数一直是它的实现（两份实现完全相同）。这里不再重复声明，避免 TS 重复实现报错。
 
 const _RECENT_DOT_GREEN = '<span class="invite-recent-dot" style="color:#22c55e;">●</span>';
 const _RECENT_DOT_FADED = '<span class="invite-recent-dot" style="color:#22c55e80;">●</span>';
@@ -445,4 +432,4 @@ function _isRecentlyActive(ts) {
   return Date.now() - ts < 86400000;  // 24h 内
 }
 
-window.INVITE_ADMIN_PANEL = INVITE_ADMIN_PANEL;
+adminWindow.INVITE_ADMIN_PANEL = INVITE_ADMIN_PANEL;

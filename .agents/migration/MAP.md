@@ -83,7 +83,7 @@
 | 55 | pages | `pages/readme.html` | `src/pages/readme/template.html` | verified | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单；2026-10-21 迁移完成 |
 | 56 | pages | `js/ui/search-cards.js` | `src/pages/search/cards.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 57 | pages | `js/app/app-search.js` | `src/pages/search/index.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
-| 58 | pages | `js/auth/admin-panel.js` | `src/pages/settings/admin-panel.ts` | pending | 第 8 节 页面导航 | — |
+| 58 | pages | `js/auth/admin-panel.js` | `src/pages/settings/admin-panel.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成；重复 helper 与 user-devices 一致，已去重 |
 | 59 | pages | `css/v2/admin.css` | `src/pages/settings/style.css` | pending | 第 8 节 页面导航 | page-loader.js 运行时插入 <link>，属动态引用白名单 |
 | 60 | pages | `pages/settings.html` | `src/pages/settings/template.html` | pending | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 61 | pages | `js/auth/user-devices.js` | `src/pages/settings/user-devices.ts` | pending | 第 8 节 页面导航 | — |
