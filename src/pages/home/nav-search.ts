@@ -23,25 +23,30 @@ import { openMobileSearch } from '../../services/config';
     const btn = form.querySelector('.nav-search-btn') as HTMLElement | null;
     if (!input || !btn) return;
 
-    const isOpen = (): boolean => form.classList.contains('is-open');
+    // 收窄结果存到非空别名：下面的函数声明会被提升，TS 不会保留外层 const 的窄化
+    const formEl = form;
+    const inputEl = input;
+    const btnEl = btn;
+
+    const isOpen = (): boolean => formEl.classList.contains('is-open');
 
     function open(): void {
-      form.classList.add('is-open');
-      btn.setAttribute('aria-expanded', 'true');
-      input.tabIndex = 0;
+      formEl.classList.add('is-open');
+      btnEl.setAttribute('aria-expanded', 'true');
+      inputEl.tabIndex = 0;
       // 宽度动画起步后再聚焦，聚焦时不让浏览器把它滚进视口
-      requestAnimationFrame(() => input.focus({ preventScroll: true }));
+      requestAnimationFrame(() => inputEl.focus({ preventScroll: true }));
     }
 
     function close(): void {
-      form.classList.remove('is-open');
-      btn.setAttribute('aria-expanded', 'false');
-      input.tabIndex = -1;
-      input.value = '';
+      formEl.classList.remove('is-open');
+      btnEl.setAttribute('aria-expanded', 'false');
+      inputEl.tabIndex = -1;
+      inputEl.value = '';
     }
 
     function submit(): void {
-      const query = input.value.trim();
+      const query = inputEl.value.trim();
       if (!query) { close(); return; }
       const home = document.getElementById('searchInput') as HTMLInputElement | null;
       if (home) home.value = query;
@@ -51,26 +56,26 @@ import { openMobileSearch } from '../../services/config';
       if (typeof search === 'function') search();
     }
 
-    btn.addEventListener('click', () => {
+    btnEl.addEventListener('click', () => {
       if (isMobile()) {
         openMobileSearch();
         return;
       }
       if (isOpen()) submit(); else open();
     });
-    form.addEventListener('submit', event => {
+    formEl.addEventListener('submit', event => {
       event.preventDefault();
       submit();
     });
-    input.addEventListener('keydown', event => {
+    inputEl.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         close();
-        btn.focus();
+        btnEl.focus();
       }
     });
     // 点到别处就收起
     document.addEventListener('pointerdown', event => {
-      if (isOpen() && !form.contains(event.target as Node)) close();
+      if (isOpen() && !formEl.contains(event.target as Node)) close();
     }, true);
   }
 

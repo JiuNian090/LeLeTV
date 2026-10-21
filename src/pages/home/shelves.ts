@@ -71,7 +71,7 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
     return isHiddenContentMode();
   }
 
-  function isSafeImageUrl(url: unknown): boolean {
+  function isSafeImageUrl(url: unknown): url is string {
     return typeof url === 'string' && /^https?:\/\//.test(url);
   }
 
@@ -107,7 +107,7 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
           title: String(item.title || item.name).trim(),
           year: String(item.release_date || item.first_air_date || '').slice(0, 4),
           type: item.media_type === 'tv' ? '剧集' : '电影',
-          rating: item.vote_count >= 100 && item.vote_average ? item.vote_average.toFixed(1) : '',
+          rating: (item.vote_count ?? 0) >= 100 && item.vote_average ? item.vote_average.toFixed(1) : '',
           img: tmdbImage(item.poster_path)
         })))
       .catch((err): TrendPoster[] => {
@@ -127,7 +127,8 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
     const card = el('button', 'v2-pcard') as HTMLButtonElement;
     card.type = 'button';
     card.dataset.action = opts.action;
-    Object.keys(opts.data || {}).forEach(key => { card.dataset[key] = String(opts.data[key]); });
+    const data = opts.data || {};
+    Object.keys(data).forEach(key => { card.dataset[key] = String(data[key]); });
     card.setAttribute('aria-label', opts.label || opts.title);
 
     const poster = el('div', 'v2-poster');
@@ -225,6 +226,7 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
     items.forEach(item => {
       const index = parseInt(String(item.episodeIndex), 10) || 0;
       const position = Math.floor(item.playbackPosition || 0);
+      const duration = item.duration ?? 0;
       const isSeries = Array.isArray(item.episodes) && item.episodes.length > 1;
       frag.appendChild(posterCard({
         action: 'play-from-history',
@@ -233,7 +235,7 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
         label: '继续播放 ' + item.title,
         sub: (isSeries ? '第 ' + (index + 1) + ' 集 · ' : '') + '看到 ' + formatClock(position),
         img: item.cover,
-        progress: item.duration > 0 ? position / item.duration : undefined
+        progress: duration > 0 ? position / duration : undefined
       }));
     });
     grid.replaceChildren(frag);
@@ -249,12 +251,13 @@ export const HomeShelves: HomeShelvesApi = (function (): HomeShelvesApi {
   /** 聚合动效按需初始化：关着时不建那一百多个节点，打开时再建并喂海报（只建一次） */
   function ensureHub(): void {
     if (hub || !hubEnabled()) return;
-    hub = HubFlow.init(document.getElementById('hubFlow') as HubStage | null);
-    if (!hub) return;
-    if (isPrivateMode()) { hub.usePlaceholders(); return; }   // 私密模式不展示 TMDB 内容，动效改用占位海报
+    hub = HubFlow.init(document.getElementById('hubFlow') as HubStage | null) || null;
+    const hubApi = hub;
+    if (!hubApi) return;
+    if (isPrivateMode()) { hubApi.usePlaceholders(); return; }   // 私密模式不展示 TMDB 内容，动效改用占位海报
     loadTrending().then(list => {
-      if (list.length) hub.setPosters(list);
-      else hub.usePlaceholders();
+      if (list.length) hubApi.setPosters(list);
+      else hubApi.usePlaceholders();
     });
   }
 
