@@ -22,7 +22,7 @@ var LeLePages = (function () {
         history: 'src/pages/history/template.html',
         settings: 'pages/settings.html',
         about: 'src/pages/about/template.html',
-        readme: 'pages/readme.html'
+        readme: 'src/pages/readme/template.html'
     };
 
     // 页面专属样式：首页不需要，首次进入内页时才下载
