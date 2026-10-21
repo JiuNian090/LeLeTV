@@ -1,27 +1,6 @@
-interface ViewingHistoryItem {
-    [key: string]: unknown;
-    title: string;
-    url: string;
-    timestamp: number;
-    episodeIndex?: number;
-    sourceName?: string;
-    sourceCode?: string;
-    vod_id?: string | number;
-    episodes?: string[];
-    playbackPosition?: number;
-    duration?: number;
-    cover?: string;
-    desc?: string;
-    type?: string;
-    year?: string;
-    area?: string;
-    director?: string;
-    actor?: string;
-    remarks?: string;
-    showIdentifier?: string;
-    directVideoUrl?: string;
-    lastSyncTime?: number;
-}
+import { scopedKey, isHiddenContentMode } from '../core/config';
+import type { ApiSite } from '../core/config';
+import type { ViewingHistoryItem } from '../core/storage';
 
 interface ViewingHistoryInput {
     [key: string]: unknown;
@@ -55,7 +34,7 @@ declare function dissolveThenRemove(el: Element, action: () => void): void;
 
 const viewingHistoryWindow = window as ViewingHistoryWindow;
 
-function getViewingHistory(): ViewingHistoryItem[] {
+export function getViewingHistory(): ViewingHistoryItem[] {
     try {
         const data = localStorage.getItem(scopedKey('viewingHistory'));
         return data ? JSON.parse(data) as ViewingHistoryItem[] : [];
@@ -65,7 +44,7 @@ function getViewingHistory(): ViewingHistoryItem[] {
     }
 }
 
-function loadViewingHistory(): void {
+export function loadViewingHistory(): void {
     const historyList = document.getElementById('historyList');
     if (!historyList) return;
 
@@ -209,7 +188,7 @@ function renderHistoryCard(item: ViewingHistoryItem): string {
     `;
 }
 
-function deleteHistoryItem(encodedUrl: string, title: string, cardEl: Element | null): void {
+export function deleteHistoryItem(encodedUrl: string, title: string, cardEl: Element | null): void {
     // 真正的删除：数据落盘 + 重渲染列表
     const removeRecord = () => {
         try {
@@ -244,7 +223,7 @@ function deleteHistoryItem(encodedUrl: string, title: string, cardEl: Element | 
     }
 }
 
-async function playFromHistory(url: string, title: string, episodeIndex: number, playbackPosition = 0): Promise<void> {
+export async function playFromHistory(url: string, title: string, episodeIndex: number, playbackPosition = 0): Promise<void> {
     try {
         let episodesList: string[] = [];
         let historyItem: ViewingHistoryItem | null = null;
@@ -404,7 +383,7 @@ async function syncEpisodesInBackground(historyItem: ViewingHistoryItem, url: st
     }
 }
 
-function addToViewingHistory(videoInfo: ViewingHistoryInput): void {
+export function addToViewingHistory(videoInfo: ViewingHistoryInput): void {
     try {
         const history = getViewingHistory();
 
@@ -512,7 +491,7 @@ function confirmClearViewingHistory(): void {
 }
 
 // 历史页事件绑定：片段按需插入后才可绑定（首屏没有 #historyList）
-function initViewingHistoryBindings(): void {
+export function initViewingHistoryBindings(): void {
     const page = document.getElementById('page-history');
     if (!page || page.dataset.leleBound === '1') return;
     page.dataset.leleBound = '1';
@@ -557,3 +536,14 @@ Object.assign(window, {
   addToViewingHistory,
   initViewingHistoryBindings
 });
+
+// 阶段 5B-3 过渡期类型桥：viewing-history.ts 已成为 ESM 模块，尚未改为 import 的
+// 调用方仍以裸名访问。
+declare global {
+  function getViewingHistory(): ViewingHistoryItem[];
+  function loadViewingHistory(): void;
+  function deleteHistoryItem(encodedUrl: string, title: string, cardEl: Element | null): void;
+  function playFromHistory(url: string, title: string, episodeIndex: number, playbackPosition?: number): Promise<void>;
+  function addToViewingHistory(videoInfo: Record<string, unknown>): void;
+  function initViewingHistoryBindings(): void;
+}

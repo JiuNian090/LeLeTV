@@ -69,6 +69,32 @@ const StorageKeys = {
 
 // ==================== 存储服务 ====================
 
+// 阶段 5B-3：观看历史类型下沉 core，供 ui/player 与 services 共用。
+export interface ViewingHistoryItem {
+    [key: string]: unknown;
+    title: string;
+    url: string;
+    timestamp: number;
+    episodeIndex?: number;
+    sourceName?: string;
+    sourceCode?: string;
+    vod_id?: string | number;
+    episodes?: string[];
+    playbackPosition?: number;
+    duration?: number;
+    cover?: string;
+    desc?: string;
+    type?: string;
+    year?: string;
+    area?: string;
+    director?: string;
+    actor?: string;
+    remarks?: string;
+    showIdentifier?: string;
+    directVideoUrl?: string;
+    lastSyncTime?: number;
+}
+
 export const StorageService = {
 
     // ---- 通用方法 ----
@@ -235,6 +261,31 @@ Object.assign(window, {
 // 阶段 5B-3 过渡期类型桥：storage.ts 已成为 ESM 模块，尚未改为 import 的调用方
 // 仍以裸名访问（运行时由上方 window 兼容桥提供）。
 type StorageServiceApi = typeof StorageService;
+type SharedViewingHistoryItem = {
+  [key: string]: unknown;
+  title: string;
+  url: string;
+  timestamp: number;
+  episodeIndex?: number;
+  sourceName?: string;
+  sourceCode?: string;
+  vod_id?: string | number;
+  episodes?: string[];
+  playbackPosition?: number;
+  duration?: number;
+  cover?: string;
+  desc?: string;
+  type?: string;
+  year?: string;
+  area?: string;
+  director?: string;
+  actor?: string;
+  remarks?: string;
+  showIdentifier?: string;
+  directVideoUrl?: string;
+  lastSyncTime?: number;
+};
 declare global {
   const StorageService: StorageServiceApi;
+  type ViewingHistoryItem = SharedViewingHistoryItem;
 }
