@@ -380,7 +380,7 @@
 | 306 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | verified | 公开函数与线路扫描、切源行为保持不变 |
 | 307 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | verified | 全局播放状态与入口函数保持不变 |
 | 308 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | verified | IIFE 原样迁移，LeLeBrandCanvas.draw 接口不变 |
-| 309 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | pending | — |
+| 309 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | verified | 光效行为不变 |
 | 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
 | 311 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
 | 312 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeLayout 接口不变 |
@@ -509,6 +509,7 @@
 | 412 | `src/pages/category/index.ts` | 影片结果页 / 类别入口（迁移自 `js/ui/movies-page.js`） | keep | — | — | — | done | 阶段 4 第 43 条迁移目标 |
 | 413 | `src/pages/category/template.html` | 分类页片段（迁移自 `pages/category.html`） | keep | — | — | — | done | 阶段 4 第 44 条迁移目标 |
 | 414 | `src/pages/history/template.html` | 历史页片段（迁移自 `pages/history.html`） | keep | — | — | — | done | 阶段 4 第 45 条迁移目标 |
+| 415 | `src/pages/home/hero-glass.ts` | 首页主视觉光效（迁移自 `js/ui/hero-glass.js`） | keep | — | — | — | done | 阶段 4 第 46 条迁移目标 |
 
 ## workers/（红区）
 
