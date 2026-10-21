@@ -58,7 +58,7 @@
 | 旧 SW 清理 | 曾安装过旧版本 SW 的浏览器 | `service-worker.js` 被拉取后旧 SW 自行注销并清缓存 |
 | manifest | 查看 `manifest.json` | 名称、图标 192/512、maskable、`start_url`、`theme_color` 正确 |
 
-相关模块：`manifest.json`、`js/ui/pwa-install.js`、`service-worker.js`、`image/brand/*`、`index.html` 启动动画。
+相关模块：`manifest.json`、`src/ui/pwa-install.ts`、`service-worker.js`、`image/brand/*`、`index.html` 启动动画。
 
 ---
 

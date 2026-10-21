@@ -388,7 +388,7 @@
 | 314 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeMotion 接口不变 |
 | 315 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | pending | — |
 | 316 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
-| 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | pending | — |
+| 317 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | verified | `window.LeLePwa` 接口不变 |
 | 318 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
 | 319 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | verified | IIFE 原样迁移，LeLeThemeStore / LeLeThemeSystem 接口不变 |
 | 320 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
@@ -503,6 +503,7 @@
 | 406 | `src/ui/player/quality.ts` | 清晰度切换（迁移自 `js/player/player-quality.js`） | keep | — | — | — | done | 阶段 4 第 37 条迁移目标 |
 | 407 | `src/ui/player/shortcuts.ts` | 播放器键盘快捷键（迁移自 `js/player/player-shortcuts.js`） | keep | — | — | — | done | 阶段 4 第 38 条迁移目标 |
 | 408 | `src/ui/player/ui.ts` | 播放器覆盖层/进度条/资源切换（迁移自 `js/player/player-ui.js`） | keep | — | — | — | done | 阶段 4 第 39 条迁移目标 |
+| 409 | `src/ui/pwa-install.ts` | PWA 安装提示（迁移自 `js/ui/pwa-install.js`） | keep | — | — | — | done | 阶段 4 第 40 条迁移目标 |
 
 ## workers/（红区）
 

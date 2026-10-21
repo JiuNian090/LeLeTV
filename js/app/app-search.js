@@ -617,7 +617,7 @@ function setupEventListeners() {
             case 'import-config-from-url': importConfigFromUrl(); break;
             case 'switch-to-category': switchPage('category'); break;
             case 'share-invite': shareInviteInfo(); break;
-            case 'pwa-install': case 'pwa-dismiss': case 'pwa-guide-close': break; // 由 js/ui/pwa-install.js 处理
+            case 'pwa-install': case 'pwa-dismiss': case 'pwa-guide-close': break; // 由 src/ui/pwa-install.ts 处理
         }
     });
 
