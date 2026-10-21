@@ -236,7 +236,7 @@ window.addEventListener('pageshow', function (e) {
 function setupEmailClickHandlers() {
     const contactElements = document.querySelectorAll('.contact-link');
     contactElements.forEach(element => {
-        element.addEventListener('click', function(event) {
+        element.addEventListener('click', function(this: HTMLElement, event) {
                 // 阻止冒泡（避免外层 <label> 的开关被连带切换）与默认跳转
                 // （mailto 由下方 JS 统一唤起，防止 <a href="mailto:"> 造成重复触发）
                 event.preventDefault();

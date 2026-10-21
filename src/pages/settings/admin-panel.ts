@@ -212,7 +212,7 @@ const INVITE_ADMIN_PANEL = {
     `;
     
     container.querySelector('#inviteGenerateBtn')?.addEventListener('click', () => this._handleGenerate(container));
-    container.querySelector('#inviteRefreshBtn')?.addEventListener('click', async function clickRefresh() {
+    container.querySelector('#inviteRefreshBtn')?.addEventListener('click', async function clickRefresh(this: HTMLElement) {
       const btn = this;
       btn.classList.add('refreshing');
       await INVITE_ADMIN_PANEL._refresh(container);

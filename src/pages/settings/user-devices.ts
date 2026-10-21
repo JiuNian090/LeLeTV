@@ -159,7 +159,7 @@ const USER_DEVICES_PANEL = {
       if (typeof window.shareInviteInfo === 'function') window.shareInviteInfo();
     });
 
-    container.querySelector('#userDeviceRefreshBtn')?.addEventListener('click', async function clickRefresh() {
+    container.querySelector('#userDeviceRefreshBtn')?.addEventListener('click', async function clickRefresh(this: HTMLElement) {
       const btn = this;
       btn.classList.add('refreshing');
       await USER_DEVICES_PANEL._refresh(container);
