@@ -30,6 +30,9 @@
     "start": "node server.mjs",
     "build": "node scripts/generate-version.mjs && node scripts/build-bundles.mjs",
     "analyze": "node scripts/analyze.js",
+    "typecheck": "tsc --noEmit",
+    "check": "node scripts/check-deps.js && node scripts/check-budget.js && node scripts/check-agents.js && node scripts/check-coverage.js && tsc --noEmit",
+    "check:orphans": "node scripts/check-orphans.js",
     "setup:hooks": "node scripts/setup-hooks.mjs",
     "test": "echo 'Running tests...'",
     "lint": "echo 'Linting code...'",
@@ -44,9 +47,12 @@
     "psmgr": "^1.0.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261021.1",
+    "@types/node": "^26.6.5",
+    "better-sqlite3": "^11.0.0",
     "esbuild": "^0.28.1",
     "nodemon": "^3.1.10",
-    "better-sqlite3": "^11.0.0"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": "^16.0.0 || ^18.0.0 || ^20.0.0",

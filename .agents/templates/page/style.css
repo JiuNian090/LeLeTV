@@ -1,0 +1,10 @@
+/* 仅本页样式；跨页共享样式放 src/styles/ */
+#page-example {
+    display: block;
+}
+
+#page-example .page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
