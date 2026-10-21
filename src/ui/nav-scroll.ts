@@ -3,7 +3,7 @@
  * 未滚动时纯半透明底，滚动后才启用 backdrop-filter。
  */
 
-(function initNavScroll(): void {
+export function initNavScroll(): void {
     const nav = document.querySelector<HTMLElement>('.top-nav-bar.v2-nav');
     if (!nav) return;
 
@@ -26,4 +26,6 @@
     }, { passive: true });
 
     updateNav();
-})();
+}
+
+initNavScroll();
