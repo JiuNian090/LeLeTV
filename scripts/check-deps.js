@@ -45,7 +45,7 @@ const ALLOWED = {
   core: new Set(['core']),
   services: new Set(['core', 'services']),
   ui: new Set(['core', 'ui']),
-  pages: new Set(['core', 'services', 'ui']),
+  pages: new Set(['core', 'services', 'ui', 'pages']),
   router: new Set(['core', 'pages']),
   main: new Set(['core', 'services', 'ui', 'pages', 'router', 'main']),
 };
@@ -107,7 +107,8 @@ for (const file of files) {
       errors.push(`${rel} 跨页面 import ${targetRel}（pages 之间禁止互相 import）`);
       continue;
     }
-    if (toLayer === 'pages' && fromLayer !== 'router' && fromLayer !== 'main') {
+    if (toLayer === 'pages' && fromLayer !== 'router' && fromLayer !== 'main'
+        && !(fromLayer === 'pages' && pageNameOf(file) === pageNameOf(target))) {
       errors.push(`${rel}（${fromLayer}）import 页面 ${targetRel}`);
       continue;
     }
