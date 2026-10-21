@@ -3,16 +3,53 @@
  * 智能分配API请求，避免单一源过载
  */
 
+interface ApiStat {
+    apiKey: string;
+    isCustom: boolean;
+    responseTime: number;
+    successCount: number;
+    failureCount: number;
+    lastSuccessTime: number;
+    lastFailureTime: number;
+    averageResponseTime: number;
+    load: number;
+    priority: number;
+    consecutiveFailures: number;
+    isBlacklisted: boolean;
+    blacklistUntil: number;
+}
+
+interface LoadBalancerConfig {
+    responseTimeThreshold: number;
+    failureThreshold: number;
+    requestTimeout: number;
+    cooldownPeriod: number;
+    maxConcurrentRequests: number;
+    retryAttempts: number;
+    retryDelay: number;
+    blacklistThreshold: number;
+    priorityBoostFactor: number;
+    loadPenaltyFactor: number;
+    recentSuccessBonus: number;
+}
+
 class LoadBalancer {
+    apiStats: Map<string, ApiStat>;
+    activeRequests: Map<string, number>;
+    saveTimeout: ReturnType<typeof setTimeout> | null;
+    preferredApi: string | null;
+    preferredApiExpiry: number;
+    config: LoadBalancerConfig;
+
     constructor() {
         this.apiStats = new Map(); // API统计信息
         this.activeRequests = new Map(); // 活跃请求计数
         this.saveTimeout = null; // 防抖保存定时器
         this.preferredApi = null; // 当前首选API（热缓存）
         this.preferredApiExpiry = 0; // 首选API过期时间
-        
+
         // 使用全局配置，如果不存在则使用默认配置
-        this.config = window.LOAD_BALANCER_CONFIG || {
+        this.config = (window as Window & { LOAD_BALANCER_CONFIG?: LoadBalancerConfig }).LOAD_BALANCER_CONFIG || {
             responseTimeThreshold: 10000, // 响应时间阈值10秒
             failureThreshold: 0.3, // 失败率阈值30%
             requestTimeout: 15000, // 请求超时时间
@@ -25,7 +62,7 @@ class LoadBalancer {
             loadPenaltyFactor: 10,
             recentSuccessBonus: 1.2
         };
-        
+
         this.init();
     }
 
@@ -35,7 +72,7 @@ class LoadBalancer {
     init() {
         this.loadStats();
         this.initializeApiStats();
-        
+
         // 监听页面卸载/冻结，立即保存（用 pagehide 而非 beforeunload，以支持 bfcache 快照恢复）
         window.addEventListener('pagehide', () => {
             this.flushSave();
@@ -90,7 +127,7 @@ class LoadBalancer {
      */
     getBestApi(preferredApis = null) {
         const availableApis = preferredApis || this.getSelectedApis();
-        
+
         if (availableApis.length === 0) {
             throw new Error('没有可用的API源');
         }
@@ -119,11 +156,11 @@ class LoadBalancer {
                 const stat = this.apiStats.get(apiKey);
                 return stat && (Date.now() - stat.lastSuccessTime) < this.config.cooldownPeriod;
             });
-            
+
             if (recentSuccessApis.length > 0) {
                 return this.selectBestFromCandidates(recentSuccessApis);
             }
-            
+
             // 最后的选择：随机选择一个
             return availableApis[Math.floor(Math.random() * availableApis.length)];
         }
@@ -205,7 +242,7 @@ class LoadBalancer {
      */
     isApiHealthy(stat) {
         const now = Date.now();
-        
+
         // 检查是否在黑名单中
         if (stat.isBlacklisted && now < stat.blacklistUntil) {
             return false;
@@ -256,7 +293,7 @@ class LoadBalancer {
             stat.lastSuccessTime = now;
             stat.consecutiveFailures = 0;
             stat.isBlacklisted = false;
-            
+
             // 更新平均响应时间
             if (responseTime > 0) {
                 if (stat.averageResponseTime === 0) {
@@ -275,13 +312,13 @@ class LoadBalancer {
             stat.failureCount++;
             stat.lastFailureTime = now;
             stat.consecutiveFailures++;
-            
+
             // 当前首选的API失败了，立即清除热缓存
             if (this.preferredApi === apiKey) {
                 this.preferredApi = null;
                 this.preferredApiExpiry = 0;
             }
-            
+
             // 连续失败过多时加入黑名单
             if (stat.consecutiveFailures >= this.config.blacklistThreshold) {
                 stat.isBlacklisted = true;
@@ -292,7 +329,7 @@ class LoadBalancer {
 
         // 减少当前负载
         this.decreaseApiLoad(apiKey);
-        
+
         // 防抖保存（2秒内多次变更合并为一次写入）
         this.scheduleSave();
     }
@@ -305,7 +342,7 @@ class LoadBalancer {
         if (stat) {
             stat.load++;
         }
-        
+
         // 更新活跃请求计数
         const currentCount = this.activeRequests.get(apiKey) || 0;
         this.activeRequests.set(apiKey, currentCount + 1);
@@ -319,7 +356,7 @@ class LoadBalancer {
         if (stat && stat.load > 0) {
             stat.load--;
         }
-        
+
         // 更新活跃请求计数
         const currentCount = this.activeRequests.get(apiKey) || 0;
         if (currentCount > 0) {
@@ -413,7 +450,7 @@ class LoadBalancer {
         try {
             const savedStats = localStorage.getItem('loadBalancerStats');
             if (savedStats) {
-                const statsData = JSON.parse(savedStats);
+                const statsData = JSON.parse(savedStats) as Record<string, ApiStat>;
                 Object.entries(statsData).forEach(([apiKey, stat]) => {
                     this.apiStats.set(apiKey, stat);
                 });
@@ -432,4 +469,4 @@ class LoadBalancer {
 }
 
 // 创建全局负载均衡器实例
-window.loadBalancer = new LoadBalancer();
+(window as Window & { loadBalancer?: LoadBalancer }).loadBalancer = new LoadBalancer();

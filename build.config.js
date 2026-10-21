@@ -33,7 +33,7 @@ export const BUNDLES = [
     name: 'leletv-app',
     firstScreen: true,
     files: [
-      'js/api/api-config.js', 'js/api/loadBalancer.js',
+      'js/api/api-config.js', 'src/services/balancer.ts',
       'js/ui/ui-search-history.js', 'js/ui/ui-viewing-history.js', 'js/ui/ui.js',
       'src/services/api.ts', 'js/api/search.js',
       'js/player/player-bridge.js', 'js/ui/search-cards.js', 'js/ui/movies-page.js',
