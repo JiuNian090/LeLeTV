@@ -52,7 +52,7 @@ const missing = tracked.filter(p => !inventorySet.has(p));
 // 已完成的 migrated 记录：原路径已不存在是预期结果，不算 B - A
 const extra = rows
   .filter(r => !trackedSet.has(r.path))
-  .filter(r => !(r.type === 'migrated' && ['migrated', 'verified', 'done'].includes(r.status)))
+  .filter(r => !(['migrated', 'merge', 'delete'].includes(r.type) && ['migrated', 'verified', 'done'].includes(r.status)))
   .map(r => r.path);
 
 const errors = [];

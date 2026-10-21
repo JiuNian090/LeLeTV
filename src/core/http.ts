@@ -48,10 +48,8 @@ async function getPasswordHash(): Promise<string | null> {
     const userPassword = localStorage.getItem('userPassword');
     if (userPassword) {
         try {
-            // 动态导入 sha256 函数（绝对路径：本文件已从 js/auth/ 迁到 src/core/）
-            const sha256ModuleUrl = '/js/auth/sha256.js';
-            const mod = await import(sha256ModuleUrl) as { sha256: (message: string) => Promise<string> };
-            const hash = await mod.sha256(userPassword);
+            // 使用 src/core/crypto.ts 提供的全局 sha256（Web Crypto + js-sha256 降级）
+            const hash = await sha256(userPassword);
             localStorage.setItem('proxyAuthHash', hash);
             cachedPasswordHash = hash;
             return hash;

@@ -357,7 +357,7 @@
 | 284 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | pending | — |
 | 285 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | verified | 已迁移至 `src/core/crypto.ts`；类型检查通过 |
 | 286 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | verified | 已迁移至 `src/core/http.ts`；类型检查通过 |
-| 287 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | migrated | `src/core/sha256.ts` | — | — | pending | — |
+| 287 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | merge | `src/core/crypto.ts` | `src/core/crypto.ts` | AP-001 | verified | 与 `crypto.ts` 的 sha256 重复，已合并；删除原文件 |
 | 288 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | pending | — |
 | 289 | `js/core/cache-manager.js` | 本地存储缓存管理与 24h 清理 | migrated | `src/core/cache.ts` | — | — | verified | 已迁移至 `src/core/cache.ts`；类型检查与回归通过 |
 | 290 | `js/core/config.js` | 全局常量与 API_SITES 基础配置 | migrated | `src/core/config.ts` | — | — | verified | 已迁移至 `src/core/config.ts`；类型检查与回归通过 |
