@@ -362,7 +362,7 @@ export function setupEventListeners() {
         if (!searchReady) return;
         if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
-        if (desktopComposing || e.isComposing) return;
+        if (desktopComposing || (e as InputEvent).isComposing) return;
         // 手动输入后清掉键盘高亮，但下拉保持打开
         clearHistoryNavHighlight();
         showSearchHistory((this as HTMLInputElement).value);
@@ -476,7 +476,7 @@ export function setupEventListeners() {
             syncSearchClearButtons();
             // 清空后同样清掉 URL 搜索残留（与桌面一致，避免刷新重放上次搜索）
             if (!(this as HTMLInputElement).value.trim() && typeof routerBridge.clearSearchResidueFromUrl === 'function') routerBridge.clearSearchResidueFromUrl();
-            if (mobileComposing || e.isComposing) return;
+            if (mobileComposing || (e as InputEvent).isComposing) return;
             renderMobileSearchHistory((this as HTMLInputElement).value);
         });
 
