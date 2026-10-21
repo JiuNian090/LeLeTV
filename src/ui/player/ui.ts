@@ -16,6 +16,7 @@ import {
 } from './state';
 import { clearVideoProgress, getVideoId } from './session';
 import { API_SITES, isHiddenContentMode, scopedKey } from '../../core/config';
+import type { DetailData } from './bridge';
 import { TIMING } from '../../core/timing';
 import { StorageService } from '../../core/storage';
 import { showLoading, hideLoading, showToast } from '../toast';

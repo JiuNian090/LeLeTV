@@ -121,7 +121,7 @@ function verifyAdminPassword(): Promise<boolean> {
 }
 
 // 重置数据源选择逻辑
-function resetDataSourceLogic(): void {
+export function resetDataSourceLogic(): void {
     // 清除所有相关的本地存储项
     localStorage.removeItem('dataSourceLogicVersion');
     localStorage.removeItem(scopedKey('selectedAPIs'));
@@ -213,7 +213,7 @@ export function initAPICheckboxes(): void {
 const DATA_SOURCE_LOGIC_VERSION = 'v2';
 
 // 从当前版本开始，对所有用户应用新的数据源选择逻辑
-function applyNewDataSourceLogic(): void {
+export function applyNewDataSourceLogic(): void {
     const currentVersion = localStorage.getItem('dataSourceLogicVersion');
     const currentTime = Date.now();
     const dayInMs = 24 * 60 * 60 * 1000;
@@ -248,7 +248,7 @@ function applyNewDataSourceLogic(): void {
 }
 
 // 刷新数据源
-function refreshDataSources(hasUserSelected: boolean): void {
+export function refreshDataSources(hasUserSelected: boolean): void {
     const currentTime = Date.now();
     const savedSelectedAPIs = localStorage.getItem(scopedKey('selectedAPIs')) || '[]';
     const currentSelectedAPIs = JSON.parse(savedSelectedAPIs) as string[];
@@ -266,7 +266,7 @@ function refreshDataSources(hasUserSelected: boolean): void {
 const DEFAULT_DATA_SOURCE_KEYS = ['gszy', 'bfzy', 'zuid', 'lzzy', 'hnzy', 'jszy'];
 
 // 数据域内的默认选中源：正常域取固定清单，隐藏域仍从私密源里随机抽 5 个
-function getDefaultDataSources(): string[] {
+export function getDefaultDataSources(): string[] {
     if (!isHiddenContentMode()) {
         const keys = DEFAULT_DATA_SOURCE_KEYS.filter(key => API_SITES[key] && !API_SITES[key].hidden);
         if (keys.length > 0) return keys;
@@ -276,7 +276,7 @@ function getDefaultDataSources(): string[] {
 
 // 随机选择指定数量的数据源（按当前数据域取池子：正常域取普通源，隐藏域取隐藏源）
 // 仅隐藏域还在用；正常域的默认源见 getDefaultDataSources()
-function getRandomDataSources(count: number): string[] {
+export function getRandomDataSources(count: number): string[] {
     const pool = Object.keys(API_SITES).filter(key =>
         isHiddenContentMode() ? !!API_SITES[key].hidden : !API_SITES[key].hidden
     );
@@ -288,7 +288,7 @@ function getRandomDataSources(count: number): string[] {
 }
 
 // 同步"隐藏内容模式"开关的显示状态（当前数据域由开关本身决定，不再与源选择互斥）
-function checkHiddenAPIsSelected(): void {
+export function checkHiddenAPIsSelected(): void {
     const hiddenModeToggle = document.getElementById('hiddenContentModeToggle') as HTMLInputElement | null;
     if (hiddenModeToggle) {
         hiddenModeToggle.checked = isHiddenContentMode();
@@ -348,7 +348,7 @@ export function renderCustomAPIsList(): void {
 }
 
 // 编辑自定义API
-function editCustomApi(index: number): void {
+export function editCustomApi(index: number): void {
     if (index < 0 || index >= customAPIs.length) return;
     const api = customAPIs[index];
     (document.getElementById('customApiName') as HTMLInputElement).value = api.name;
@@ -368,7 +368,7 @@ function editCustomApi(index: number): void {
 }
 
 // 更新自定义API
-function updateCustomApi(index: number): void {
+export function updateCustomApi(index: number): void {
     if (index < 0 || index >= customAPIs.length) return;
     const nameInput = document.getElementById('customApiName') as HTMLInputElement;
     const urlInput = document.getElementById('customApiUrl') as HTMLInputElement;
@@ -401,7 +401,7 @@ function updateCustomApi(index: number): void {
 }
 
 // 取消编辑自定义API
-function cancelEditCustomApi(): void {
+export function cancelEditCustomApi(): void {
     // 清空表单
     (document.getElementById('customApiName') as HTMLInputElement).value = '';
     (document.getElementById('customApiUrl') as HTMLInputElement).value = '';
@@ -459,7 +459,7 @@ export function updateSelectedApiCount(): void {
 }
 
 // 全选或取消全选API
-function selectAllAPIs(selectAll = true, excludeHidden = false): void {
+export function selectAllAPIs(selectAll = true, excludeHidden = false): void {
     const checkboxes = document.querySelectorAll<HTMLInputElement>('#apiCheckboxes input[type="checkbox"]');
 
     checkboxes.forEach(checkbox => {
@@ -475,7 +475,7 @@ function selectAllAPIs(selectAll = true, excludeHidden = false): void {
 }
 
 // 显示添加自定义API表单
-function showAddCustomApiForm(): void {
+export function showAddCustomApiForm(): void {
     const form = document.getElementById('addCustomApiForm');
     if (form) {
         form.classList.remove('hidden');
@@ -483,7 +483,7 @@ function showAddCustomApiForm(): void {
 }
 
 // 取消添加自定义API - 修改函数来重用恢复按钮逻辑
-function cancelAddCustomApi(): void {
+export function cancelAddCustomApi(): void {
     const form = document.getElementById('addCustomApiForm');
     if (form) {
         form.classList.add('hidden');
@@ -499,7 +499,7 @@ function cancelAddCustomApi(): void {
 }
 
 // 添加自定义API
-function addCustomApi(): void {
+export function addCustomApi(): void {
     const nameInput = document.getElementById('customApiName') as HTMLInputElement;
     const urlInput = document.getElementById('customApiUrl') as HTMLInputElement;
     const detailInput = document.getElementById('customApiDetail') as HTMLInputElement | null;
@@ -542,7 +542,7 @@ function addCustomApi(): void {
 }
 
 // 移除自定义API
-function removeCustomApi(index: number): void {
+export function removeCustomApi(index: number): void {
     if (index < 0 || index >= customAPIs.length) return;
 
     const apiName = customAPIs[index].name;

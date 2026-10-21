@@ -26,8 +26,23 @@ import {
   saveSearchHistory,
   showSearchHistory,
 } from '../../services/search-history';
-import { playFromHistory } from '../../services/viewing-history';
-import { showToast, showLoading, hideLoading, showModal } from '../../ui/toast';
+import {
+  addCustomApi,
+  cancelAddCustomApi,
+  cancelEditCustomApi,
+  checkHiddenAPIsSelected,
+  editCustomApi,
+  removeCustomApi,
+  resetDataSourceLogic,
+  selectAllAPIs,
+  showAddCustomApiForm,
+  updateCustomApi,
+} from '../../services/sources/config';
+import { exportVideoSources, importVideoSources } from '../../services/sources/port';
+import { loadTmdbResults, openTmdbCategory, tmdbSearchVideo } from '../../services/tmdb';
+import { deleteHistoryItem, playFromHistory } from '../../services/viewing-history';
+import { buildPlayerBackUrl, navigateToPlayer, playDirectly } from '../../ui/player/bridge';
+import { showToast, showLoading, hideLoading, showModal, clearLocalStorage } from '../../ui/toast';
 import {
   _applySourceFilter,
   _buildSearchCardsHtml,
@@ -65,19 +80,9 @@ interface MoviesPageBridge {
 }
 const moviesPage = window as unknown as MoviesPageBridge;
 
-// 路由函数属于 router 层，pages 不能 import；沿用 window 契约
-const {
-  rememberPageForReload,
-  playParticleDissolve,
-  clearSearchResidueFromUrl,
-  dissolveThenRemove,
-  switchPage,
-  openDisclaimerModal,
-  closeDisclaimerModal,
-  openInviteGuideModal,
-  closeInviteGuideModal,
-  shareInviteInfo,
-} = window;
+// 路由函数属于 router 层，pages 不能 import；沿用 window 契约。
+// 不能在这里解构：router 模块可能尚未执行，属性必须调用时再取。
+const routerBridge = window;
 
 // 点击卡片跳转播放页的延迟定时器：保证流星动画循环可见后再跳转
 let _pendingPlayDirectTimer = null;
@@ -241,14 +246,14 @@ function bindSettingsPageEvents() {
 
             // 数据域已切换：源/历史/自定义API都要按新域重新读取，重载最可靠
             // 重载后停留在设置页（开关所在页），避免回落到默认首页
-            rememberPageForReload('settings');
+            routerBridge.rememberPageForReload('settings');
             // 不沿用上次搜索：清掉搜索结果缓存（否则重载或返回时会恢复旧域的结果页）
             try { sessionStorage.removeItem(SEARCH_CACHE_KEY); } catch (err) { /* 忽略 */ }
             // 动效期间锁住开关，避免重复触发切换
             (e.target as HTMLInputElement).disabled = true;
             // 过渡动效：卡片粒子消散 → 重载后粒子汇聚生成新页面（期间不出现加载弹窗/闪屏）
-            if (typeof playParticleDissolve === 'function') {
-                playParticleDissolve(function () { window.location.reload(); });
+            if (typeof routerBridge.playParticleDissolve === 'function') {
+                routerBridge.playParticleDissolve(function () { window.location.reload(); });
             } else {
                 window.location.reload();
             }
@@ -348,7 +353,7 @@ export function setupEventListeners() {
         syncSearchClearButtons();
         // 输入框被清空：顺手清掉 URL 里的搜索残留，
         // 否则刷新时首页初始化会把上次的关键词当直链再搜一遍
-        if (!(this as HTMLInputElement).value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
+        if (!(this as HTMLInputElement).value.trim() && typeof routerBridge.clearSearchResidueFromUrl === 'function') routerBridge.clearSearchResidueFromUrl();
         if (!searchReady) return;
         if (_resettingSearchArea) return;
         if (window.innerWidth <= 639) return;
@@ -365,7 +370,7 @@ export function setupEventListeners() {
             searchInput.value = '';
             searchInput.focus();
             syncSearchClearButtons();
-            if (typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
+            if (typeof routerBridge.clearSearchResidueFromUrl === 'function') routerBridge.clearSearchResidueFromUrl();
             showSearchHistory('');
         });
     }
@@ -383,7 +388,7 @@ export function setupEventListeners() {
                 const query = deleteBtn.dataset.query;
                 if (query) {
                     // 先让该条历史化作粒子消散，播完再删除并重渲染
-                    dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
+                    routerBridge.dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
                         deleteSingleSearchHistory(query);
                         showSearchHistory((document.getElementById('searchInput') as HTMLInputElement).value);
                     });
@@ -394,7 +399,7 @@ export function setupEventListeners() {
             if (clearBtn) {
                 e.stopPropagation();
                 // 整块历史列表一起化作粒子消散，播完再清空
-                dissolveThenRemove(clearBtn.closest('#searchHistoryDropdown'), function () {
+                routerBridge.dissolveThenRemove(clearBtn.closest('#searchHistoryDropdown'), function () {
                     clearSearchHistory();
                 });
                 return;
@@ -465,7 +470,7 @@ export function setupEventListeners() {
         mobileSearchInput.addEventListener('input', function (e) {
             syncSearchClearButtons();
             // 清空后同样清掉 URL 搜索残留（与桌面一致，避免刷新重放上次搜索）
-            if (!(this as HTMLInputElement).value.trim() && typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
+            if (!(this as HTMLInputElement).value.trim() && typeof routerBridge.clearSearchResidueFromUrl === 'function') routerBridge.clearSearchResidueFromUrl();
             if (mobileComposing || e.isComposing) return;
             renderMobileSearchHistory((this as HTMLInputElement).value);
         });
@@ -488,7 +493,7 @@ export function setupEventListeners() {
                 mobileSearchInput.value = '';
                 mobileSearchInput.focus();
                 syncSearchClearButtons();
-                if (typeof clearSearchResidueFromUrl === 'function') clearSearchResidueFromUrl();
+                if (typeof routerBridge.clearSearchResidueFromUrl === 'function') routerBridge.clearSearchResidueFromUrl();
                 renderMobileSearchHistory('');
             });
         }
@@ -513,7 +518,7 @@ export function setupEventListeners() {
                 const query = deleteBtn.dataset.query;
                 if (query) {
                     // 先让该条历史化作粒子消散，播完再删除并重渲染
-                    dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
+                    routerBridge.dissolveThenRemove(deleteBtn.closest('.search-history-item'), function () {
                         deleteSingleSearchHistory(query);
                         renderMobileSearchHistory(mobileSearchInput ? mobileSearchInput.value : '');
                     });
@@ -524,7 +529,7 @@ export function setupEventListeners() {
             if (clearBtn) {
                 e.stopPropagation();
                 // 整块历史列表一起化作粒子消散，播完再清空
-                dissolveThenRemove(clearBtn.closest('.mobile-search-history-list'), function () {
+                routerBridge.dissolveThenRemove(clearBtn.closest('.mobile-search-history-list'), function () {
                     clearSearchHistory();
                     renderMobileSearchHistory('');
                 });
@@ -598,16 +603,16 @@ export function setupEventListeners() {
         if (!action) return;
 
         switch (action) {
-            case 'switch-page': switchPage(el.dataset.page); break;
+            case 'switch-page': routerBridge.switchPage(el.dataset.page); break;
             case 'reset-home': resetSearchArea(); closeMobileSearch(); hideSearchHistory(); break;
             case 'close-results': closeSearchResults(); break;
             case 'movies-back': moviesPage.moviesPageBack(); break;
             case 'search': search(); break;
             case 'close-modal': closeModal(); break;
-            case 'open-disclaimer': openDisclaimerModal(); break;
-            case 'open-invite-guide': openInviteGuideModal(); break;
-            case 'close-invite-guide': closeInviteGuideModal(); break;
-            case 'accept-disclaimer': closeDisclaimerModal(); break;
+            case 'open-disclaimer': routerBridge.openDisclaimerModal(); break;
+            case 'open-invite-guide': routerBridge.openInviteGuideModal(); break;
+            case 'close-invite-guide': routerBridge.closeInviteGuideModal(); break;
+            case 'accept-disclaimer': routerBridge.closeDisclaimerModal(); break;
             case 'select-all-apis': selectAllAPIs(true); break;
             case 'deselect-all-apis': selectAllAPIs(false); break;
             case 'reset-apis': {
@@ -651,7 +656,7 @@ export function setupEventListeners() {
                 // 先让该条自定义 API 化作粒子消散，播完再真正移除
                 // （条目是 #customApisList 的直接子 div，无需在渲染处加类名）
                 const removeApiIndex = parseInt(el.dataset.index);
-                dissolveThenRemove(el.closest('#customApisList > div'), function () {
+                routerBridge.dissolveThenRemove(el.closest('#customApisList > div'), function () {
                     removeCustomApi(removeApiIndex);
                 });
                 break;
@@ -680,8 +685,8 @@ export function setupEventListeners() {
                 break;
             }
             case 'import-config-from-url': importConfigFromUrl(); break;
-            case 'switch-to-category': switchPage('category'); break;
-            case 'share-invite': shareInviteInfo(); break;
+            case 'switch-to-category': routerBridge.switchPage('category'); break;
+            case 'share-invite': routerBridge.shareInviteInfo(); break;
             case 'pwa-install': case 'pwa-dismiss': case 'pwa-guide-close': break; // 由 src/ui/pwa-install.ts 处理
         }
     });

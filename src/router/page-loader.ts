@@ -107,6 +107,7 @@ export const LeLePages = (function () {
         _scriptPromises[name] = new Promise<void>(function (resolve) {
             var s = document.createElement('script');
             s.src = src + versionQuery();
+            s.type = 'module';
             s.async = true;
             s.setAttribute('data-leletv-page-script', name);
             s.onload = function () { resolve(); };

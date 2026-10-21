@@ -53,8 +53,9 @@ const {
   _sortResultsByLatencyThenName,
 } = window as unknown as SearchCardsBridge;
 
-// 结果页与搜索页 / 路由之间的跨页契约，运行时由各自的 window 桥提供
-const { clearSearchInput, switchPage } = window as unknown as {
+// 结果页与搜索页 / 路由之间的跨页契约，运行时由各自的 window 桥提供。
+// 不能在这里解构：search / router 模块可能尚未执行，属性必须调用时再取。
+const pageBridge = window as unknown as {
   clearSearchInput: () => void;
   switchPage: (name: string) => void;
 };
@@ -737,11 +738,11 @@ function showMoviesResults(keyword, results, opts) {
   var mode = (results && results.length) ? 'search' : ((opts.fallbackGenres && opts.fallbackGenres.length) ? 'fallback' : 'empty');
   _moviesState = _freshState(keyword, results, opts, mode, false);
   // 首页搜索框保持为空：避免残留关键词在下次打开搜索页/切换页面时被重复搜索
-  clearSearchInput();
+  pageBridge.clearSearchInput();
   renderMoviesPageHeader();
   renderMoviesSidebar();
   renderMoviesGrid();
-  switchPage('movies');
+  pageBridge.switchPage('movies');
   // 关键词全部无结果且类别入口携带类型 → 混合兜底：按分类拉取
   if (_moviesState.mode === 'fallback') {
     _runCategoryFallback(_orderSourcesByLoad((selectedAPIs || []).filter(_isValidSource)));
@@ -755,11 +756,11 @@ function openMoviesPage(keyword, opts) {
   // 新入口发起：作废仍在途的旧搜索/旧加载管道（后发起者优先）
   _moviesEpoch++;
   _moviesState = _freshState(keyword, [], opts, 'loading', true);
-  clearSearchInput();
+  pageBridge.clearSearchInput();
   renderMoviesPageHeader();
   renderMoviesSidebar();
   renderMoviesGrid();
-  switchPage('movies');
+  pageBridge.switchPage('movies');
   loadMoviesResults();
 }
 
@@ -908,7 +909,7 @@ function restoreMoviesFromCache(cached) {
   if (!cached || !cached.keyword || !Array.isArray(cached.results) || cached.results.length === 0) return false;
   _moviesState = _freshState(cached.keyword, cached.results, { from: cached.from || 'home' }, 'search', false);
   _moviesState.activeSource = cached.activeFilter || 'all';
-  clearSearchInput();
+  pageBridge.clearSearchInput();
   renderMoviesPageHeader();
   renderMoviesSidebar();
   renderMoviesGrid();
@@ -958,7 +959,7 @@ function initMoviesPage() {
 // 返回来源页（类别 / 首页）
 function moviesPageBack() {
   var from = (_moviesState && _moviesState.from) || 'home';
-  switchPage(from === 'category' ? 'category' : 'home');
+  pageBridge.switchPage(from === 'category' ? 'category' : 'home');
 }
 
 // ===================== 事件绑定 =====================

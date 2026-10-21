@@ -27,98 +27,56 @@ const CATEGORY = byName('leletv-category');
 const SETTINGS = byName('leletv-settings');
 const PLAYER = byName('leletv-player');
 
-function concatFiles(fileList) {
-  return fileList.map(f => {
-    const p = path.join(ROOT, f);
-    if (!fs.existsSync(p)) { console.warn('[warn] missing:', p); return ''; }
-    return '/* ' + f + ' */\n' + fs.readFileSync(p, 'utf8');
-  }).join('\n');
-}
-
-function hashContent(content) {
-  let h = 0;
-  for (let i = 0; i < content.length; i++) {
-    h = ((h << 5) - h) + content.charCodeAt(i);
-    h = h & h;
-  }
-  return Math.abs(h).toString(36).substring(0, 8);
-}
-
-async function buildEntryBundle(config) {
-  // 阶段 5A：带 entry（或 esm 标志）的 bundle 走 esbuild.build；其余仍走 concat + transform。
-  // 本阶段 format 固定 iife，暂不启用 splitting。
-  let entryPath;
-  if (config.entry) {
-    entryPath = path.join(ROOT, config.entry);
-  } else {
-    // 无显式 entry：按 files 顺序生成临时 ESM 入口，保持与原 concat 相同的求值顺序
-    entryPath = path.join(DIST, '.entry-' + config.name + '.ts');
+/** 生成临时 ESM 入口（无显式 entry 的 bundle）；返回 [{ in, out }] */
+function makeEntryPoints() {
+  const entries = [];
+  for (const config of [CORE, APP, CATEGORY, SETTINGS, PLAYER]) {
+    if (config.entry) {
+      entries.push({ in: path.join(ROOT, config.entry), out: config.name });
+      continue;
+    }
+    const entryPath = path.join(DIST, '.entry-' + config.name + '.ts');
     const imports = config.files
       .map(f => "import '../" + f.replace(/\\/g, '/') + "';")
       .join('\n');
     fs.writeFileSync(entryPath, imports + '\n', 'utf8');
+    entries.push({ in: entryPath, out: config.name });
   }
-
-  const result = await esbuild.build({
-    entryPoints: [entryPath],
-    bundle: true,
-    format: 'iife',
-    minify: true,
-    sourcemap: true,
-    target: ['es2020'],
-    write: false,
-    outfile: path.join(DIST, config.name + '.js'),
-    logLevel: 'silent',
-  });
-
-  const jsFile = result.outputFiles.find(f => f.path.endsWith('.js'));
-  const mapFile = result.outputFiles.find(f => f.path.endsWith('.map'));
-  if (!jsFile) throw new Error('esbuild 未产出 JS：' + config.name);
-
-  const outName = config.name + '.' + hashContent(jsFile.text) + '.js';
-  // esbuild 的 sourceMappingURL 注释指向临时 outfile，改名后同步
-  const code = jsFile.text.replace(/\/\/# sourceMappingURL=.*$/m, '//# sourceMappingURL=' + outName + '.map');
-  fs.writeFileSync(path.join(DIST, outName), code);
-  if (mapFile) {
-    const map = JSON.parse(mapFile.text);
-    map.file = outName;
-    fs.writeFileSync(path.join(DIST, outName + '.map'), JSON.stringify(map));
-  }
-  // 临时入口只在构建期使用，产物落盘后删除，避免污染 git 状态
-  if (!config.entry) fs.unlinkSync(entryPath);
-  console.log('[build] ' + outName + ' (' + (code.length / 1024).toFixed(1) + 'KB, entry)');
-  return outName;
+  return entries;
 }
 
-async function buildBundle(config) {
-  if (config.entry || config.esm) return buildEntryBundle(config);
-  const content = concatFiles(config.files);
-  const h = hashContent(content);
-  const outName = config.name + '.' + h + '.js';
-  const outPath = path.join(DIST, outName);
+/** metafile 里的输出路径（相对 cwd）→ 相对 DIST 的 posix 路径 */
+function distRelative(outPath) {
+  const rel = path.relative(DIST, path.resolve(ROOT, outPath)).replace(/\\/g, '/');
+  return rel;
+}
 
-  const result = await esbuild.transform(content, {
-    minify: true,
-    sourcemap: true,
-    sourcefile: config.name + '.ts',
-    loader: 'ts',
-    target: ['es2020'],
-  });
-
-  fs.writeFileSync(outPath, result.code);
-  if (result.map) {
-    const mapPath = outPath + '.map';
-    const map = JSON.parse(result.map);
-    map.sources = map.sources.map(s => '../' + (config.files[0] || s));
-    fs.writeFileSync(mapPath, JSON.stringify(map));
+/** 入口的静态 import（共享 chunk）→ modulepreload 标签 */
+function preloadLinks(entryFiles, prefix, eol) {
+  const seen = new Set();
+  const links = [];
+  for (const file of entryFiles) {
+    const info = result.metafile.outputs[file];
+    if (!info) continue;
+    for (const imp of info.imports || []) {
+      if (imp.kind !== 'import-statement') continue;
+      const rel = distRelative(imp.path).replace(/^\.\//, '');
+      if (seen.has(rel)) continue;
+      seen.add(rel);
+      links.push('    <link rel="modulepreload" href="' + prefix + rel + '?v=' + version + '">');
+    }
   }
-
-  console.log('[build] ' + outName + ' (' + (result.code.length / 1024).toFixed(1) + 'KB)');
-  return outName;
+  return links.join(eol);
 }
 
 function stripJsScripts(html) {
-  return html.replace(/    <script src="(\/)?(js|dist)\/.*?"[^>]*><\/script>\r?\n/g, '');
+  // 兼容普通 <script src> 与 5B-4 的 <script type="module" src>，避免重复注入
+  return html.replace(/    <script[^>]*\bsrc="(\/)?(js|dist)\/.*?"[^>]*><\/script>\r?\n/g, '');
+}
+
+/** 上一次构建注入的 modulepreload 先移除，避免重复叠加 */
+function stripModulePreloads(html) {
+  return html.replace(/    <link rel="modulepreload" href="[^"]*"[^>]*>\r?\n/g, '');
 }
 
 /** 文件行尾：HTML 用 CRLF，写回时保持原样，避免把 LF 混进 CRLF 文件 */
@@ -133,6 +91,8 @@ function collapseBlankLines(html) {
   return html.replace(/(?:\r?\n){3,}/g, eol + eol);
 }
 
+let result;
+
 async function main() {
   if (!fs.existsSync(DIST)) fs.mkdirSync(DIST, { recursive: true });
   for (const f of fs.readdirSync(DIST)) {
@@ -140,26 +100,74 @@ async function main() {
       fs.unlinkSync(path.join(DIST, f));
     }
   }
-  console.log('[build] building...\n');
+  const chunksDir = path.join(DIST, 'chunks');
+  if (fs.existsSync(chunksDir)) fs.rmSync(chunksDir, { recursive: true, force: true });
 
-  const [coreFile, appFile, playerFile, categoryFile, settingsFile] = await Promise.all([
-    buildBundle(CORE), buildBundle(APP), buildBundle(PLAYER),
-    buildBundle(CATEGORY), buildBundle(SETTINGS),
-  ]);
+  console.log('[build] building (esm + splitting)...\n');
+  const entryPoints = makeEntryPoints();
+  result = await esbuild.build({
+    entryPoints,
+    bundle: true,
+    splitting: true,
+    format: 'esm',
+    minify: true,
+    sourcemap: true,
+    target: ['es2020'],
+    outdir: DIST,
+    entryNames: '[name].[hash]',
+    chunkNames: 'chunks/[name]-[hash]',
+    metafile: true,
+    logLevel: 'silent',
+  });
+
+  // 入口源文件 → 输出文件
+  const bySource = new Map(entryPoints.map(e => [path.resolve(e.in), e.out]));
+  const entryFiles = {};
+  const entryMeta = {};
+  for (const [outPath, info] of Object.entries(result.metafile.outputs)) {
+    if (!info.entryPoint) continue;
+    const name = bySource.get(path.resolve(ROOT, info.entryPoint));
+    if (!name) continue;
+    entryFiles[name] = distRelative(outPath);
+    entryMeta[name] = outPath;
+    const size = (info.bytes / 1024).toFixed(1);
+    console.log('[build] ' + entryFiles[name] + ' (' + size + 'KB, entry)');
+  }
+  for (const [outPath, info] of Object.entries(result.metafile.outputs)) {
+    if (info.entryPoint) continue;
+    if (!outPath.endsWith('.js')) continue;
+    console.log('[build] ' + distRelative(outPath) + ' (' + (info.bytes / 1024).toFixed(1) + 'KB, chunk)');
+  }
+
+  const coreFile = entryFiles[CORE.name];
+  const appFile = entryFiles[APP.name];
+  const playerFile = entryFiles[PLAYER.name];
+  const categoryFile = entryFiles[CATEGORY.name];
+  const settingsFile = entryFiles[SETTINGS.name];
+  if (!coreFile || !appFile || !playerFile || !categoryFile || !settingsFile) {
+    throw new Error('缺少入口产物：' + JSON.stringify(entryFiles));
+  }
+
+  // 临时入口只在构建期使用，产物落盘后删除，避免污染 git 状态
+  for (const f of fs.readdirSync(DIST)) {
+    if (f.startsWith('.entry-')) fs.unlinkSync(path.join(DIST, f));
+  }
 
   console.log('\n[build] updating HTML...');
 
   // --- index.html：源在 src/index.html，装配结果写根 index.html（Cloudflare Pages 入口）---
   let idx = fs.readFileSync(path.join(ROOT, 'src/index.html'), 'utf8');
   const idxEol = detectEol(idx);
-  idx = stripJsScripts(idx);
+  idx = stripModulePreloads(stripJsScripts(idx));
   const envMarker = '    <!-- \u73af\u5883\u53d8\u91cf\u6ce8\u5165\u811a\u672c -->';
-  const idxBundle = '    <script src="dist/' + coreFile + '?v=' + version + '" defer></script>' + idxEol
-    + '    <script src="dist/' + appFile + '?v=' + version + '" defer></script>';
+  const idxPreload = preloadLinks([entryMeta[CORE.name], entryMeta[APP.name]], 'dist/', idxEol);
+  const idxBundle = (idxPreload ? idxPreload + idxEol : '')
+    + '    <script type="module" src="dist/' + coreFile + '?v=' + version + '"></script>' + idxEol
+    + '    <script type="module" src="dist/' + appFile + '?v=' + version + '"></script>';
   idx = idx.replace(envMarker, idxBundle + idxEol + idxEol + envMarker);
   // 结果页预取播放页资源用的 bundle 名
-  idx = idx.replace(/dist\/leletv-player\.[a-z0-9]+\.js/g, 'dist/' + playerFile);
-  // 页面按需 bundle 的映射（js/app/page-loader.js 读取）
+  idx = idx.replace(/dist\/leletv-player\.[A-Za-z0-9]+\.js/g, 'dist/' + playerFile);
+  // 页面按需 bundle 的映射（src/router/page-loader.ts 读取）
   const pageBundles = JSON.stringify({
     category: 'dist/' + categoryFile,
     settings: 'dist/' + settingsFile,
@@ -174,11 +182,13 @@ async function main() {
   const PLAYER_PAGE = path.join(ROOT, 'src/pages/player/index.html');
   let ply = fs.readFileSync(PLAYER_PAGE, 'utf8');
   const plyEol = detectEol(ply);
-  ply = stripJsScripts(ply);
+  ply = stripModulePreloads(stripJsScripts(ply));
   // Insert after artplayer script (outside any <script> block)
   const plyAnchor = '    <script src="/libs/artplayer.min.js?v=' + version + '" defer crossorigin="anonymous"></script>';
-  const plyBundle = '    <script src="/dist/' + coreFile + '?v=' + version + '" defer></script>' + plyEol
-    + '    <script src="/dist/' + playerFile + '?v=' + version + '" defer></script>';
+  const plyPreload = preloadLinks([entryMeta[CORE.name], entryMeta[PLAYER.name]], '/dist/', plyEol);
+  const plyBundle = (plyPreload ? plyPreload + plyEol : '')
+    + '    <script type="module" src="/dist/' + coreFile + '?v=' + version + '"></script>' + plyEol
+    + '    <script type="module" src="/dist/' + playerFile + '?v=' + version + '"></script>';
   ply = ply.replace(plyAnchor, plyAnchor + plyEol + plyBundle);
   ply = collapseBlankLines(ply);
   fs.writeFileSync(PLAYER_PAGE, ply, 'utf8');

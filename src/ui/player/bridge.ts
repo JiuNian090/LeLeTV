@@ -10,7 +10,7 @@ interface VideoInfo {
     remarks?: string;
 }
 
-interface DetailData {
+export interface DetailData {
     [key: string]: unknown;
     videoInfo?: VideoInfo;
     episodes?: string[];
@@ -67,7 +67,7 @@ async function buildApiParamsAndFetch(id: string, sourceCode: string): Promise<D
 // 构建播放页返回地址：直接取当前页完整 URL（含 hash 与查询参数），保证返回精确回到点击来源页。
 // 特例：结果页（#movies）若由类别页发起的搜索进入，返回时应跳过结果页直达类别页，
 // 因此改写为 #category 并附 returnTo 标记，供 goHome 判断本次不能用 history.back()。
-function buildPlayerBackUrl(): string {
+export function buildPlayerBackUrl(): string {
     try {
         // 结果页可能由类别页发起（pages 之间不互相 import，沿用 window 契约）
         const moviesState = (window as Window & { _moviesState?: { from?: string } })._moviesState;
@@ -84,7 +84,7 @@ function buildPlayerBackUrl(): string {
 
 // 跳转播放页前写入哨兵：标记本次为站内同标签页导航。
 // 播放页返回时据此决定走 history.back()（历史栈紧邻条目必为来源页，可命中 bfcache 秒回）
-function navigateToPlayer(playerUrl: string): void {
+export function navigateToPlayer(playerUrl: string): void {
     try {
         sessionStorage.setItem('leletv_player_from_tab', '1');
     } catch (e) { /* 忽略 sessionStorage 不可用 */ }
@@ -92,7 +92,7 @@ function navigateToPlayer(playerUrl: string): void {
 }
 
 // 点击搜索结果直接跳转播放器（立即跳转，不等待API响应）
-async function playDirectly(id: string, vod_name: string, sourceCode: string): Promise<void> {
+export async function playDirectly(id: string, vod_name: string, sourceCode: string): Promise<void> {
     if (!id) {
         showToast('视频ID无效', 'error');
         return;
@@ -235,7 +235,7 @@ async function showDetails(id: string, vod_name: string, sourceCode: string): Pr
     }
 }
 
-function playVideo(url: string, vod_name: string, sourceCode: string, episodeIndex = 0, vodId = ''): void {
+export function playVideo(url: string, vod_name: string, sourceCode: string, episodeIndex = 0, vodId = ''): void {
 
     let playerUrl = `src/pages/player/index.html?id=${vodId || ''}&source=${sourceCode || ''}&url=${encodeURIComponent(url)}&index=${episodeIndex}&title=${encodeURIComponent(vod_name || '')}`;
 

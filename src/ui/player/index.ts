@@ -1,4 +1,6 @@
 import { goHome } from './navigation';
+import { playVideo } from './bridge';
+import type { DetailData } from './bridge';
 import { initPlayer } from './core';
 import { PlayerManager } from './manager';
 import { setupQualitySwitcher } from './quality';
