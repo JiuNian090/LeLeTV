@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 确保搜索历史下拉默认隐藏，并强制移除焦点
     hideSearchHistory();
-    document.getElementById('searchInput').blur();
+    (document.getElementById('searchInput') as HTMLInputElement | null)?.blur();
 
     // 延迟标记搜索就绪，防止浏览器自动填充/自动聚焦触发下拉
     setTimeout(() => { setSearchReady(true); }, TIMING.SEARCH_READY_DELAY);

@@ -50,9 +50,9 @@ export const LeLePages = (function () {
     // 页面专属脚本 bundle：路径由构建脚本写入 meta
     var PAGE_SCRIPTS = readBundles();
 
-    var _pagePromises: Record<string, Promise<void>> = {};
-    var _scriptPromises: Record<string, Promise<void>> = {};
-    var _stylePromises: Record<string, Promise<void>> = {};
+    var _pagePromises: Record<string, Promise<void> | undefined> = {};
+    var _scriptPromises: Record<string, Promise<void> | undefined> = {};
+    var _stylePromises: Record<string, Promise<void> | undefined> = {};
 
     function readBundles() {
         try {
@@ -79,11 +79,12 @@ export const LeLePages = (function () {
     }
 
     function loadStyle(key: string): Promise<void> {
-        if (_stylePromises[key]) return _stylePromises[key];
+        const existing = _stylePromises[key];
+        if (existing) return existing;
         var href = STYLES[key];
         if (!href) return Promise.resolve();
 
-        _stylePromises[key] = new Promise<void>(function (resolve) {
+        const task = new Promise<void>(function (resolve) {
             var link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = href + versionQuery();
@@ -96,15 +97,17 @@ export const LeLePages = (function () {
             };
             document.head.appendChild(link);
         });
-        return _stylePromises[key];
+        _stylePromises[key] = task;
+        return task;
     }
 
     function loadScript(name: string): Promise<void> {
         var src = PAGE_SCRIPTS[name];
         if (!src) return Promise.resolve();
-        if (_scriptPromises[name]) return _scriptPromises[name];
+        const existing = _scriptPromises[name];
+        if (existing) return existing;
 
-        _scriptPromises[name] = new Promise<void>(function (resolve) {
+        const task = new Promise<void>(function (resolve) {
             var s = document.createElement('script');
             s.src = src + versionQuery();
             s.type = 'module';
@@ -117,7 +120,8 @@ export const LeLePages = (function () {
             };
             document.head.appendChild(s);
         });
-        return _scriptPromises[name];
+        _scriptPromises[name] = task;
+        return task;
     }
 
     function fetchFragment(name: string): Promise<void> {
@@ -159,11 +163,12 @@ export const LeLePages = (function () {
     function ensure(name: string): Promise<void> {
         if (!has(name)) return Promise.resolve();
         if (isLoaded(name)) return Promise.resolve();
-        if (_pagePromises[name]) return _pagePromises[name];
+        const existing = _pagePromises[name];
+        if (existing) return existing;
 
         var styles = (PAGE_STYLES[name] || []).map(loadStyle);
 
-        _pagePromises[name] = Promise.all([
+        const task = Promise.all([
             fetchFragment(name),
             Promise.all(styles),
             loadScript(name)
@@ -176,8 +181,8 @@ export const LeLePages = (function () {
             showFallback(name);
             return;
         });
-
-        return _pagePromises[name];
+        _pagePromises[name] = task;
+        return task;
     }
 
     /** 空闲时预取（如搜索框聚焦时提前拉结果页），不参与首屏关键路径 */
