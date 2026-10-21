@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`a681589 refactor: 迁移 history 页片段到 src/pages/history/template.html`
+> 最新提交：`2d74afb refactor: 迁移 home-shelves 到 src/pages/home/shelves.ts`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：45 / 85 条已验证** |
+| 4 | **进行中：50 / 85 条已验证** |
 
 ---
 
-## 阶段 4 已完成（MAP 1–45）
+## 阶段 4 已完成（MAP 1–50）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -69,19 +69,25 @@
 | 43 | `js/ui/movies-page.js` | `src/pages/category/index.ts` | 全局入口与 `_moviesState` 读取方式不变 |
 | 44 | `pages/category.html` | `src/pages/category/template.html` | FRAGMENTS 映射已同步 |
 | 45 | `pages/history.html` | `src/pages/history/template.html` | FRAGMENTS 映射已同步 |
+| 46 | `js/ui/hero-glass.js` | `src/pages/home/hero-glass.ts` | 光效行为不变 |
+| 47 | `js/effects/hub-flow.js` | `src/pages/home/hub-flow.ts` | `window.HubFlow` 接口不变 |
+| 48 | `js/ui/nav-search.js` | `src/pages/home/nav-search.ts` | 桌面展开 / 移动搜索层行为不变 |
+| 49 | `js/ui/home-recent.js` | `src/pages/home/recent.ts` | `window.HomeRecent` 接口不变 |
+| 50 | `js/ui/home-shelves.js` | `src/pages/home/shelves.ts` | `window.HomeShelves` 接口不变 |
 
 ---
 
 ## 下一步
 
-**MAP 第 46 条**：`js/ui/hero-glass.js → src/pages/home/hero-glass.ts`
+**MAP 第 51 条**：`css/v2/home.css → src/pages/home/style.css`
 
 之后：
 
-- 第 47–50 条：`hub-flow` / `nav-search` / `home-recent` / `home-shelves` 迁入 `src/pages/home/`
+- 第 52 条 `pages/movies.html → src/pages/movies/template.html`
+- 第 53 条 `player.html → src/pages/player/index.html`（构建脚本与 HTML 引用需同步）
 - pages 层共 20 条，再 router（2）、entry（2）、styles（3）、public（17）
 
-新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 46 条继续。
+新会话开场：读本文件 → `npm start` 启动一次服务器 → 从第 51 条继续。
 
 ---
 
@@ -106,7 +112,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **265.5 KB**（预算 275 KB）；`js/` 剩余 `.js` **14**；tracked 369 / inventory 414。
+基线：首屏 core+app **265.8 KB**（预算 275 KB）；`js/` 剩余 `.js` **9**；tracked 369 / inventory 419。
 
 ---
 
