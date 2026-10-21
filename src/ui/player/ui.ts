@@ -1,6 +1,25 @@
 // LeLeTV — UI 控件模块
 // 快捷键提示 + 进度条 + 覆盖层 + 资源切换
 
+// 阶段 5B-3：状态、进度清理与 core 依赖改为显式 import。
+import {
+    art,
+    controlsLocked,
+    currentEpisodeIndex,
+    currentVideoTitle,
+    shortcutHintTimeout,
+    userClickedPosition,
+    advanceEpisode,
+    setControlsLocked,
+    setShortcutHintTimeout,
+    setUserClickedPosition,
+} from './state';
+import { clearVideoProgress, getVideoId } from './session';
+import { API_SITES, isHiddenContentMode, scopedKey } from '../../core/config';
+import { TIMING } from '../../core/timing';
+import { StorageService } from '../../core/storage';
+import { showLoading, hideLoading, showToast } from '../toast';
+
 interface PlayerTouchState {
     isMobile: boolean;
     lastTapAt: number;
@@ -47,7 +66,7 @@ const leletvPlayerTouchState: PlayerTouchState = {
     hideControls: null
 };
 
-function showShortcutHint(text: string, direction: string): void {
+export function showShortcutHint(text: string, direction: string): void {
     const hintElement = document.getElementById('shortcutHint');
     const textElement = document.getElementById('shortcutText');
     const iconElement = document.getElementById('shortcutIcon');
@@ -78,12 +97,12 @@ function showShortcutHint(text: string, direction: string): void {
     hintElement.classList.add('show');
 
     // 两秒后隐藏
-    shortcutHintTimeout = setTimeout(() => {
+    setShortcutHintTimeout(setTimeout(() => {
         hintElement.classList.remove('show');
-    }, 2000);
+    }, 2000));
 }
 
-function showError(message: string): void {
+export function showError(message: string): void {
     // 在视频已经播放的情况下不显示错误
     if (art && art.video && art.video.currentTime > 1) {
         return;
@@ -116,7 +135,7 @@ function showError(message: string): void {
     }
 }
 
-function copyLinks(): void {
+export function copyLinks(): void {
     // 尝试从URL中获取参数
     const urlParams = new URLSearchParams(window.location.search);
     const linkUrl = urlParams.get('url') || '';
@@ -129,7 +148,7 @@ function copyLinks(): void {
     }
 }
 
-function setupProgressBarPreciseClicks(): void {
+export function setupProgressBarPreciseClicks(): void {
     // 查找ArtPlayer的进度条元素（.art-progress 在 .art-bottom 内部）
     const progressBar = document.querySelector('.art-progress') as HTMLElement | null;
     if (!progressBar || !art || !art.video) return;
@@ -153,7 +172,7 @@ function setupProgressBarPreciseClicks(): void {
         if (duration - seekTime < 1) {
             seekTime = Math.max(0, duration - 1.5);
         }
-        userClickedPosition = seekTime;
+        setUserClickedPosition(seekTime);
         art.seek = seekTime;
     }
 
@@ -207,7 +226,7 @@ function setupProgressBarPreciseClicks(): void {
     progressBar.addEventListener('touchcancel', handleTouchEnd);
 }
 
-function showPositionRestoreHint(position: number): void {
+export function showPositionRestoreHint(position: number): void {
     if (!position || position < 10) return;
 
     // 创建提示元素
@@ -266,7 +285,7 @@ function formatTime(seconds: number): string {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function setupLongPressSpeedControl(): void {
+export function setupLongPressSpeedControl(): void {
     if (!art || !art.video) return;
 
     const playerElement = document.getElementById('player');
@@ -292,14 +311,14 @@ function setupLongPressSpeedControl(): void {
         hintElement.classList.add('show');
 
         // 长按期间保持显示，松开后恢复1倍速时提示1秒后隐藏
-        shortcutHintTimeout = setTimeout(() => {
+        setShortcutHintTimeout(setTimeout(() => {
             hintElement.classList.remove('show');
             // 延迟移除专用类，等待淡出动画完成
             setTimeout(() => {
                 hintElement.classList.remove('speed-hint');
                 iconElement.style.display = '';
             }, 300);
-        }, speed === 2.0 ? 0 : 1000);
+        }, speed === 2.0 ? 0 : 1000));
 
         // 2倍速时不自动隐藏，直到松开恢复
         if (speed === 2.0) {
@@ -382,7 +401,7 @@ function setupLongPressSpeedControl(): void {
     });
 }
 
-function setupControlsBehavior(): void {
+export function setupControlsBehavior(): void {
     if (!art) return;
 
     const container = document.getElementById('playerContainer');
@@ -579,16 +598,9 @@ function setupControlsBehavior(): void {
     setTimeout(hideControls, TIMING.CONTROLS_INITIAL_HIDE_DELAY);
 }
 
-function clearVideoProgress(): void {
-    const progressKey = `videoProgress_${getVideoId()}`;
-    try {
-        localStorage.removeItem(progressKey);
-    } catch (e) {
-        console.warn('[LeLeTV] 清除视频进度记录失败:', e);
-    }
-}
+// clearVideoProgress 已迁至 src/ui/player/session.ts
 
-function addNextEpisodeDirectly(art: PlayerArtInstance): void {
+export function addNextEpisodeDirectly(art: PlayerArtInstance): void {
 
     // 检查是否已存在
     if (document.querySelector('.custom-next-episode-btn')) {
@@ -649,9 +661,7 @@ function addNextEpisodeDirectly(art: PlayerArtInstance): void {
     nextBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
-        if (typeof playNextEpisode === 'function') {
-            playNextEpisode();
-        }
+        advanceEpisode();
     });
 
     // 插入到播放按钮后面
@@ -666,7 +676,7 @@ function addNextEpisodeDirectly(art: PlayerArtInstance): void {
     }
 }
 
-function addLockFloatingButton(art: PlayerArtInstance): void {
+export function addLockFloatingButton(art: PlayerArtInstance): void {
     if (!art) return;
     const playerEl = document.getElementById('player');
     if (!playerEl) return;
@@ -695,7 +705,7 @@ function getLockSvg(locked: boolean): string {
 }
 
 function toggleControlsLock(art: PlayerArtInstance): void {
-    controlsLocked = !controlsLocked;
+    setControlsLocked(!controlsLocked);
     const container = document.getElementById('playerContainer');
 
     if (controlsLocked) {
@@ -834,7 +844,7 @@ const resourceScan: ResourceScan = {
 let resourceGridFrame: number | null = null;
 
 // 当前数据域下可扫描的来源：本模式的全部内置源（含未勾选的）+ 本模式的自定义源
-function getResourceScanSources(): ResourceSource[] {
+export function getResourceScanSources(): ResourceSource[] {
     const customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]') as CustomApiEntry[];
     const hidden = isHiddenContentMode();
     const list: ResourceSource[] = Object.keys(API_SITES)
@@ -868,14 +878,14 @@ function getCurrentSourceDisplayName(): string {
 
 // 渲染标题行的源名称。取不到 source 时留空，由 CSS 的 :empty 隐藏，
 // 避免空节点在 flex 布局里多占一个 gap
-function renderResourceCurrentSource(): void {
+export function renderResourceCurrentSource(): void {
     const el = document.getElementById('resourceCurrentSource');
     if (!el) return;
     const name = getCurrentSourceDisplayName();
     el.textContent = name ? '· ' + name : '';
 }
 
-function updateResourceSourceCount(): void {
+export function updateResourceSourceCount(): void {
     const el = document.getElementById('resourceSourceCount');
     if (!el) return;
     if (!resourceScan.started) {
@@ -889,7 +899,7 @@ function updateResourceSourceCount(): void {
     el.textContent = '· 当前集共 ' + resourceScan.hitCount + ' 个来源';
 }
 
-function toggleResourceList(): void {
+export function toggleResourceList(): void {
     const section = document.getElementById('resourceSection');
     if (!section) return;
     const collapsed = section.classList.toggle('collapsed');
@@ -1098,7 +1108,7 @@ function getResumePosition(vodId: string | null): number {
     return 0;
 }
 
-async function switchToResource(sourceKey: string, vodId: string): Promise<void> {
+export async function switchToResource(sourceKey: string, vodId: string): Promise<void> {
     showLoading();
     try {
         // 保存当前播放进度
@@ -1257,3 +1267,22 @@ Object.assign(window, {
   toggleResourceList,
   switchToResource
 });
+
+// 阶段 5B-3 过渡期类型桥：ui.ts 已成为 ESM 模块，尚未改为 import 的 player 模块
+// 仍以裸名访问。
+declare global {
+  function showShortcutHint(text: string, direction: string): void;
+  function showError(message: string): void;
+  function copyLinks(): void;
+  function setupProgressBarPreciseClicks(): void;
+  function showPositionRestoreHint(position: number): void;
+  function setupLongPressSpeedControl(): void;
+  function setupControlsBehavior(): void;
+  function addNextEpisodeDirectly(art: PlayerArtInstance): void;
+  function addLockFloatingButton(art: PlayerArtInstance): void;
+  function getResourceScanSources(): Array<{ key: string; name: string }>;
+  function renderResourceCurrentSource(): void;
+  function updateResourceSourceCount(): void;
+  function toggleResourceList(): void;
+  function switchToResource(sourceKey: string, vodId: string): Promise<void>;
+}

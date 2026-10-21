@@ -25,7 +25,7 @@ let isShowingToast = false;
 let currentToastTimeout: number | null = null;
 let loadingTimeoutId: number | null = null;
 
-function showToast(message: string, type = 'error', duration = 3000): void {
+export function showToast(message: string, type = 'error', duration = 3000): void {
     if (!message || typeof message !== 'string') {
         console.warn('Invalid toast message:', message);
         return;
@@ -93,7 +93,7 @@ function showNextToast(): void {
     }, duration);
 }
 
-function showLoading(message = '正在加载'): void {
+export function showLoading(message = '正在加载'): void {
     // 清除任何现有的超时
     if (loadingTimeoutId) {
         clearTimeout(loadingTimeoutId);
@@ -111,7 +111,7 @@ function showLoading(message = '正在加载'): void {
     }, 30000);
 }
 
-function hideLoading(): void {
+export function hideLoading(): void {
     // 清除超时
     if (loadingTimeoutId) {
         clearTimeout(loadingTimeoutId);
@@ -122,13 +122,13 @@ function hideLoading(): void {
     loading.style.display = 'none';
 }
 
-function closeModal(): void {
+export function closeModal(): void {
     (document.getElementById('modal') as HTMLElement).classList.add('hidden');
     // 清除 iframe 内容
     (document.getElementById('modalContent') as HTMLElement).innerHTML = '';
 }
 
-function showModal(options: ModalOptions): HTMLElement {
+export function showModal(options: ModalOptions): HTMLElement {
     const { title, content, width = 'narrow', closeOnBackdrop = true, onClose } = options;
 
     // 移除已有模态框
@@ -192,7 +192,7 @@ function showModal(options: ModalOptions): HTMLElement {
     return overlay;
 }
 
-function formatTimestamp(timestamp: number | string): string {
+export function formatTimestamp(timestamp: number | string): string {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -225,7 +225,7 @@ function formatTimestamp(timestamp: number | string): string {
     return `${year}-${month}-${day} ${hour}:${minute}`;
 }
 
-function formatPlaybackTime(seconds: number): string {
+export function formatPlaybackTime(seconds: number): string {
     if (!seconds || isNaN(seconds)) return '00:00';
 
     const minutes = Math.floor(seconds / 60);
@@ -234,7 +234,7 @@ function formatPlaybackTime(seconds: number): string {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function clearLocalStorage(): void {
+export function clearLocalStorage(): void {
     const overlay = showModal({
         title: '清除本地数据',
         content: (body, modal) => {
@@ -289,3 +289,16 @@ Object.assign(window, {
   formatPlaybackTime,
   clearLocalStorage
 });
+
+// 阶段 5B-3 过渡期类型桥：toast.ts 已成为 ESM 模块，尚未改为 import 的调用方
+// 仍以裸名访问。
+declare global {
+  function showToast(message: string, type?: string, duration?: number): void;
+  function showLoading(message?: string): void;
+  function hideLoading(): void;
+  function closeModal(): void;
+  function showModal(options: unknown): HTMLElement;
+  function formatTimestamp(timestamp: number | string): string;
+  function formatPlaybackTime(seconds: number): string;
+  function clearLocalStorage(): void;
+}

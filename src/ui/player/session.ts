@@ -15,7 +15,18 @@ export function getVideoId(): string {
     return `${encodeURIComponent(currentVideoTitle)}_${currentEpisodeIndex}`;
 }
 
-// 阶段 5B-2 过渡期类型桥：尚未改为 import 的 player 模块仍以裸名访问。
+/** 清除当前视频的播放进度记录 */
+export function clearVideoProgress(): void {
+    const progressKey = `videoProgress_${getVideoId()}`;
+    try {
+        localStorage.removeItem(progressKey);
+    } catch (e) {
+        console.warn('[LeLeTV] 清除视频进度记录失败:', e);
+    }
+}
+
+// 阶段 5B-3 过渡期类型桥：尚未改为 import 的 player 模块仍以裸名访问。
 declare global {
     function getVideoId(): string;
+    function clearVideoProgress(): void;
 }
