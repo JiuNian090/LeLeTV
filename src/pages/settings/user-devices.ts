@@ -345,3 +345,10 @@ function _deviceIcon(browser) {
 }
 
 devicesWindow.USER_DEVICES_PANEL = USER_DEVICES_PANEL;
+
+// 阶段 5A-5 过渡期兼容桥：settings bundle 切 ESM 入口后，
+// admin-panel 仍以裸名复用这两个 helper。5B 改为 import 后删除本段。
+Object.assign(window, {
+  _timeAgo,
+  _deviceIcon,
+});

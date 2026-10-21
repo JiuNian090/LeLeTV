@@ -69,6 +69,8 @@ export const BUNDLES = [
   {
     name: 'leletv-settings',
     firstScreen: false,
+    // 阶段 5A-5：由 files 顺序生成 ESM 入口，走 esbuild.build
+    esm: true,
     files: [
       'src/services/theme.ts', 'src/pages/settings/admin-panel.ts', 'src/pages/settings/user-devices.ts',
     ],
