@@ -293,7 +293,7 @@
 |---|---|---|---|---|---|---|---|---|
 | 240 | `css/v2/admin.css` | 设置/管理面板样式（运行时按需加载） | migrated | `src/pages/settings/style.css` | — | — | pending | page-loader.js 运行时插入 <link>，属动态引用白名单 |
 | 241 | `css/v2/base.css` | 全局基础样式/布局/组件 | migrated | `src/styles/base.css` | — | — | pending | — |
-| 242 | `css/v2/home.css` | 首页样式 | migrated | `src/pages/home/style.css` | — | — | pending | — |
+| 242 | `css/v2/home.css` | 首页样式 | migrated | `src/pages/home/style.css` | — | — | verified | 相对图片路径已同步 |
 | 243 | `css/v2/player.css` | 播放页样式 | migrated | `src/pages/player/style.css` | — | — | pending | — |
 | 244 | `css/v2/tokens.css` | 设计令牌与主题变量 | migrated | `src/styles/variables.css` | — | — | pending | — |
 | 245 | `css/v2/views.css` | 内页共享视图样式（运行时按需加载） | migrated | `src/styles/views.css` | — | — | pending | page-loader.js 运行时插入 <link>，属动态引用白名单 |
@@ -514,6 +514,7 @@
 | 417 | `src/pages/home/nav-search.ts` | 导航栏迷你搜索（迁移自 `js/ui/nav-search.js`） | keep | — | — | — | done | 阶段 4 第 48 条迁移目标 |
 | 418 | `src/pages/home/recent.ts` | 首页最近更新货架（迁移自 `js/ui/home-recent.js`） | keep | — | — | — | done | 阶段 4 第 49 条迁移目标 |
 | 419 | `src/pages/home/shelves.ts` | 首页继续观看/片源货架（迁移自 `js/ui/home-shelves.js`） | keep | — | — | — | done | 阶段 4 第 50 条迁移目标 |
+| 420 | `src/pages/home/style.css` | 首页样式（迁移自 `css/v2/home.css`） | keep | — | — | — | done | 阶段 4 第 51 条迁移目标 |
 
 ## workers/（红区）
 

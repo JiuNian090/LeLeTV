@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 升级品牌图片的缓存版本号（index.html / player.html / manifest.json / css/v2/home.css 里的 ?v=leN）。
+ * 升级品牌图片的缓存版本号（index.html / player.html / manifest.json / src/pages/home/style.css 里的 ?v=leN）。
  *
  * 为什么需要：服务器给图片缓存一天，换了 image/brand 下的图却不动版本号，
  * 浏览器和已装 PWA 会继续用旧图标。
@@ -10,7 +10,7 @@
  */
 import fs from 'node:fs';
 
-const FILE = ['index.html', 'player.html', 'manifest.json', 'css/v2/home.css'];
+const FILE = ['index.html', 'player.html', 'manifest.json', 'src/pages/home/style.css'];
 
 const [newVersion, ...flags] = process.argv.slice(2);
 if (!newVersion || !/^le\d+$/.test(newVersion)) {

@@ -47,7 +47,7 @@
          在首次进入对应页面时加载，不再占用首屏。 -->
     <link rel="stylesheet" href="css/v2/tokens.css?v=v4.1.2">
     <link rel="stylesheet" href="css/v2/base.css?v=v4.1.2">
-    <link rel="stylesheet" href="css/v2/home.css?v=v4.1.2">
+    <link rel="stylesheet" href="src/pages/home/style.css?v=v4.1.2">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -594,7 +594,7 @@
         // ---------- 加载进度 ----------
         // 阶段由 js/app/boot-sequence.js 推进，这里只负责画：
         //   启动层出现 → 关键样式 12% → DOM 20% → 鉴权 22~35% → 首页 40~95% → 进入 100%
-        var CRITICAL_STYLES = ['v2/tokens.css', 'v2/base.css', 'v2/home.css'];
+        var CRITICAL_STYLES = ['v2/tokens.css', 'v2/base.css', 'src/pages/home/style.css'];
         var progress = 0;
         var lastProgressAt = now();
         var stall = 0;               // 停滞兜底：缓慢缓推，避免进度条看起来卡死
