@@ -457,6 +457,10 @@
 | 362 | `scripts/setup-agent-links.mjs` | 建立各 AI 工具到 .agents 的接线 | keep | — | — | — | done | — |
 | 363 | `scripts/setup-hooks.mjs` | 安装 pre-commit 钩子 | keep | — | — | — | done | — |
 | 364 | `scripts/sync-agent-index.mjs` | 生成 AGENTS.md 与 .agents/skills/INDEX.md 索引 | keep | — | — | — | done | — |
+| 453 | `scripts/run-tests.mjs` | 单元测试 runner（esbuild 打包 + node --test） | keep | — | — | — | done | 自动化测试基础设施 |
+| 454 | `scripts/test/dom-stub.ts` | 测试用最小浏览器桩 | keep | — | — | — | done | 自动化测试基础设施 |
+| 455 | `scripts/test/cards.test.ts` | 搜索结果卡片纯函数单测 | keep | — | — | — | done | 自动化测试基础设施 |
+| 456 | `scripts/test/user-devices.test.ts` | 设备面板格式化函数单测 | keep | — | — | — | done | 自动化测试基础设施 |
 
 ## src/（阶段 2 起）
 

@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：完整 strict 模式已开启（33 处清零，见 git log）
+> 最新提交：自动化测试基础设施 + 首批 13 个单测（见 git log）
 
 ---
 
@@ -38,6 +38,7 @@
 | strictNullChecks 分批 6 | **完成（2 个 commit）**：`ui/index.ts`（4）、`ui/pwa-install.ts`（3）、`ui/nav-scroll.ts`（2）、`router/page-loader.ts`（4）、`main.ts`（1）清零；导航滚动、历史/关于/设置懒加载切页、导入配置弹窗、PWA 接口回归通过。剩余 35 处，全部在 `ui/player`：detail 12、index 10、core 5、shortcuts 4、episodes 2、quality 1、failover 1 |
 | strictNullChecks 分批 7 | **完成（4 个 commit）**：`ui/player/detail.ts`（12）、`ui/player/index.ts`（10）、`ui/player/core.ts` + `shortcuts.ts`（9）、`ui/player/episodes.ts` + `quality.ts` + `failover.ts`（4）清零；起播/续播、切集、切源、音量快捷键、关灯回归通过。**全局 `strictNullChecks` 已在 `tsconfig.json` 开启**，`npm run typecheck` / `npm run check` 全绿，剩余 **0** 处 |
 | 完整 strict 模式 8 | **完成（4 个 commit）**：补齐 `this` 注解（main / admin / user-devices 8 处）、catch `unknown` 收窄（10 处）、settings 面板空值与字段类型（11 处）、fetch 透传 / Path2D / 定时器（4 处）；首页、搜索、设置数据源与邀请码统计、播放起播/切集、关于页回归通过。**`tsconfig.json` 已改为 `"strict": true`**，`npx tsc --noEmit` 全绿，剩余 **0** 处 |
+| 自动化测试 1 | **完成（2 个 commit）**：新增 `scripts/run-tests.mjs`（esbuild 打包 → `node --test`，产物写系统临时目录）与最小 DOM 桩；首批 13 个测试覆盖 `pages/search/cards` 的转义、标题合并、季序解析、延迟分档与排序，以及 `pages/settings/user-devices` 的相对时间与设备图标。测试同时发现并修复 `\d` / `\s` 正则转义丢失（`第2季` / `S2` / 纯数字季序此前解析失效）。`npm test` 全绿 |
 
 ---
 
