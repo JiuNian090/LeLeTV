@@ -638,7 +638,7 @@ async function handleMultipleCustomSearch(searchQuery: string, customApiUrls: st
         }
 
         // 非API请求使用原始fetch
-        return originalFetch.apply(this, arguments);
+        return originalFetch.call(this, input, init);
     };
 })();
 

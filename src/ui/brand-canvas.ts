@@ -40,7 +40,7 @@ function load(): BrandPaths | false {
     const word = document.getElementById('lele-word');
     if (!mark || !word || typeof Path2D !== 'function') { paths = false; return paths; }
     const toPaths = function (root: Element): Path2D[] {
-      return Array.prototype.map.call(root.querySelectorAll('path'), function (p: Element) { return new Path2D(p.getAttribute('d') || ''); });
+      return Array.from(root.querySelectorAll('path'), function (p) { return new Path2D(p.getAttribute('d') || ''); });
     };
     const m = toPaths(mark);
     const w = toPaths(word);

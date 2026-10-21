@@ -143,12 +143,12 @@ export const PlayerManager = {
 
     /** 清空所有追踪的定时器 */
     _clearAllTimers(): void {
-        this._intervals.forEach(function (id: ReturnType<typeof setInterval>) {
+        this._intervals.forEach(function (id: number) {
             try { clearInterval(id); } catch (e) { /* 静默处理 */ }
         });
         this._intervals = [];
 
-        this._timeouts.forEach(function (id: ReturnType<typeof setTimeout>) {
+        this._timeouts.forEach(function (id: number) {
             try { clearTimeout(id); } catch (e) { /* 静默处理 */ }
         });
         this._timeouts = [];
