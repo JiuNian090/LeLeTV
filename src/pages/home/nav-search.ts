@@ -4,6 +4,9 @@
  *     所以搜索历史、结果页、地址栏 /s= 都和首页搜索一致。空着再点、按 Esc、点到别处都收起
  *   - 手机（≤720px）：导航项在底部标签栏，这个入口固定在顶栏右侧，点开的是现成的手机搜索层
  */
+
+import { openMobileSearch } from '../../services/config';
+
 (function () {
   'use strict';
 
@@ -43,12 +46,14 @@
       const home = document.getElementById('searchInput') as HTMLInputElement | null;
       if (home) home.value = query;
       close();
+      // search() 属于结果页（pages/search），导航栏不能跨页 import：保留 window 契约
+      const search = (window as Window & { search?: () => void }).search;
       if (typeof search === 'function') search();
     }
 
     btn.addEventListener('click', () => {
       if (isMobile()) {
-        if (typeof openMobileSearch === 'function') openMobileSearch();
+        openMobileSearch();
         return;
       }
       if (isOpen()) submit(); else open();
