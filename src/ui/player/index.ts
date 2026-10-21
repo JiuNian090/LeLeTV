@@ -97,6 +97,9 @@ interface PlayerArtInstance extends ArtplayerInstance {
     url?: string;
     play?: () => void;
     pause?: () => void;
+    template?: { $player?: HTMLElement; $controlsLeft?: HTMLElement };
+    isLock?: boolean;
+    seek?: number;
 }
 let currentVideoTitle = '';
 let currentEpisodeIndex = 0;

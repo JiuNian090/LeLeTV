@@ -1,7 +1,41 @@
 // LeLeTV — UI 控件模块
 // 快捷键提示 + 进度条 + 覆盖层 + 资源切换
 
-const leletvPlayerTouchState = {
+interface PlayerTouchState {
+    isMobile: boolean;
+    lastTapAt: number;
+    touchStartX: number;
+    touchStartY: number;
+    touchMoved: boolean;
+    longPressActive: boolean;
+    suppressNextClick: boolean;
+    isControlsVisible: (() => boolean) | null;
+    hideControls: (() => void) | null;
+}
+
+interface ResourceSource {
+    key: string;
+    name: string;
+}
+
+interface SourceSpeedResult {
+    speed: number;
+    episodes?: number;
+    error: string | null;
+    videoMeasured?: boolean;
+}
+
+interface ResourceScan {
+    started: boolean;
+    finished: boolean;
+    sources: ResourceSource[];
+    results: Record<string, SearchResultItem>;
+    latency: Record<string, SourceSpeedResult>;
+    status: Record<string, string>;
+    hitCount: number;
+}
+
+const leletvPlayerTouchState: PlayerTouchState = {
     isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
     lastTapAt: 0,
     touchStartX: 0,
@@ -13,7 +47,7 @@ const leletvPlayerTouchState = {
     hideControls: null
 };
 
-function showShortcutHint(text, direction) {
+function showShortcutHint(text: string, direction: string): void {
     const hintElement = document.getElementById('shortcutHint');
     const textElement = document.getElementById('shortcutText');
     const iconElement = document.getElementById('shortcutIcon');
@@ -49,7 +83,7 @@ function showShortcutHint(text, direction) {
     }, 2000);
 }
 
-function showError(message) {
+function showError(message: string): void {
     // 在视频已经播放的情况下不显示错误
     if (art && art.video && art.video.currentTime > 1) {
         return;
@@ -82,7 +116,7 @@ function showError(message) {
     }
 }
 
-function copyLinks() {
+function copyLinks(): void {
     // 尝试从URL中获取参数
     const urlParams = new URLSearchParams(window.location.search);
     const linkUrl = urlParams.get('url') || '';
@@ -95,9 +129,9 @@ function copyLinks() {
     }
 }
 
-function setupProgressBarPreciseClicks() {
+function setupProgressBarPreciseClicks(): void {
     // 查找ArtPlayer的进度条元素（.art-progress 在 .art-bottom 内部）
-    const progressBar = document.querySelector('.art-progress');
+    const progressBar = document.querySelector('.art-progress') as HTMLElement | null;
     if (!progressBar || !art || !art.video) return;
 
     // 防止重复绑定：剧集切换时此函数可能被多次调用
@@ -105,10 +139,10 @@ function setupProgressBarPreciseClicks() {
     progressBar.dataset.leletvProgress = 'bound';
 
     let isDragging = false;
-    let cachedRect = null; // 拖动期间缓存 progressBar 布局，避免每帧强制回流
+    let cachedRect: DOMRect | null = null; // 拖动期间缓存 progressBar 布局，避免每帧强制回流
 
     // 统一的跳转处理函数
-    function seekByClientX(clientX) {
+    function seekByClientX(clientX: number): void {
         if (!art || !art.video) return;
         // 拖动期间使用缓存的 rect，初始点击时实时计算
         const rect = cachedRect || progressBar.getBoundingClientRect();
@@ -124,7 +158,7 @@ function setupProgressBarPreciseClicks() {
     }
 
     // --- 桌面端：mousedown 点击跳转 + 拖动 ---
-    function handleMouseDown(e) {
+    function handleMouseDown(e: MouseEvent): void {
         if (!art || !art.video) return;
         isDragging = true;
         cachedRect = progressBar.getBoundingClientRect(); // 缓存一次
@@ -133,12 +167,12 @@ function setupProgressBarPreciseClicks() {
         seekByClientX(e.clientX);
     }
 
-    function handleMouseMove(e) {
+    function handleMouseMove(e: MouseEvent): void {
         if (!isDragging) return;
         seekByClientX(e.clientX);
     }
 
-    function handleMouseUp() {
+    function handleMouseUp(): void {
         isDragging = false;
         cachedRect = null;
     }
@@ -148,7 +182,7 @@ function setupProgressBarPreciseClicks() {
     document.addEventListener('mouseup', handleMouseUp);
 
     // --- 移动端：touchstart 点击 + touchmove 滑动 ---
-    function handleTouchStart(e) {
+    function handleTouchStart(e: TouchEvent): void {
         if (!art || !art.video || !e.touches[0]) return;
         isDragging = true;
         cachedRect = progressBar.getBoundingClientRect(); // 缓存一次
@@ -156,13 +190,13 @@ function setupProgressBarPreciseClicks() {
         seekByClientX(e.touches[0].clientX);
     }
 
-    function handleTouchMove(e) {
+    function handleTouchMove(e: TouchEvent): void {
         if (!isDragging || !e.touches[0]) return;
         e.preventDefault();
         seekByClientX(e.touches[0].clientX);
     }
 
-    function handleTouchEnd() {
+    function handleTouchEnd(): void {
         isDragging = false;
         cachedRect = null;
     }
@@ -173,7 +207,7 @@ function setupProgressBarPreciseClicks() {
     progressBar.addEventListener('touchcancel', handleTouchEnd);
 }
 
-function showPositionRestoreHint(position) {
+function showPositionRestoreHint(position: number): void {
     if (!position || position < 10) return;
 
     // 创建提示元素
@@ -186,7 +220,7 @@ function showPositionRestoreHint(position) {
     `;
 
     // 尝试添加到播放器容器或body
-    let container;
+    let container: Element;
     if (document.getElementById('player')) {
         container = document.getElementById('player');
     } else if (document.querySelector('.player-container')) {
@@ -223,7 +257,7 @@ function showPositionRestoreHint(position) {
     }, 100);
 }
 
-function formatTime(seconds) {
+function formatTime(seconds: number): string {
     if (isNaN(seconds)) return '00:00';
 
     const minutes = Math.floor(seconds / 60);
@@ -232,16 +266,16 @@ function formatTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function setupLongPressSpeedControl() {
+function setupLongPressSpeedControl(): void {
     if (!art || !art.video) return;
 
     const playerElement = document.getElementById('player');
-    let longPressTimer = null;
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let originalPlaybackRate = 1.0;
     let isLongPress = false;
 
     // 显示倍速提示
-    function showSpeedHint(speed) {
+    function showSpeedHint(speed: number): void {
         const hintElement = document.getElementById('shortcutHint');
         const textElement = document.getElementById('shortcutText');
         const iconElement = document.getElementById('shortcutIcon');
@@ -277,9 +311,10 @@ function setupLongPressSpeedControl() {
         playerElement.oncontextmenu = () => false;
     }
 
-    function startLongPress(e) {
+    function startLongPress(e?: Event): void {
         if (controlsLocked) return;
-        if (e && e.target && e.target.closest && e.target.closest('.art-controls, .art-bottom, .art-progress, .player-back-btn, .player-floating-lock-btn')) return;
+        const target = e && e.target as HTMLElement;
+        if (target && target.closest && target.closest('.art-controls, .art-bottom, .art-progress, .player-back-btn, .player-floating-lock-btn')) return;
         if (art.video.paused) return;
         originalPlaybackRate = art.video.playbackRate;
         leletvPlayerTouchState.longPressActive = false;
@@ -297,7 +332,7 @@ function setupLongPressSpeedControl() {
         }, 500);
     }
 
-    function endLongPress(e) {
+    function endLongPress(e?: Event): void {
         if (longPressTimer) {
             clearTimeout(longPressTimer);
             longPressTimer = null;
@@ -329,9 +364,9 @@ function setupLongPressSpeedControl() {
 
     // iOS：拦截 gesture 手势事件（长按放大镜 / 文字选择框）
     if (leletvPlayerTouchState.isMobile && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        playerElement.addEventListener('gesturestart', function (e) { e.preventDefault(); });
-        playerElement.addEventListener('gesturechange', function (e) { e.preventDefault(); });
-        playerElement.addEventListener('gestureend', function (e) { e.preventDefault(); });
+        playerElement.addEventListener('gesturestart' as keyof HTMLElementEventMap, function (e) { e.preventDefault(); });
+        playerElement.addEventListener('gesturechange' as keyof HTMLElementEventMap, function (e) { e.preventDefault(); });
+        playerElement.addEventListener('gestureend' as keyof HTMLElementEventMap, function (e) { e.preventDefault(); });
     }
 
     // 视频暂停时取消长按状态
@@ -347,7 +382,7 @@ function setupLongPressSpeedControl() {
     });
 }
 
-function setupControlsBehavior() {
+function setupControlsBehavior(): void {
     if (!art) return;
 
     const container = document.getElementById('playerContainer');
@@ -355,8 +390,8 @@ function setupControlsBehavior() {
     if (!container || !playerEl) return;
 
     let controlsVisible = true;
-    let hideTimer = null;
-    let clickTimer = null;
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+    let clickTimer: ReturnType<typeof setTimeout> | null = null;
     let lastTapAt = 0;
     let tapStartX = 0;
     let tapStartY = 0;
@@ -364,13 +399,13 @@ function setupControlsBehavior() {
     const DOUBLE_TAP_DELAY = 280;
     const TAP_MOVE_THRESHOLD = 12;
 
-    function showControls(resetTimer) {
+    function showControls(resetTimer?: boolean): void {
         controlsVisible = true;
         container.classList.remove('controls-hidden');
         if (resetTimer !== false) resetAutoHide();
     }
 
-    function hideControls() {
+    function hideControls(): void {
         controlsVisible = false;
         container.classList.add('controls-hidden');
         if (hideTimer) {
@@ -379,12 +414,12 @@ function setupControlsBehavior() {
         }
     }
 
-    function toggleControls() {
+    function toggleControls(): void {
         if (controlsVisible) hideControls();
         else showControls();
     }
 
-    function resetAutoHide() {
+    function resetAutoHide(): void {
         if (hideTimer) clearTimeout(hideTimer);
         hideTimer = setTimeout(hideControls, TIMING.CONTROLS_HIDE_DELAY);
     }
@@ -466,8 +501,8 @@ function setupControlsBehavior() {
         const now = Date.now();
         if (now - lastTapAt <= DOUBLE_TAP_DELAY) {
             lastTapAt = 0;
-            if (art.video.paused) art.play();
-            else art.pause();
+            if (art.video.paused) art.play?.();
+            else art.pause?.();
             if (controlsVisible) resetAutoHide();
             return;
         }
@@ -509,8 +544,8 @@ function setupControlsBehavior() {
         if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
-            if (art.video.paused) art.play();
-            else art.pause();
+            if (art.video.paused) art.play?.();
+            else art.pause?.();
             e.stopPropagation();
             return;
         }
@@ -544,7 +579,7 @@ function setupControlsBehavior() {
     setTimeout(hideControls, TIMING.CONTROLS_INITIAL_HIDE_DELAY);
 }
 
-function clearVideoProgress() {
+function clearVideoProgress(): void {
     const progressKey = `videoProgress_${getVideoId()}`;
     try {
         localStorage.removeItem(progressKey);
@@ -553,38 +588,38 @@ function clearVideoProgress() {
     }
 }
 
-function addNextEpisodeDirectly(art) {
-    
+function addNextEpisodeDirectly(art: PlayerArtInstance): void {
+
     // 检查是否已存在
     if (document.querySelector('.custom-next-episode-btn')) {
         return;
     }
-    
+
     // 获取播放器容器
     const playerEl = document.getElementById('player');
     if (!playerEl) {
         return;
     }
-    
+
     // 查找控制栏
     const controlsContainer = playerEl.querySelector('.art-controls') || document.querySelector('.art-controls');
     if (!controlsContainer) {
         return;
     }
-    
+
     // 查找左侧控制区
     const leftControls = controlsContainer.querySelector('.art-controls-left');
     const targetContainer = leftControls || controlsContainer;
-    
+
     // 查找播放按钮（暂停按钮）
     const playBtn = targetContainer.querySelector('.art-control-playAndPause');
-    
+
     // 创建按钮
     const nextBtn = document.createElement('div');
     nextBtn.className = 'custom-next-episode-btn art-control';
     nextBtn.title = '下一集 (Alt+→)';
     nextBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>';
-    
+
     // 应用样式，和其他控制按钮一致
     nextBtn.style.cssText = `
         display: flex !important;
@@ -600,17 +635,17 @@ function addNextEpisodeDirectly(art) {
         box-sizing: border-box !important;
         position: relative !important;
     `;
-    
+
     nextBtn.addEventListener('mouseenter', function() {
-        this.style.opacity = '1 !important';
-        this.style.backgroundColor = 'rgba(255, 255, 255, 0.1) !important';
-        this.style.borderRadius = '50% !important';
+        nextBtn.style.opacity = '1 !important';
+        nextBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1) !important';
+        nextBtn.style.borderRadius = '50% !important';
     });
-    
+
     nextBtn.addEventListener('mouseleave', function() {
-        this.style.backgroundColor = 'transparent !important';
+        nextBtn.style.backgroundColor = 'transparent !important';
     });
-    
+
     nextBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
@@ -618,7 +653,7 @@ function addNextEpisodeDirectly(art) {
             playNextEpisode();
         }
     });
-    
+
     // 插入到播放按钮后面
     if (playBtn && playBtn.nextSibling) {
         targetContainer.insertBefore(nextBtn, playBtn.nextSibling);
@@ -631,7 +666,7 @@ function addNextEpisodeDirectly(art) {
     }
 }
 
-function addLockFloatingButton(art) {
+function addLockFloatingButton(art: PlayerArtInstance): void {
     if (!art) return;
     const playerEl = document.getElementById('player');
     if (!playerEl) return;
@@ -652,14 +687,14 @@ function addLockFloatingButton(art) {
     playerEl.appendChild(btn);
 }
 
-function getLockSvg(locked) {
+function getLockSvg(locked: boolean): string {
     if (locked) {
         return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>';
     }
     return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
 }
 
-function toggleControlsLock(art) {
+function toggleControlsLock(art: PlayerArtInstance): void {
     controlsLocked = !controlsLocked;
     const container = document.getElementById('playerContainer');
 
@@ -678,7 +713,7 @@ function toggleControlsLock(art) {
     }
 
     // 更新浮动按钮图标
-    const btn = document.querySelector('.player-floating-lock-btn');
+    const btn = document.querySelector('.player-floating-lock-btn') as HTMLElement | null;
     if (btn) {
         btn.innerHTML = getLockSvg(controlsLocked);
         btn.title = controlsLocked ? '点击解锁' : '锁定控制栏';
@@ -689,10 +724,10 @@ function toggleControlsLock(art) {
 const SOURCE_DETAIL_TIMEOUT_MS = 8000;
 const SOURCE_VIDEO_TIMEOUT_MS = 5000;
 
-async function testVideoSourceSpeed(sourceKey, vodId) {
+async function testVideoSourceSpeed(sourceKey: string, vodId: string): Promise<SourceSpeedResult> {
     try {
         const apiStart = performance.now();
-        
+
         // 构建API参数
         let apiParams = '';
         if (sourceKey.startsWith('custom_')) {
@@ -709,34 +744,34 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
         } else {
             apiParams = '&source=' + sourceKey;
         }
-        
+
         // 添加时间戳防止缓存
         const timestamp = new Date().getTime();
         const cacheBuster = `&_t=${timestamp}`;
-        
+
         // 获取视频详情（补超时：源挂起时原本会一直停在「测速中」）
         const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}${cacheBuster}`, {
             method: 'GET',
             cache: 'no-cache',
             signal: AbortSignal.timeout(SOURCE_DETAIL_TIMEOUT_MS)
         });
-        
+
         if (!response.ok) {
             return { speed: -1, error: '获取失败' };
         }
-        
-        const data = await response.json();
-        
+
+        const data = await response.json() as DetailData;
+
         if (!data.episodes || data.episodes.length === 0) {
             return { speed: -1, error: '无播放源' };
         }
-        
+
         // 测试第一个播放链接的响应速度
         const firstEpisodeUrl = data.episodes[0];
         if (!firstEpisodeUrl) {
             return { speed: -1, error: '链接无效' };
         }
-        
+
         // 测试视频链接响应时间。只计这一段：原来减的是请求详情前的时刻，
         // 一个数字里混了「详情接口 + 视频请求」两段时间，源之间没法横向比较
         const videoTestStart = performance.now();
@@ -750,9 +785,9 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
                 cache: 'no-cache',
                 signal: AbortSignal.timeout(SOURCE_VIDEO_TIMEOUT_MS)
             });
-            
+
             const videoTime = performance.now() - videoTestStart;
-            
+
             return {
                 speed: Math.round(videoTime),
                 episodes: data.episodes.length,
@@ -770,12 +805,12 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
                 videoMeasured: false
             };
         }
-        
+
     } catch (error) {
-        return { 
-            speed: -1, 
+        return {
+            speed: -1,
             // AbortSignal.timeout() 抛的是 TimeoutError，两种都要认
-            error: (error.name === 'TimeoutError' || error.name === 'AbortError') ? '超时' : '测试失败' 
+            error: (error.name === 'TimeoutError' || error.name === 'AbortError') ? '超时' : '测试失败'
         };
     }
 }
@@ -786,7 +821,7 @@ async function testVideoSourceSpeed(sourceKey, vodId) {
 const RESOURCE_SCAN_CONCURRENCY = 6;
 
 // 单源扫描状态：untested 未测 / testing 测速中 / done 已测 / failed 测速失败 / empty 无结果
-const resourceScan = {
+const resourceScan: ResourceScan = {
     started: false,
     finished: false,
     sources: [],
@@ -796,13 +831,13 @@ const resourceScan = {
     hitCount: 0
 };
 
-let resourceGridFrame = null;
+let resourceGridFrame: number | null = null;
 
 // 当前数据域下可扫描的来源：本模式的全部内置源（含未勾选的）+ 本模式的自定义源
-function getResourceScanSources() {
-    const customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
+function getResourceScanSources(): ResourceSource[] {
+    const customAPIs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]') as CustomApiEntry[];
     const hidden = isHiddenContentMode();
-    const list = Object.keys(API_SITES)
+    const list: ResourceSource[] = Object.keys(API_SITES)
         .filter(key => hidden ? !!API_SITES[key].hidden : !API_SITES[key].hidden)
         .map(key => ({ key: key, name: (API_SITES[key] && API_SITES[key].name) || key }));
     customAPIs.forEach((api, index) => {
@@ -813,31 +848,34 @@ function getResourceScanSources() {
 
 // 当前播放源名称（如「猫眼资源」）：URL 的 source 参数可能是内置源 key，
 // 也可能是自定义源的 custom_N —— 后者的名称存在 localStorage 的 customAPIs 里
-function getCurrentSourceDisplayName() {
+function getCurrentSourceDisplayName(): string {
     const code = new URLSearchParams(window.location.search).get('source') || '';
     if (!code) return '';
 
     if (code.startsWith('custom_')) {
-        const customApi = typeof window.getCustomApiInfo === 'function'
-            ? window.getCustomApiInfo(code.replace('custom_', ''))
+        const getInfo = (window as Window & {
+            getCustomApiInfo?: (index: string) => { name?: string } | null;
+        }).getCustomApiInfo;
+        const customApi = typeof getInfo === 'function'
+            ? getInfo(code.replace('custom_', ''))
             : null;
         return (customApi && customApi.name) ? customApi.name : '自定义资源';
     }
 
-    const site = window.API_SITES && window.API_SITES[code];
+    const site = (window as Window & { API_SITES?: Record<string, ApiSite> }).API_SITES?.[code];
     return (site && site.name) ? site.name : code;
 }
 
 // 渲染标题行的源名称。取不到 source 时留空，由 CSS 的 :empty 隐藏，
 // 避免空节点在 flex 布局里多占一个 gap
-function renderResourceCurrentSource() {
+function renderResourceCurrentSource(): void {
     const el = document.getElementById('resourceCurrentSource');
     if (!el) return;
     const name = getCurrentSourceDisplayName();
     el.textContent = name ? '· ' + name : '';
 }
 
-function updateResourceSourceCount() {
+function updateResourceSourceCount(): void {
     const el = document.getElementById('resourceSourceCount');
     if (!el) return;
     if (!resourceScan.started) {
@@ -851,7 +889,7 @@ function updateResourceSourceCount() {
     el.textContent = '· 当前集共 ' + resourceScan.hitCount + ' 个来源';
 }
 
-function toggleResourceList() {
+function toggleResourceList(): void {
     const section = document.getElementById('resourceSection');
     if (!section) return;
     const collapsed = section.classList.toggle('collapsed');
@@ -859,7 +897,7 @@ function toggleResourceList() {
     startResourceScan();
 }
 
-function startResourceScan() {
+function startResourceScan(): void {
     if (resourceScan.started) return;
     resourceScan.started = true;
 
@@ -882,11 +920,11 @@ function startResourceScan() {
 
     // 并发池：固定数量的 worker 从队列里取源，避免一次打满几十个请求
     const queue = resourceScan.sources.slice();
-    const workers = [];
+    const workers: Promise<void>[] = [];
     const workerCount = Math.min(RESOURCE_SCAN_CONCURRENCY, queue.length);
     for (let i = 0; i < workerCount; i++) {
         workers.push((async () => {
-            let src;
+            let src: ResourceSource | undefined;
             while ((src = queue.shift())) {
                 await scanOneResourceSource(src);
             }
@@ -903,9 +941,9 @@ function startResourceScan() {
 // 全部测速结束后按延迟重排：当前播放的线路固定第一（它不一定是延迟最低的），
 // 其次是实测到视频耗时的按毫秒升序（最快在前），只测到接口耗时的另排一档，
 // 测速失败、无结果的沉到最后
-function sortResourceSourcesByLatency() {
+function sortResourceSourcesByLatency(): void {
     const currentSourceCode = new URLSearchParams(window.location.search).get('source') || '';
-    const rank = (src) => {
+    const rank = (src: ResourceSource): number => {
         if (String(src.key) === String(currentSourceCode)) return -1;
         const status = resourceScan.status[src.key];
         if (status === 'done') {
@@ -921,15 +959,15 @@ function sortResourceSourcesByLatency() {
         const rankA = rank(a);
         const rankB = rank(b);
         if (rankA !== rankB) return rankA - rankB;
-        const speedA = (resourceScan.latency[a.key] || {}).speed;
-        const speedB = (resourceScan.latency[b.key] || {}).speed;
+        const speedA = (resourceScan.latency[a.key] || {} as Partial<SourceSpeedResult>).speed;
+        const speedB = (resourceScan.latency[b.key] || {} as Partial<SourceSpeedResult>).speed;
         const valueA = typeof speedA === 'number' && speedA >= 0 ? speedA : Number.MAX_SAFE_INTEGER;
         const valueB = typeof speedB === 'number' && speedB >= 0 ? speedB : Number.MAX_SAFE_INTEGER;
         return valueA - valueB;
     });
 }
 
-async function scanOneResourceSource(src) {
+async function scanOneResourceSource(src: ResourceSource): Promise<void> {
     try {
         const results = await searchByAPIAndKeyWord(src.key, currentVideoTitle);
         if (Array.isArray(results) && results.length > 0) {
@@ -943,7 +981,7 @@ async function scanOneResourceSource(src) {
             scheduleResourceGridRender();
             updateResourceSourceCount();
 
-            const speed = await testVideoSourceSpeed(src.key, hit.vod_id);
+            const speed = await testVideoSourceSpeed(src.key, String(hit.vod_id));
             resourceScan.latency[src.key] = speed;
             resourceScan.status[src.key] = (speed && speed.speed === -1) ? 'failed' : 'done';
         } else {
@@ -958,7 +996,7 @@ async function scanOneResourceSource(src) {
 }
 
 // 扫描是渐进式的，用 rAF 合并重绘，避免几十个源完成时反复重建整个列表
-function scheduleResourceGridRender() {
+function scheduleResourceGridRender(): void {
     if (resourceGridFrame) return;
     resourceGridFrame = requestAnimationFrame(() => {
         resourceGridFrame = null;
@@ -966,12 +1004,12 @@ function scheduleResourceGridRender() {
     });
 }
 
-function renderResourceLatency(sourceKey) {
+function renderResourceLatency(sourceKey: string): string {
     const status = resourceScan.status[sourceKey];
     if (status === 'empty') return '<span class="resource-source-latency">无结果</span>';
     if (status === 'testing') return '<span class="resource-source-latency">测速中</span>';
     if (status === 'done' || status === 'failed') {
-        const spd = resourceScan.latency[sourceKey] || {};
+        const spd: Partial<SourceSpeedResult> = resourceScan.latency[sourceKey] || {};
         if (spd.speed === -1) {
             return '<span class="resource-source-latency poor">' + escHtml(spd.error || '失败') + '</span>';
         }
@@ -988,7 +1026,7 @@ function renderResourceLatency(sourceKey) {
     return '<span class="resource-source-latency">未测</span>';
 }
 
-function renderResourceSourceGrid() {
+function renderResourceSourceGrid(): void {
     const grid = document.getElementById('resourceSourceGrid');
     if (!grid || !resourceScan.started) return;
     const currentSourceCode = new URLSearchParams(window.location.search).get('source') || '';
@@ -1034,15 +1072,15 @@ function renderResourceSourceGrid() {
 
 // 取续播位置：URL 的 position 参数优先，其次历史记录中同一部剧同一集的进度。
 // 用于起播前自动换线（此时 currentTime 还是 0，不能让它覆盖掉历史进度）。
-function getResumePosition(vodId) {
+function getResumePosition(vodId: string | null): number {
     const urlParams = new URLSearchParams(window.location.search);
     const urlPosition = parseInt(urlParams.get('position') || '0', 10);
     if (urlPosition > 1) return urlPosition;
 
     try {
-        const history = StorageService.getViewingHistory();
+        const history = StorageService.getViewingHistory() as ViewingHistoryItem[];
         const episodeIndex = typeof currentEpisodeIndex === 'number' ? currentEpisodeIndex : 0;
-        const sameEpisode = item => item.episodeIndex === undefined || item.episodeIndex === episodeIndex;
+        const sameEpisode = (item: ViewingHistoryItem) => item.episodeIndex === undefined || item.episodeIndex === episodeIndex;
         // 换线后 vod_id 会跟着新线路变，所以先按 id 精确匹配，匹配不到再按片名兜底
         const byId = vodId
             ? history.find(item => item.vod_id && String(item.vod_id) === String(vodId) && sameEpisode(item))
@@ -1060,7 +1098,7 @@ function getResumePosition(vodId) {
     return 0;
 }
 
-async function switchToResource(sourceKey, vodId) {
+async function switchToResource(sourceKey: string, vodId: string): Promise<void> {
     showLoading();
     try {
         // 保存当前播放进度
@@ -1073,10 +1111,10 @@ async function switchToResource(sourceKey, vodId) {
         if (!(currentPosition > 1)) {
             currentPosition = getResumePosition(vodId) || 0;
         }
-        
+
         // 构建API参数
         let apiParams = '';
-        
+
         // 处理自定义API源
         if (sourceKey.startsWith('custom_')) {
             const customIndex = sourceKey.replace('custom_', '');
@@ -1096,14 +1134,14 @@ async function switchToResource(sourceKey, vodId) {
             // 内置API
             apiParams = '&source=' + sourceKey;
         }
-        
+
         // Add a timestamp to prevent caching
         const timestamp = new Date().getTime();
         const cacheBuster = `&_t=${timestamp}`;
         const response = await fetch(`/api/detail?id=${encodeURIComponent(vodId)}${apiParams}${cacheBuster}`);
-        
-        const data = await response.json();
-        
+
+        const data = await response.json() as DetailData;
+
         if (!data.episodes || data.episodes.length === 0) {
             showToast('未找到播放资源', 'error');
             hideLoading();
@@ -1112,17 +1150,17 @@ async function switchToResource(sourceKey, vodId) {
 
         // 获取当前播放的集数索引
         const currentIndex = currentEpisodeIndex;
-        
+
         // 确定要播放的集数索引
         let targetIndex = 0;
         if (currentIndex < data.episodes.length) {
             // 如果当前集数在新资源中存在，则使用相同集数
             targetIndex = currentIndex;
         }
-        
+
         // 获取目标集数的URL
         const targetUrl = data.episodes[targetIndex];
-        
+
         // 保留当前页面的 back 参数，确保切换资源后返回仍能回到来源页（而非上一个源）
         const currentUrlParams2 = new URLSearchParams(window.location.search);
         const currentBack = currentUrlParams2.get('back');
@@ -1130,15 +1168,15 @@ async function switchToResource(sourceKey, vodId) {
 
         // 构建播放页面URL，包含当前播放进度
         const watchUrl = `player.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}${backSuffix}`;
-        
+
         // 保存当前状态到localStorage
         try {
-            localStorage.setItem('currentVideoTitle', data.vod_name || '未知视频');
+            localStorage.setItem('currentVideoTitle', String(data.vod_name || '未知视频'));
             localStorage.setItem('currentEpisodes', JSON.stringify(data.episodes));
-            localStorage.setItem('currentEpisodeIndex', targetIndex);
+            localStorage.setItem('currentEpisodeIndex', String(targetIndex));
             localStorage.setItem('currentSourceCode', sourceKey);
-            localStorage.setItem('lastPlayTime', Date.now());
-            
+            localStorage.setItem('lastPlayTime', String(Date.now()));
+
             // 保存视频详细信息，包括封面
             if (data.videoInfo) {
                 StorageService.setCurrentVideoInfo(data.videoInfo);
@@ -1149,27 +1187,27 @@ async function switchToResource(sourceKey, vodId) {
 
         // 更新历史记录中的源信息而不是创建新记录
         try {
-            const history = StorageService.getViewingHistory();
+            const history = StorageService.getViewingHistory() as ViewingHistoryItem[];
             if (history.length > 0) {
-                
+
                 // 查找当前视频的历史记录项（通过标题和集数索引）
                 const currentUrlParams = new URLSearchParams(window.location.search);
                 const currentVodId = currentUrlParams.get('id') || '';
-                
+
                 let idx = -1;
                 if (currentVodId) {
                     // 先尝试通过ID匹配
-                    idx = history.findIndex(item => item.vod_id === currentVodId);
+                    idx = history.findIndex(item => String(item.vod_id) === currentVodId);
                 }
-                
+
                 if (idx === -1) {
                     // 如果没有找到ID匹配，尝试通过标题和集数索引匹配
-                    idx = history.findIndex(item => 
-                        item.title === currentVideoTitle && 
+                    idx = history.findIndex(item =>
+                        item.title === currentVideoTitle &&
                         item.episodeIndex === currentEpisodeIndex
                     );
                 }
-                
+
                 if (idx !== -1) {
                     // 更新现有记录的源信息和位置
                     history[idx].sourceName = sourceKey;
@@ -1177,11 +1215,11 @@ async function switchToResource(sourceKey, vodId) {
                     if (currentPosition > 0) {
                         history[idx].playbackPosition = currentPosition;
                     }
-                    
+
                     // 移动到最近观看的位置
                     const updatedItem = history.splice(idx, 1)[0];
                     history.unshift(updatedItem);
-                    
+
                     StorageService.setViewingHistory(history);
                 }
             }
@@ -1191,7 +1229,7 @@ async function switchToResource(sourceKey, vodId) {
 
         // 跳转到播放页面（用 replace 不新增历史条目，保证返回按钮能直接回到来源页，配合 bfcache 秒回）
         window.location.replace(watchUrl);
-        
+
     } catch (error) {
         console.error('切换资源失败:', error);
         showToast('切换资源失败，请稍后重试', 'error');

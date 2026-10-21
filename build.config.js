@@ -73,7 +73,7 @@ export const BUNDLES = [
       'src/services/viewing-history.ts',
       'src/ui/player/manager.ts', 'src/ui/player/shortcuts.ts',
       'src/ui/player/core.ts', 'src/ui/player/episodes.ts',
-      'js/player/player-ui.js', 'src/ui/player/failover.ts', 'src/ui/player/lights.ts',
+      'src/ui/player/ui.ts', 'src/ui/player/failover.ts', 'src/ui/player/lights.ts',
       'src/ui/player/detail.ts', 'src/ui/player/quality.ts', 'src/ui/player/index.ts',
       'src/services/version-updater.ts', 'src/core/cache.ts',
     ],
