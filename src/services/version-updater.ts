@@ -1,17 +1,34 @@
+interface ChangelogEntry {
+  version: string;
+  date: string;
+  content: string;
+}
+
+interface VersionWindow extends Window {
+  __LELETV_VERSION__?: string;
+  INVITE_AUTH?: { isVerified?: () => boolean };
+  LELETV_DISCLAIMER?: { pending?: boolean; handled?: boolean };
+  checkLeLeTVUpdate?: () => void;
+}
+
+declare function parseChangelogMarkdown(md: string): ChangelogEntry[];
+
+const versionWindow = window as VersionWindow;
+
 const LAST_VERSION_KEY = 'leletv_last_version';
 const UPDATING_KEY = 'leletv_updating';
 
 var hasNewVersion = false;
-var latestChangelogVersion = null;
+var latestChangelogVersion: string | null = null;
 
-function formatDisplayVersion(rawVersion) {
+function formatDisplayVersion(rawVersion: string | null | undefined): string {
   if (!rawVersion || rawVersion === '0') return '';
   if (rawVersion.startsWith('{{')) return '';
   if (rawVersion.startsWith('v')) return rawVersion;
   return `v${rawVersion}`;
 }
 
-async function clearAllCaches() {
+async function clearAllCaches(): Promise<void> {
   if ('caches' in window) {
     try {
       const cacheNames = await caches.keys();
@@ -20,7 +37,7 @@ async function clearAllCaches() {
   }
 }
 
-async function unregisterServiceWorker() {
+async function unregisterServiceWorker(): Promise<void> {
   if ('serviceWorker' in navigator) {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
@@ -29,11 +46,11 @@ async function unregisterServiceWorker() {
   }
 }
 
-async function sendClearCacheMessage() {
+async function sendClearCacheMessage(): Promise<boolean> {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     return new Promise(resolve => {
       const timeout = setTimeout(() => resolve(false), 3000);
-      const handler = event => {
+      const handler = (event: MessageEvent) => {
         if (event.data && event.data.type === 'CACHES_CLEARED') {
           clearTimeout(timeout);
           navigator.serviceWorker.removeEventListener('message', handler);
@@ -47,7 +64,7 @@ async function sendClearCacheMessage() {
   return false;
 }
 
-async function performUpdate() {
+async function performUpdate(): Promise<void> {
   if (localStorage.getItem(UPDATING_KEY) === 'true') return;
   localStorage.setItem(UPDATING_KEY, 'true');
 
@@ -67,21 +84,21 @@ async function performUpdate() {
   }, 800);
 }
 
-function updateFooterBtn(text) {
+function updateFooterBtn(text: string): void {
   const btn = document.getElementById('checkUpdateBtn');
   if (!btn) return;
   btn.textContent = text;
   btn.classList.toggle('is-update', text === '立即更新');
 }
 
-function setStatusDot(color) {
+function setStatusDot(color: string): void {
   var dot = document.getElementById('statusDot');
   if (!dot) return;
   dot.className = 'v2-ver-dot is-' + color;
 }
 
 /** 从 VERSION.txt 获取最新版本号 */
-async function getChangelogVersion() {
+async function getChangelogVersion(): Promise<string | null> {
   try {
     var resp = await fetch('/VERSION.txt', { cache: 'no-store' });
     if (!resp.ok) return null;
@@ -95,7 +112,7 @@ async function getChangelogVersion() {
 }
 
 /** 核心：对比 VERSION.txt 版本与 localStorage 记录 */
-async function checkForUpdates() {
+async function checkForUpdates(): Promise<boolean> {
   var changelogVersion = await getChangelogVersion();
   if (!changelogVersion) {
     updateFooterBtn('检查失败');
@@ -127,7 +144,7 @@ async function checkForUpdates() {
   return false;
 }
 
-function initFooterBtn() {
+function initFooterBtn(): void {
   var displayEl = document.getElementById('footerVersionDisplay');
   if (!displayEl) return;
 
@@ -138,7 +155,7 @@ function initFooterBtn() {
   if (storedVersion) {
     versionSpan.textContent = storedVersion;
   } else {
-    var versionText = formatDisplayVersion(window.__LELETV_VERSION__);
+    var versionText = formatDisplayVersion(versionWindow.__LELETV_VERSION__);
     if (versionText) {
       versionSpan.textContent = versionText;
     }
@@ -171,7 +188,7 @@ function initFooterBtn() {
   checkForUpdates();
 }
 
-function setupSwUpdateListener() {
+function setupSwUpdateListener(): void {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.addEventListener('message', function(event) {
       if (event.data && event.data.type === 'SW_UPDATED' && !hasNewVersion) {
@@ -183,7 +200,7 @@ function setupSwUpdateListener() {
   }
 }
 
-window.checkLeLeTVUpdate = function() {
+versionWindow.checkLeLeTVUpdate = function() {
   updateFooterBtn('检测中');
   checkForUpdates().then(function(found) {
     if (found) performUpdate();
@@ -200,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
 var _updateModalBound = false;
 
 /** 拉取并解析 CHANGELOG.md（复用 app-routing.js 的解析器，同一 bundle 内） */
-async function fetchChangelogEntries() {
+async function fetchChangelogEntries(): Promise<ChangelogEntry[]> {
   try {
     var resp = await fetch('/CHANGELOG.md', { cache: 'no-store' });
     if (!resp.ok) return [];
@@ -217,7 +234,7 @@ async function fetchChangelogEntries() {
  * 因此返回的列表天然是新版本在第一个。
  * 边界取上次进站记录的版本号，命中的那条本身不列出（其内容用户已见过）。
  */
-function pickNewEntries(entries, lastVersion) {
+function pickNewEntries(entries: ChangelogEntry[], lastVersion: string | null): ChangelogEntry[] {
   if (!entries || !entries.length) return [];
 
   if (lastVersion) {
@@ -242,7 +259,7 @@ function pickNewEntries(entries, lastVersion) {
 }
 
 /** 渲染新版本日志（卡片内的版本条目） */
-function renderUpdateLog(entries) {
+function renderUpdateLog(entries: ChangelogEntry[]): string {
   var html = '';
   entries.forEach(function (e) {
     html += '<div class="update-log-entry">';
@@ -254,13 +271,13 @@ function renderUpdateLog(entries) {
 }
 
 /** 绑定「立即更新」按钮（只绑一次）；有更新时必须点更新进入网站，遮罩不提供关闭 */
-function bindUpdateModal() {
+function bindUpdateModal(): void {
   if (_updateModalBound) return;
   var modal = document.getElementById('updateModal');
   if (!modal) return;
   _updateModalBound = true;
 
-  var btn = document.getElementById('updateModalBtn');
+  var btn = document.getElementById('updateModalBtn') as HTMLButtonElement | null;
   if (btn) {
     btn.addEventListener('click', function () {
       btn.disabled = true;
@@ -279,7 +296,7 @@ var BOOT_SPLASH_FADE_MS = 340;
  * FADE_MS 与 CSS 过渡同为 320ms），事件在移除竞态中经常丢失，只能退到 6s 兜底才弹窗。
  * 改为观察 DOM 状态判断退场，滞后可控（淡出开始 → 等淡出结束）。
  */
-function whenBootSplashGone(cb) {
+function whenBootSplashGone(cb: () => void): void {
   var fired = false;
   var fire = function () {
     if (fired) return;
@@ -309,26 +326,26 @@ function whenBootSplashGone(cb) {
 }
 
 /** 邀请码验证通过之前一直挂起；已登录（localStorage 有 auth）则立即回调 */
-function whenAuthed(cb) {
-  if (window.INVITE_AUTH && typeof window.INVITE_AUTH.isVerified === 'function' && window.INVITE_AUTH.isVerified()) {
+function whenAuthed(cb: () => void): void {
+  if (versionWindow.INVITE_AUTH && typeof versionWindow.INVITE_AUTH.isVerified === 'function' && versionWindow.INVITE_AUTH.isVerified()) {
     cb();
     return;
   }
 
   var onAuthed = function () {
-    document.removeEventListener('inviteVerified', onAuthed);
-    document.removeEventListener('passwordVerified', onAuthed);
+    document.removeEventListener('inviteVerified' as keyof DocumentEventMap, onAuthed);
+    document.removeEventListener('passwordVerified' as keyof DocumentEventMap, onAuthed);
     cb();
   };
-  document.addEventListener('inviteVerified', onAuthed);
-  document.addEventListener('passwordVerified', onAuthed);
+  document.addEventListener('inviteVerified' as keyof DocumentEventMap, onAuthed);
+  document.addEventListener('passwordVerified' as keyof DocumentEventMap, onAuthed);
 }
 
 /**
  * 进入网站的最早时刻：邀请码验证通过 + 启动占位（#bootSplash）退场。
  * 邀请码登录优先于任何弹窗 —— 未登录时后续的隐私政策、更新弹窗都不会出现。
  */
-function whenEnteringSite(cb) {
+function whenEnteringSite(cb: () => void): void {
   whenAuthed(function () { whenBootSplashGone(cb); });
 }
 
@@ -336,26 +353,27 @@ function whenEnteringSite(cb) {
  * 更新弹窗的显示时机：进入网站（见 whenEnteringSite）之后，
  * 再等本次要确认的隐私政策点过「我已知晓」（等 disclaimerAccepted；无需确认则直接通过）
  */
-function whenHomeReady(cb) {
+function whenHomeReady(cb: () => void): void {
   var fired = false;
-  var disclaimerOk = !(window.LELETV_DISCLAIMER && window.LELETV_DISCLAIMER.pending && !window.LELETV_DISCLAIMER.handled);
+  var disclaimer = versionWindow.LELETV_DISCLAIMER;
+  var disclaimerOk = !(disclaimer && disclaimer.pending && !disclaimer.handled);
 
   var maybeFire = function () {
     if (fired || !disclaimerOk) return;
     fired = true;
-    document.removeEventListener('disclaimerAccepted', onDisclaimerAccepted);
+    document.removeEventListener('disclaimerAccepted' as keyof DocumentEventMap, onDisclaimerAccepted);
     cb();
   };
   var onDisclaimerAccepted = function () { disclaimerOk = true; maybeFire(); };
 
   if (!disclaimerOk) {
-    document.addEventListener('disclaimerAccepted', onDisclaimerAccepted);
+    document.addEventListener('disclaimerAccepted' as keyof DocumentEventMap, onDisclaimerAccepted);
   }
   whenEnteringSite(maybeFire);
 }
 
 /** 弹出更新弹窗：卡片先出现，新版本日志异步填充 */
-async function showUpdateModal(newVersion, oldVersion) {
+async function showUpdateModal(newVersion: string, oldVersion: string | null): Promise<void> {
   var modal = document.getElementById('updateModal');
   if (!modal) return; // 播放页等没有弹窗的环境直接跳过
 
@@ -384,7 +402,7 @@ async function showUpdateModal(newVersion, oldVersion) {
 }
 
 /** 进站检测：VERSION.txt 与本地记录不一致时弹窗（首次访问不打扰） */
-async function checkAndPromptUpdate() {
+async function checkAndPromptUpdate(): Promise<void> {
   if (!document.getElementById('updateModal')) return; // 无弹窗的环境（如播放页）不参与检测
 
   var latest = await getChangelogVersion();

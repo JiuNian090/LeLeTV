@@ -395,7 +395,7 @@
 | 321 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | verified | 全局函数名保持不变，渲染逻辑原样迁移 |
 | 322 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | verified | 公开函数名保持不变，历史分组与播放跳转逻辑原样迁移 |
 | 323 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | pending | — |
-| 324 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | pending | — |
+| 324 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | verified | 公开函数与 window 入口保持不变 |
 
 ## libs/
 
@@ -486,6 +486,7 @@
 | 389 | `src/services/search.ts` | 跨源聚合搜索与结果缓存（迁移自 `js/api/search.js`） | keep | — | — | — | done | 阶段 4 第 20 条迁移目标 |
 | 390 | `src/services/viewing-history.ts` | 观看历史读写与历史页渲染（迁移自 `js/ui/ui-viewing-history.js`） | keep | — | — | — | done | 阶段 4 第 21 条迁移目标 |
 | 391 | `src/services/theme.ts` | 主题配色、色盘与换色过渡（迁移自 `js/ui/theme-system.js`） | keep | — | — | — | done | 阶段 4 第 22 条迁移目标 |
+| 392 | `src/services/version-updater.ts` | 版本检测与更新提示（迁移自 `js/utils/version-updater.js`） | keep | — | — | — | done | 阶段 4 第 23 条迁移目标 |
 
 ## workers/（红区）
 
