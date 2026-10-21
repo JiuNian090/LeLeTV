@@ -17,7 +17,7 @@ export interface ApiSite {
 // 开启隐藏内容模式后，下列键的读写会自动带 hidden:: 前缀，与正常域完全隔离，
 // 两个域互不可见。其余键（设置项、播放器状态等）由两个域共用。
 export const HIDDEN_MODE_KEY = 'hiddenContentMode';
-const HIDDEN_KEY_PREFIX = 'hidden::';
+export const HIDDEN_KEY_PREFIX = 'hidden::';
 const SCOPED_STORAGE_KEYS = ['selectedAPIs', 'customAPIs', 'viewingHistory', 'videoSearchHistory'];
 
 /** 当前是否处于隐藏内容模式 */

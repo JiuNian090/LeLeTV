@@ -6,32 +6,37 @@
  *   只改「播放页链接」，直链记录（url 直接是 m3u8）保持原样。
  */
 
-import { scopedKey } from '../core/state';
+import { HIDDEN_KEY_PREFIX, scopedKey } from '../core/state';
 
 const LEGACY_PLAYER_URL = /(^|\/)player\.html(\?|$)/;
 const PLAYER_PAGE_PATH = 'src/pages/player/index.html';
 
-function migrateLegacyPlayerUrls(): void {
-    try {
-        const key = scopedKey('viewingHistory');
-        const raw = localStorage.getItem(key);
-        if (!raw) return;
+function migrateKey(key: string): void {
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
 
-        const list: unknown = JSON.parse(raw);
-        if (!Array.isArray(list)) return;
+    const list: unknown = JSON.parse(raw);
+    if (!Array.isArray(list)) return;
 
-        let changed = false;
-        list.forEach(entry => {
-            if (!entry || typeof entry !== 'object') return;
-            const item = entry as { url?: unknown };
-            if (typeof item.url !== 'string' || !LEGACY_PLAYER_URL.test(item.url)) return;
-            item.url = item.url.replace(LEGACY_PLAYER_URL, (_match, lead: string, tail: string) => {
-                return (lead || '') + PLAYER_PAGE_PATH + tail;
-            });
-            changed = true;
+    let changed = false;
+    list.forEach(entry => {
+        if (!entry || typeof entry !== 'object') return;
+        const item = entry as { url?: unknown };
+        if (typeof item.url !== 'string' || !LEGACY_PLAYER_URL.test(item.url)) return;
+        item.url = item.url.replace(LEGACY_PLAYER_URL, (_match, lead: string, tail: string) => {
+            return (lead || '') + PLAYER_PAGE_PATH + tail;
         });
+        changed = true;
+    });
 
-        if (changed) localStorage.setItem(key, JSON.stringify(list));
+    if (changed) localStorage.setItem(key, JSON.stringify(list));
+}
+
+export function migrateLegacyPlayerUrls(): void {
+    try {
+        // 正常域与私密域各自独立存储；scopedKey 只返回当前域，另一份要显式处理
+        const keys = new Set([scopedKey('viewingHistory'), HIDDEN_KEY_PREFIX + 'viewingHistory']);
+        keys.forEach(migrateKey);
     } catch (e) {
         /* 隐私模式 / 存储损坏：保持原样，忽略 */
     }
