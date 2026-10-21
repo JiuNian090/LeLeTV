@@ -8,8 +8,69 @@
  * 结果在 sessionStorage 里缓存半小时：从播放页返回时不重新请求。
  * 卡片沿用 home-shelves.js 的 posterCard：点击按片名去各片源检索。
  */
+
+interface TmdbRecentItem {
+  title?: string;
+  name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  origin_country?: string[];
+  original_language?: string;
+  genre_ids?: number[];
+  vote_count?: number;
+  vote_average?: number;
+  poster_path?: string;
+  [key: string]: unknown;
+}
+
+interface TmdbRecentResponse {
+  results?: TmdbRecentItem[];
+}
+
+interface NormalizedItem {
+  title: string;
+  year: string;
+  region: string;
+  genres: string[];
+  rating: string;
+  votes: string;
+  img: string;
+}
+
+interface RecentCachePayload {
+  at: number;
+  data?: Record<string, NormalizedItem[]>;
+}
+
+interface PosterCardOptions {
+  action: string;
+  data: Record<string, string>;
+  title: string;
+  label: string;
+  sub: string;
+  img: string;
+  rating: string;
+  votes: string;
+}
+
+interface HomeShelvesApi {
+  tmdbImage(path?: string): string;
+  posterCard(opts: PosterCardOptions): HTMLElement;
+  skeletons(n: number): DocumentFragment;
+}
+
+interface HomeRecentWindow extends Window {
+  HomeShelves?: HomeShelvesApi;
+  HomeRecent?: { ensure: () => Promise<void> | null };
+}
+
+type QueryParams = Record<string, string | number>;
+type QueryFactory = () => [string, QueryParams];
+
 (function () {
   'use strict';
+
+  const recentWindow = window as HomeRecentWindow;
 
   const LIMIT = 6;
   const CACHE_KEY = 'leletv_home_recent_v1';
@@ -17,22 +78,22 @@
   const TYPES = ['movie', 'tv', 'anime', 'variety'];
 
   // 剧集带 origin_country；电影只有 original_language，按语言给个大致地区
-  const REGION = {
+  const REGION: Record<string, string> = {
     CN: '大陆', HK: '香港', TW: '台湾', US: '美国', GB: '英国', JP: '日本', KR: '韩国', FR: '法国', DE: '德国',
     TH: '泰国', IN: '印度', ES: '西班牙', IT: '意大利', CA: '加拿大', AU: '澳大利亚', RU: '俄罗斯', BR: '巴西',
     MX: '墨西哥', SE: '瑞典', DK: '丹麦', NO: '挪威', NL: '荷兰', BE: '比利时', AT: '奥地利', PL: '波兰',
     TR: '土耳其', IE: '爱尔兰', NZ: '新西兰', AR: '阿根廷', SG: '新加坡', MY: '马来西亚', PH: '菲律宾',
     ID: '印尼', VN: '越南', CH: '瑞士', FI: '芬兰', PT: '葡萄牙', CO: '哥伦比亚', IL: '以色列', ZA: '南非'
   };
-  const LANG_REGION = {
+  const LANG_REGION: Record<string, string> = {
     zh: '华语', cn: '华语', en: '英语', ja: '日本', ko: '韩国', fr: '法国', de: '德国', es: '西班牙', it: '意大利',
     th: '泰国', hi: '印度', ru: '俄罗斯', pt: '葡语', sv: '瑞典', da: '丹麦', no: '挪威', nl: '荷兰', pl: '波兰',
     tr: '土耳其', id: '印尼', vi: '越南', tl: '菲律宾', ms: '马来', ar: '阿拉伯语', fa: '波斯语', he: '希伯来语'
   };
 
-  const day = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+  const day = (n: number): string => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 
-  const QUERIES = {
+  const QUERIES: Record<string, QueryFactory> = {
     movie: () => ['discover/movie', {
       sort_by: 'popularity.desc',
       with_release_type: '4|5',
@@ -63,21 +124,28 @@
     }]
   };
 
-  function isPrivateMode() {
+  function isPrivateMode(): boolean {
     return typeof isHiddenContentMode === 'function' && isHiddenContentMode();
   }
 
-  function fetchList(endpoint, params) {
-    const query = Object.assign({ language: 'zh-CN', page: 1 }, params);
-    if (typeof tmdbFetch === 'function') return tmdbFetch(endpoint, query);
+  /** URLSearchParams 会把所有值转成字符串，这里显式转换以匹配 tmdbFetch 的参数类型 */
+  function toQueryParams(params: QueryParams): Record<string, string> {
+    const out: Record<string, string> = {};
+    Object.keys(params).forEach(key => { out[key] = String(params[key]); });
+    return out;
+  }
+
+  function fetchList(endpoint: string, params: QueryParams): Promise<TmdbRecentResponse> {
+    const query: QueryParams = Object.assign({ language: 'zh-CN', page: 1 }, params);
+    if (typeof tmdbFetch === 'function') return tmdbFetch(endpoint, toQueryParams(query));
     query.endpoint = endpoint;
-    return fetch('/api/tmdb?' + new URLSearchParams(query).toString()).then(res => {
+    return fetch('/api/tmdb?' + new URLSearchParams(toQueryParams(query)).toString()).then(res => {
       if (!res.ok) throw new Error('TMDB ' + res.status);
       return res.json();
     });
   }
 
-  function genreNames(type, ids) {
+  function genreNames(type: string, ids: number[] | undefined): string[] {
     const map = typeof GENRE_MAP === 'object' && GENRE_MAP ? GENRE_MAP[type === 'movie' ? 'movie' : 'tv'] : null;
     if (!map || !Array.isArray(ids)) return [];
     return map.filter(g => ids.includes(g.id)).map(g => g.name)
@@ -86,7 +154,7 @@
       .slice(0, 2);
   }
 
-  function regionOf(item) {
+  function regionOf(item: TmdbRecentItem): string {
     const countries = Array.isArray(item.origin_country) ? item.origin_country : [];
     for (const code of countries) {
       if (REGION[code]) return REGION[code];
@@ -94,16 +162,16 @@
     return LANG_REGION[item.original_language] || '';
   }
 
-  function formatVotes(n) {
+  function formatVotes(n: number): string {
     if (!n) return '';
     if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + '万人评';
     return n + '人评';
   }
 
-  function normalize(type, item) {
+  function normalize(type: string, item: TmdbRecentItem): NormalizedItem {
     const title = String(item.title || item.name || '').trim();
     const date = String(item.release_date || item.first_air_date || '');
-    const shelves = window.HomeShelves;
+    const shelves = recentWindow.HomeShelves;
     return {
       title,
       year: date.slice(0, 4),
@@ -115,21 +183,21 @@
     };
   }
 
-  function readCache() {
+  function readCache(): Record<string, NormalizedItem[]> | null {
     try {
       const raw = sessionStorage.getItem(CACHE_KEY);
       if (!raw) return null;
-      const cached = JSON.parse(raw);
+      const cached: RecentCachePayload = JSON.parse(raw);
       if (!cached || Date.now() - cached.at > CACHE_TTL || !cached.data) return null;
       return cached.data;
     } catch (e) { return null; }
   }
 
-  function writeCache(data) {
+  function writeCache(data: Record<string, NormalizedItem[]>): void {
     try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data })); } catch (e) { /* 忽略 */ }
   }
 
-  function loadType(type) {
+  function loadType(type: string): Promise<NormalizedItem[]> {
     const [endpoint, params] = QUERIES[type]();
     return fetchList(endpoint, params)
       .then(data => (data && Array.isArray(data.results) ? data.results : [])
@@ -142,9 +210,9 @@
       });
   }
 
-  function renderRow(row, items) {
+  function renderRow(row: HTMLElement, items: NormalizedItem[]): boolean {
     const grid = row.querySelector('[data-recent-list]');
-    const shelves = window.HomeShelves;
+    const shelves = recentWindow.HomeShelves;
     if (!grid || !shelves || !items.length) { row.hidden = true; return false; }
     const frag = document.createDocumentFragment();
     items.forEach(item => {
@@ -167,9 +235,9 @@
   }
 
   let started = false;
-  let readyPromise = null;
+  let readyPromise: Promise<void> | null = null;
 
-  function shelvesEnabled() {
+  function shelvesEnabled(): boolean {
     return document.documentElement.getAttribute('data-home-shelves') !== 'off';   // 设置 › 首页与导航 关掉了内容板块
   }
 
@@ -177,19 +245,19 @@
    * 首次进入首页时加载「最近更新」。
    * 由 js/app/boot-sequence.js 在鉴权通过后调用；返回的 Promise 在四条内容行渲染完成后 resolve。
    */
-  function init() {
+  function init(): Promise<void> | null {
     if (started) return readyPromise;
     const section = document.getElementById('homeRecent');
     if (!section || isPrivateMode() || !shelvesEnabled()) return Promise.resolve();   // 私密模式/板块关闭时不发请求
     started = true;
     readyPromise = Promise.resolve();
-    const rows = {};
+    const rows: Record<string, HTMLElement> = {};
     TYPES.forEach(type => {
-      const row = section.querySelector('[data-recent="' + type + '"]');
+      const row = section.querySelector('[data-recent="' + type + '"]') as HTMLElement | null;
       if (!row) return;
       rows[type] = row;
       const grid = row.querySelector('[data-recent-list]');
-      if (grid && window.HomeShelves) grid.replaceChildren(window.HomeShelves.skeletons(LIMIT));
+      if (grid && recentWindow.HomeShelves) grid.replaceChildren(recentWindow.HomeShelves.skeletons(LIMIT));
       row.hidden = false;
     });
     section.hidden = false;
@@ -200,7 +268,7 @@
       : loadType(type));
 
     readyPromise = Promise.all(pending).then(lists => {
-      const data = {};
+      const data: Record<string, NormalizedItem[]> = {};
       let shown = 0;
       TYPES.forEach((type, i) => {
         data[type] = lists[i];
@@ -222,5 +290,5 @@
   // 设置里刚把内容板块打开：这时再拉数据
   window.addEventListener('leletv:layoutchange', init);
 
-  window.HomeRecent = { ensure: init };
+  recentWindow.HomeRecent = { ensure: init };
 })();

@@ -381,7 +381,7 @@
 | 307 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | verified | 全局播放状态与入口函数保持不变 |
 | 308 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | verified | IIFE 原样迁移，LeLeBrandCanvas.draw 接口不变 |
 | 309 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | verified | 光效行为不变 |
-| 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
+| 310 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | verified | `window.HomeRecent` 接口不变 |
 | 311 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
 | 312 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | verified | IIFE 原样迁移，LeLeLayout 接口不变 |
 | 313 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | verified | IIFE 原样迁移，window.LeLeLineProbe 接口不变 |
@@ -512,6 +512,7 @@
 | 415 | `src/pages/home/hero-glass.ts` | 首页主视觉光效（迁移自 `js/ui/hero-glass.js`） | keep | — | — | — | done | 阶段 4 第 46 条迁移目标 |
 | 416 | `src/pages/home/hub-flow.ts` | 首页聚合动效（迁移自 `js/effects/hub-flow.js`） | keep | — | — | — | done | 阶段 4 第 47 条迁移目标 |
 | 417 | `src/pages/home/nav-search.ts` | 导航栏迷你搜索（迁移自 `js/ui/nav-search.js`） | keep | — | — | — | done | 阶段 4 第 48 条迁移目标 |
+| 418 | `src/pages/home/recent.ts` | 首页最近更新货架（迁移自 `js/ui/home-recent.js`） | keep | — | — | — | done | 阶段 4 第 49 条迁移目标 |
 
 ## workers/（红区）
 
