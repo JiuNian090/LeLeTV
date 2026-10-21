@@ -14,16 +14,16 @@ type LeLeWindow = Window & {
 };
 
 // 全局常量配置
-const PROXY_URL = '/proxy/';    // 适用于 Cloudflare, Netlify (带重写), Vercel (带重写)
-const SEARCH_HISTORY_KEY = 'videoSearchHistory';
-const MAX_HISTORY_ITEMS = 5;
+export const PROXY_URL = '/proxy/';    // 适用于 Cloudflare, Netlify (带重写), Vercel (带重写)
+export const SEARCH_HISTORY_KEY = 'videoSearchHistory';
+export const MAX_HISTORY_ITEMS = 5;
 
 // 隐藏内容模式相关常量 / isHiddenContentMode / scopedKey 已迁至 src/core/state.ts
 
 // TMDB Worker URL
 // 部署 Cloudflare Worker (workers/tmdb-worker.js) 后填入自定义域名
 // 留空则使用本地 Node.js 代理 /api/tmdb
-const TMDB_WORKER_URL = (window as LeLeWindow).__ENV__?.TMDB_WORKER_URL || '';
+export const TMDB_WORKER_URL = (window as LeLeWindow).__ENV__?.TMDB_WORKER_URL || '';
 
 // SHA-256 兼容性检查（用于 invite-auth 管理员 token 计算）
 (window as LeLeWindow)._sha256Available = typeof window.crypto?.subtle?.digest === 'function' || typeof (window as Window & { _jsSha256?: unknown })._jsSha256 === 'function';
@@ -45,7 +45,7 @@ const SITE_CONFIG = {
 
 
 // 添加聚合搜索的配置选项
-const AGGREGATED_SEARCH_CONFIG = {
+export const AGGREGATED_SEARCH_CONFIG = {
     enabled: true,             // 是否启用聚合搜索
     timeout: 8000,            // 单个源超时时间（毫秒）
     maxResults: 10000,          // 最大结果数量
@@ -54,15 +54,15 @@ const AGGREGATED_SEARCH_CONFIG = {
 };
 
 // 源延迟分级阈值（搜索结果页的延迟标注 与 播放页换源测速 共用同一套配色规则）
-const SOURCE_LATENCY_FAST_MS = 1000;   // < 1s  → 快（绿）
-const SOURCE_LATENCY_SLOW_MS = 2000;   // ≥ 2s  → 慢（红）；两者之间为 中（黄）
+export const SOURCE_LATENCY_FAST_MS = 1000;   // < 1s  → 快（绿）
+export const SOURCE_LATENCY_SLOW_MS = 2000;   // ≥ 2s  → 慢（红）；两者之间为 中（黄）
 
 // 搜索结果提前退出：到达 CUTOFF_MS 时若已有 >= MIN_SOURCES 个源返回，就不再等待剩余源
-const SEARCH_EARLY_EXIT_CUTOFF_MS = 3000;
-const SEARCH_EARLY_EXIT_MIN_SOURCES = 3;
+export const SEARCH_EARLY_EXIT_CUTOFF_MS = 3000;
+export const SEARCH_EARLY_EXIT_MIN_SOURCES = 3;
 
 // 抽象API请求配置
-const API_CONFIG = {
+export const API_CONFIG = {
     search: {
         // 只拼接参数部分，不再包含 /api.php/provide/vod/
         path: '?ac=videolist&wd=',
@@ -84,13 +84,13 @@ const API_CONFIG = {
 };
 
 // 优化后的正则表达式模式
-const M3U8_PATTERN = /\$https?:\/\/[^"'\s]+?\.m3u8/g;
+export const M3U8_PATTERN = /\$https?:\/\/[^"'\s]+?\.m3u8/g;
 
 // 添加自定义播放器URL
 const CUSTOM_PLAYER_URL = 'src/pages/player/index.html'; // 使用相对路径引用本地src/pages/player/index.html
 
 // 增加视频播放相关配置
-const PLAYER_CONFIG = {
+export const PLAYER_CONFIG = {
     autoplay: true,
     allowFullscreen: true,
     width: '100%',
@@ -120,7 +120,7 @@ const SECURITY_CONFIG = {
 };
 
 // 缓存管理配置
-const CACHE_CONFIG = {
+export const CACHE_CONFIG = {
     // 缓存清理间隔（毫秒）- 24小时
     cleanupInterval: 24 * 60 * 60 * 1000,
     // 允许保留的用户设置和历史记录键名
@@ -162,7 +162,7 @@ const CACHE_CONFIG = {
 };
 
 // 添加多个自定义API源的配置
-const CUSTOM_API_CONFIG = {
+export const CUSTOM_API_CONFIG = {
     separator: ',',           // 分隔符
     maxSources: 5,            // 最大允许的自定义源数量
     testTimeout: 5000,        // 测试超时时间(毫秒)
@@ -177,7 +177,7 @@ const CUSTOM_API_CONFIG = {
 const HIDE_BUILTIN_HIDDEN_APIS = false;
 
 // 负载均衡器配置
-const LOAD_BALANCER_CONFIG = {
+export const LOAD_BALANCER_CONFIG = {
     enabled: true,                    // 是否启用负载均衡
     responseTimeThreshold: 10000,     // 响应时间阈值（10秒）
     failureThreshold: 0.3,           // 失败率阈值（30%）
@@ -208,7 +208,7 @@ function isHiddenThemeMode(): boolean {
 }
 
 /** 当前主题主色：优先取 CSS 变量的真实值，取不到时按模式回退到常量 */
-function themeColor(): string {
+export function themeColor(): string {
     try {
         var v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
         if (v) return v;

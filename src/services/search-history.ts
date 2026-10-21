@@ -1,9 +1,11 @@
+import { scopedKey, SEARCH_HISTORY_KEY, MAX_HISTORY_ITEMS } from '../core/config';
+
 interface SearchHistoryEntry {
     text: string;
     timestamp: number;
 }
 
-function getSearchHistory(): SearchHistoryEntry[] {
+export function getSearchHistory(): SearchHistoryEntry[] {
     try {
         const data = localStorage.getItem(scopedKey(SEARCH_HISTORY_KEY));
         if (!data) return [];
@@ -26,7 +28,7 @@ function getSearchHistory(): SearchHistoryEntry[] {
     }
 }
 
-function saveSearchHistory(query: string): void {
+export function saveSearchHistory(query: string): void {
     if (!query || !query.trim()) return;
 
     // 清理输入，防止XSS
@@ -146,7 +148,7 @@ function renderSearchHistory(): void {
     _renderHistoryInto(dropdown, getSearchHistory(), 'history-item-', '');
 }
 
-function showSearchHistory(filterText: string): void {
+export function showSearchHistory(filterText: string): void {
     const dropdown = document.getElementById('searchHistoryDropdown');
     if (!dropdown) return;
 
@@ -187,7 +189,7 @@ function _positionDropdown(dropdown: HTMLElement): void {
 
 // 滚动/缩放会高频触发，用 rAF 合并成每帧一次定位
 var _repositionFrame: number | null = null;
-function repositionSearchHistory(): void {
+export function repositionSearchHistory(): void {
     var dropdown = document.getElementById('searchHistoryDropdown');
     if (!dropdown || dropdown.classList.contains('hidden')) return;
     if (_repositionFrame) return;
@@ -198,7 +200,7 @@ function repositionSearchHistory(): void {
     });
 }
 
-function hideSearchHistory(): void {
+export function hideSearchHistory(): void {
     const dropdown = document.getElementById('searchHistoryDropdown');
     if (dropdown) {
         dropdown.classList.add('hidden');
@@ -244,7 +246,7 @@ function _applyActiveHistoryItem(items: HTMLElement[], index: number): void {
 }
 
 // 返回 true 表示按键已被下拉消费
-function navigateSearchHistory(delta: number): boolean {
+export function navigateSearchHistory(delta: number): boolean {
     const items = _visibleHistoryItems();
     if (items.length === 0) return false;
     const next = Math.max(0, Math.min(items.length - 1, _historyActiveIndex + delta));
@@ -257,14 +259,14 @@ function navigateSearchHistory(delta: number): boolean {
 }
 
 // 当前高亮的搜索词（没有高亮时返回 null，调用方回退到输入框内容）
-function getActiveHistoryQuery(): string | null {
+export function getActiveHistoryQuery(): string | null {
     const items = _visibleHistoryItems();
     if (_historyActiveIndex < 0 || !items[_historyActiveIndex]) return null;
     return items[_historyActiveIndex].dataset.query || null;
 }
 
 // 清掉高亮（用于手动输入后），但不动 aria-expanded —— 下拉可能仍然打开
-function clearHistoryNavHighlight(): void {
+export function clearHistoryNavHighlight(): void {
     _historyActiveIndex = -1;
     const input = document.getElementById('searchInput');
     if (input) input.removeAttribute('aria-activedescendant');
@@ -282,7 +284,7 @@ function resetSearchHistoryNav(): void {
     _syncSearchInputAria(false);
 }
 
-function renderMobileSearchHistory(filterText: string): void {
+export function renderMobileSearchHistory(filterText: string): void {
     const container = document.getElementById('mobileSearchHistoryList');
     if (!container) return;
 
@@ -312,7 +314,7 @@ function _removeSearchBarFlush(): void {
     if (searchBar) searchBar.classList.remove('search-bar-flush');
 }
 
-function deleteSingleSearchHistory(query: string): void {
+export function deleteSingleSearchHistory(query: string): void {
     // 当url中包含删除的关键词时，页面刷新后会自动加入历史记录，导致误认为删除功能有bug。此问题无需修复，功能无实际影响。
     try {
         let history = getSearchHistory();
@@ -325,7 +327,7 @@ function deleteSingleSearchHistory(query: string): void {
     }
 }
 
-function clearSearchHistory(): void {
+export function clearSearchHistory(): void {
     try {
         localStorage.removeItem(scopedKey(SEARCH_HISTORY_KEY));
         hideSearchHistory();
@@ -351,3 +353,19 @@ Object.assign(window, {
   deleteSingleSearchHistory,
   clearSearchHistory
 });
+
+// 阶段 5B-3 过渡期类型桥：search-history.ts 已成为 ESM 模块，尚未改为 import 的
+// 调用方仍以裸名访问。
+declare global {
+  function getSearchHistory(): unknown[];
+  function saveSearchHistory(query: string): void;
+  function showSearchHistory(filterText: string): void;
+  function repositionSearchHistory(): void;
+  function hideSearchHistory(): void;
+  function navigateSearchHistory(delta: number): boolean;
+  function getActiveHistoryQuery(): string | null;
+  function clearHistoryNavHighlight(): void;
+  function renderMobileSearchHistory(filterText: string): void;
+  function deleteSingleSearchHistory(query: string): void;
+  function clearSearchHistory(): void;
+}
