@@ -34,6 +34,7 @@ export default {
     'wrangler.toml',
     'package.json',
     'nodemon.json',
+    'tsconfig.json',
     'manifest.json',
     '_headers',
     '_routes.json',
