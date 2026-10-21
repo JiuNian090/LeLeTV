@@ -34,7 +34,7 @@
     "check": "node scripts/check-deps.js && node scripts/check-budget.js && node scripts/check-agents.js && node scripts/check-coverage.js && tsc --noEmit",
     "check:orphans": "node scripts/check-orphans.js",
     "setup:hooks": "node scripts/setup-hooks.mjs",
-    "test": "echo 'Running tests...'",
+    "test": "node scripts/run-tests.mjs",
     "lint": "echo 'Linting code...'",
     "format": "echo 'Formatting code...'"
   },
