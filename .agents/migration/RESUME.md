@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`837b7c9 refactor: 阶段 5B-3n tmdb 改 import core/config`
+> 最新提交：`e1ab73f refactor: 阶段 5B-3s player index/quality 改 import 各模块`
 
 ---
 
@@ -26,7 +26,7 @@
 | 5A-7 | **已达成**：5 个 bundle 全部走 esbuild.build；concat 分支暂留作回退 |
 | 5B-1 | **完成（3 个 commit）**：新增 `src/core/state.ts`，收敛 `API_SITES` / 数据域函数 / `selectedAPIs` / `customAPIs` / 搜索状态；旧位置保留 re-export 与 window getter/setter 代理。首屏 238.3 KB |
 | 5B-2 | **完成（6 个 commit）**：新增 `ui/player/state.ts`（15 个状态 + 选集 hook）、`session.ts`、`utils.ts`、`navigation.ts`；`core.ts` 改为 import state 并用 `advanceEpisode()` 断开 core→episodes；播放页起播/选集/自动连播/关灯/返回回归通过。player 94.4 KB |
-| 5B-3 | **进行中（core + services 已完成，ui/pages/router 待做）**：core/config、crypto、timing、http、storage、global、listener-tracker 与 services/search-history、invitation、balancer、api、search、config、viewing-history、remote、port、tmdb 均已显式 import。首屏 244.4 KB（跨 bundle 重复打包，5B-4 splitting 后消除） |
+| 5B-3 | **进行中（core + services + player 已完成）**：core/config、crypto、timing、http、storage、global、listener-tracker；services/search-history、invitation、balancer、api、search、config、viewing-history、remote、port、tmdb；ui/player 的 toast、state、session、utils、navigation、manager、episodes、shortcuts、detail、ui、index、quality 均已显式 import。剩余 ui 其他模块（layout-pref / motion-pref / nav-scroll / brand-canvas / pwa-install / invite-login / index / modals）与 pages / router / main。首屏 244.4 KB |
 
 ---
 
@@ -122,9 +122,9 @@
 
 阶段 5A 已完成：5 个 bundle 全部走 esbuild.build，首屏 238.4 KB。
 阶段 5B-2 已完成：`ui/player/state.ts` 等叶子模块落地，core 用 hook 断开 episodes。
-阶段 5B-3 进行中：core 与 services 层已完成显式 import；剩余 ui / pages / router。
-下一步：继续 5B-3 的 ui（player 各模块、toast、layout）→ pages → router/main，然后 5B-4（splitting）/ 5B-5（清理）。
-新会话开场：读本文件与 `PHASE-5-PLAN.md` / `PHASE-5-GRAPH.md` → 从 5B-3 的 ui 层继续 → `npm start` 启动一次服务器。
+阶段 5B-3 进行中：core、services、ui/player 已完成显式 import；剩余 ui 其他模块、pages、router/main。
+下一步：继续 5B-3 的 ui（layout-pref / motion-pref / nav-scroll / brand-canvas / pwa-install / invite-login / index / modals）→ pages（home/search/category/settings）→ router/page-loader/router/index/prefetch → main/boot，然后 5B-4（splitting）/ 5B-5（清理）。
+新会话开场：读本文件与 `PHASE-5-PLAN.md` / `PHASE-5-GRAPH.md` → 从 5B-3 的 ui 剩余模块继续 → `npm start` 启动一次服务器。
 
 ---
 
@@ -149,7 +149,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **244.4 KB**（预算 275 KB）；core **47.6 KB**；app **196.9 KB**；category **24.0 KB**；settings **40.5 KB**；player **101.2 KB**；`js/` 剩余 `.js` **0**；tracked 378 / inventory 447。
+基线：首屏 core+app **244.4 KB**（预算 275 KB）；core **47.6 KB**；app **196.9 KB**；category **24.0 KB**；settings **40.5 KB**；player **107.1 KB**；`js/` 剩余 `.js` **0**；tracked 378 / inventory 447。
 
 ---
 
