@@ -94,23 +94,23 @@
 | 66 | styles | `css/v2/base.css` | `src/styles/base.css` | verified | 第 4 节 主题 | 2026-10-21 迁移完成；HTML link、CRITICAL_STYLES 已同步 |
 | 67 | styles | `css/v2/tokens.css` | `src/styles/variables.css` | verified | 第 4 节 主题 | 2026-10-21 迁移完成；HTML link、CRITICAL_STYLES 已同步 |
 | 68 | styles | `css/v2/views.css` | `src/styles/views.css` | verified | 第 4 节 主题 | 2026-10-21 迁移完成；page-loader STYLES 已同步 |
-| 69 | public | `libs/geist/Geist-Bold.woff2` | `public/fonts/Geist-Bold.woff2` | pending | 第 3 节 PWA / 资源 | — |
-| 70 | public | `libs/geist/Geist-Medium.woff2` | `public/fonts/Geist-Medium.woff2` | pending | 第 3 节 PWA / 资源 | — |
-| 71 | public | `libs/geist/Geist-Regular.woff2` | `public/fonts/Geist-Regular.woff2` | pending | 第 3 节 PWA / 资源 | — |
-| 72 | public | `libs/geist/Geist-SemiBold.woff2` | `public/fonts/Geist-SemiBold.woff2` | pending | 第 3 节 PWA / 资源 | — |
-| 73 | public | `image/brand/apple-touch-icon-180.png` | `public/icons/apple-touch-icon-180.png` | pending | 第 3 节 PWA / 资源 | — |
-| 74 | public | `image/brand/favicon-32.png` | `public/icons/favicon-32.png` | pending | 第 3 节 PWA / 资源 | — |
-| 75 | public | `image/brand/leletv-app-icon-maskable.svg` | `public/icons/leletv-app-icon-maskable.svg` | pending | 第 3 节 PWA / 资源 | — |
-| 76 | public | `image/brand/leletv-app-icon.svg` | `public/icons/leletv-app-icon.svg` | pending | 第 3 节 PWA / 资源 | — |
-| 77 | public | `image/brand/leletv-favicon.svg` | `public/icons/leletv-favicon.svg` | pending | 第 3 节 PWA / 资源 | — |
-| 78 | public | `image/brand/leletv-icon-192.png` | `public/icons/leletv-icon-192.png` | pending | 第 3 节 PWA / 资源 | — |
-| 79 | public | `image/brand/leletv-icon-512.png` | `public/icons/leletv-icon-512.png` | pending | 第 3 节 PWA / 资源 | — |
-| 80 | public | `image/brand/leletv-icon-maskable-192.png` | `public/icons/leletv-icon-maskable-192.png` | pending | 第 3 节 PWA / 资源 | — |
-| 81 | public | `image/brand/leletv-icon-maskable-512.png` | `public/icons/leletv-icon-maskable-512.png` | pending | 第 3 节 PWA / 资源 | — |
-| 82 | public | `image/brand/leletv-mark-currentcolor.svg` | `public/icons/leletv-mark-currentcolor.svg` | pending | 第 3 节 PWA / 资源 | — |
-| 83 | public | `image/logo-black.png` | `public/images/logo-black.png` | pending | 第 3 节 PWA / 资源 | — |
-| 84 | public | `image/logo.png` | `public/images/logo.png` | pending | 第 3 节 PWA / 资源 | — |
-| 85 | public | `manifest.json` | `public/manifest.json` | pending | 第 3 节 PWA / 资源 | — |
+| 69 | public | `libs/geist/Geist-Bold.woff2` | `public/fonts/Geist-Bold.woff2` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 70 | public | `libs/geist/Geist-Medium.woff2` | `public/fonts/Geist-Medium.woff2` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 71 | public | `libs/geist/Geist-Regular.woff2` | `public/fonts/Geist-Regular.woff2` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 72 | public | `libs/geist/Geist-SemiBold.woff2` | `public/fonts/Geist-SemiBold.woff2` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 73 | public | `image/brand/apple-touch-icon-180.png` | `public/icons/apple-touch-icon-180.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 74 | public | `image/brand/favicon-32.png` | `public/icons/favicon-32.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 75 | public | `image/brand/leletv-app-icon-maskable.svg` | `public/icons/leletv-app-icon-maskable.svg` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 76 | public | `image/brand/leletv-app-icon.svg` | `public/icons/leletv-app-icon.svg` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 77 | public | `image/brand/leletv-favicon.svg` | `public/icons/leletv-favicon.svg` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 78 | public | `image/brand/leletv-icon-192.png` | `public/icons/leletv-icon-192.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 79 | public | `image/brand/leletv-icon-512.png` | `public/icons/leletv-icon-512.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 80 | public | `image/brand/leletv-icon-maskable-192.png` | `public/icons/leletv-icon-maskable-192.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 81 | public | `image/brand/leletv-icon-maskable-512.png` | `public/icons/leletv-icon-maskable-512.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 82 | public | `image/brand/leletv-mark-currentcolor.svg` | `public/icons/leletv-mark-currentcolor.svg` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 83 | public | `image/logo-black.png` | `public/images/logo-black.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 84 | public | `image/logo.png` | `public/images/logo.png` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 85 | public | `manifest.json` | `public/manifest.json` | keep | 第 3 节 PWA / 资源 | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 
 ## 状态流转
 

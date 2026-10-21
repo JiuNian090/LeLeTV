@@ -43,7 +43,7 @@
 | 10 | `_routes.json` | Cloudflare Pages Functions 路由配置（红区） | keep | — | — | — | done | — |
 | 11 | `build.config.js` | 构建配置 / bundle 清单单一来源（阶段 3 新增） | keep | — | — | — | done | — |
 | 12 | `index.html` | 应用壳 + 首页骨架 + 启动动画（Cloudflare Pages 入口） | migrated | `src/index.html` | — | — | verified | 第 64 条：源已迁入 `src/index.html`，根文件由 `build-bundles.mjs` 装配生成，不再手工编辑 |
-| 13 | `manifest.json` | PWA 清单 | migrated | `public/manifest.json` | — | — | pending | — |
+| 13 | `manifest.json` | PWA 清单 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 | 14 | `nodemon.json` | nodemon 开发配置 | keep | — | — | — | done | — |
 | 15 | `package.json` | 依赖与 scripts | keep | — | — | — | done | — |
 | 16 | `player.html` | 独立播放页文档入口 | migrated | `src/pages/player/index.html` | — | — | verified | 页面内资源引用改为绝对路径；构建 / 版本 / server 路由已同步 |
@@ -320,21 +320,21 @@
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 254 | `image/brand/apple-touch-icon-180.png` | Apple 主屏图标 | migrated | `public/icons/apple-touch-icon-180.png` | — | — | pending | — |
-| 255 | `image/brand/favicon-32.png` | 站点 favicon | migrated | `public/icons/favicon-32.png` | — | — | pending | — |
-| 256 | `image/brand/leletv-app-icon-maskable.svg` | PWA maskable 图标母版 | migrated | `public/icons/leletv-app-icon-maskable.svg` | — | — | pending | — |
-| 257 | `image/brand/leletv-app-icon.svg` | PWA 图标母版 | migrated | `public/icons/leletv-app-icon.svg` | — | — | pending | — |
-| 258 | `image/brand/leletv-favicon.svg` | 矢量 favicon | migrated | `public/icons/leletv-favicon.svg` | — | — | pending | — |
-| 259 | `image/brand/leletv-icon-192.png` | PWA 图标 192 | migrated | `public/icons/leletv-icon-192.png` | — | — | pending | — |
-| 260 | `image/brand/leletv-icon-512.png` | PWA 图标 512 | migrated | `public/icons/leletv-icon-512.png` | — | — | pending | — |
-| 261 | `image/brand/leletv-icon-maskable-192.png` | PWA maskable 图标 192 | migrated | `public/icons/leletv-icon-maskable-192.png` | — | — | pending | — |
-| 262 | `image/brand/leletv-icon-maskable-512.png` | PWA maskable 图标 512 | migrated | `public/icons/leletv-icon-maskable-512.png` | — | — | pending | — |
+| 254 | `image/brand/apple-touch-icon-180.png` | Apple 主屏图标 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 255 | `image/brand/favicon-32.png` | 站点 favicon | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 256 | `image/brand/leletv-app-icon-maskable.svg` | PWA maskable 图标母版 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 257 | `image/brand/leletv-app-icon.svg` | PWA 图标母版 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 258 | `image/brand/leletv-favicon.svg` | 矢量 favicon | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 259 | `image/brand/leletv-icon-192.png` | PWA 图标 192 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 260 | `image/brand/leletv-icon-512.png` | PWA 图标 512 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 261 | `image/brand/leletv-icon-maskable-192.png` | PWA maskable 图标 192 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 262 | `image/brand/leletv-icon-maskable-512.png` | PWA maskable 图标 512 | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 | 263 | `image/brand/leletv-lockup.svg` | 品牌组合锁版 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
-| 264 | `image/brand/leletv-mark-currentcolor.svg` | 品牌图形标（currentColor） | migrated | `public/icons/leletv-mark-currentcolor.svg` | — | — | pending | — |
+| 264 | `image/brand/leletv-mark-currentcolor.svg` | 品牌图形标（currentColor） | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 | 265 | `image/brand/leletv-mark.svg` | 品牌图形标 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
 | 266 | `image/brand/leletv-wordmark-currentcolor.svg` | 品牌字标 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
-| 267 | `image/logo-black.png` | 播放页详情占位 Logo | migrated | `public/images/logo-black.png` | — | — | pending | — |
-| 268 | `image/logo.png` | README/品牌 Logo | migrated | `public/images/logo.png` | — | — | pending | — |
+| 267 | `image/logo-black.png` | 播放页详情占位 Logo | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 268 | `image/logo.png` | README/品牌 Logo | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 
 ## js/（56 个模块）
 
@@ -402,10 +402,10 @@
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
 | 325 | `libs/artplayer.min.js` | ArtPlayer 播放器（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
-| 326 | `libs/geist/Geist-Bold.woff2` | Geist 字体 Bold | migrated | `public/fonts/Geist-Bold.woff2` | — | — | pending | — |
-| 327 | `libs/geist/Geist-Medium.woff2` | Geist 字体 Medium | migrated | `public/fonts/Geist-Medium.woff2` | — | — | pending | — |
-| 328 | `libs/geist/Geist-Regular.woff2` | Geist 字体 Regular | migrated | `public/fonts/Geist-Regular.woff2` | — | — | pending | — |
-| 329 | `libs/geist/Geist-SemiBold.woff2` | Geist 字体 SemiBold | migrated | `public/fonts/Geist-SemiBold.woff2` | — | — | pending | — |
+| 326 | `libs/geist/Geist-Bold.woff2` | Geist 字体 Bold | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 327 | `libs/geist/Geist-Medium.woff2` | Geist 字体 Medium | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 328 | `libs/geist/Geist-Regular.woff2` | Geist 字体 Regular | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
+| 329 | `libs/geist/Geist-SemiBold.woff2` | Geist 字体 SemiBold | keep | — | — | — | done | C-1：不引入 `public/`，保留原路径（2026-10-21 用户确认） |
 | 330 | `libs/hls.min.js` | HLS.js（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
 | 331 | `libs/jszip.min.js` | JSZip：配置导入/导出（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
 | 332 | `libs/marked.min.js` | Markdown 渲染，README 弹窗按需加载（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |

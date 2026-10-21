@@ -3,7 +3,7 @@
 > 最后更新：2026-10-21
 > 分支：`refactor/slim-arch`
 > 基线 tag：`pre-refactor`
-> 最新提交：`1627896 refactor: 迁移 views 样式到 src/styles/views.css`
+> 最新提交：`fa8ff88 refactor: 迁移应用壳到 src/index.html`
 
 ---
 
@@ -16,11 +16,11 @@
 | 1 | `01`–`07` 规则、5 个技能、`.ts` 模板、`tsconfig.json`、`check-*` 脚本、`MAP.md` |
 | 2 | 模态框 / 邀请码登录 / 导航滚动脚本外置（`index.html` 1636 → 1298 行） |
 | 3 | `build.config.js` 单一清单、JSZip 按需加载、路由预取（首屏传输 694 → 365 KB） |
-| 4 | **进行中：67 / 85 条已验证**（第 64、69–85 条经用户确认暂缓） |
+| 4 | **完成：68 / 85 条已验证，69–85 条标 keep**（C-1：不引入 `public/`） |
 
 ---
 
-## 阶段 4 已完成（MAP 1–63、65–68）
+## 阶段 4 已完成（MAP 1–64、65–68）
 
 | # | 原路径 | 目标 | 备注 |
 |---|---|---|---|
@@ -87,6 +87,7 @@
 | 61 | `js/auth/user-devices.js` | `src/pages/settings/user-devices.ts` | 面板接口不变 |
 | 62 | `js/app/app-routing.js` | `src/router/index.ts` | 路由与切页行为不变 |
 | 63 | `js/app/page-loader.js` | `src/router/page-loader.ts` | `LeLePages` 接口不变 |
+| 64 | `index.html` | `src/index.html` | 源迁入 `src/`，根 `index.html` 由 `build-bundles.mjs` 装配生成；Pages 入口与部署配置未改 |
 | 65 | `js/app/app.js` | `src/main.ts` | 全局入口与启动信号不变 |
 | 66 | `css/v2/base.css` | `src/styles/base.css` | HTML link 与 CRITICAL_STYLES 已同步 |
 | 67 | `css/v2/tokens.css` | `src/styles/variables.css` | HTML link、CRITICAL_STYLES 与注释已同步 |
@@ -96,23 +97,21 @@
 
 ## 下一步
 
-**阶段 4 队列已无可自动执行项。** 以下经用户确认**暂缓**，恢复时必须先重新确认：
+**阶段 4 队列已完结。** 2026-10-21 用户确认的处理结果：
 
-| 条目 | 内容 | 暂缓原因 |
-|---|---|---|
-| 64 | `index.html → src/index.html` | 根 `index.html` 是 Cloudflare Pages 默认入口，与 C-1 冲突 |
-| 69–85 | public 层（字体 / 图标 / logo / manifest.json） | 会新建 `public/` 并改变公开资源 URL，与 C-1 冲突 |
-
-> 恢复会话后若用户同意继续：先做第 64 条需定部署策略（构建复制 / 改 wrangler），
-> public 层需同步 HTML、CSS、`manifest.json` 内部路径与 PWA 缓存。
+| 条目 | 结论 |
+|---|---|
+| 64 | **已解禁并完成（方案 A）**：`src/index.html` 为唯一手工编辑源，`build-bundles.mjs` 装配根 `index.html`；Pages 入口、`_headers`、`_routes.json`、`manifest.json` 均未改动 |
+| 69–85 | **保持暂缓并标 keep**：与 C-1 一致，不引入 `public/`，字体 / 图标 / logo / manifest 保留 `/libs` 与 `/image` 原路径 |
 
 > `pages/` 目录已清空；`js/` 仅剩 2 个 `.js`（app-init / boot-sequence，未在 MAP 队列）。
-> styles 层已全部迁入 `src/styles/`。
+> styles 层已全部迁入 `src/styles/`；入口层 `index.html` 已迁入 `src/index.html`。
 
 > 已知非迁移问题：本地 Express 的 `renderPage` 只替换第一处 `{{TMDB_WORKER_URL}}`，
 > 播放页 `window.__ENV__.TMDB_WORKER_URL` 仍为占位符（迁移前同样存在），线上由 Pages Functions 注入。
 
-新会话开场：读本文件 → 按上表向用户确认暂缓项是否解禁 → `npm start` 启动一次服务器。
+下一步候选：阶段 4.5（orphans 清理，需人工批准）或阶段 5（ESM splitting）。
+新会话开场：读本文件 → 确认下一阶段范围 → `npm start` 启动一次服务器。
 
 ---
 
@@ -137,7 +136,7 @@ node scripts/analyze.js --out docs/BASELINE-stage3.md
 npm run check:orphans  # 只报告，不删除
 ```
 
-基线：首屏 core+app **267.1 KB**（预算 275 KB）；`js/` 剩余 `.js` **2**；tracked 370 / inventory 437。
+基线：首屏 core+app **267.1 KB**（预算 275 KB）；`js/` 剩余 `.js` **2**；tracked 371 / inventory 438。
 
 ---
 
@@ -153,6 +152,7 @@ npm run check:orphans  # 只报告，不删除
 
 ## 注意事项
 
+- 根 `index.html` 是构建产物：只改 `src/index.html`，然后跑 `npm run build`；直接改根文件会被覆盖。
 - `src/` 同时是源码与静态资源目录：`/src/services/adfilter-config.json` 由运行时 `fetch` 提供。
 - `src/core/http.ts` 不再动态 import sha256，统一使用 `src/core/crypto.ts` 的全局 `sha256`。
 - `check-coverage.js` 允许已完成的 `migrated` / `merge` / `delete` 原路径不存在。
