@@ -143,8 +143,9 @@ ui/player/episodes.ts     <-> ui/player/ui.ts
 
 ### 5A-5. settings bundle ESM 化（3 文件）
 
+- **状态：已完成（commit `5a54131`）**。settings 41.0 → 40.5 KB；设置页 / 主题选择器 / 邀请码面板 / 设备详情回归通过。
 - 范围：`src/services/theme.ts`、`src/pages/settings/admin-panel.ts`、`src/pages/settings/user-devices.ts`。
-- 沿用 5A-3/5A-4 模式：扫描对外符号 → 补桥 → `esm: true`。
+- 仅 `_timeAgo` / `_deviceIcon` 需要桥（admin-panel 裸名复用）；两个面板已用 `window.*` 显式导出。
 - 按需 bundle，不影响首屏。
 
 ### 5A-6. player bundle ESM 化（14 文件）
