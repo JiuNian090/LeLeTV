@@ -1,6 +1,6 @@
 # INVENTORY — 全量文件清单（阶段 -1 初版）
 
-> 权威来源：`git ls-files`（当前共 **330** 个跟踪文件 = 迁移前基线 326 + 阶段 -1 新增 4 个 migration 文档）。
+> 权威来源：`git ls-files`（当前共 **334** 个跟踪文件；迁移前基线 326，阶段 -1 / 0 新增的文档与脚本均已登记）。
 > 本表逐文件登记，一个不许漏；`check-coverage` 校验要求条目数 == `git ls-files` 数量。
 > 生成时间：2026-10-21；分支：`refactor/slim-arch`；基线 tag：`pre-refactor`。
 
@@ -19,11 +19,11 @@
 
 | 去向类型 | 数量 |
 |---|---|
-| keep | 239 |
+| keep | 243 |
 | migrated | 85 |
 | pending | 2 |
 | suspected-unused | 4 |
-| **合计** | **330** |
+| **合计** | **334** |
 
 > 疑似无用初判：`service-worker.js`、`image/brand/leletv-lockup.svg`、`image/brand/leletv-mark.svg`、`image/brand/leletv-wordmark-currentcolor.svg`。全部只登记，不删除。
 
@@ -276,151 +276,160 @@
 | 223 | `css/v2/tokens.css` | 设计令牌与主题变量 | migrated | `src/styles/variables.css` | — | — | pending | — |
 | 224 | `css/v2/views.css` | 内页共享视图样式（运行时按需加载） | migrated | `src/styles/views.css` | — | — | pending | page-loader.js 运行时插入 <link>，属动态引用白名单 |
 
+## docs/
+
+| # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
+|---|---|---|---|---|---|---|---|---|
+| 225 | `docs/BASELINE.md` | 阶段 0 构建体积基线 | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
+| 226 | `docs/MIGRATION.md` | 阶段 -1 勘察报告（与 .agents/migration/PHASE-1-REPORT.md 同步） | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
+| 227 | `docs/REGRESSION.md` | 回归清单 | keep | — | — | — | done | 阶段 0 新增文档，纳入版本控制 |
+
 ## functions/（红区）
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 225 | `functions/_middleware.js` | Cloudflare Pages Function（红区） | keep | — | — | — | done | 禁止修改 |
-| 226 | `functions/proxy/[[path]].js` | Cloudflare Pages Function（红区） | keep | — | — | — | done | 禁止修改 |
+| 228 | `functions/_middleware.js` | Cloudflare Pages Function（红区） | keep | — | — | — | done | 禁止修改 |
+| 229 | `functions/proxy/[[path]].js` | Cloudflare Pages Function（红区） | keep | — | — | — | done | 禁止修改 |
 
 ## image/
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 227 | `image/brand/apple-touch-icon-180.png` | Apple 主屏图标 | migrated | `public/icons/apple-touch-icon-180.png` | — | — | pending | — |
-| 228 | `image/brand/favicon-32.png` | 站点 favicon | migrated | `public/icons/favicon-32.png` | — | — | pending | — |
-| 229 | `image/brand/leletv-app-icon-maskable.svg` | PWA maskable 图标母版 | migrated | `public/icons/leletv-app-icon-maskable.svg` | — | — | pending | — |
-| 230 | `image/brand/leletv-app-icon.svg` | PWA 图标母版 | migrated | `public/icons/leletv-app-icon.svg` | — | — | pending | — |
-| 231 | `image/brand/leletv-favicon.svg` | 矢量 favicon | migrated | `public/icons/leletv-favicon.svg` | — | — | pending | — |
-| 232 | `image/brand/leletv-icon-192.png` | PWA 图标 192 | migrated | `public/icons/leletv-icon-192.png` | — | — | pending | — |
-| 233 | `image/brand/leletv-icon-512.png` | PWA 图标 512 | migrated | `public/icons/leletv-icon-512.png` | — | — | pending | — |
-| 234 | `image/brand/leletv-icon-maskable-192.png` | PWA maskable 图标 192 | migrated | `public/icons/leletv-icon-maskable-192.png` | — | — | pending | — |
-| 235 | `image/brand/leletv-icon-maskable-512.png` | PWA maskable 图标 512 | migrated | `public/icons/leletv-icon-maskable-512.png` | — | — | pending | — |
-| 236 | `image/brand/leletv-lockup.svg` | 品牌组合锁版 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
-| 237 | `image/brand/leletv-mark-currentcolor.svg` | 品牌图形标（currentColor） | migrated | `public/icons/leletv-mark-currentcolor.svg` | — | — | pending | — |
-| 238 | `image/brand/leletv-mark.svg` | 品牌图形标 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
-| 239 | `image/brand/leletv-wordmark-currentcolor.svg` | 品牌字标 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
-| 240 | `image/logo-black.png` | 播放页详情占位 Logo | migrated | `public/images/logo-black.png` | — | — | pending | — |
-| 241 | `image/logo.png` | README/品牌 Logo | migrated | `public/images/logo.png` | — | — | pending | — |
+| 230 | `image/brand/apple-touch-icon-180.png` | Apple 主屏图标 | migrated | `public/icons/apple-touch-icon-180.png` | — | — | pending | — |
+| 231 | `image/brand/favicon-32.png` | 站点 favicon | migrated | `public/icons/favicon-32.png` | — | — | pending | — |
+| 232 | `image/brand/leletv-app-icon-maskable.svg` | PWA maskable 图标母版 | migrated | `public/icons/leletv-app-icon-maskable.svg` | — | — | pending | — |
+| 233 | `image/brand/leletv-app-icon.svg` | PWA 图标母版 | migrated | `public/icons/leletv-app-icon.svg` | — | — | pending | — |
+| 234 | `image/brand/leletv-favicon.svg` | 矢量 favicon | migrated | `public/icons/leletv-favicon.svg` | — | — | pending | — |
+| 235 | `image/brand/leletv-icon-192.png` | PWA 图标 192 | migrated | `public/icons/leletv-icon-192.png` | — | — | pending | — |
+| 236 | `image/brand/leletv-icon-512.png` | PWA 图标 512 | migrated | `public/icons/leletv-icon-512.png` | — | — | pending | — |
+| 237 | `image/brand/leletv-icon-maskable-192.png` | PWA maskable 图标 192 | migrated | `public/icons/leletv-icon-maskable-192.png` | — | — | pending | — |
+| 238 | `image/brand/leletv-icon-maskable-512.png` | PWA maskable 图标 512 | migrated | `public/icons/leletv-icon-maskable-512.png` | — | — | pending | — |
+| 239 | `image/brand/leletv-lockup.svg` | 品牌组合锁版 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
+| 240 | `image/brand/leletv-mark-currentcolor.svg` | 品牌图形标（currentColor） | migrated | `public/icons/leletv-mark-currentcolor.svg` | — | — | pending | — |
+| 241 | `image/brand/leletv-mark.svg` | 品牌图形标 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
+| 242 | `image/brand/leletv-wordmark-currentcolor.svg` | 品牌字标 SVG（静态检索零引用） | suspected-unused | — | — | — | pending | 静态检索零引用；可能是品牌设计母版。阶段 4.5 由人工确认，禁止迁移期删除 |
+| 243 | `image/logo-black.png` | 播放页详情占位 Logo | migrated | `public/images/logo-black.png` | — | — | pending | — |
+| 244 | `image/logo.png` | README/品牌 Logo | migrated | `public/images/logo.png` | — | — | pending | — |
 
 ## js/（56 个模块）
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 242 | `js/api/api-config.js` | 采集站 API 配置（selectedAPIs / customAPIs） | migrated | `src/services/sources/config.ts` | — | — | pending | — |
-| 243 | `js/api/api.js` | 采集站请求与详情/搜索 API 封装 | migrated | `src/services/api.ts` | — | — | pending | — |
-| 244 | `js/api/loadBalancer.js` | 采集站负载均衡与延迟调度 | migrated | `src/services/balancer.ts` | — | — | pending | — |
-| 245 | `js/api/remote-sources.js` | 远端数据源同步与合并 | migrated | `src/services/sources/remote.ts` | — | — | pending | — |
-| 246 | `js/api/search.js` | 跨源聚合搜索与结果缓存 | migrated | `src/services/search.ts` | — | — | pending | — |
-| 247 | `js/api/source-port.js` | 视频源导入/导出（LibreTV 互操作） | migrated | `src/services/sources/port.ts` | — | — | pending | — |
-| 248 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | pending | — |
-| 249 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | pending | — |
-| 250 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
-| 251 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | pending | — |
-| 252 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | pending | — |
-| 253 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | pending | — |
-| 254 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
-| 255 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
-| 256 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | pending | — |
-| 257 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | pending | — |
-| 258 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | pending | — |
-| 259 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | pending | — |
-| 260 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | migrated | `src/core/sha256.ts` | — | — | pending | — |
-| 261 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | pending | — |
-| 262 | `js/core/cache-manager.js` | 本地存储缓存管理与 24h 清理 | migrated | `src/core/cache.ts` | — | — | pending | — |
-| 263 | `js/core/config.js` | 全局常量与 API_SITES 基础配置 | migrated | `src/core/config.ts` | — | — | pending | — |
-| 264 | `js/core/leletv-global.js` | 全局命名空间适配器 | migrated | `src/core/global.ts` | — | — | pending | — |
-| 265 | `js/core/listener-tracker.js` | 事件监听追踪与批量解绑 | migrated | `src/core/listener-tracker.ts` | — | — | pending | — |
-| 266 | `js/core/storage-service.js` | 统一存储服务（localStorage 封装） | migrated | `src/core/storage.ts` | — | — | pending | — |
-| 267 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | pending | — |
-| 268 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | pending | — |
-| 269 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | pending | 运行时 fetch /js/filter-config.json，迁移后需同步 fetch 路径 |
-| 270 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | pending | — |
-| 271 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | pending | — |
-| 272 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | pending | — |
-| 273 | `js/player/player-episodes.js` | 剧集列表与选集 | migrated | `src/ui/player/episodes.ts` | — | — | pending | — |
-| 274 | `js/player/player-failover.js` | 起播失败自动换线 | migrated | `src/ui/player/failover.ts` | — | — | pending | — |
-| 275 | `js/player/player-lights.js` | 播放页氛围灯/背景 | migrated | `src/ui/player/lights.ts` | — | — | pending | — |
-| 276 | `js/player/player-manager.js` | 播放器生命周期管理 | migrated | `src/ui/player/manager.ts` | — | — | pending | — |
-| 277 | `js/player/player-quality.js` | 清晰度切换 | migrated | `src/ui/player/quality.ts` | — | — | pending | — |
-| 278 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | pending | — |
-| 279 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | pending | — |
-| 280 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | pending | — |
-| 281 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | pending | — |
-| 282 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | pending | — |
-| 283 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
-| 284 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
-| 285 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | pending | — |
-| 286 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | pending | — |
-| 287 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | pending | — |
-| 288 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | pending | — |
-| 289 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
-| 290 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | pending | — |
-| 291 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
-| 292 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | pending | — |
-| 293 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
-| 294 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | pending | — |
-| 295 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | pending | — |
-| 296 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | pending | — |
-| 297 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | pending | — |
+| 245 | `js/api/api-config.js` | 采集站 API 配置（selectedAPIs / customAPIs） | migrated | `src/services/sources/config.ts` | — | — | pending | — |
+| 246 | `js/api/api.js` | 采集站请求与详情/搜索 API 封装 | migrated | `src/services/api.ts` | — | — | pending | — |
+| 247 | `js/api/loadBalancer.js` | 采集站负载均衡与延迟调度 | migrated | `src/services/balancer.ts` | — | — | pending | — |
+| 248 | `js/api/remote-sources.js` | 远端数据源同步与合并 | migrated | `src/services/sources/remote.ts` | — | — | pending | — |
+| 249 | `js/api/search.js` | 跨源聚合搜索与结果缓存 | migrated | `src/services/search.ts` | — | — | pending | — |
+| 250 | `js/api/source-port.js` | 视频源导入/导出（LibreTV 互操作） | migrated | `src/services/sources/port.ts` | — | — | pending | — |
+| 251 | `js/api/tmdb.js` | TMDB 分类/详情接口封装 | migrated | `src/services/tmdb.ts` | — | — | pending | — |
+| 252 | `js/app/app-config.js` | 配置导入/导出（ZIP）与本地配置读写 | migrated | `src/services/config.ts` | — | — | pending | — |
+| 253 | `js/app/app-init.js` | 应用初始化协调器 | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
+| 254 | `js/app/app-routing.js` | hash 路由、页面切换与页面装载 | migrated | `src/router/index.ts` | — | — | pending | — |
+| 255 | `js/app/app-search.js` | 搜索流程与结果页编排 | migrated | `src/pages/search/index.ts` | — | — | pending | — |
+| 256 | `js/app/app.js` | 应用主装配（首页/导航/事件委托） | migrated | `src/main.ts` | — | — | pending | — |
+| 257 | `js/app/boot-sequence.js` | 启动编排（鉴权 → 首页加载） | pending | — | — | — | pending | 拟并入 src/main.ts，需阶段 1 的 MAP.md 定稿并走 merge 批准 |
+| 258 | `js/app/page-loader.js` | 按需加载 pages/*.html 片段与页面 bundle | migrated | `src/router/page-loader.ts` | — | — | pending | — |
+| 259 | `js/auth/admin-panel.js` | 邀请码管理面板（管理员） | migrated | `src/pages/settings/admin-panel.ts` | — | — | pending | — |
+| 260 | `js/auth/invite-auth.js` | 邀请码验证与设备准入 | migrated | `src/services/invitation.ts` | — | — | pending | — |
+| 261 | `js/auth/password.js` | 密码哈希与校验 | migrated | `src/core/crypto.ts` | — | — | pending | — |
+| 262 | `js/auth/proxy-auth.js` | 代理请求鉴权（PASSWORD 签名） | migrated | `src/core/http.ts` | — | — | pending | — |
+| 263 | `js/auth/sha256.js` | SHA-256 动态加载兜底实现 | migrated | `src/core/sha256.ts` | — | — | pending | — |
+| 264 | `js/auth/user-devices.js` | 设备管理面板（普通用户） | migrated | `src/pages/settings/user-devices.ts` | — | — | pending | — |
+| 265 | `js/core/cache-manager.js` | 本地存储缓存管理与 24h 清理 | migrated | `src/core/cache.ts` | — | — | pending | — |
+| 266 | `js/core/config.js` | 全局常量与 API_SITES 基础配置 | migrated | `src/core/config.ts` | — | — | pending | — |
+| 267 | `js/core/leletv-global.js` | 全局命名空间适配器 | migrated | `src/core/global.ts` | — | — | pending | — |
+| 268 | `js/core/listener-tracker.js` | 事件监听追踪与批量解绑 | migrated | `src/core/listener-tracker.ts` | — | — | pending | — |
+| 269 | `js/core/storage-service.js` | 统一存储服务（localStorage 封装） | migrated | `src/core/storage.ts` | — | — | pending | — |
+| 270 | `js/core/timing.js` | 时间常量配置 | migrated | `src/core/timing.ts` | — | — | pending | — |
+| 271 | `js/effects/hub-flow.js` | 首页聚合动效 | migrated | `src/pages/home/hub-flow.ts` | — | — | pending | — |
+| 272 | `js/filter-config.json` | 广告过滤规则配置（运行时 fetch） | migrated | `src/services/adfilter-config.json` | — | — | pending | 运行时 fetch /js/filter-config.json，迁移后需同步 fetch 路径 |
+| 273 | `js/player/player-bridge.js` | 播放页与搜索/详情接口桥接 | migrated | `src/ui/player/bridge.ts` | — | — | pending | — |
+| 274 | `js/player/player-core.js` | HLS + ArtPlayer 核心初始化 | migrated | `src/ui/player/core.ts` | — | — | pending | — |
+| 275 | `js/player/player-detail.js` | 播放页详情/海报信息 | migrated | `src/ui/player/detail.ts` | — | — | pending | — |
+| 276 | `js/player/player-episodes.js` | 剧集列表与选集 | migrated | `src/ui/player/episodes.ts` | — | — | pending | — |
+| 277 | `js/player/player-failover.js` | 起播失败自动换线 | migrated | `src/ui/player/failover.ts` | — | — | pending | — |
+| 278 | `js/player/player-lights.js` | 播放页氛围灯/背景 | migrated | `src/ui/player/lights.ts` | — | — | pending | — |
+| 279 | `js/player/player-manager.js` | 播放器生命周期管理 | migrated | `src/ui/player/manager.ts` | — | — | pending | — |
+| 280 | `js/player/player-quality.js` | 清晰度切换 | migrated | `src/ui/player/quality.ts` | — | — | pending | — |
+| 281 | `js/player/player-shortcuts.js` | 播放器键盘快捷键 | migrated | `src/ui/player/shortcuts.ts` | — | — | pending | — |
+| 282 | `js/player/player-ui.js` | 播放器覆盖层/进度条/资源切换 | migrated | `src/ui/player/ui.ts` | — | — | pending | — |
+| 283 | `js/player/player.js` | 播放页入口与返回导航 | migrated | `src/ui/player/index.ts` | — | — | pending | — |
+| 284 | `js/ui/brand-canvas.js` | 品牌组合 canvas 绘制 | migrated | `src/ui/brand-canvas.ts` | — | — | pending | — |
+| 285 | `js/ui/hero-glass.js` | 首页主视觉光效 | migrated | `src/pages/home/hero-glass.ts` | — | — | pending | — |
+| 286 | `js/ui/home-recent.js` | 首页最近更新货架 | migrated | `src/pages/home/recent.ts` | — | — | pending | — |
+| 287 | `js/ui/home-shelves.js` | 首页继续观看/片源货架 | migrated | `src/pages/home/shelves.ts` | — | — | pending | — |
+| 288 | `js/ui/layout-pref.js` | 首页与导航布局偏好 | migrated | `src/ui/layout-pref.ts` | — | — | pending | — |
+| 289 | `js/ui/line-probe.js` | 线路可用性探测 | migrated | `src/services/line-probe.ts` | — | — | pending | — |
+| 290 | `js/ui/motion-pref.js` | 动态效果偏好 | migrated | `src/ui/motion-pref.ts` | — | — | pending | — |
+| 291 | `js/ui/movies-page.js` | 分类/影片列表页 | migrated | `src/pages/category/index.ts` | — | — | pending | — |
+| 292 | `js/ui/nav-search.js` | 导航栏迷你搜索 | migrated | `src/pages/home/nav-search.ts` | — | — | pending | — |
+| 293 | `js/ui/pwa-install.js` | PWA 安装提示 | migrated | `src/ui/pwa-install.ts` | — | — | pending | — |
+| 294 | `js/ui/search-cards.js` | 搜索结果卡片渲染 | migrated | `src/pages/search/cards.ts` | — | — | pending | — |
+| 295 | `js/ui/theme-system.js` | 11 套主题切换与配色存储 | migrated | `src/services/theme.ts` | — | — | pending | — |
+| 296 | `js/ui/ui-core.js` | Toast / 通用 UI 反馈 | migrated | `src/ui/toast.ts` | — | — | pending | — |
+| 297 | `js/ui/ui-search-history.js` | 搜索历史读写 | migrated | `src/services/search-history.ts` | — | — | pending | — |
+| 298 | `js/ui/ui-viewing-history.js` | 观看历史读写 | migrated | `src/services/viewing-history.ts` | — | — | pending | — |
+| 299 | `js/ui/ui.js` | 通用 UI 工具与弹窗 | migrated | `src/ui/index.ts` | — | — | pending | — |
+| 300 | `js/utils/version-updater.js` | 版本检测与更新提示 | migrated | `src/services/version-updater.ts` | — | — | pending | — |
 
 ## libs/
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 298 | `libs/artplayer.min.js` | ArtPlayer 播放器（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
-| 299 | `libs/geist/Geist-Bold.woff2` | Geist 字体 Bold | migrated | `public/fonts/Geist-Bold.woff2` | — | — | pending | — |
-| 300 | `libs/geist/Geist-Medium.woff2` | Geist 字体 Medium | migrated | `public/fonts/Geist-Medium.woff2` | — | — | pending | — |
-| 301 | `libs/geist/Geist-Regular.woff2` | Geist 字体 Regular | migrated | `public/fonts/Geist-Regular.woff2` | — | — | pending | — |
-| 302 | `libs/geist/Geist-SemiBold.woff2` | Geist 字体 SemiBold | migrated | `public/fonts/Geist-SemiBold.woff2` | — | — | pending | — |
-| 303 | `libs/hls.min.js` | HLS.js（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
-| 304 | `libs/jszip.min.js` | JSZip：配置导入/导出（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
-| 305 | `libs/marked.min.js` | Markdown 渲染，README 弹窗按需加载（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
-| 306 | `libs/sha256.min.js` | SHA-256 浏览器实现（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
+| 301 | `libs/artplayer.min.js` | ArtPlayer 播放器（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
+| 302 | `libs/geist/Geist-Bold.woff2` | Geist 字体 Bold | migrated | `public/fonts/Geist-Bold.woff2` | — | — | pending | — |
+| 303 | `libs/geist/Geist-Medium.woff2` | Geist 字体 Medium | migrated | `public/fonts/Geist-Medium.woff2` | — | — | pending | — |
+| 304 | `libs/geist/Geist-Regular.woff2` | Geist 字体 Regular | migrated | `public/fonts/Geist-Regular.woff2` | — | — | pending | — |
+| 305 | `libs/geist/Geist-SemiBold.woff2` | Geist 字体 SemiBold | migrated | `public/fonts/Geist-SemiBold.woff2` | — | — | pending | — |
+| 306 | `libs/hls.min.js` | HLS.js（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
+| 307 | `libs/jszip.min.js` | JSZip：配置导入/导出（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
+| 308 | `libs/marked.min.js` | Markdown 渲染，README 弹窗按需加载（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
+| 309 | `libs/sha256.min.js` | SHA-256 浏览器实现（第三方） | keep | — | — | — | done | 第三方库，保留原位；阶段 3 再评估独立 chunk |
 
 ## migrations/（红区）
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 307 | `migrations/001_create_tables.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
-| 308 | `migrations/002_add_remark.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
-| 309 | `migrations/003_add_device_signature.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
-| 310 | `migrations/004_add_api_sites.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
+| 310 | `migrations/001_create_tables.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
+| 311 | `migrations/002_add_remark.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
+| 312 | `migrations/003_add_device_signature.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
+| 313 | `migrations/004_add_api_sites.sql` | D1 数据库迁移（红区） | keep | — | — | — | done | 禁止修改 |
 
 ## pages/
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 311 | `pages/about.html` | 关于页片段（page-loader 拉取） | migrated | `src/pages/about/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 312 | `pages/category.html` | 分类页片段 | migrated | `src/pages/category/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 313 | `pages/history.html` | 历史页片段 | migrated | `src/pages/history/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 314 | `pages/movies.html` | 影片结果页片段 | migrated | `src/pages/movies/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 315 | `pages/readme.html` | README/说明页片段 | migrated | `src/pages/readme/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
-| 316 | `pages/settings.html` | 设置页片段 | migrated | `src/pages/settings/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 314 | `pages/about.html` | 关于页片段（page-loader 拉取） | migrated | `src/pages/about/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 315 | `pages/category.html` | 分类页片段 | migrated | `src/pages/category/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 316 | `pages/history.html` | 历史页片段 | migrated | `src/pages/history/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 317 | `pages/movies.html` | 影片结果页片段 | migrated | `src/pages/movies/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 318 | `pages/readme.html` | README/说明页片段 | migrated | `src/pages/readme/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
+| 319 | `pages/settings.html` | 设置页片段 | migrated | `src/pages/settings/template.html` | — | — | pending | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 
 ## scripts/
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 317 | `scripts/bootstrap.js` | 引导/环境自检（手工运行） | keep | — | — | — | done | — |
-| 318 | `scripts/brand/README.md` | 品牌资产生成流程说明 | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 319 | `scripts/brand/bump-version.mjs` | 品牌图缓存版本号升级（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 320 | `scripts/brand/gen-splash.mjs` | 生成 PWA 启动屏（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 321 | `scripts/brand/make-brand.mjs` | 品牌图生成主脚本（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 322 | `scripts/brand/png-info.mjs` | PNG 信息查看（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 323 | `scripts/brand/quantize.mjs` | PNG 量化工具（被 make-brand 调用） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 324 | `scripts/brand/render-svg.mjs` | SVG 渲染为 PNG（被 make-brand 调用） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
-| 325 | `scripts/build-bundles.mjs` | 版本注入后的 bundle 拼接 + esbuild 压缩，并原地更新 HTML | keep | — | — | — | done | — |
-| 326 | `scripts/generate-version.mjs` | 把 VERSION.txt 注入 HTML / service-worker 缓存版本 | keep | — | — | — | done | — |
-| 327 | `scripts/setup-agent-links.mjs` | 建立各 AI 工具到 .agents 的接线 | keep | — | — | — | done | — |
-| 328 | `scripts/setup-hooks.mjs` | 安装 pre-commit 钩子 | keep | — | — | — | done | — |
-| 329 | `scripts/sync-agent-index.mjs` | 生成 AGENTS.md 与 .agents/skills/INDEX.md 索引 | keep | — | — | — | done | — |
+| 320 | `scripts/analyze.js` | bundle 体积分析（阶段 0 新增） | keep | — | — | — | done | — |
+| 321 | `scripts/bootstrap.js` | 引导/环境自检（手工运行） | keep | — | — | — | done | — |
+| 322 | `scripts/brand/README.md` | 品牌资产生成流程说明 | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 323 | `scripts/brand/bump-version.mjs` | 品牌图缓存版本号升级（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 324 | `scripts/brand/gen-splash.mjs` | 生成 PWA 启动屏（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 325 | `scripts/brand/make-brand.mjs` | 品牌图生成主脚本（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 326 | `scripts/brand/png-info.mjs` | PNG 信息查看（手工运行） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 327 | `scripts/brand/quantize.mjs` | PNG 量化工具（被 make-brand 调用） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 328 | `scripts/brand/render-svg.mjs` | SVG 渲染为 PNG（被 make-brand 调用） | keep | — | — | — | done | 手工运行的品牌资产工具，非构建链路引用；建议保留 |
+| 329 | `scripts/build-bundles.mjs` | 版本注入后的 bundle 拼接 + esbuild 压缩，并原地更新 HTML | keep | — | — | — | done | — |
+| 330 | `scripts/generate-version.mjs` | 把 VERSION.txt 注入 HTML / service-worker 缓存版本 | keep | — | — | — | done | — |
+| 331 | `scripts/setup-agent-links.mjs` | 建立各 AI 工具到 .agents 的接线 | keep | — | — | — | done | — |
+| 332 | `scripts/setup-hooks.mjs` | 安装 pre-commit 钩子 | keep | — | — | — | done | — |
+| 333 | `scripts/sync-agent-index.mjs` | 生成 AGENTS.md 与 .agents/skills/INDEX.md 索引 | keep | — | — | — | done | — |
 
 ## workers/（红区）
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 330 | `workers/tmdb-worker.js` | Cloudflare Worker：TMDB 代理 / 邀请码 / 云源管理（红区） | keep | — | — | — | done | 禁止修改 |
+| 334 | `workers/tmdb-worker.js` | Cloudflare Worker：TMDB 代理 / 邀请码 / 云源管理（红区） | keep | — | — | — | done | 禁止修改 |
 
 ## 生成后自检
 
