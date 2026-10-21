@@ -42,23 +42,6 @@ interface RecentCachePayload {
   data?: Record<string, NormalizedItem[]>;
 }
 
-interface PosterCardOptions {
-  action: string;
-  data: Record<string, string>;
-  title: string;
-  label: string;
-  sub: string;
-  img: string;
-  rating: string;
-  votes: string;
-}
-
-interface HomeShelvesApi {
-  tmdbImage(path?: string): string;
-  posterCard(opts: PosterCardOptions): HTMLElement;
-  skeletons(n: number): DocumentFragment;
-}
-
 interface HomeRecentWindow extends Window {
   HomeShelves?: HomeShelvesApi;
   HomeRecent?: { ensure: () => Promise<void> | null };

@@ -4,37 +4,87 @@
  *   - data-action="tmdb-search-video" + data-title → 进入结果页搜索
  *   - data-action="play-from-history" + data-url/title/index/position → 续播
  */
+
+interface TrendPoster {
+  title: string;
+  year: string;
+  type: string;
+  rating: string;
+  img: string;
+}
+
+interface TrendSourceItem {
+  title?: string;
+  name?: string;
+  media_type?: string;
+  poster_path?: string;
+  vote_count?: number;
+  vote_average?: number;
+  release_date?: string;
+  first_air_date?: string;
+}
+
+interface PosterCardOptions {
+  action: string;
+  data?: Record<string, string | number | undefined>;
+  title: string;
+  label?: string;
+  sub?: string;
+  img?: string;
+  badge?: string;
+  rating?: string;
+  votes?: string;
+  progress?: number;
+}
+
+interface HomeShelvesApi {
+  ensure: () => Promise<void> | null;
+  refresh: () => void;
+  loadTrending: () => Promise<TrendPoster[]>;
+  posterCard: (opts: PosterCardOptions) => HTMLElement;
+  skeletons: (n: number) => DocumentFragment;
+  tmdbImage: (path?: string) => string;
+}
+
+interface HomeShelvesWindow extends Window {
+  selectedAPIs?: string[];
+  HubFlow?: { init: (stage: HubStage | null) => HubFlowApi | null | undefined };
+  HomeShelves?: HomeShelvesApi;
+}
+
 (function () {
   'use strict';
 
-  const CONTINUE_LIMIT = 6;
-  let trendingPromise = null;
+  const shelvesWindow = window as HomeShelvesWindow;
 
-  function el(tag, className, text) {
+  const CONTINUE_LIMIT = 6;
+  let trendingPromise: Promise<TrendPoster[]> | null = null;
+
+  function el(tag: string, className: string | null, text?: string | number | null): HTMLElement {
     const node = document.createElement(tag);
     if (className) node.className = className;
-    if (text !== undefined && text !== null) node.textContent = text;
+    if (text !== undefined && text !== null) node.textContent = String(text);
     return node;
   }
 
-  function isPrivateMode() {
+  function isPrivateMode(): boolean {
     return typeof isHiddenContentMode === 'function' && isHiddenContentMode();
   }
 
-  function isSafeImageUrl(url) {
+  function isSafeImageUrl(url: unknown): boolean {
     return typeof url === 'string' && /^https?:\/\//.test(url);
   }
 
-  function cssUrl(url) {
+  function cssUrl(url: string): string {
     return 'url("' + url.replace(/["\\\n\r]/g, '') + '")';
   }
 
-  function tmdbImage(path) {
+  function tmdbImage(path?: string): string {
     const base = (typeof TMDB_CONFIG === 'object' && TMDB_CONFIG && TMDB_CONFIG.imageBase) || 'https://image.tmdb.org/t/p';
     return path ? base + '/w342' + path : '';
   }
 
-  function formatClock(seconds) {
+  function formatClock(seconds: number): string {
     const s = Math.max(0, Math.floor(seconds || 0));
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -42,9 +92,9 @@
     return h ? h + ':' + String(m).padStart(2, '0') + ':' + sec : m + ':' + sec;
   }
 
-  function loadTrending() {
+  function loadTrending(): Promise<TrendPoster[]> {
     if (trendingPromise) return trendingPromise;
-    const request = typeof tmdbFetch === 'function'
+    const request: Promise<{ results?: TrendSourceItem[] }> = typeof tmdbFetch === 'function'
       ? tmdbFetch('trending/all/week', {})
       : fetch('/api/tmdb?endpoint=trending%2Fall%2Fweek').then(res => {
           if (!res.ok) throw new Error('TMDB ' + res.status);
@@ -73,8 +123,8 @@
    * opts.rating  海报底部评分条的分数（如「7.0」），opts.votes 为评价人数文字；给了 rating 才画评分条
    * opts.progress 0～1 的观看进度条
    */
-  function posterCard(opts) {
-    const card = el('button', 'v2-pcard');
+  function posterCard(opts: PosterCardOptions): HTMLElement {
+    const card = el('button', 'v2-pcard') as HTMLButtonElement;
     card.type = 'button';
     card.dataset.action = opts.action;
     Object.keys(opts.data || {}).forEach(key => { card.dataset[key] = String(opts.data[key]); });
@@ -89,7 +139,7 @@
       probe.onerror = () => {
         card.style.removeProperty('--poster');
         card.classList.add('is-noimg');
-        poster.prepend(initial);
+        poster.insertBefore(initial, poster.firstChild);
       };
       probe.src = opts.img;
     } else {
@@ -100,7 +150,8 @@
     if (opts.rating !== undefined) {
       const rate = el('span', 'v2-rate');
       if (opts.rating) {
-        rate.append(el('b', null, '★ ' + opts.rating), el('i', null, opts.votes || ''));
+        rate.appendChild(el('b', null, '★ ' + opts.rating));
+        rate.appendChild(el('i', null, opts.votes || ''));
       } else {
         rate.classList.add('is-none');
         rate.textContent = '暂无评分';
@@ -110,35 +161,39 @@
     if (typeof opts.progress === 'number') {
       poster.appendChild(el('span', 'v2-scrim'));
       const bar = el('span', 'v2-progress');
-      const fill = el('i');
+      const fill = el('i', null);
       fill.style.width = Math.round(Math.min(1, Math.max(0.02, opts.progress)) * 100) + '%';
       bar.appendChild(fill);
       poster.appendChild(bar);
     }
-    card.append(poster, el('h3', null, opts.title), el('p', null, opts.sub || ''));
+    card.appendChild(poster);
+    card.appendChild(el('h3', null, opts.title));
+    card.appendChild(el('p', null, opts.sub || ''));
     return card;
   }
 
-  function skeletons(n) {
+  function skeletons(n: number): DocumentFragment {
     const frag = document.createDocumentFragment();
     for (let i = 0; i < n; i++) {
       const card = el('div', 'v2-pcard v2-skel');
       card.setAttribute('aria-hidden', 'true');
-      card.append(el('div', 'v2-poster'), el('h3', null, '　'), el('p', null, '　'));
+      card.appendChild(el('div', 'v2-poster'));
+      card.appendChild(el('h3', null, '　'));
+      card.appendChild(el('p', null, '　'));
       frag.appendChild(card);
     }
     return frag;
   }
 
   /** 首屏副标题里的片源数：只数正常域里已启用的资源站（私密源不计入、不暴露） */
-  function renderSourceCount() {
+  function renderSourceCount(): void {
     const target = document.getElementById('heroSourceCount');
     if (!target) return;
     let count = 0;
     if (!isPrivateMode()) {
       try {
         const stored = localStorage.getItem(scopedKey('selectedAPIs'));
-        const keys = stored ? JSON.parse(stored) : (Array.isArray(window.selectedAPIs) ? window.selectedAPIs : []);
+        const keys: unknown[] = stored ? JSON.parse(stored) : (Array.isArray(shelvesWindow.selectedAPIs) ? shelvesWindow.selectedAPIs : []);
         const customs = JSON.parse(localStorage.getItem(scopedKey('customAPIs')) || '[]');
         count = keys.filter(key => {
           if (typeof key !== 'string') return false;
@@ -156,7 +211,7 @@
     target.textContent = count > 0 ? ' ' + count + ' 个资源站' : '多个资源站';
   }
 
-  function renderContinue() {
+  function renderContinue(): void {
     const section = document.getElementById('homeContinue');
     const grid = document.getElementById('homeContinueList');
     if (!section || !grid) return;
@@ -168,7 +223,7 @@
     if (!items.length) { section.hidden = true; grid.replaceChildren(); return; }
     const frag = document.createDocumentFragment();
     items.forEach(item => {
-      const index = parseInt(item.episodeIndex, 10) || 0;
+      const index = parseInt(String(item.episodeIndex), 10) || 0;
       const position = Math.floor(item.playbackPosition || 0);
       const isSeries = Array.isArray(item.episodes) && item.episodes.length > 1;
       frag.appendChild(posterCard({
@@ -186,15 +241,15 @@
   }
 
   // 设置 › 首页与导航：关掉的板块首帧就由 css 隐藏（html 上的 data-home-* 属性），这里顺带不去建节点、不发请求
-  function hubEnabled() { return document.documentElement.getAttribute('data-home-hub') !== 'off'; }
-  function shelvesEnabled() { return document.documentElement.getAttribute('data-home-shelves') !== 'off'; }
+  function hubEnabled(): boolean { return document.documentElement.getAttribute('data-home-hub') !== 'off'; }
+  function shelvesEnabled(): boolean { return document.documentElement.getAttribute('data-home-shelves') !== 'off'; }
 
-  let hub = null;
+  let hub: HubFlowApi | null = null;
 
   /** 聚合动效按需初始化：关着时不建那一百多个节点，打开时再建并喂海报（只建一次） */
-  function ensureHub() {
-    if (hub || !hubEnabled() || !window.HubFlow) return;
-    hub = window.HubFlow.init(document.getElementById('hubFlow'));
+  function ensureHub(): void {
+    if (hub || !hubEnabled() || !shelvesWindow.HubFlow) return;
+    hub = shelvesWindow.HubFlow.init(document.getElementById('hubFlow') as HubStage | null);
     if (!hub) return;
     if (isPrivateMode()) { hub.usePlaceholders(); return; }   // 私密模式不展示 TMDB 内容，动效改用占位海报
     loadTrending().then(list => {
@@ -204,9 +259,9 @@
   }
 
   var started = false;
-  var ready = null;
+  var ready: Promise<void> | null = null;
 
-  function init() {
+  function init(): Promise<void> | null {
     if (started) return ready;
     started = true;
     if (shelvesEnabled()) renderContinue();
@@ -223,7 +278,7 @@
   // 从播放页返回、或切回首页时刷新「继续观看」；设置里刚打开的板块这时补建
   window.addEventListener('pageshow', event => { if (event.persisted && shelvesEnabled()) renderContinue(); });
   document.addEventListener('click', event => {
-    const target = event.target.closest && event.target.closest('[data-action="switch-page"][data-page="home"]');
+    const target = (event.target as HTMLElement).closest && (event.target as HTMLElement).closest('[data-action="switch-page"][data-page="home"]');
     if (target) setTimeout(() => { if (shelvesEnabled()) renderContinue(); renderSourceCount(); ensureHub(); }, 0);
   });
   window.addEventListener('leletv:layoutchange', () => { ensureHub(); if (shelvesEnabled()) renderContinue(); });
@@ -236,12 +291,12 @@
     setTimeout(init, 8000);
   }
 
-  window.HomeShelves = {
+  shelvesWindow.HomeShelves = {
     ensure: init,
     refresh: renderContinue,
-    loadTrending,
-    posterCard,
-    skeletons,
-    tmdbImage
+    loadTrending: loadTrending,
+    posterCard: posterCard,
+    skeletons: skeletons,
+    tmdbImage: tmdbImage
   };
 })();

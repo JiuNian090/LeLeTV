@@ -75,7 +75,7 @@
 | 47 | pages | `js/effects/hub-flow.js` | `src/pages/home/hub-flow.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 48 | pages | `js/ui/nav-search.js` | `src/pages/home/nav-search.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 49 | pages | `js/ui/home-recent.js` | `src/pages/home/recent.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
-| 50 | pages | `js/ui/home-shelves.js` | `src/pages/home/shelves.ts` | pending | 第 8 节 页面导航 | — |
+| 50 | pages | `js/ui/home-shelves.js` | `src/pages/home/shelves.ts` | verified | 第 8 节 页面导航 | 2026-10-21 迁移完成 |
 | 51 | pages | `css/v2/home.css` | `src/pages/home/style.css` | pending | 第 8 节 页面导航 | — |
 | 52 | pages | `pages/movies.html` | `src/pages/movies/template.html` | pending | 第 8 节 页面导航 | page-loader.js 通过 FRAGMENTS 映射运行时 fetch，属动态引用白名单 |
 | 53 | pages | `player.html` | `src/pages/player/index.html` | pending | 第 8 节 页面导航 | — |
