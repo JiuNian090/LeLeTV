@@ -28,9 +28,9 @@
     <link rel="preload" as="font" type="font/woff2" crossorigin href="/libs/geist/Geist-Regular.woff2?v=v3.4.0">
     <link rel="preload" as="font" type="font/woff2" crossorigin href="/libs/geist/Geist-Bold.woff2?v=v3.4.0">
     <!-- 播放页 bundle 的文件名（打包脚本会更新），结果页出来后用它预取播放页资源 -->
-    <meta name="leletv-player-bundle" content="dist/leletv-player.6RMCDJ3M.js">
+    <meta name="leletv-player-bundle" content="dist/leletv-player.POZHMEC5.js">
     <!-- 非首页页面的按需 bundle（构建脚本会更新文件名） -->
-    <meta name="leletv-page-bundles" content='{"category":"dist/leletv-category.BIPK2PSP.js","settings":"dist/leletv-settings.ZMLLA5TI.js"}'>
+    <meta name="leletv-page-bundles" content='{"category":"dist/leletv-category.2KTUFYCJ.js","settings":"dist/leletv-settings.ZMLLA5TI.js"}'>
 
     <!-- PWA：添加到主屏/桌面后以独立窗口运行（无浏览器 UI） -->
     <!-- mobile-web-app-capable 为标准化写法（Chrome 已废弃 apple-* 前缀）；apple-* 保留以兼容 iOS Safari -->
@@ -46,9 +46,9 @@
     <!-- 样式：变量与背景 → 通用组件 → 首页。
          views.css（内页）与 admin.css（设置页面板）改由 js/app/page-loader.js
          在首次进入对应页面时加载，不再占用首屏。 -->
-    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.2.2">
-    <link rel="stylesheet" href="/src/styles/base.css?v=v4.2.2">
-    <link rel="stylesheet" href="/src/pages/home/style.css?v=v4.2.2">
+    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.2.3">
+    <link rel="stylesheet" href="/src/styles/base.css?v=v4.2.3">
+    <link rel="stylesheet" href="/src/pages/home/style.css?v=v4.2.3">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -1252,27 +1252,27 @@
     </footer>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="/libs/sha256.min.js?v=v4.2.2"></script>
+    <script src="/libs/sha256.min.js?v=v4.2.3"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-    <link rel="modulepreload" href="dist/chunks/chunk-WF3VK4AM.js?v=v4.2.2">
-    <link rel="modulepreload" href="dist/chunks/chunk-SK4IB6VU.js?v=v4.2.2">
-    <link rel="modulepreload" href="dist/chunks/chunk-C7ZP77W2.js?v=v4.2.2">
-    <link rel="modulepreload" href="dist/chunks/chunk-3BMNPX2A.js?v=v4.2.2">
-    <link rel="modulepreload" href="dist/chunks/chunk-DWOYCZYJ.js?v=v4.2.2">
-    <link rel="modulepreload" href="dist/chunks/chunk-MZY3QFGL.js?v=v4.2.2">
-    <link rel="modulepreload" href="dist/chunks/chunk-TVGY7BT2.js?v=v4.2.2">
-    <script type="module" src="dist/leletv-core.CNMAX6OV.js?v=v4.2.2"></script>
-    <script type="module" src="dist/leletv-app.FED6ZDOB.js?v=v4.2.2"></script>
+    <link rel="modulepreload" href="dist/chunks/chunk-WF3VK4AM.js?v=v4.2.3">
+    <link rel="modulepreload" href="dist/chunks/chunk-HMMTM4NY.js?v=v4.2.3">
+    <link rel="modulepreload" href="dist/chunks/chunk-C7ZP77W2.js?v=v4.2.3">
+    <link rel="modulepreload" href="dist/chunks/chunk-T5XKFWOJ.js?v=v4.2.3">
+    <link rel="modulepreload" href="dist/chunks/chunk-DWOYCZYJ.js?v=v4.2.3">
+    <link rel="modulepreload" href="dist/chunks/chunk-ZHVJECZT.js?v=v4.2.3">
+    <link rel="modulepreload" href="dist/chunks/chunk-JWV3REPK.js?v=v4.2.3">
+    <script type="module" src="dist/leletv-core.HW4CAB56.js?v=v4.2.3"></script>
+    <script type="module" src="dist/leletv-app.QBRGOTY2.js?v=v4.2.3"></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v4.2.2";
+        window.__LELETV_VERSION__ = "v4.2.3";
         // 鉴权与 TMDB 都走同一个 Worker：在首次请求前先建好 DNS/TLS，省掉登录时的一次握手
         (function () {
             var base = window.__ENV__.TMDB_WORKER_URL;
