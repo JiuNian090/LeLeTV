@@ -63,6 +63,7 @@ interface MainWindow extends Window {
   __LELETV_INIT_SETTINGS_PANELS__?: () => void;
   __LELETV_INIT_SETTINGS_PAGE__?: () => void;
   __LELETV_BIND_SETTINGS_PAGE__?: () => void;
+  __LELETV_INIT_MEDIA_SETTINGS__?: () => void;
   INVITE_ADMIN_PANEL?: { render: (el: HTMLElement) => void };
   USER_DEVICES_PANEL?: { render: (el: HTMLElement) => void };
   INVITE_AUTH?: { isLocalMode: () => boolean; isVerified: () => boolean; ensureHeartbeat: () => void };
@@ -403,6 +404,11 @@ function initSettingsPage() {
     // 首页与导航布局开关：片段插入后同步勾选状态
     if (mainWindow.LeLeLayout && typeof mainWindow.LeLeLayout.refresh === 'function') {
         mainWindow.LeLeLayout.refresh();
+    }
+
+    // 元数据源（豆瓣 / TMDB + 自动降级）：设置页 bundle 注册，片段插入后同步状态与绑定
+    if (typeof mainWindow.__LELETV_INIT_MEDIA_SETTINGS__ === 'function') {
+        mainWindow.__LELETV_INIT_MEDIA_SETTINGS__();
     }
 
     // 主题配色盘由 theme-system.js 渲染；脚本与片段都就绪后补一次

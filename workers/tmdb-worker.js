@@ -2,6 +2,9 @@
 // Cloudflare Worker - TMDB API 代理 + 邀请码 API
 // ES Module 格式（支持 D1 绑定）
 //
+// 豆瓣元数据代理（/douban/*）在同仓库的 workers/douban.js，入口 import 后按路径分流；
+// 部署仍是这一个 Worker（wrangler.toml 的 main 不变）。
+//
 // TMDB 部分：
 // 方式1: ?endpoint=discover/movie&page=1
 // 方式2: /discover/movie?page=1
@@ -29,6 +32,9 @@
 // - 首页/分类/详情数据：边缘缓存 24 小时
 // - 搜索数据：边缘缓存 1 小时（按搜索词独立缓存）
 // - 浏览器统一缓存 2 分钟 + stale-while-revalidate
+
+// 豆瓣元数据代理：与 TMDB 共用同一个 Worker，只按 /douban/* 分流
+import { handleDoubanRequest } from './douban.js';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
@@ -1863,6 +1869,11 @@ export default {
           'Access-Control-Max-Age': '86400'
         }
       });
+    }
+
+    // /douban/* 路由 → 豆瓣元数据/图片代理（与 TMDB 同一个 Worker）
+    if (path.startsWith('/douban/')) {
+      return handleDoubanRequest(request, env, ctx, url);
     }
 
     // /invite/* 路由 → 邀请码 API

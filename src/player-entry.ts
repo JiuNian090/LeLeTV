@@ -6,6 +6,7 @@
 import './services/api';
 import './services/search';
 import './services/viewing-history';
+import './services/media/player-bridge';
 
 import './ui/player/utils';
 import './ui/player/navigation';

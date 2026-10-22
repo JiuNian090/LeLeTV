@@ -2,7 +2,7 @@
 // 从 player-ui.js 拆分
 
 // 阶段 5B-3：状态、详情存储与同层渲染函数改为显式 import。
-import { currentEpisodeIndex, currentVideoTitle, currentVideoUrl, setCurrentVideoTitle } from './state';
+import { currentEpisodeIndex, currentEpisodes, currentVideoTitle, currentVideoUrl, setCurrentVideoTitle } from './state';
 import { escHtml } from './utils';
 import { renderResourceCurrentSource, updateResourceSourceCount } from './ui';
 import { StorageService } from '../../core/storage';
@@ -40,6 +40,70 @@ export function renderPlayerDetailInfo(): void {
   var toggleHd = ct.querySelector('.detail-toggle-header') as HTMLElement | null;
   if (toggleHd) toggleHd.style.display = hasActorOrDesc ? '' : 'none';
   if (hasActorOrDesc) ct.classList.add('detail-collapsed');
+
+  // 采集站详情先渲染；豆瓣/TMDB 元数据异步补全后再重绘一次（失败时保留采集站内容）
+  void enrichVideoInfoFromMediaSource();
+}
+
+let mediaEnrichKey = '';
+let mediaEnrichInFlight = false;
+
+interface MediaPlayerBridgeWindow extends Window {
+  LeLeMediaPlayer?: {
+    enrich: (input: {
+      title: string;
+      info: Record<string, unknown>;
+      episodeCount: number;
+    }) => Promise<Record<string, unknown> | null>;
+  };
+}
+
+/**
+ * UI 层只负责触发和重绘；豆瓣/TMDB 的匹配与字段合并由 services/media/player-bridge 完成。
+ * bridge 未加载（例如旧页签缓存了旧 bundle）时直接保留采集站详情。
+ */
+async function enrichVideoInfoFromMediaSource(): Promise<void> {
+  const title = String(currentVideoTitle || '').trim();
+  if (!title || title === '未知视频') return;
+
+  let current: Record<string, unknown> | null = null;
+  try { current = StorageService.getCurrentVideoInfo(); } catch { current = null; }
+  const info: Record<string, unknown> = current || {};
+
+  const year = info.year ? String(info.year) : '';
+  const key = title + '|' + year;
+  if (mediaEnrichInFlight || mediaEnrichKey === key) return;
+
+  // 已经补全过（页面刷新后 currentVideoInfo 仍在）：不重复请求
+  if (info.mediaSource === 'douban' || info.mediaSource === 'tmdb') {
+    mediaEnrichKey = key;
+    return;
+  }
+
+  const bridge = (window as MediaPlayerBridgeWindow).LeLeMediaPlayer;
+  if (!bridge || typeof bridge.enrich !== 'function') {
+    mediaEnrichKey = key;
+    return;
+  }
+
+  mediaEnrichInFlight = true;
+  try {
+    const merged = await bridge.enrich({
+      title,
+      info,
+      episodeCount: Array.isArray(currentEpisodes) ? currentEpisodes.length : 0,
+    });
+    mediaEnrichKey = key;
+    if (!merged) return;
+
+    StorageService.setCurrentVideoInfo(merged);
+    renderPlayerDetailInfo();
+  } catch (e) {
+    console.warn('[LeLeTV] 元数据补全失败，保留采集站详情:', e);
+    mediaEnrichKey = key;
+  } finally {
+    mediaEnrichInFlight = false;
+  }
 }
 
 export function toggleDetailInfo(): void {

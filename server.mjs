@@ -83,17 +83,19 @@ async function renderPage(filePath, hiddenKey) {
     // 注入隐藏内容密码
     if (hiddenKey !== '') {
       const sha256 = await sha256Hash(hiddenKey);
-      content = content.replace('{{HIDDENKEY}}', sha256);
+      content = content.replaceAll('{{HIDDENKEY}}', sha256);
     } else {
-      content = content.replace('{{HIDDENKEY}}', '');
+      content = content.replaceAll('{{HIDDENKEY}}', '');
     }
 
     // 注入 TMDB Worker URL
-    content = content.replace('{{TMDB_WORKER_URL}}', config.tmdbWorkerUrl);
+    // 播放页里这个占位符出现两次（邀请码脚本 + window.__ENV__），必须全部替换，
+    // 否则 window.__ENV__.TMDB_WORKER_URL 会保留占位符，元数据请求解析到相对路径。
+    content = content.replaceAll('{{TMDB_WORKER_URL}}', config.tmdbWorkerUrl);
 
     // 注入版本号
     const version = await getVersion();
-    content = content.replace('{{LELETV_VERSION}}', version);
+    content = content.replaceAll('{{LELETV_VERSION}}', version);
 
     return content;
   } catch (error) {

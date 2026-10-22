@@ -117,3 +117,11 @@ skills-lock.json
 
 # .agents/ 内的本机状态（含本机绝对路径），不纳入版本控制
 .agents/tools.json
+
+# 本地规划/勘察/重构文档，不纳入版本控制
+# 已跟踪的旧文档（BASELINE / REGRESSION 等）不受影响
+docs/
+
+# 本地测试文件，不纳入版本控制
+# 已跟踪的旧测试仍保留；如需从远端移除，使用 git rm --cached
+scripts/test/

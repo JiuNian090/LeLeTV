@@ -1,5 +1,14 @@
 // 阶段 5B-3：TMDB Worker URL 改为显式 import。
 import { TMDB_WORKER_URL } from '../core/config';
+import { GENRE_MAP } from '../core/genres';
+import type { GenreItem } from '../core/genres';
+import { getMediaProvider } from './media';
+import type { MediaCategory, MediaItem, MediaSort } from './media';
+import { saveLastPickedMedia } from './media/context';
+
+// 兼容旧调用方：类型表已下沉 core，这里继续按原路径导出
+export { GENRE_MAP } from '../core/genres';
+export type { GenreItem } from '../core/genres';
 
 interface TmdbState {
   type: string;
@@ -25,11 +34,6 @@ interface TmdbConfig {
   posterSize: string;
   backdropSize: string;
   language: string;
-}
-
-interface GenreItem {
-  id: number;
-  name: string;
 }
 
 interface SortOption {
@@ -161,48 +165,6 @@ export const TMDB_CONFIG: TmdbConfig = {
   posterSize: 'w342',
   backdropSize: 'w780',
   language: 'zh-CN'
-};
-
-export const GENRE_MAP: Record<string, GenreItem[]> = {
-  movie: [
-    { id: 28, name: '动作' },
-    { id: 12, name: '冒险' },
-    { id: 16, name: '动画' },
-    { id: 35, name: '喜剧' },
-    { id: 80, name: '犯罪' },
-    { id: 99, name: '纪录' },
-    { id: 18, name: '剧情' },
-    { id: 10751, name: '家庭' },
-    { id: 14, name: '奇幻' },
-    { id: 36, name: '历史' },
-    { id: 27, name: '恐怖' },
-    { id: 10402, name: '音乐' },
-    { id: 9648, name: '悬疑' },
-    { id: 10749, name: '爱情' },
-    { id: 878, name: '科幻' },
-    { id: 10770, name: '电视电影' },
-    { id: 53, name: '惊悚' },
-    { id: 10752, name: '战争' },
-    { id: 37, name: '西部' }
-  ],
-  tv: [
-    { id: 10759, name: '动作冒险' },
-    { id: 16, name: '动画' },
-    { id: 35, name: '喜剧' },
-    { id: 80, name: '犯罪' },
-    { id: 99, name: '纪录' },
-    { id: 18, name: '剧情' },
-    { id: 10751, name: '家庭' },
-    { id: 10762, name: '儿童' },
-    { id: 9648, name: '悬疑' },
-    { id: 10763, name: '新闻' },
-    { id: 10764, name: '真人秀' },
-    { id: 10765, name: '科幻奇幻' },
-    { id: 10766, name: '肥皂剧' },
-    { id: 10767, name: '脱口秀' },
-    { id: 10768, name: '战争政治' },
-    { id: 37, name: '西部' }
-  ]
 };
 
 const SORT_OPTIONS: Record<string, SortOption[]> = {
@@ -525,16 +487,19 @@ function bindFilterTags(): void {
       if (genre === TMDB_STATE.selectedGenre) return;
       TMDB_STATE.selectedGenre = genre;
     } else if (btn.hasAttribute('data-country')) {
-      const country = btn.dataset.country;
-      if (!country || country === TMDB_STATE.originCountry) return;
+      // 空字符串代表「全部地区」，必须允许清空
+      const country = btn.dataset.country || '';
+      if (country === TMDB_STATE.originCountry) return;
       TMDB_STATE.originCountry = country;
     } else if (btn.hasAttribute('data-status')) {
-      const status = btn.dataset.status;
-      if (!status || status === TMDB_STATE.tvStatus) return;
+      // 空字符串代表「全部状态」
+      const status = btn.dataset.status || '';
+      if (status === TMDB_STATE.tvStatus) return;
       TMDB_STATE.tvStatus = status;
     } else if (btn.hasAttribute('data-language')) {
-      const language = btn.dataset.language;
-      if (!language || language === TMDB_STATE.originalLanguage) return;
+      // 空字符串代表「全部语言」
+      const language = btn.dataset.language || '';
+      if (language === TMDB_STATE.originalLanguage) return;
       TMDB_STATE.originalLanguage = language;
     } else if (btn.hasAttribute('data-year-toggle')) {
       TMDB_STATE._yearExpanded = !TMDB_STATE._yearExpanded;
@@ -545,12 +510,14 @@ function bindFilterTags(): void {
       renderTmdbFilters();
       return;
     } else if (btn.hasAttribute('data-year')) {
-      const year = btn.dataset.year;
-      if (!year || year === TMDB_STATE.selectedYear) return;
+      // 空字符串代表「全部年份」
+      const year = btn.dataset.year || '';
+      if (year === TMDB_STATE.selectedYear) return;
       TMDB_STATE.selectedYear = year;
     } else if (btn.hasAttribute('data-rating')) {
-      const rating = btn.dataset.rating;
-      if (!rating || rating === TMDB_STATE.voteRating) return;
+      // 空字符串代表「全部评分」
+      const rating = btn.dataset.rating || '';
+      if (rating === TMDB_STATE.voteRating) return;
       TMDB_STATE.voteRating = rating;
     } else if (btn.hasAttribute('data-sort')) {
       const sort = btn.dataset.sort;
@@ -567,12 +534,26 @@ function bindFilterTags(): void {
   });
 }
 
+function toMediaCategory(type: string): MediaCategory {
+  return type === 'tv' || type === 'anime' || type === 'variety' ? type : 'movie';
+}
+
+function toMediaSort(sort: string): MediaSort {
+  if (sort === 'popularity.desc' || sort === 'vote_count.desc' || sort === 'revenue.desc') return 'popular';
+  if (sort === 'vote_average.desc') return 'rating';
+  if (sort === 'primary_release_date.desc' || sort === 'first_air_date.desc') return 'recent';
+  return 'default';
+}
+
 export async function loadTmdbResults(): Promise<void> {
   if (TMDB_STATE.isLoading) return;
   TMDB_STATE.isLoading = true;
 
   const container = document.getElementById('tmdb-results');
-  if (!container) return;
+  if (!container) {
+    TMDB_STATE.isLoading = false;
+    return;
+  }
 
   // 加载中：与结果同形状的海报骨架
   container.innerHTML = typeof generateSkeletonCards === 'function'
@@ -580,88 +561,42 @@ export async function loadTmdbResults(): Promise<void> {
     : '<div class="v2-state-inline"><span class="v2-spinner"></span>正在加载</div>';
 
   try {
-    const type = TMDB_STATE.type;
-    const isMovie = isMovieLike(type);
-    const params: Record<string, string> = {
-      language: 'zh-CN',
-      page: String(TMDB_STATE.page),
-      sort_by: TMDB_STATE.selectedSort,
-      'vote_count.gte': '10'
-    };
+    const category = toMediaCategory(TMDB_STATE.type);
+    const genreMap = GENRE_MAP[getEffectiveType(TMDB_STATE.type)] || [];
+    const selectedGenre = TMDB_STATE.selectedGenre
+      ? genreMap.find(genre => genre.id === TMDB_STATE.selectedGenre)
+      : undefined;
+    const voteRating = Number(TMDB_STATE.voteRating);
 
-    if (TMDB_STATE.selectedGenre) {
-      params.with_genres = String(TMDB_STATE.selectedGenre);
-    }
+    const result = await getMediaProvider().getList({
+      type: category,
+      page: TMDB_STATE.page,
+      pageSize: 20,
+      genre: selectedGenre ? selectedGenre.name : undefined,
+      year: TMDB_STATE.selectedYear || undefined,
+      region: TMDB_STATE.originCountry || undefined,
+      minRating: Number.isFinite(voteRating) && voteRating > 0 ? voteRating : undefined,
+      language: TMDB_STATE.originalLanguage || undefined,
+      tvStatus: TMDB_STATE.tvStatus || undefined,
+      sort: toMediaSort(TMDB_STATE.selectedSort),
+    });
 
-    if (TMDB_STATE.selectedYear) {
-      if (TMDB_STATE.selectedYear === '1980s') {
-        params[isMovie ? 'primary_release_date.gte' : 'first_air_date.gte'] = '1980-01-01';
-        params[isMovie ? 'primary_release_date.lte' : 'first_air_date.lte'] = '1989-12-31';
-      } else if (TMDB_STATE.selectedYear === '1970s') {
-        params[isMovie ? 'primary_release_date.gte' : 'first_air_date.gte'] = '1970-01-01';
-        params[isMovie ? 'primary_release_date.lte' : 'first_air_date.lte'] = '1979-12-31';
-      } else if (TMDB_STATE.selectedYear === '1960s') {
-        params[isMovie ? 'primary_release_date.gte' : 'first_air_date.gte'] = '1900-01-01';
-        params[isMovie ? 'primary_release_date.lte' : 'first_air_date.lte'] = '1969-12-31';
-      } else if (isMovie) {
-        params.year = TMDB_STATE.selectedYear;
-      } else {
-        params.first_air_date_year = TMDB_STATE.selectedYear;
-      }
-    }
-
-    if (TMDB_STATE.voteRating) {
-      params['vote_average.gte'] = TMDB_STATE.voteRating;
-    }
-
-    if (TMDB_STATE.originalLanguage) {
-      params.with_original_language = TMDB_STATE.originalLanguage;
-    }
-
-    if (TMDB_STATE.originCountry) {
-      if (isMovie) {
-        params.region = TMDB_STATE.originCountry;
-      } else {
-        params.with_origin_country = TMDB_STATE.originCountry;
-      }
-    }
-
-    if (!isMovie && TMDB_STATE.tvStatus) {
-      params.with_status = TMDB_STATE.tvStatus;
-    }
-
-    const endpoint = isMovie ? 'discover/movie' : 'discover/tv';
-
-    const ourPage = TMDB_STATE.page;
-    const startIdx = (ourPage - 1) * 24;
-    const tmdbPage1 = Math.floor(startIdx / 20) + 1;
-    const offset = startIdx % 20;
-
-    const [data, data2] = await Promise.all([
-      tmdbFetch(endpoint, { ...params, page: String(tmdbPage1) }),
-      tmdbPage1 + 1 <= 500
-        ? tmdbFetch(endpoint, { ...params, page: String(tmdbPage1 + 1) })
-        : Promise.resolve({ results: [] as TmdbResultItem[] })
-    ]);
-
-    let results = [...(data.results || []), ...(data2.results || [])];
-    results = results.slice(offset, offset + 24);
-
-    const totalTmdbPages = Math.min(data.total_pages || 1, 500);
-    TMDB_STATE.totalPages = Math.min(Math.ceil(totalTmdbPages * 20 / 24), 500);
-    renderTmdbCards(results);
+    // 豆瓣列表不返回总条数，只能根据 hasMore 推断下一页是否存在；
+    // 页码 UI 至少保留当前页与可前进的一页。
+    TMDB_STATE.totalPages = result.hasMore ? TMDB_STATE.page + 1 : TMDB_STATE.page;
+    renderTmdbCards(result.items);
     renderTmdbPagination();
     // 从播放页返回时恢复之前浏览到的影片位置
     restoreTmdbScroll();
   } catch (err) {
-    console.error('TMDB 加载失败:', err);
+    console.error('元数据加载失败:', err);
     const rawMessage = (err as { message?: unknown } | null)?.message;
     const safeMessage = String(rawMessage || '未知错误').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     container.innerHTML = `
       <div class="v2-state is-error">
         <span class="v2-state-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 8v4.5m0 3.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>
         <h3>片单加载失败</h3>
-        <p>${safeMessage}。请检查网络，或确认 TMDB API Key 配置正确。</p>
+        <p>${safeMessage}。请检查网络，或在设置中切换元数据源。</p>
         <button type="button" data-action="load-tmdb-results" class="v2-btn v2-btn--secondary v2-btn--sm">重试</button>
       </div>
     `;
@@ -670,7 +605,7 @@ export async function loadTmdbResults(): Promise<void> {
   }
 }
 
-function renderTmdbCards(items: TmdbResultItem[]): void {
+function renderTmdbCards(items: MediaItem[]): void {
   const container = document.getElementById('tmdb-results');
   if (!container) return;
 
@@ -686,28 +621,31 @@ function renderTmdbCards(items: TmdbResultItem[]): void {
   }
 
   const fragment = document.createDocumentFragment();
+  const category = toMediaCategory(TMDB_STATE.type);
+  const genreMap = GENRE_MAP[getEffectiveType(TMDB_STATE.type)] || [];
+  const safeAttr = (value: unknown): string => String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
   items.forEach(item => {
-    const title = (isMovieLike(TMDB_STATE.type) ? item.title : item.name) as string;
-    const date = isMovieLike(TMDB_STATE.type) ? item.release_date : item.first_air_date;
-    const year = date ? date.split('-')[0] : '';
-    const voteAverage = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-    const posterPath = item.poster_path
-      ? `${TMDB_CONFIG.imageBase}/${TMDB_CONFIG.posterSize}${item.poster_path}`
-      : null;
+    const title = item.title || '';
+    const year = item.year || '';
+    const voteAverage = typeof item.rating === 'number' ? item.rating.toFixed(1) : 'N/A';
+    const posterPath = item.poster || null;
     const overview = item.overview || '暂无简介';
-    const language = item.original_language || '';
-
-    const genresList = GENRE_MAP[getEffectiveType(TMDB_STATE.type)]
-      .filter(g => (item.genre_ids || []).includes(g.id))
-      .map(g => g.name)
+    const genresList = (item.genreIds || [])
+      .map(id => genreMap.find(genre => genre.id === id))
+      .filter((genre): genre is GenreItem => Boolean(genre))
+      .map(genre => genre.name)
       .slice(0, 2);
 
-    const langLabel = LANGUAGES.find(l => l.value === language);
-
-    const safeTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const safeOverview = overview.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const safeGenres = genresList.map(g => g.replace(/"/g, '')).join(',');
+    const safeTitle = safeAttr(title);
+    const safeOverview = safeAttr(overview);
+    const safeGenres = safeAttr(genresList.join(','));
+    const mediaCategory = item.category || category;
 
     const card = document.createElement('div');
     card.className = 'tmdb-card';
@@ -715,13 +653,24 @@ function renderTmdbCards(items: TmdbResultItem[]): void {
     const meta = [year, genresList.join(' / ')].filter(Boolean).join(' · ');
     // 片名首字占位垫在下面，封面到了再淡入覆盖
     const posterHtml = `<div class="v2-poster-empty"><b>${safeTitle.charAt(0) || '·'}</b><span>${safeTitle}</span></div>`
-      + (posterPath ? `<img src="${posterPath}" alt="" data-title="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="_cardImgFallback(this)">` : '');
-    const ratingHtml = (item.vote_count ?? 0) >= 20 && item.vote_average ? `<span class="v2-badge">★ ${voteAverage}</span>` : '';
-    const langHtml = langLabel ? `<span class="v2-lang">${langLabel.label}</span>` : '';
+      + (posterPath ? `<img src="${safeAttr(posterPath)}" alt="" data-title="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="_cardImgFallback(this)">` : '');
+    const ratingHtml = typeof item.rating === 'number' && item.rating > 0
+      ? `<span class="v2-badge">★ ${voteAverage}</span>`
+      : '';
+    const langLabel = item.originalLanguage
+      ? LANGUAGES.find(language => language.value === item.originalLanguage)
+      : undefined;
+    const langHtml = langLabel ? `<span class="v2-lang">${safeAttr(langLabel.label)}</span>` : '';
 
-    // 整张卡片是按钮：点击后按片名去各片源检索（沿用 data-action="tmdb-search-video"）
+    // 整张卡片是按钮：点击后按片名去各片源检索（沿用 data-action="tmdb-search-video"）；
+    // 同时携带豆瓣/TMDB 的 sourceId，播放页详情补全时优先用它。
     card.innerHTML = `
-      <button type="button" class="v2-pcard tmdb-card-inner" data-action="tmdb-search-video" data-title="${safeTitle}" data-genres="${safeGenres}" aria-label="检索 ${safeTitle}" title="${safeOverview}">
+      <button type="button" class="v2-pcard tmdb-card-inner" data-action="tmdb-search-video"
+        data-title="${safeTitle}" data-genres="${safeGenres}"
+        data-media-source="${safeAttr(item.source)}" data-media-id="${safeAttr(item.sourceId)}"
+        data-media-type="${safeAttr(item.type)}" data-category="${safeAttr(mediaCategory)}"
+        data-year="${safeAttr(year)}"
+        aria-label="检索 ${safeTitle}" title="${safeOverview}">
         <div class="v2-poster">${posterHtml}${ratingHtml}${langHtml}</div>
         <h3>${safeTitle}</h3>
         <p>${meta || '&nbsp;'}</p>
@@ -800,8 +749,28 @@ function renderTmdbPagination(): void {
   });
 }
 
-export function tmdbSearchVideo(title: string, genres: string): void {
+export function tmdbSearchVideo(
+  title: string,
+  genres: string,
+  mediaSource?: string,
+  mediaId?: string,
+  mediaType?: string,
+  category?: string,
+  year?: string
+): void {
   if (!title) return;
+
+  // 分类页卡片携带豆瓣/TMDB 的 sourceId：暂存给播放页详情补全，避免只靠片名重新匹配
+  if ((mediaSource === 'douban' || mediaSource === 'tmdb') && mediaId && (mediaType === 'movie' || mediaType === 'tv')) {
+    saveLastPickedMedia({
+      source: mediaSource,
+      sourceId: mediaId,
+      type: mediaType,
+      category: toMediaCategory(category || mediaType),
+      title,
+      year: year || undefined,
+    });
+  }
 
   function open(): void {
     // 统一进入结果页：左侧源列表 + 右侧结果，携带类型信息用于「无关键词结果时的分类兜底」
