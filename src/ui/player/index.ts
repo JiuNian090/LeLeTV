@@ -34,6 +34,7 @@ import {
 import { TIMING } from '../../core/timing';
 import { StorageService } from '../../core/storage';
 import { TMDB_WORKER_URL } from '../../core/config';
+import { refreshRelatedSection } from './related';
 
 // 返回导航已迁至 src/ui/player/navigation.ts（阶段 5B-2d）
 
@@ -412,6 +413,7 @@ function initializePageContent(): void {
 
                 StorageService.setCurrentVideoInfo(mergedInfo);
                 renderPlayerDetailInfo();
+                refreshRelatedSection();
 
                 // 同步 TMDB 元数据到观看历史：下次从历史进入可直接恢复简介/海报，不必等接口
                 try {
@@ -496,6 +498,9 @@ function initializePageContent(): void {
             case 'switch-to-resource': switchToResource(el.dataset.key || '', el.dataset.vodId || ''); break;
         }
     });
+
+    // 相关推荐：先按已知片名/类型渲染，详情到达后由各详情分支再刷新
+    refreshRelatedSection();
 }
 
 // 处理键盘快捷键
@@ -893,6 +898,7 @@ async function fetchDetailAndInit(vodId: string, sourceCode: string, title: stri
 
         // 渲染详情、集数、源信息
         renderPlayerDetailInfo();
+        refreshRelatedSection();
         renderResourceInfoBar();
         updateEpisodeInfo();
         renderEpisodes();
@@ -941,6 +947,7 @@ async function fetchDetailInfo(vodId: string, sourceCode: string): Promise<void>
         if (data.videoInfo) {
             StorageService.setCurrentVideoInfo(data.videoInfo);
             renderPlayerDetailInfo();
+            refreshRelatedSection();
             renderResourceInfoBar();
         }
 

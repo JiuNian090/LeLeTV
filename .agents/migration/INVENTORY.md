@@ -548,12 +548,16 @@
 | 450 | `src/pages/settings/entry.ts` | `leletv-settings` 的持久 ESM 入口 | keep | — | — | — | done | 阶段 5B-5 新增 |
 | 451 | `docs/GLOBAL-BRIDGES.md` | 全局桥白名单与跨层契约清单 | keep | — | — | — | done | 阶段 5B-5 新增 |
 | 452 | `package-lock.json` | npm 依赖锁定（Pages 构建可复现） | keep | — | — | — | done | 纳入版本控制；Pages 构建按锁文件安装 |
+| 453 | `src/services/related.ts` | 播放页相关推荐数据（同源其他季 / 续集 / 同类型） | keep | — | — | — | done | 新增功能；按名称与类型打分，优先复用搜索缓存 |
+| 454 | `src/ui/player/related.ts` | 播放页相关推荐板块渲染与交互 | keep | — | — | — | done | 新增功能；数据加载函数由 `player-entry.ts` 注入 |
+| 455 | `src/services/sources/imported.ts` | 本地导入源（LibreTV / TVBOX / 裸数组）合并与去重 | keep | — | — | — | done | 补登记：随「从 URL 导入视频源」提交引入 |
 
 ## workers/（红区）
 
 | # | 原路径 | 职责 | 去向类型 | 目标路径 | 合并目标 | 批准记录 | 状态 | 备注 |
 |---|---|---|---|---|---|---|---|---|
 | 369 | `workers/tmdb-worker.js` | Cloudflare Worker：TMDB 代理 / 邀请码 / 云源管理（红区） | keep | — | — | — | done | 禁止修改 |
+| 456 | `workers/builtin-sources.json` | Worker 内置源清单（红区数据文件） | keep | — | — | — | done | 补登记：随「从 URL 导入视频源」提交引入；禁止修改 |
 
 ## 生成后自检
 

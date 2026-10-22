@@ -22,3 +22,9 @@ import './ui/player/index';
 
 import './services/version-updater';
 import './core/cache';
+
+// 播放页「相关推荐」：ui 只负责渲染，数据加载函数由入口注入（services 只能在非 ui 层接入）
+import { loadRelatedVideos } from './services/related';
+import { initRelatedSection } from './ui/player/related';
+
+initRelatedSection(loadRelatedVideos);
