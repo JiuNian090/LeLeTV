@@ -46,9 +46,9 @@
     <!-- 样式：变量与背景 → 通用组件 → 首页。
          views.css（内页）与 admin.css（设置页面板）改由 js/app/page-loader.js
          在首次进入对应页面时加载，不再占用首屏。 -->
-    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.2.0">
-    <link rel="stylesheet" href="/src/styles/base.css?v=v4.2.0">
-    <link rel="stylesheet" href="/src/pages/home/style.css?v=v4.2.0">
+    <link rel="stylesheet" href="/src/styles/variables.css?v=v4.2.1">
+    <link rel="stylesheet" href="/src/styles/base.css?v=v4.2.1">
+    <link rel="stylesheet" href="/src/pages/home/style.css?v=v4.2.1">
 
     <!-- Geist 字体：本地自托管（原先走 cdn.jsdelivr.net，跨境抖动会拖慢首屏；libs/* 命中长缓存） -->
     <style>
@@ -1252,28 +1252,28 @@
     </footer>
 
     <!-- 引入纯 JS sha256（HTTP 下依然可用） -->
-    <script src="/libs/sha256.min.js?v=v4.2.0"></script>
+    <script src="/libs/sha256.min.js?v=v4.2.1"></script>
     <script>
         window._jsSha256 = window.sha256;
     </script>
 
-    <link rel="modulepreload" href="dist/chunks/chunk-WF3VK4AM.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-FWXTDEMR.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-SQQEWIWI.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-IIQRKWHD.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-TKUCQLJ3.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-ERAXO2Q2.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-55WJMAUR.js?v=v4.2.0">
-    <link rel="modulepreload" href="dist/chunks/chunk-K6KTEZCG.js?v=v4.2.0">
-    <script type="module" src="dist/leletv-core.ZBTK5PQV.js?v=v4.2.0"></script>
-    <script type="module" src="dist/leletv-app.GNZXMY4Y.js?v=v4.2.0"></script>
+    <link rel="modulepreload" href="dist/chunks/chunk-WF3VK4AM.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-FWXTDEMR.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-SQQEWIWI.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-IIQRKWHD.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-TKUCQLJ3.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-ERAXO2Q2.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-55WJMAUR.js?v=v4.2.1">
+    <link rel="modulepreload" href="dist/chunks/chunk-K6KTEZCG.js?v=v4.2.1">
+    <script type="module" src="dist/leletv-core.ZBTK5PQV.js?v=v4.2.1"></script>
+    <script type="module" src="dist/leletv-app.GNZXMY4Y.js?v=v4.2.1"></script>
 
     <!-- 环境变量注入脚本 -->
     <script>
         window.__ENV__ = window.__ENV__ || {};
         window.__ENV__.HIDDENKEY = "{{HIDDENKEY}}";
         window.__ENV__.TMDB_WORKER_URL = "{{TMDB_WORKER_URL}}";
-        window.__LELETV_VERSION__ = "v4.2.0";
+        window.__LELETV_VERSION__ = "v4.2.1";
         // 鉴权与 TMDB 都走同一个 Worker：在首次请求前先建好 DNS/TLS，省掉登录时的一次握手
         (function () {
             var base = window.__ENV__.TMDB_WORKER_URL;

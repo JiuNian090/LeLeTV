@@ -20,7 +20,7 @@
 
 ## 📖 项目简介
 
-LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学习与技术研究。核心是一个**纯前端单页应用（SPA）**：聚合 21 个第三方视频采集站 API 完成搜索与播放，通过 **TMDB（The Movie Database）** 提供分类浏览、影片详情与智能筛选。
+LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学习与技术研究。核心是一个**纯前端单页应用（SPA）**：聚合 21 个第三方视频采集站 API 完成搜索与播放，通过**豆瓣 / TMDB 双元数据源**提供分类浏览、影片详情与智能筛选，主源可在设置里切换、失败时自动降级。
 
 部署采用 **Cloudflare Pages + Pages Functions + Workers + D1** 的纯静态 + 无服务器架构，无需自建后端。
 
@@ -28,15 +28,15 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 指标 | 数据 |
 |------|------|
-| 源码 | 67 个 TypeScript 模块（`src/`，core / services / ui / pages / router） |
+| 源码 | 82 个 TypeScript 模块（`src/`，core / services / ui / pages / router） |
 | 第三方库 | 5 个（`libs/`：ArtPlayer / HLS.js / marked / sha256 / JSZip）+ Geist 字体 |
 | 样式 | 6 个手写 CSS（`src/styles/` + 页面级样式，无构建步骤） |
 | 构建产物 | 5 个 esbuild bundle（core / app / category / settings / player，ESM splitting + 内容哈希） |
 | 主题配色 | 11 套预设方案 + 自定义配色 |
 | 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
-| 页面 | `src/index.html`（SPA，1307 行）+ `src/pages/player/index.html`（独立播放页，331 行） |
+| 页面 | `src/index.html`（SPA，1220 行）+ `src/pages/player/index.html`（独立播放页，317 行） |
 | 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
-| 代码图谱 | CodeGraph 219 文件 / 6,157 节点 / 23,010 边 |
+| 代码图谱 | CodeGraph 231 文件 / 6,361 节点 / 23,733 边 |
 
 ## ⚠️ 重要声明
 
@@ -66,7 +66,9 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 - **智能负载均衡**：动态评分算法自动选源与故障转移（详见下文）
 - **私密内容过滤**：可选开关，密码保护
 
-### TMDB 分类浏览
+### 分类浏览（豆瓣 / TMDB）
+- **双元数据源**：默认使用豆瓣，设置里可切换为 TMDB；豆瓣不支持的筛选条件自动交给 TMDB 补齐
+- **自动降级**：主源超时、被限流或返回异常时自动切换到另一个源，熔断期内直接走备用源，分类页不会整页空白
 - 支持 **电影 / 电视剧 / 动漫 / 综艺** 四大类型
 - **多维筛选**：类型流派、年份（可折叠）、评分、语言、地区、剧集状态，整块筛选区亦可一键收起
 - 8 种排序方式；智能分页（省略号逻辑）+ 响应式网格
@@ -177,7 +179,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 | 本地服务 | Node.js + Express 5 | 静态服务 + 视频代理 + TMDB 代理 |
 | 托管 | Cloudflare Pages | 静态资源 |
 | 边缘函数 | Pages Functions | HTML 注入 + 视频/图片代理 |
-| 无服务器 | Cloudflare Workers | TMDB 代理 + 邀请码 API |
+| 无服务器 | Cloudflare Workers | 豆瓣 / TMDB 元数据代理 + 邀请码 API |
 | 数据库 | Cloudflare D1 | 邀请码与设备数据 |
 | PWA | Web App Manifest | 可安装为独立应用 |
 
@@ -217,10 +219,12 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     │               ├── devices ─────────── 指纹、设备名、浏览器、IP、活跃时间
     │               └── api_sites ───────── 云端采集源配置（名称、接口、私密、启停、排序）
     │
-    ├── Cloudflare Worker ────────── TMDB 代理 + 邀请码 API + 数据源下发
+    ├── Cloudflare Worker ────────── 元数据代理（豆瓣 / TMDB）+ 邀请码 API + 数据源下发
     │       ├── TMDB API v3（首页/分类/详情边缘缓存 24h，搜索缓存 1h）
+    │       ├── 豆瓣（movie / m.douban.com 分类、搜索、详情、图片代理，边缘缓存 5min ~ 30 天）
     │       ├── GET / ────────────── 部署状态控制台（自检密钥与绑定）
     │       ├── /invite/* ────────── 邀请码 API 路由
+    │       ├── /douban/* ────────── 豆瓣元数据与图片代理
     │       ├── /api-sites ───────── 云端数据源下发（私密源走 /api-sites/hidden）
     │       └── /admin ───────────── 数据源管理面板（登录后在线增删改查）
     │
@@ -232,7 +236,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 ```
 用户浏览器
     │
-    ├── Node.js + Express（server.mjs，364 行）
+    ├── Node.js + Express（server.mjs，366 行）
     │       ├── express.static ───── 静态资源
     │       ├── GET / ────────────── HTML 注入（版本号、Worker 地址等）
     │       ├── GET /s=:keyword ──── 搜索直达路由
@@ -288,7 +292,7 @@ LeLeTV/
 │   ├── boot.ts                 #   启动编排（鉴权 → 首页 → 进入）
 │   ├── core-entry.ts           #   core bundle 入口
 │   ├── core/                   #   配置、共享状态、存储、HTTP、加密、时序
-│   ├── services/               #   采集站 API、搜索、负载均衡、TMDB、邀请码、主题、观看记录、源导入导出
+│   ├── services/               #   采集站 API、搜索、负载均衡、元数据统一层（豆瓣 / TMDB）、邀请码、主题、观看记录、源导入导出
 │   ├── ui/                     #   Toast/模态框、导航、品牌画布、PWA、播放器（ui/player）
 │   ├── pages/                  #   首页/分类/历史/设置/关于/项目说明片段、播放页、页面脚本与样式
 │   ├── router/                 #   路由、页面按需加载、预取
@@ -305,9 +309,10 @@ LeLeTV/
 │   ├── _middleware.js          #   HTML 注入
 │   └── proxy/[[path]].js       #   视频/图片代理
 ├── workers/
-│   └── tmdb-worker.js          #   TMDB 代理 + 邀请码 API + 数据源下发 + /admin 面板
+│   ├── tmdb-worker.js          #   Worker 入口：TMDB 代理 + 邀请码 API + 数据源下发 + /admin 面板
+│   └── douban.js               #   豆瓣元数据/图片代理（由入口按 /douban/* 分流调用）
 ├── migrations/                 # D1 迁移脚本（001 表结构 → 004 数据源表）
-├── scripts/                    # 版本生成、打包、品牌图与启动图生成（scripts/brand）、钩子安装、技能索引同步脚本
+├── scripts/                    # 版本生成、打包、品牌图与启动图生成（scripts/brand）、钩子安装、技能索引同步脚本、测试（scripts/test）
 ├── image/                      # 品牌 Logo 与图标、启动图（当前启动由页面首帧动画接管，启动图未启用）
 ├── .agents/                    # AI 技能与规则（技能正文、规则文档、注册表，跨 Agent 共用）
 └── .github/                    # Issue 模板与工作流
@@ -414,8 +419,8 @@ npm run dev
 
 1. 访问 Pages 域名，应弹出邀请码登录界面
 2. 用有效邀请码（或 `ADMINUSER` / `ADMINKEY`）登录进入首页
-3. 打开 **分类** 页，应能看到 TMDB 数据
-4. 若分类页空白，依次检查：Worker 根路径状态控制台是否显示密钥已就绪 → Pages 的 `TMDB_WORKER_URL` 是否填写正确 → Worker 的 `TMDB_API_KEY` 是否生效
+3. 打开 **分类** 页，应能看到分类数据（默认来自豆瓣，可在设置里切到 TMDB）
+4. 若分类页空白，先确认主源在设置里的选择，再看 Worker 根路径状态控制台是否显示密钥已就绪 → Pages 的 `TMDB_WORKER_URL` 是否填写正确 → Worker 的 `TMDB_API_KEY` 是否生效（豆瓣主源不需要密钥，主源异常时也会自动降级到 TMDB）
 
 ## ⚙️ 环境变量
 
@@ -430,6 +435,7 @@ npm run dev
 | `INVITE_DB` | 是 | D1 数据库绑定名 |
 
 > `ADMINUSER` / `ADMINKEY` 同时用于 Worker `/admin` 数据源管理面板的登录鉴权。
+> 豆瓣元数据代理（`/douban/*`）直接请求豆瓣公开接口，不需要额外密钥或变量。
 
 ### Pages Functions（生产）
 
@@ -489,10 +495,12 @@ npm run dev
 | 起播换线记录 | sessionStorage | 会话内（最多换 3 次） |
 | 临时播放进度 | localStorage | 24 小时自动清理 |
 | TMDB 边缘缓存 | Cloudflare 边缘 | 首页/分类/详情 24h，搜索 1h |
+| 豆瓣边缘缓存 | Cloudflare 边缘 | 分类标签 1h、列表 10min、搜索 5min、详情 30min、图片 30 天 |
+| 元数据源设置（主源 / 自动降级） | localStorage | 永久 |
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.2.0`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.2.1`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -504,6 +512,11 @@ npm run dev
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
 
+### v4.2.1 (2026-10-22)
+- 🎉 新增 分类与详情新增豆瓣数据源，设置里可切换豆瓣 / TMDB 主数据源，豆瓣不支持的筛选自动交给 TMDB
+- 🎉 新增 主数据源超时、被限流或返回异常时自动切换到另一个源，分类页不再整页空白
+- 🔧 修复 播放页地址拼接错误导致打开后出现 404 的问题
+
 ### v4.2.0 (2026-10-22)
 - 🏗️ 重构 完成前端架构迁移（`js/` → `src/` TypeScript 分层），项目进入新的开发阶段
 - 🔧 修复 启动屏在加载尚未超时时误显示“网络响应较慢 / 直接进入”的问题
@@ -514,17 +527,6 @@ npm run dev
 ### v4.1.2 (2026-10-20)
 - 🔧 修复 iOS Safari 上播放页双指捏合缩放导致页面错乱的问题
 - 🔧 修复 播放页在部分屏幕下底部或右侧露出空白的问题
-
-### v4.1.1 (2026-10-20)
-- 🎉 新增 视频源导入导出功能，支持拖拽上传，兼容 LibreTV、TVBOX 等格式，导入自动去重合并
-- 🎉 新增 播放 m3u8 直链时可自定义标题
-- ✨ 优化 启动流程改为先登录鉴权再加载首页内容，冷启动更顺畅
-- ✨ 优化 登录与鉴权请求增加超时保护，不再长时间转圈；同时预连接数据服务，登录更快
-- ✨ 优化 简洁首页适配竖屏极窄屏机型
-- 🎨 样式 播放页详情区域布局更紧凑
-- 🔧 修复 部分 HLS 源切换线路后播放进度丢失或错乱的问题
-- 🔧 修复 iOS 播放页高度显示异常的问题
-- 🔧 修复 部分设备应用图标无法正常显示的问题
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
