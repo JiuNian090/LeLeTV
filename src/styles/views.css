@@ -1266,12 +1266,32 @@
 }
 
 .v2-src-name {
+    position: relative;
+    padding-left: 10px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: var(--v2-t2);
     font-size: 13.5px;
     transition: color 0.15s ease;
+}
+
+/* 来源小圆点：不额外占 flex 宽度，只在名称前留 5px 点 + 5px 间距 */
+.v2-src-name::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    margin-top: -2.5px;
+    border-radius: 50%;
+    background: #22d3ee;
+    opacity: 0.9;
+}
+
+.v2-src-item[data-origin="import"] .v2-src-name::before {
+    background: #a78bfa;
 }
 
 .v2-switch-input:checked ~ .v2-src-name {
@@ -2832,6 +2852,26 @@
 
 .v2-dropzone-actions label {
     cursor: pointer;
+}
+
+/* 源列表 URL 导入：与拖拽区同一视觉层级，窄屏自动换行 */
+.v2-url-import {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.v2-url-import .v2-input {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.v2-url-hint {
+    margin-top: 6px;
+    color: var(--v2-t3);
+    font-size: 12px;
 }
 
 /* 更新日志条目里的分类标记（新增 / 修复 / 优化……）与补充说明 */

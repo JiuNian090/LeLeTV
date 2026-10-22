@@ -129,9 +129,10 @@ export function resetDataSourceLogic(): void {
     localStorage.removeItem('lastRefreshTime');
 
     // 显示提示信息
+    const defaultCount = getDefaultDataSources().length;
     showToast(isHiddenContentMode()
         ? '已重置，随机选取 5 个私密内容源'
-        : `已重置，恢复默认 ${DEFAULT_DATA_SOURCE_KEYS.length} 个数据源`, 'success');
+        : (defaultCount ? `已重置，恢复默认 ${defaultCount} 个数据源` : '暂无可用数据源，请先配置 Worker'), 'success');
 
     // 重新初始化API复选框，应用新逻辑
     initAPICheckboxes();
@@ -170,16 +171,30 @@ export function initAPICheckboxes(): void {
     }
     normaldiv.appendChild(normalTitle);
 
+    // 内置源已移除，首次启动或 Worker 未配置时可能暂时没有源
+    if (!Object.keys(API_SITES).length) {
+        normaldiv.innerHTML = '<p class="v2-empty-line">暂无数据源：请确认 Worker 已配置并已导入源</p>';
+        container.appendChild(normaldiv);
+        const statusEl = document.getElementById('siteStatus');
+        if (statusEl) statusEl.textContent = '等待云端数据源';
+        checkHiddenAPIsSelected();
+        return;
+    }
+
     // 只渲染当前数据域的源，另一个域的内容完全不出现
     Object.keys(API_SITES).forEach(apiKey => {
         const api = API_SITES[apiKey];
         if (isHiddenContentMode() ? !api.hidden : !!api.hidden) return;
 
         const checked = selectedAPIs.includes(apiKey);
+        const origin = api.origin === 'import' ? 'import' : 'worker';
 
-        // 一行一个小开关：input 只负责状态，开关本体是后面的 span，名字在最右
+        // 一行一个小开关：input 只负责状态，开关本体是后面的 span，名字在最右。
+        // data-origin 控制名称前的来源小圆点（CSS 伪元素，不额外占 flex 宽度）。
         const checkbox = document.createElement('label');
         checkbox.className = 'v2-src-item';
+        checkbox.dataset.origin = origin;
+        checkbox.title = origin === 'import' ? '导入源' : '云端源';
         checkbox.setAttribute('for', `api_${apiKey}`);
         checkbox.innerHTML = `
             <input type="checkbox" id="api_${apiKey}" class="v2-switch-input"
@@ -199,6 +214,20 @@ export function initAPICheckboxes(): void {
         });
     });
     container.appendChild(normaldiv);
+
+    // 当前域的来源统计，放在已有的 dash-stats 行里，不额外占高度
+    const visibleKeys = Object.keys(API_SITES).filter(key => {
+        const api = API_SITES[key];
+        return isHiddenContentMode() ? !!api.hidden : !api.hidden;
+    });
+    const importCount = visibleKeys.filter(key => API_SITES[key].origin === 'import').length;
+    const workerCount = visibleKeys.length - importCount;
+    const siteStatusEl = document.getElementById('siteStatus');
+    if (siteStatusEl) {
+        siteStatusEl.textContent = visibleKeys.length
+            ? `云端 ${workerCount} · 导入 ${importCount}`
+            : '';
+    }
 
     // 自定义API的「隐藏资源站」标记由当前数据域决定，不允许手动改
     const hiddenFlagInput = document.getElementById('customApiIsHidden') as HTMLInputElement | null;
@@ -246,6 +275,14 @@ export function applyNewDataSourceLogic(): void {
             localStorage.setItem('lastRefreshTime', currentTime.toString());
             localStorage.setItem('hasUserSelectedAPIs', 'false');
         }
+
+        // 远端源晚于首屏到达时 selectedAPIs 可能还是空数组；
+        // 只要用户没有手动选择过，就补选当前域的默认源。
+        if (!selectedAPIs.length && !hasUserSelected && defaultSelected.length) {
+            setSelectedAPIs(defaultSelected.slice());
+            localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selectedAPIs));
+            localStorage.setItem('lastRefreshTime', currentTime.toString());
+        }
     }
 }
 
@@ -254,7 +291,7 @@ export function refreshDataSources(hasUserSelected: boolean): void {
     const currentTime = Date.now();
     const savedSelectedAPIs = localStorage.getItem(scopedKey('selectedAPIs')) || '[]';
     const currentSelectedAPIs = JSON.parse(savedSelectedAPIs) as string[];
-    // 保留所有内置源（含隐藏源）与有效自定义源；仅剔除已不存在的源
+    // 保留所有云端 / 导入源（含隐藏源）与有效自定义源；仅剔除已不存在的源
     const allDataSources = Object.keys(API_SITES);
     const updatedSelectedAPIs = currentSelectedAPIs.filter(api =>
         allDataSources.includes(api) || api.startsWith('custom_')
@@ -264,14 +301,19 @@ export function refreshDataSources(hasUserSelected: boolean): void {
     localStorage.setItem('lastRefreshTime', currentTime.toString());
 }
 
-// 默认选中的数据源（正常域固定，顺序即界面里的展示顺序）
-const DEFAULT_DATA_SOURCE_KEYS = ['gszy', 'bfzy', 'zuid', 'lzzy', 'hnzy', 'jszy'];
+// 正常域默认选中数量；具体取哪些源由 Worker 下发顺序决定
+const DEFAULT_SOURCE_COUNT = 6;
 
-// 数据域内的默认选中源：正常域取固定清单，隐藏域仍从私密源里随机抽 5 个
+/**
+ * 数据域内的默认选中源：正常域取 Worker 下发顺序的前 6 个普通源，
+ * 隐藏域从私密源里随机抽 5 个。没有源时返回空数组，等远端加载后补选。
+ */
 export function getDefaultDataSources(): string[] {
     if (!isHiddenContentMode()) {
-        const keys = DEFAULT_DATA_SOURCE_KEYS.filter(key => API_SITES[key] && !API_SITES[key].hidden);
-        if (keys.length > 0) return keys;
+        const normalKeys = Object.keys(API_SITES).filter(
+            key => API_SITES[key] && !API_SITES[key].hidden
+        );
+        return normalKeys.slice(0, DEFAULT_SOURCE_COUNT);
     }
     return getRandomDataSources(5);
 }

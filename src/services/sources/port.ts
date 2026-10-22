@@ -1,13 +1,15 @@
-import { API_SITES, isHiddenContentMode, scopedKey } from '../../core/config';
-import { selectedAPIs, customAPIs } from '../../core/state';
+import { API_SITES, isHiddenContentMode } from '../../core/config';
+import { customAPIs } from '../../core/state';
 import type { CustomApiEntry } from '../../core/state';
-import { renderCustomAPIsList, initAPICheckboxes, updateSelectedApiCount } from './config';
+import { initAPICheckboxes, updateSelectedApiCount } from './config';
+import { saveImportedSources, applyImportedSourcesToAPISites } from './imported';
 import { saveBlobAsFile } from '../config';
 
 /**
  * 视频源导入 / 导出（LibreTV 互操作层）
  *
- * 内部存储保持不变：内置源在 API_SITES，自定义源在 customAPIs。
+ * 内部存储：云端 / 导入源在 API_SITES（Worker 下发与本地导入合并），
+ * 只有用户手动添加的源在 customAPIs。
  * 仅在跨平台迁移时转换为 LibreTV-SourceList v2：
  *   {
  *     "name": "LeLeTV-SourceList",
@@ -26,13 +28,16 @@ import { saveBlobAsFile } from '../config';
  */
 
 interface SourceEntry {
+    key?: string;
     name: string;
     url: string;
     detail?: string;
     isAdult?: boolean;
+    hidden?: boolean;
 }
 
 interface RawSourceLike {
+    key?: unknown;
     name?: unknown;
     url?: unknown;
     api?: unknown;
@@ -40,6 +45,7 @@ interface RawSourceLike {
     detailUrl?: unknown;
     isAdult?: unknown;
     hidden?: unknown;
+    enabled?: unknown;
     type?: unknown;
 }
 
@@ -60,8 +66,12 @@ interface SourceImportModalOptions {
     content?: (body: HTMLElement, modal: HTMLElement) => void;
 }
 
+interface SourceImportWindow extends Window {
+    __ENV__?: { HIDDENKEY?: string; TMDB_WORKER_URL?: string };
+}
+
 declare function showModal(options: SourceImportModalOptions): HTMLElement;
-declare function showSourceImportBox(onSelect: (file: File) => void): void;
+declare function showSourceImportBox(onSelect: (file: File) => void, onUrl?: (url: string) => void): void;
 
 const SOURCE_LIST_NAME = 'LeLeTV-SourceList';
 const SOURCE_LIST_VERSION = 2;
@@ -100,11 +110,6 @@ function currentDomainCustomAPIs(): CustomApiEntry[] {
     return [];
 }
 
-function currentDomainSelectedAPIs(): string[] {
-    if (typeof selectedAPIs !== 'undefined' && Array.isArray(selectedAPIs)) return selectedAPIs;
-    return [];
-}
-
 /** 当前数据域是否可见该源：私密模式只看 hidden，正常模式只看非 hidden */
 function sourceVisibleInDomain(site: { hidden?: boolean; isHidden?: boolean }, hiddenMode: boolean): boolean {
     return hiddenMode ? !!site.hidden : !site.hidden;
@@ -129,7 +134,12 @@ function collectCurrentDomainSources(): SourceEntry[] {
             if (!url || seen.has(url)) return;
             seen.add(url);
 
-            const entry: SourceEntry = { name: site.name || key, url };
+            const entry: SourceEntry = {
+                key,
+                name: site.name || key,
+                url,
+                hidden: !!site.hidden,
+            };
             const detail = normalizeSourceUrl(site.detail);
             if (detail) entry.detail = detail;
             if (site.hidden) entry.isAdult = true;
@@ -143,7 +153,11 @@ function collectCurrentDomainSources(): SourceEntry[] {
         if (!url || seen.has(url)) return;
         seen.add(url);
 
-        const entry: SourceEntry = { name: api.name || sourceHostname(url), url };
+        const entry: SourceEntry = {
+            name: api.name || sourceHostname(url),
+            url,
+            hidden: !!(api.isHidden || api.isAdult),
+        };
         const detail = normalizeSourceUrl(api.detail);
         if (detail) entry.detail = detail;
         if (api.isHidden || api.isAdult) entry.isAdult = true;
@@ -235,10 +249,14 @@ function normalizeSourceEntry(raw: RawSourceLike): SourceEntry | null {
 
     const name = typeof raw.name === 'string' ? raw.name.trim() : '';
     const entry: SourceEntry = { name: name || sourceHostname(url), url };
+    if (typeof raw.key === 'string' && raw.key.trim()) entry.key = raw.key.trim();
 
     const detail = normalizeSourceUrl(raw.detail || raw.detailUrl);
     if (detail) entry.detail = detail;
-    if (raw.isAdult === true || raw.hidden === true) entry.isAdult = true;
+    if (raw.isAdult === true || raw.hidden === true) {
+        entry.isAdult = true;
+        entry.hidden = true;
+    }
 
     return entry;
 }
@@ -291,97 +309,46 @@ function parseSourceListJson(text: string): ParsedSourceList {
 }
 
 /**
- * 把解析后的源合并进当前数据域，并自动启用。
- * - URL 命中当前域内置源：只启用，不新增
- * - URL 命中当前域已有自定义源：更新名称/详情并启用
- * - 其余：追加为自定义源并启用
- * @returns {{added: number, enabled: number}}
+ * 把解析后的源写入「导入源」存储，并按 hidden 自动分流到正常 / 私密数据域。
+ * - 与 Worker 源或已有导入源同 URL：跳过，不重复
+ * - 普通源进正常域，hidden / isAdult 源进私密域，并自动启用
+ * - 不再写入 customAPIs（自定义资源站只保留用户手动添加的源）
  */
-function applyImportedSources(imported: SourceEntry[]): { added: number; enabled: number } {
-    const hiddenMode = isHiddenContentMode();
-    const customs = currentDomainCustomAPIs();
-    const selected = currentDomainSelectedAPIs();
+function applyImportedSources(imported: SourceEntry[]): { added: number; enabled: number; hiddenAdded: number; skipped: number } {
+    const entries = (Array.isArray(imported) ? imported : [])
+        .map((source) => ({
+            key: source.key || '',
+            name: source.name || sourceHostname(source.url),
+            url: normalizeSourceUrl(source.url),
+            detail: source.detail,
+            hidden: source.hidden === true || source.isAdult === true,
+            isAdult: source.isAdult === true,
+        }))
+        .filter((entry) => !!entry.url);
 
-    const builtinByUrl: Record<string, string> = {};
-    if (typeof API_SITES === 'object' && API_SITES) {
-        Object.keys(API_SITES).forEach((key) => {
-            const site = API_SITES[key];
-            if (!site || typeof site.api !== 'string') return;
-            if (!sourceVisibleInDomain(site, hiddenMode)) return;
-            const url = normalizeSourceUrl(site.api);
-            if (url && !builtinByUrl[url]) builtinByUrl[url] = key;
-        });
-    }
-
-    const customIndexByUrl: Record<string, number> = {};
-    customs.forEach((api, index) => {
-        if (!api || !sourceVisibleInDomain(api, hiddenMode)) return;
-        const url = normalizeSourceUrl(api.url);
-        if (url && customIndexByUrl[url] === undefined) customIndexByUrl[url] = index;
-    });
-
-    let added = 0;
-    let enabled = 0;
-
-    (Array.isArray(imported) ? imported : []).forEach((source) => {
-        const url = normalizeSourceUrl(source && source.url);
-        if (!url) return;
-
-        if (builtinByUrl[url]) {
-            const key = builtinByUrl[url];
-            if (selected.indexOf(key) === -1) {
-                selected.push(key);
-                enabled++;
-            }
-            return;
-        }
-
-        const existingIndex = customIndexByUrl[url];
-        if (existingIndex !== undefined) {
-            const existing = customs[existingIndex];
-            if (source.name) existing.name = source.name;
-            if (source.detail) existing.detail = source.detail;
-            if (source.isAdult) existing.isAdult = true;
-
-            const customId = 'custom_' + existingIndex;
-            if (selected.indexOf(customId) === -1) {
-                selected.push(customId);
-                enabled++;
-            }
-            return;
-        }
-
-        customs.push({
-            name: source.name || sourceHostname(url),
-            url,
-            detail: source.detail || '',
-            isHidden: hiddenMode,
-            isAdult: source.isAdult === true
-        });
-        customIndexByUrl[url] = customs.length - 1;
-        selected.push('custom_' + (customs.length - 1));
-        added++;
-    });
-
-    localStorage.setItem(scopedKey('customAPIs'), JSON.stringify(customs));
-    localStorage.setItem(scopedKey('selectedAPIs'), JSON.stringify(selected));
+    const result = saveImportedSources(entries);
+    applyImportedSourcesToAPISites(entries);
     localStorage.setItem('hasUserSelectedAPIs', 'true');
 
     // 立即刷新设置页，避免用户以为没生效
-    if (typeof renderCustomAPIsList === 'function') renderCustomAPIsList();
     if (typeof initAPICheckboxes === 'function') initAPICheckboxes();
     if (typeof updateSelectedApiCount === 'function') updateSelectedApiCount();
 
-    return { added, enabled };
+    return {
+        added: result.added,
+        enabled: result.added,
+        hiddenAdded: result.hiddenAdded,
+        skipped: result.skipped,
+    };
 }
 
-/** 打开源导入弹窗（文件选择 / 拖拽） */
+/** 打开源导入弹窗（文件选择 / 拖拽 / URL） */
 export function importVideoSources(): void {
     if (typeof showSourceImportBox !== 'function') {
         showToast('当前页面不支持导入视频源', 'error');
         return;
     }
-    showSourceImportBox(handleSourceImportFile);
+    showSourceImportBox(handleSourceImportFile, handleSourceImportUrl);
 }
 
 /** 读取并解析用户选择的源文件，成功后再弹确认 */
@@ -413,16 +380,82 @@ function handleSourceImportFile(file: File): void {
     reader.readAsText(file);
 }
 
+/**
+ * 从 URL 拉取并解析源列表。
+ * Worker 分享链接用 scope=public|hidden|all 表示范围：
+ *   - public：普通源，直接拉取；
+ *   - hidden / all：需要隐私凭证。链接自带 key 时直接使用；
+ *     否则要求接收方处于私密模式，自动附带 HIDDENKEY。
+ */
+function handleSourceImportUrl(rawUrl: string): void {
+    const url = String(rawUrl || '').trim();
+    if (!url) {
+        showToast('请输入源列表 URL', 'warning');
+        return;
+    }
+    if (!/^https?:\/\//i.test(url)) {
+        showToast('URL 需以 http:// 或 https:// 开头', 'warning');
+        return;
+    }
+
+    let target = url;
+    const headers: Record<string, string> = { 'Accept': 'application/json' };
+    try {
+        const env = (window as SourceImportWindow).__ENV__;
+        const hiddenKey = env && env.HIDDENKEY;
+        const parsedUrl = new URL(url);
+        const isWorkerSource = /(^|\/)sources\.json$/i.test(parsedUrl.pathname);
+        if (isWorkerSource) {
+            const hasShareKey = parsedUrl.searchParams.has('key');
+            const hasLegacyHidden = parsedUrl.searchParams.get('hidden') === '1';
+            let scope = (parsedUrl.searchParams.get('scope') || '').toLowerCase();
+            if (scope !== 'public' && scope !== 'hidden' && scope !== 'all') {
+                // 旧链接没有 scope：私密模式导入全部，普通模式只导入普通源
+                scope = (hasLegacyHidden || (isHiddenContentMode() && hiddenKey)) ? 'all' : 'public';
+                parsedUrl.searchParams.set('scope', scope);
+            }
+            if ((scope === 'hidden' || scope === 'all') && !hasShareKey) {
+                if (!isHiddenContentMode()) {
+                    showToast('该分享链接包含私密源，请先开启私密模式再导入', 'warning');
+                    return;
+                }
+                if (hiddenKey) headers['Authorization'] = 'Bearer ' + hiddenKey;
+            }
+            target = parsedUrl.toString();
+        }
+    } catch (e) {
+        // URL 解析失败交给下面的 fetch 报错
+    }
+
+    showToast('正在获取源列表…', 'info');
+    fetch(target, { headers, cache: 'no-store' }).then((res) => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+    }).then((text) => {
+        if (text.length > SOURCE_IMPORT_MAX_BYTES) {
+            throw new Error('源列表超过 2MB');
+        }
+        const parsed = parseSourceListJson(text);
+        if (!parsed.sources.length) {
+            showToast('没有可导入的有效源', 'warning');
+            return;
+        }
+        showSourceImportConfirm(parsed);
+    }).catch((error) => {
+        const message = error && error.message ? error.message : '网络错误';
+        showToast('获取源列表失败：' + message, 'error');
+    });
+}
+
 /** 导入前确认：说明目标数据域、可用数量与跳过项 */
 function showSourceImportConfirm(parsed: ParsedSourceList): void {
     const stats = parsed.stats;
     const extras: string[] = [];
     if (stats.invalid) extras.push(`跳过 ${stats.invalid} 条无效地址`);
-    if (stats.duplicates) extras.push(`合并 ${stats.duplicates} 条重复源`);
+    if (stats.duplicates) extras.push(`跳过 ${stats.duplicates} 条重复源`);
     if (stats.truncated) extras.push(`超出上限丢弃 ${stats.truncated} 条`);
 
-    const scope = isHiddenContentMode() ? '私密数据域' : '正常数据域';
-    const summary = `识别到 ${parsed.sources.length} 个可用源，将导入到${scope}并自动启用`
+    const summary = `识别到 ${parsed.sources.length} 个可用源，将按私密标记分别导入正常域 / 私密域并自动启用`
         + (extras.length ? `；${extras.join('，')}。` : '。');
 
     showModal({
@@ -445,8 +478,13 @@ function showSourceImportConfirm(parsed: ParsedSourceList): void {
                 const result = applyImportedSources(parsed.sources);
                 const parts: string[] = [];
                 if (result.added) parts.push(`新增 ${result.added} 个`);
-                if (result.enabled) parts.push(`启用 ${result.enabled} 个`);
-                showToast(parts.length ? `源导入完成：${parts.join('，')}` : '这些源已存在，未做改动', 'success');
+                if (result.hiddenAdded) parts.push(`其中私密 ${result.hiddenAdded} 个`);
+                if (result.skipped) parts.push(`跳过 ${result.skipped} 个`);
+                let message = parts.length ? `源导入完成：${parts.join('，')}` : '这些源已存在，未做改动';
+                if (result.hiddenAdded && !isHiddenContentMode()) {
+                    message += '；私密源需开启私密模式查看';
+                }
+                showToast(message, 'success');
             });
         }
     });

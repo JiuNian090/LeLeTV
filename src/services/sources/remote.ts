@@ -4,8 +4,8 @@ import type { ApiSite } from '../../core/config';
 /**
  * 远端数据源同步
  *
- * 把 Worker（GET /api-sites、GET /api-sites/hidden）里配置的采集源合并进内置 API_SITES
- * （src/core/config.ts）。内置源是永久兜底：Worker 未配置、请求失败或超时，页面照常使用内置源。
+ * 把 Worker（GET /api-sites、GET /api-sites/hidden）里配置的采集源合并进 API_SITES
+ * （src/core/state.ts）。前端已不再硬编码内置源，来源为 Worker 缓存 / 导入源 / Worker 最新。
  *
  * 几个刻意的设计：
  *   - 启动时先同步套用上次成功拉取的本地缓存，不让首屏等网络；随后后台拉最新，列表有变化才刷新复选框。
@@ -59,6 +59,19 @@ function remoteSourcesBaseUrl(): string {
     }
 }
 
+/** 去重用的规范化 URL：只接受 http(s)，去掉末尾斜杠 */
+function normalizeSourceUrl(value: unknown): string {
+    if (typeof value !== 'string') return '';
+    const url = value.trim();
+    if (!/^https?:\/\//i.test(url)) return '';
+    try {
+        new URL(url);
+    } catch (e) {
+        return '';
+    }
+    return url.replace(/\/+$/, '');
+}
+
 function readRemoteSourcesCache(): RemoteSourcesCache | null {
     try {
         const raw = localStorage.getItem(REMOTE_SOURCES_CACHE_KEY);
@@ -108,6 +121,7 @@ function mergeRemoteSourceEntry(builtin: ApiSite | undefined, remote: RemoteSour
         else delete merged.detail; // 空串 = 明确清空
     }
 
+    merged.origin = 'worker';
     return merged as ApiSite;
 }
 
@@ -125,6 +139,13 @@ function applyRemoteApiSites(sites: unknown): string[] {
     const changed: string[] = [];
     const sitesObj = sites as Record<string, unknown>;
 
+    // URL → 已有 key：导入源先到先得，Worker 源遇到同 URL 时不再重复新增
+    const existingByUrl = new Map<string, string>();
+    Object.keys(existing).forEach((key) => {
+        const url = normalizeSourceUrl(existing[key] && existing[key].api);
+        if (url && !existingByUrl.has(url)) existingByUrl.set(url, key);
+    });
+
     Object.keys(sitesObj).forEach((key) => {
         const remote = sitesObj[key] as RemoteSourceLike;
         if (!remote || typeof remote !== 'object') return;
@@ -133,8 +154,17 @@ function applyRemoteApiSites(sites: unknown): string[] {
         if (typeof remote.name !== 'string' || !remote.name) return;
 
         const builtin = existing[key];
+        // 导入源已经占用这个 key：保留先到的那条
+        if (builtin && builtin.origin === 'import') return;
+
+        const url = normalizeSourceUrl(remote.api);
+        const sameUrlKey = url ? existingByUrl.get(url) : undefined;
+        // 同 URL 已存在（另一个 Worker key 或导入源）：不重复新增
+        if (!builtin && sameUrlKey) return;
+
         const merged = mergeRemoteSourceEntry(builtin, remote);
         patches[key] = merged;
+        if (url) existingByUrl.set(url, key);
 
         if (!builtin || JSON.stringify(builtin) !== JSON.stringify(merged)) {
             changed.push(key);

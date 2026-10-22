@@ -18,7 +18,10 @@
 // GET  /admin/status            运行状态（TMDB 配置、D1 就绪、源数量），需管理员鉴权
 // GET  /admin/api-sites/list    全量列表（含停用与私密），需管理员鉴权
 // POST /admin/api-sites/save | /delete | /toggle，需管理员鉴权
-// POST /admin/api-sites/import   导入 LibreTV / TVBOX 源列表（按 API 地址合并），需管理员鉴权
+// POST /admin/api-sites/import   导入 LibreTV / TVBOX 源列表（按 key / URL 合并），需管理员鉴权
+// GET  /admin/api-sites/export   全量 JSON 导出（含停用/私密），需管理员鉴权
+// POST /admin/api-sites/share    生成普通 / 私密 / 全部源的分享链接，需管理员鉴权
+// GET  /sources.json             分享 / 导入地址（scope=public|hidden|all；私密范围需隐私凭证）
 //
 // 环境变量：
 // - TMDB_API_KEY (secret)
@@ -1231,9 +1234,22 @@ function normalizeImportEntry(raw) {
   if (!url) return null;
 
   const name = typeof raw.name === 'string' ? raw.name.trim() : '';
+  const rawKey = typeof raw.key === 'string' ? raw.key.trim().toLowerCase() : '';
+  const key = /^[a-z0-9][a-z0-9_]{0,31}$/.test(rawKey) && !rawKey.startsWith('custom') ? rawKey : '';
+  const hasDetail = Object.prototype.hasOwnProperty.call(raw, 'detail')
+    || Object.prototype.hasOwnProperty.call(raw, 'detailUrl');
+  const hasEnabled = Object.prototype.hasOwnProperty.call(raw, 'enabled');
+  const hasHidden = Object.prototype.hasOwnProperty.call(raw, 'hidden');
+
   const entry = {
+    key,
     name: (name || importHostname(url)).slice(0, API_SITE_MAX_NAME_LEN),
     url,
+    hasDetail,
+    // null = JSON 没写 enabled，更新时保留原状态；新建时默认启用
+    enabled: hasEnabled ? ((raw.enabled === false || raw.enabled === 0 || raw.enabled === '0') ? 0 : 1) : null,
+    // null = JSON 没写 hidden，更新时保留原私密状态；显式 false 才降级为普通源
+    hidden: hasHidden ? raw.hidden === true : null,
   };
 
   const detail = normalizeImportUrl(raw.detail || raw.detailUrl);
@@ -1378,13 +1394,17 @@ async function handleApiSiteImport(request, env, url) {
     ).all();
     const rows = (existingResult && existingResult.results) || [];
 
+    const byKey = new Map();
     const byUrl = new Map();
     const usedKeys = new Set();
     let nextSort = 0;
     for (const row of rows) {
-      const key = normalizeImportUrl(row.api);
-      if (key && !byUrl.has(key)) byUrl.set(key, row);
-      if (row.source_key) usedKeys.add(row.source_key);
+      if (row.source_key) {
+        byKey.set(row.source_key, row);
+        usedKeys.add(row.source_key);
+      }
+      const urlKey = normalizeImportUrl(row.api);
+      if (urlKey && !byUrl.has(urlKey)) byUrl.set(urlKey, row);
       const sort = Number(row.sort_order) || 0;
       if (sort > nextSort) nextSort = sort;
     }
@@ -1395,22 +1415,41 @@ async function handleApiSiteImport(request, env, url) {
     let updated = 0;
 
     for (const source of parsed.sources) {
-      const existing = byUrl.get(source.url);
-      const wantHidden = hiddenFlag || (source.isAdult ? 1 : 0);
+      const existing = (source.key && byKey.get(source.key)) || byUrl.get(source.url);
+      // null = 条目没写 hidden，更新时保留原状态；显式 false 才降级为普通源
+      const wantHidden = hiddenFlag
+        ? 1
+        : (source.isAdult || source.hidden === true ? 1 : (source.hidden === false ? 0 : null));
 
       if (existing) {
-        let detail = existing.detail || '';
-        if (source.detail) {
-          const detailCheck = sanitizeApiSiteUrl(source.detail, 'detail 地址');
-          if (detailCheck.value) detail = detailCheck.value;
+        const apiCheck = sanitizeApiSiteUrl(source.url, 'API 地址');
+        if (apiCheck.error) {
+          errors.push(`${source.name || source.url}：${apiCheck.error}`);
+          continue;
         }
 
+        let detail = existing.detail || '';
+        if (source.hasDetail) {
+          if (!source.detail) {
+            detail = '';
+          } else {
+            const detailCheck = sanitizeApiSiteUrl(source.detail, 'detail 地址');
+            if (detailCheck.value) detail = detailCheck.value;
+            else errors.push(`${source.name || source.url}：${detailCheck.error}`);
+          }
+        }
+
+        const nextHidden = wantHidden === null ? (existing.hidden ? 1 : 0) : wantHidden;
+        const nextEnabled = source.enabled === null ? (existing.enabled ? 1 : 0) : source.enabled;
+
         statements.push(env.INVITE_DB.prepare(
-          'UPDATE api_sites SET name = ?, detail = ?, hidden = ?, updated_at = ? WHERE id = ?'
+          'UPDATE api_sites SET name = ?, api = ?, detail = ?, hidden = ?, enabled = ?, updated_at = ? WHERE id = ?'
         ).bind(
           (source.name || existing.name || '').slice(0, API_SITE_MAX_NAME_LEN),
+          apiCheck.value,
           detail,
-          wantHidden ? 1 : (existing.hidden ? 1 : 0),
+          nextHidden,
+          nextEnabled,
           now,
           existing.id
         ));
@@ -1431,20 +1470,24 @@ async function handleApiSiteImport(request, env, url) {
         if (detailCheck.value) detail = detailCheck.value;
       }
 
-      let key = generateApiSiteKey();
-      while (usedKeys.has(key)) key = generateApiSiteKey();
+      let key = source.key;
+      if (!key || usedKeys.has(key)) {
+        key = generateApiSiteKey();
+        while (usedKeys.has(key)) key = generateApiSiteKey();
+      }
       usedKeys.add(key);
       nextSort += 1;
 
       statements.push(env.INVITE_DB.prepare(
         'INSERT INTO api_sites (source_key, name, api, detail, hidden, enabled, sort_order, created_at, updated_at)'
-        + ' VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)'
+        + ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ).bind(
         key,
         (source.name || importHostname(source.url)).slice(0, API_SITE_MAX_NAME_LEN),
         apiCheck.value,
         detail,
-        wantHidden ? 1 : 0,
+        wantHidden === null ? 0 : wantHidden,
+        source.enabled === null ? 1 : source.enabled,
         nextSort,
         now,
         now
@@ -1472,6 +1515,117 @@ async function handleApiSiteImport(request, env, url) {
   } catch (error) {
     console.error('[api-sites] 导入失败:', error && error.message);
     return jsonResponse({ ok: false, error: '导入失败：请确认已执行 migrations/004_add_api_sites.sql' }, 500);
+  }
+}
+
+// ====== 数据源导出（/sources.json、/admin/api-sites/export）======
+
+/** D1 行 → LibreTV SourceList；key/enabled 供面板 JSON 编辑与再次导入 */
+function buildSourceListPayload(rows) {
+  return {
+    name: 'LeLeTV-SourceList',
+    version: 2,
+    exportedAt: Date.now(),
+    sources: (rows || []).map((row) => ({
+      key: row.source_key,
+      name: row.name,
+      url: row.api,
+      detail: row.detail || '',
+      hidden: !!row.hidden,
+      enabled: !!row.enabled,
+    })),
+  };
+}
+
+/**
+ * GET /sources.json —— 分享 / 导入地址。
+ * scope=public：启用的普通源（默认，公开）
+ * scope=hidden：只返回启用的私密源，需要隐私凭证
+ * scope=all：普通 + 私密源，需要隐私凭证
+ * 兼容旧参数 ?hidden=1（等价 scope=all）。
+ */
+function resolveSourceScope(url) {
+  const scope = (url.searchParams.get('scope') || '').toLowerCase();
+  if (scope === 'public' || scope === 'hidden' || scope === 'all') return scope;
+  return url.searchParams.get('hidden') === '1' ? 'all' : 'public';
+}
+
+async function handleSourceListExport(request, env, url) {
+  const scope = resolveSourceScope(url);
+  if (scope !== 'public') {
+    const authed = await verifyPrivateModeRead(request, env, url);
+    if (!authed) {
+      return jsonResponse({ ok: false, error: '隐私模式验证失败' }, 401);
+    }
+  }
+
+  try {
+    const where = scope === 'hidden'
+      ? 'enabled = 1 AND hidden = 1'
+      : (scope === 'all' ? 'enabled = 1' : 'enabled = 1 AND hidden = 0');
+    const result = await env.INVITE_DB.prepare(
+      'SELECT source_key, name, api, detail, hidden, enabled FROM api_sites'
+      + ' WHERE ' + where + ' ORDER BY sort_order ASC, id ASC'
+    ).all();
+    const payload = buildSourceListPayload((result && result.results) || []);
+    payload.scope = scope;
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'X-Robots-Tag': 'noindex',
+      },
+    });
+  } catch (error) {
+    console.error('[api-sites] 导出失败:', error && error.message);
+    return jsonResponse({ ok: false, error: '导出失败：请确认已执行 migrations/004_add_api_sites.sql' }, 500);
+  }
+}
+
+/** POST /admin/api-sites/share —— 生成分享链接；私密范围可显式附带隐私凭证 */
+async function handleApiSiteShare(request, env, url) {
+  const body = await request.json().catch(() => null);
+  const includeToken = !!(body && body.includeToken);
+  let token = '';
+  if (includeToken) {
+    if (!env.HIDDENKEY) {
+      return jsonResponse({ ok: false, error: '未配置 HIDDENKEY，无法生成带凭证的私密分享链接' }, 400);
+    }
+    token = await sha256Hex(env.HIDDENKEY);
+  }
+
+  const base = new URL('/sources.json', url.origin);
+  const urls = {};
+  for (const scope of ['public', 'hidden', 'all']) {
+    const link = new URL(base.toString());
+    link.searchParams.set('scope', scope);
+    if (token && scope !== 'public') link.searchParams.set('key', token);
+    urls[scope] = link.toString();
+  }
+
+  return jsonResponse({
+    ok: true,
+    urls,
+    has_hidden_key: !!env.HIDDENKEY,
+  }, 200);
+}
+
+/** GET /admin/api-sites/export —— 管理面板 JSON 编辑器用，含停用与私密源 */
+async function handleApiSiteExport(env) {
+  try {
+    const result = await env.INVITE_DB.prepare(
+      'SELECT source_key, name, api, detail, hidden, enabled FROM api_sites ORDER BY sort_order ASC, id ASC'
+    ).all();
+    return jsonResponse({
+      ok: true,
+      list: buildSourceListPayload((result && result.results) || []),
+    }, 200);
+  } catch (error) {
+    console.error('[api-sites] 管理导出失败:', error && error.message);
+    return jsonResponse({ ok: false, error: '导出失败：请确认已执行 migrations/004_add_api_sites.sql' }, 500);
   }
 }
 
@@ -1616,8 +1770,6 @@ button.primary{background:#ec4899;border-color:#ec4899;color:#fff}
 button.primary:hover{background:#db2777}
 button.danger:hover{background:#2a1a1c;border-color:#7f1d1d;color:#fca5a5}
 .item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#1a1a1f;border-radius:8px;margin-bottom:8px}
-.item.is-on{box-shadow:inset 2px 0 0 #22c55e}
-.item.is-off{box-shadow:inset 2px 0 0 #3f3f46}
 .item .info{flex:1;min-width:0}
 .item .nm{font-size:14px;color:#e0e0e0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .item .meta{font-size:11px;color:#555;margin-top:4px;word-break:break-all}
@@ -1631,7 +1783,7 @@ button.danger:hover{background:#2a1a1c;border-color:#7f1d1d;color:#fca5a5}
 .msg.ok{color:#4ade80}
 .empty{font-size:13px;color:#555;text-align:center;padding:22px 0}
 .hidden{display:none}
-h2{display:flex;align-items:center;gap:10px}
+h2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 button.mini{padding:4px 10px;font-size:11px;margin-left:auto}
 .stat-grid{display:flex;flex-wrap:wrap;gap:10px}
 .stat{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#1a1a1f;border-radius:8px;font-size:14px;flex:1;min-width:210px}
@@ -1672,6 +1824,15 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
 .import-result .warn{color:#fbbf24;margin-top:8px}
 .import-result ul{margin:6px 0 0 16px;color:#aaa}
 .import-result li{word-break:break-all}
+#jsonText{min-height:300px}
+.json-toolbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px}
+.share-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.share-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#1a1a1f;border:1px solid #2a2a30;border-radius:8px}
+.share-info{flex:1;min-width:0}
+.share-name{display:flex;align-items:center;gap:6px;font-size:13px;color:#e0e0e0}
+.share-url{margin-top:4px;color:#666;font-size:11px;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Consolas,'Courier New',monospace}
+.share-row button{flex:none}
+.hint.warn{color:#fbbf24}
 @media (max-width:560px){
   body{padding:18px 10px}
   .container{padding:24px 18px}
@@ -1716,7 +1877,7 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
 
 <!-- 数据源统一板块：统计 / 列表 / 状态消息都在这里，新增与编辑走弹窗 -->
 <div class="block">
-<h2>数据源管理<span class="count" id="siteCount"></span><button type="button" class="mini import-btn" id="importBtn" title="导入 LibreTV 源列表">导入</button><button class="icon-btn" id="addSiteBtn" title="新增数据源" aria-label="新增数据源">+</button></h2>
+<h2>数据源管理<span class="count" id="siteCount"></span><button type="button" class="mini import-btn" id="shareBtn" title="分享数据源链接">分享</button><button type="button" class="mini import-btn" id="jsonBtn" title="查看 / 编辑数据源 JSON">JSON</button><button type="button" class="mini import-btn" id="importBtn" title="导入 LibreTV 源列表">导入</button><button class="icon-btn" id="addSiteBtn" title="新增数据源" aria-label="新增数据源">+</button></h2>
 <div id="list"><div class="empty">加载中…</div></div>
 <div class="msg" id="msg"></div>
 </div>
@@ -1789,6 +1950,58 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
 <div id="importResult" class="hidden"></div>
 </div>
 </div>
+
+<!-- 数据源 JSON 工作台：直接编辑 LibreTV 格式，保存时只增改，不删除未列出的源 -->
+<div class="modal hidden" id="jsonModal" role="dialog" aria-modal="true" aria-labelledby="jsonTitle">
+<div class="modal-mask" data-json-close="1"></div>
+<div class="modal-card">
+<h2 id="jsonTitle">数据源 JSON</h2>
+<div class="hint">直接编辑下面的 LibreTV 格式；保存时只新增和更新，不删除未列出的源。</div>
+<textarea id="jsonText" rows="16" spellcheck="false"></textarea>
+<div class="json-toolbar">
+<button type="button" id="jsonCopyUrl">复制导入地址</button>
+<button type="button" id="jsonDownload">下载备份</button>
+<button type="button" class="primary" id="jsonSave">保存（只增改）</button>
+</div>
+<div class="msg" id="jsonMsg"></div>
+<div class="hint" id="jsonUrlHint"></div>
+</div>
+</div>
+
+<!-- 分享数据源：普通 / 私密 / 全部，链接由 Worker 的 /sources.json 生成 -->
+<div class="modal hidden" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+<div class="modal-mask" data-share-close="1"></div>
+<div class="modal-card">
+<h2 id="shareTitle">分享数据源</h2>
+<div class="hint">把链接发给其他用户，在设置页「导入视频源 → 从 URL 导入」使用。</div>
+<div class="share-list">
+<div class="share-row">
+<div class="share-info">
+<div class="share-name">普通源</div>
+<div class="share-url" id="shareUrlPublic">—</div>
+</div>
+<button type="button" data-share-copy="public">复制</button>
+</div>
+<div class="share-row">
+<div class="share-info">
+<div class="share-name">私密源 <span class="tag priv">18+</span></div>
+<div class="share-url" id="shareUrlHidden">—</div>
+</div>
+<button type="button" data-share-copy="hidden">复制</button>
+</div>
+<div class="share-row">
+<div class="share-info">
+<div class="share-name">普通 + 私密源</div>
+<div class="share-url" id="shareUrlAll">—</div>
+</div>
+<button type="button" data-share-copy="all">复制</button>
+</div>
+</div>
+<label class="check"><input type="checkbox" id="shareIncludeToken"> 链接包含私密访问凭证（拿到链接即可导入私密源）</label>
+<div class="hint warn" id="shareTokenHint">默认不带凭证：接收方需在私密模式下导入。开启后链接泄露会暴露私密源，请只分享给信任的人。</div>
+<div class="msg" id="shareMsg"></div>
+</div>
+</div>
 <script>
 (function () {
   'use strict';
@@ -1835,6 +2048,25 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
   var importMode = 'text';
   var importFileText = '';
   var importing = false;
+  var jsonBtn = document.getElementById('jsonBtn');
+  var jsonModal = document.getElementById('jsonModal');
+  var jsonText = document.getElementById('jsonText');
+  var jsonMsg = document.getElementById('jsonMsg');
+  var jsonSave = document.getElementById('jsonSave');
+  var jsonDownload = document.getElementById('jsonDownload');
+  var jsonCopyUrl = document.getElementById('jsonCopyUrl');
+  var jsonUrlHint = document.getElementById('jsonUrlHint');
+  var savingJson = false;
+  var shareBtn = document.getElementById('shareBtn');
+  var shareModal = document.getElementById('shareModal');
+  var shareIncludeToken = document.getElementById('shareIncludeToken');
+  var shareMsg = document.getElementById('shareMsg');
+  var shareUrlPublic = document.getElementById('shareUrlPublic');
+  var shareUrlHidden = document.getElementById('shareUrlHidden');
+  var shareUrlAll = document.getElementById('shareUrlAll');
+  var shareTokenHint = document.getElementById('shareTokenHint');
+  var shareUrls = {};
+  var shareLoading = false;
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -2026,6 +2258,183 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
     });
   }
 
+  // ===== JSON 工作台 =====
+
+  function isJsonOpen() {
+    return jsonModal.className.indexOf('hidden') === -1;
+  }
+
+  function openJsonModal() {
+    if (isJsonOpen()) return;
+    jsonText.value = '';
+    jsonUrlHint.textContent = '';
+    say(jsonMsg, '正在读取…');
+    lastFocus = document.activeElement;
+    jsonModal.className = 'modal';
+    call('/admin/api-sites/export').then(function (res) {
+      if (!res.ok) {
+        say(jsonMsg, res.error || '读取失败', 'err');
+        return;
+      }
+      jsonText.value = JSON.stringify(res.list || {}, null, 2);
+      say(jsonMsg, '');
+      jsonUrlHint.textContent = '导入地址：' + location.origin + '/sources.json';
+    }).catch(function () {
+      say(jsonMsg, '网络错误', 'err');
+    });
+  }
+
+  function closeJsonModal() {
+    if (!isJsonOpen() || savingJson) return;
+    jsonModal.className = 'modal hidden';
+    say(jsonMsg, '');
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+    lastFocus = null;
+  }
+
+  function saveJson() {
+    if (savingJson) return;
+    var text = jsonText.value.trim();
+    if (!text) {
+      say(jsonMsg, 'JSON 不能为空', 'err');
+      return;
+    }
+    try {
+      JSON.parse(text);
+    } catch (e) {
+      say(jsonMsg, '不是合法的 JSON', 'err');
+      return;
+    }
+
+    savingJson = true;
+    jsonSave.disabled = true;
+    say(jsonMsg, '保存中…');
+    call('/admin/api-sites/import', { text: text }).then(function (res) {
+      savingJson = false;
+      jsonSave.disabled = false;
+      if (!res.ok) {
+        say(jsonMsg, res.error || '保存失败', 'err');
+        return;
+      }
+      var stats = res.stats || {};
+      var parts = [];
+      if (stats.imported) parts.push('新增 ' + stats.imported);
+      if (stats.updated) parts.push('更新 ' + stats.updated);
+      var skipped = (stats.invalid || 0) + (stats.duplicates || 0) + (stats.truncated || 0);
+      if (skipped) parts.push('跳过 ' + skipped);
+      say(jsonMsg, '已保存：' + (parts.join(' · ') || '没有变化'), 'ok');
+      loadSites();
+      loadStatus();
+    }).catch(function () {
+      savingJson = false;
+      jsonSave.disabled = false;
+      say(jsonMsg, '网络错误', 'err');
+    });
+  }
+
+  function downloadJson() {
+    var text = jsonText.value.trim();
+    if (!text) return;
+    var blob = new Blob([text], { type: 'application/json' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'leletv-worker-sources-' + Date.now() + '.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+  }
+
+  function copyImportUrl() {
+    var url = location.origin + '/sources.json';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () {
+        say(jsonMsg, '已复制导入地址', 'ok');
+      }).catch(function () {
+        say(jsonMsg, '复制失败，请手动复制：' + url, 'err');
+      });
+      return;
+    }
+    say(jsonMsg, '导入地址：' + url);
+  }
+
+  // ===== 分享弹窗 =====
+
+  function isShareOpen() {
+    return shareModal.className.indexOf('hidden') === -1;
+  }
+
+  function setShareUrls(urls) {
+    shareUrls = urls || {};
+    shareUrlPublic.textContent = shareUrls.public || '—';
+    shareUrlHidden.textContent = shareUrls.hidden || '—';
+    shareUrlAll.textContent = shareUrls.all || '—';
+  }
+
+  function loadShareLinks(includeToken) {
+    if (shareLoading) return;
+    shareLoading = true;
+    say(shareMsg, '正在生成链接…');
+    call('/admin/api-sites/share', { includeToken: !!includeToken }).then(function (res) {
+      shareLoading = false;
+      if (!res.ok) {
+        say(shareMsg, res.error || '生成失败', 'err');
+        return;
+      }
+      setShareUrls(res.urls);
+      shareIncludeToken.disabled = !res.has_hidden_key;
+      if (!res.has_hidden_key) {
+        shareIncludeToken.checked = false;
+        shareTokenHint.textContent = '未配置 HIDDENKEY，私密源链接无法被验证；请先在 Worker 环境变量中配置。';
+      } else if (includeToken) {
+        shareTokenHint.textContent = '链接已包含访问凭证，拿到链接即可导入私密源；链接泄露会暴露私密源，请只分享给信任的人。';
+      } else {
+        shareTokenHint.textContent = '默认不带凭证：接收方需在私密模式下导入。开启后链接泄露会暴露私密源，请只分享给信任的人。';
+      }
+      say(shareMsg, '');
+    }).catch(function () {
+      shareLoading = false;
+      say(shareMsg, '网络错误', 'err');
+    });
+  }
+
+  function openShareModal() {
+    if (isShareOpen()) return;
+    shareIncludeToken.checked = false;
+    shareIncludeToken.disabled = false;
+    setShareUrls({});
+    say(shareMsg, '');
+    lastFocus = document.activeElement;
+    shareModal.className = 'modal';
+    loadShareLinks(false);
+  }
+
+  function closeShareModal() {
+    if (!isShareOpen() || shareLoading) return;
+    shareModal.className = 'modal hidden';
+    say(shareMsg, '');
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+    lastFocus = null;
+  }
+
+  function copyShareLink(scope) {
+    var url = shareUrls[scope] || '';
+    if (!url) {
+      say(shareMsg, '链接还没生成', 'err');
+      return;
+    }
+    var label = scope === 'public' ? '普通源' : (scope === 'hidden' ? '私密源' : '普通 + 私密源');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () {
+        say(shareMsg, '已复制' + label + '链接', 'ok');
+      }).catch(function () {
+        say(shareMsg, '复制失败，请手动复制：' + url, 'err');
+      });
+      return;
+    }
+    say(shareMsg, '分享链接：' + url);
+  }
+
   // ===== 新增 / 编辑弹窗 =====
 
   function isModalOpen() {
@@ -2150,7 +2559,7 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
     listEl.innerHTML = sites.map(function (s) {
       var tags = '<span class="tag ' + (s.enabled ? 'on' : 'off') + '">' + (s.enabled ? '启用' : '停用') + '</span>';
       if (s.hidden) tags += '<span class="tag priv">私密</span>';
-      return '<div class="item ' + (s.enabled ? 'is-on' : 'is-off') + '">' +
+      return '<div class="item">' +
         '<div class="info">' +
           '<div class="nm">' + esc(s.name) + tags + '</div>' +
           '<div class="meta">' + esc(s.key) + '</div>' +
@@ -2230,6 +2639,26 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
 
   // 导入弹窗：按钮、入口切换、文件读取、三种来源共用一个提交
   importBtn.addEventListener('click', openImportModal);
+  jsonBtn.addEventListener('click', openJsonModal);
+  jsonSave.addEventListener('click', saveJson);
+  jsonDownload.addEventListener('click', downloadJson);
+  jsonCopyUrl.addEventListener('click', copyImportUrl);
+  jsonModal.addEventListener('click', function (e) {
+    if (e.target && e.target.getAttribute('data-json-close') === '1') closeJsonModal();
+  });
+  shareBtn.addEventListener('click', openShareModal);
+  shareIncludeToken.addEventListener('change', function () {
+    loadShareLinks(shareIncludeToken.checked);
+  });
+  shareModal.addEventListener('click', function (e) {
+    if (e.target && e.target.getAttribute('data-share-close') === '1') closeShareModal();
+  });
+  var shareCopyBtns = document.querySelectorAll('[data-share-copy]');
+  for (var sc = 0; sc < shareCopyBtns.length; sc++) {
+    shareCopyBtns[sc].addEventListener('click', function () {
+      copyShareLink(this.getAttribute('data-share-copy'));
+    });
+  }
   importCancel.addEventListener('click', closeImportModal);
   importConfirm.addEventListener('click', doImport);
   importFile.addEventListener('change', readImportFile);
@@ -2255,6 +2684,8 @@ input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
+      closeShareModal();
+      closeJsonModal();
       closeImportModal();
       closeModal();
     }
@@ -2355,6 +2786,11 @@ async function handleApiSitesRequest(request, env, ctx, url) {
   const path = url.pathname;
 
   try {
+    // 公开导入地址：设置页「从 URL 导入」可直接填写它
+    if (path === '/sources.json' && request.method === 'GET') {
+      return await handleSourceListExport(request, env, url);
+    }
+
     // 公开只读：普通源
     if (path === '/api-sites' && request.method === 'GET') {
       return await serveApiSites(env, ctx, url, false);
@@ -2396,6 +2832,8 @@ async function handleApiSitesRequest(request, env, ctx, url) {
       '/admin/api-sites/delete': 'POST',
       '/admin/api-sites/toggle': 'POST',
       '/admin/api-sites/import': 'POST',
+      '/admin/api-sites/export': 'GET',
+      '/admin/api-sites/share': 'POST',
     }[path];
     if (allowedMethod) {
       if (request.method !== allowedMethod) {
@@ -2408,6 +2846,8 @@ async function handleApiSitesRequest(request, env, ctx, url) {
       }
       if (path === '/admin/status') return await handleAdminStatus(env);
       if (path === '/admin/api-sites/list') return await handleApiSiteList(env);
+      if (path === '/admin/api-sites/export') return await handleApiSiteExport(env);
+      if (path === '/admin/api-sites/share') return await handleApiSiteShare(request, env, url);
       if (path === '/admin/api-sites/save') return await handleApiSiteSave(request, env, url);
       if (path === '/admin/api-sites/delete') return await handleApiSiteDelete(request, env, url);
       if (path === '/admin/api-sites/import') return await handleApiSiteImport(request, env, url);
@@ -2434,7 +2874,7 @@ export default {
         return handleInviteRequest(request, env);
       }
       // 管理接口带 Authorization 头，属于非简单请求，预检必须放行该头
-      if (path.startsWith('/api-sites') || path.startsWith('/admin')) {
+      if (path.startsWith('/api-sites') || path.startsWith('/admin') || path === '/sources.json') {
         return new Response(null, {
           status: 204,
           headers: {
@@ -2462,7 +2902,7 @@ export default {
     }
 
     // /api-sites/* 与 /admin* 路由 → 视频源配置 API
-    if (path.startsWith('/api-sites') || path.startsWith('/admin')) {
+    if (path.startsWith('/api-sites') || path.startsWith('/admin') || path === '/sources.json') {
       return handleApiSitesRequest(request, env, ctx, url);
     }
 

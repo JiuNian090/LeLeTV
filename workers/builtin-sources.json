@@ -1,0 +1,29 @@
+{
+  "name": "LeLeTV-SourceList",
+  "version": 2,
+  "exportedAt": 0,
+  "defaults": ["gszy", "bfzy", "zuid", "lzzy", "hnzy", "jszy"],
+  "sources": [
+    { "key": "bdzy", "name": "百度资源", "url": "https://api.apibdzy.com/api.php/provide/vod/", "hidden": false },
+    { "key": "gszy", "name": "光速资源", "url": "https://api.guangsuapi.com/api.php/provide/vod", "hidden": false },
+    { "key": "zy360", "name": "360资源", "url": "https://360zy.com/api.php/provide/vod", "hidden": false },
+    { "key": "bfzy", "name": "暴风资源", "url": "https://bfzyapi.com/api.php/provide/vod", "hidden": false },
+    { "key": "xlzy", "name": "新浪资源", "url": "https://api.xinlangapi.com/xinlangapi.php/provide/vod/", "hidden": false },
+    { "key": "zuid", "name": "最大资源", "url": "https://api.zuidapi.com/api.php/provide/vod", "hidden": false },
+    { "key": "hhzy", "name": "豪华资源", "url": "https://hhzyapi.com/api.php/provide/vod", "hidden": false },
+    { "key": "ffzy", "name": "非凡资源", "url": "https://api.ffzyapi.com/api.php/provide/vod/from/ffm3u8/at/json/", "hidden": false },
+    { "key": "lzzy", "name": "量子资源", "url": "https://cj.lziapi.com/api.php/provide/vod/from/lzm3u8/at/json/", "hidden": false },
+    { "key": "jszy", "name": "极速资源", "url": "https://jszyapi.com/api.php/provide/vod", "hidden": false },
+    { "key": "hnzy", "name": "红牛资源", "url": "https://www.hongniuzy2.com/api.php/provide/vod/from/hnm3u8/at/json/", "hidden": false },
+    { "key": "ckzy", "name": "ck资源", "url": "https://ckzy.me/api.php/provide/vod", "hidden": true },
+    { "key": "fhzy", "name": "fh资源", "url": "http://fhapi9.com/api.php/provide/vod", "hidden": true },
+    { "key": "ywzy", "name": "155资源", "url": "https://155api.com/api.php/provide/vod", "hidden": true },
+    { "key": "mdzy", "name": "麻豆资源", "url": "https://91md.me/api.php/provide/vod", "hidden": true },
+    { "key": "kgzy", "name": "kg资源", "url": "https://jkunzyapi.com/api.php/provide/vod", "hidden": true },
+    { "key": "nxzy", "name": "奶香资源", "url": "https://naixxzy.com/api.php/provide/vod", "hidden": true },
+    { "key": "lbzy", "name": "乐播资源", "url": "https://lbapi9.com/api.php/provide/vod", "hidden": true },
+    { "key": "xjzy", "name": "香蕉资源", "url": "https://www.xiangjiaozyw.com/api.php/provide/vod", "hidden": true },
+    { "key": "hjzy", "name": "花椒资源", "url": "https://api.apilyzy.com/api.php/provide/vod", "hidden": true },
+    { "key": "ttzy", "name": "探探资源", "url": "https://apittzy.com/api.php/provide/vod/", "hidden": true }
+  ]
+}

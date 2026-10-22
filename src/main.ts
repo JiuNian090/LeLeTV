@@ -52,6 +52,7 @@ import type { LeLeTVAdapter } from './core/global';
 import { handlePageLoad, playHomeIntro, showPage } from './router/index';
 import { setupEventListeners, hookInput } from './pages/search/index';
 import { initAPICheckboxes } from './services/sources/config';
+import { applyImportedSourcesFromCache } from './services/sources/imported';
 import { TIMING } from './core/timing';
 
 // 全局变量（在 api-config.js 中初始化，直接引用 window 上的值）
@@ -82,7 +83,7 @@ const mainWindow = window as MainWindow;
 // 阶段 5B-1：已迁至 src/core/state.ts（见文件顶部 import）
 
 // ====== 默认数据源 ======
-// 首次初始化的默认源见 src/services/sources/config.ts 的 getDefaultDataSources()：正常域固定 6 个源
+// 首次初始化的默认源见 src/services/sources/config.ts 的 getDefaultDataSources()：正常域取前 6 个普通源
 // （光速 / 暴风 / 最大 / 量子 / 红牛 / 极速），隐藏域仍从私密源里随机抽 5 个。
 // 「重置」走的也是同一份默认逻辑。
 
@@ -102,6 +103,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof window.applyRemoteApiSitesFromCache === 'function') {
         window.applyRemoteApiSitesFromCache();
     }
+
+    // 本地导入源：排在 Worker 缓存之后、默认选源之前；
+    // 与 Worker 源同 URL 时保留先加载的那条
+    applyImportedSourcesFromCache();
 
     // 设置默认API选择（必须在 initAPICheckboxes 之前，否则复选框不同步）
     if (!localStorage.getItem('hasInitializedDefaults')) {

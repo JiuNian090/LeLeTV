@@ -72,11 +72,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 清除本地存储缓存并刷新页面
 
-// 显示视频源导入页面（LibreTV 源列表 JSON / 裸数组 / 旧版源配置）
-export function showSourceImportBox(fun: FileHandler): void {
+// 显示视频源导入页面（文件 / URL；LibreTV 源列表 JSON / 裸数组 / 旧版源配置）
+export function showSourceImportBox(fun: FileHandler, onUrl?: (url: string) => void): void {
     showModal({
         title: '导入视频源',
-        content: (body) => {
+        content: (body, modal) => {
+            const urlRow = onUrl ? `
+                <div class="v2-url-import">
+                    <input type="url" id="sourceUrlInput" class="v2-input" placeholder="https://example.com/sources.json" autocomplete="off" spellcheck="false">
+                    <button type="button" id="sourceUrlBtn" class="v2-btn v2-btn--secondary v2-btn--sm">从 URL 导入</button>
+                </div>
+                <p class="v2-url-hint">可直接填 Worker 的 /sources.json 地址</p>
+            ` : '';
             body.innerHTML = `
                 <div id="sourceDropZone" class="v2-dropzone">
                     <span class="v2-dropzone-icon" aria-hidden="true">
@@ -91,6 +98,7 @@ export function showSourceImportBox(fun: FileHandler): void {
                         </label>
                     </div>
                 </div>
+                ${urlRow}
             `;
             const dropZone = document.getElementById('sourceDropZone');
             const fileInput = document.getElementById('sourceFileInput') as HTMLInputElement | null;
@@ -110,6 +118,23 @@ export function showSourceImportBox(fun: FileHandler): void {
                     const file = fileInput.files && fileInput.files[0];
                     if (file) fun(file);
                     fileInput.value = '';
+                });
+            }
+            if (onUrl) {
+                const urlInput = document.getElementById('sourceUrlInput') as HTMLInputElement | null;
+                const urlBtn = document.getElementById('sourceUrlBtn') as HTMLButtonElement | null;
+                const submitUrl = () => {
+                    const url = urlInput ? urlInput.value.trim() : '';
+                    if (!url) return;
+                    modal.remove();
+                    onUrl(url);
+                };
+                urlBtn?.addEventListener('click', submitUrl);
+                urlInput?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitUrl();
+                    }
                 });
             }
         }
