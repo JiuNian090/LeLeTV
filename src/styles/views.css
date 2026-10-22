@@ -1144,8 +1144,41 @@
 .settings-dashboard-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 横屏：数据源占左列两行，右侧上下放播放与数据管理；
+       首页与导航 / 主题配色并排；自定义源整行放最下面。 */
+    grid-template-areas:
+        "sources playback"
+        "sources data"
+        "home theme"
+        "custom custom";
     gap: 16px;
     align-items: stretch;
+}
+
+.settings-card-sources { grid-area: sources; }
+.settings-card-playback { grid-area: playback; }
+.settings-card-data { grid-area: data; }
+.settings-card-home { grid-area: home; }
+.settings-card-custom { grid-area: custom; }
+.settings-card-theme { grid-area: theme; }
+
+/* 主题配色现在占半列，色盘改为自适应列宽，避免 6 列把卡片挤扁 */
+.settings-card-theme .theme-scheme-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* 首页与导航现在只占半列，内部开关改为单列，避免文字和分段按钮被挤窄 */
+.settings-card-home .dash-switch-body.is-two-col {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.settings-card-home .dash-switch-body.is-two-col .dash-switch-row + .dash-switch-row {
+    border-top: 1px solid var(--v2-line);
+}
+
+/* 设备管理容器整行，避免宽屏下只占半列留空 */
+#userDeviceContainer {
+    grid-column: 1 / -1;
 }
 
 .theme-full-width,
@@ -1220,7 +1253,7 @@
 /* 数据源勾选 */
 .dash-api-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 2px 12px;
     max-height: 300px;
     overflow-y: auto;
@@ -1266,7 +1299,8 @@
 }
 
 .v2-src-name {
-    flex: 1;
+    flex: 0 1 auto;
+    max-width: 9em;
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
@@ -2523,22 +2557,33 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    /* 单列时把常用的排前面：数据源 > 主题 > 开关 > 其余 */
+    .settings-dashboard-grid {
+        grid-template-areas: none;
+    }
+
+    /* 单列顺序：数据源 > 播放 > 首页 > 主题 > 数据管理 > 自定义源 */
     .settings-dashboard-grid > * {
-        order: 4;
+        order: 7;
     }
 
-    .settings-dashboard-grid > :has(#apiCheckboxes) {
-        order: 1;
+    .settings-card-sources,
+    .settings-card-playback,
+    .settings-card-data,
+    .settings-card-home,
+    .settings-card-custom,
+    .settings-card-theme,
+    #userDeviceContainer {
+        grid-area: auto;
+        grid-column: auto;
+        grid-row: auto;
     }
 
-    .settings-dashboard-grid > .theme-full-width {
-        order: 2;
-    }
-
-    .settings-dashboard-grid > :has(#hiddenContentModeToggle) {
-        order: 3;
-    }
+    .settings-card-sources { order: 1; }
+    .settings-card-playback { order: 2; }
+    .settings-card-home { order: 3; }
+    .settings-card-theme { order: 4; }
+    .settings-card-data { order: 5; }
+    .settings-card-custom { order: 6; }
 }
 
 @media (max-width: 720px) {
