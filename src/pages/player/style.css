@@ -991,15 +991,15 @@ button.player-action:hover {
     font-weight: 600;
 }
 
-/* 竖屏（默认）：不限高，跟随页面一直往下翻 */
+/* 竖屏（默认）：一行三个封面，不限高，跟随页面一直往下翻 */
 .related-scroll {
     overflow: visible;
 }
 
 .related-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
 }
 
 .related-status {
@@ -1201,13 +1201,10 @@ button.player-action:hover {
         overflow-y: auto;
     }
 
-    /* 相关推荐：卡片不越过屏幕底部，内容在卡片内向下滚动 */
-    .related-scroll {
-        max-height: min(46vh, 420px);
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
+    /* 横屏：一行两个封面 */
+    .related-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
     }
 }
 
