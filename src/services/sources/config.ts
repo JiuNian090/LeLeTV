@@ -189,20 +189,23 @@ export function initAPICheckboxes(): void {
         const checked = selectedAPIs.includes(apiKey);
         const origin = api.origin === 'import' ? 'import' : 'worker';
 
-        // 一行一个小开关：input 只负责状态，开关本体是后面的 span，名字在最右。
-        // data-origin 控制名称前的来源小圆点（CSS 伪元素，不额外占 flex 宽度）。
+        // 顺序：呼吸圆点 → 源名称 → 开关。
+        // data-origin / data-hidden 控制圆点颜色：
+        //   普通源：Worker 绿、导入紫；私密源：Worker 绿、导入黄。
         const checkbox = document.createElement('label');
         checkbox.className = 'v2-src-item';
         checkbox.dataset.origin = origin;
-        checkbox.title = origin === 'import' ? '导入源' : '云端源';
+        checkbox.dataset.hidden = api.hidden ? '1' : '0';
+        checkbox.title = (origin === 'import' ? '导入源' : '云端源') + (api.hidden ? '（私密）' : '');
         checkbox.setAttribute('for', `api_${apiKey}`);
         checkbox.innerHTML = `
             <input type="checkbox" id="api_${apiKey}" class="v2-switch-input"
                    ${checked ? 'checked' : ''}
                    data-api="${apiKey}"
                    data-role="api-toggle">
-            <span class="v2-switch" aria-hidden="true"></span>
+            <span class="v2-src-dot" aria-hidden="true"></span>
             <span class="v2-src-name"></span>
+            <span class="v2-switch" aria-hidden="true"></span>
         `;
         const nameEl = checkbox.querySelector('.v2-src-name');
         if (nameEl) nameEl.textContent = api.name;

@@ -78,11 +78,12 @@ export function showSourceImportBox(fun: FileHandler, onUrl?: (url: string) => v
         title: '导入视频源',
         content: (body, modal) => {
             const urlRow = onUrl ? `
+                <p class="v2-url-title">或从链接导入</p>
                 <div class="v2-url-import">
-                    <input type="url" id="sourceUrlInput" class="v2-input" placeholder="https://example.com/sources.json" autocomplete="off" spellcheck="false">
-                    <button type="button" id="sourceUrlBtn" class="v2-btn v2-btn--secondary v2-btn--sm">从 URL 导入</button>
+                    <input type="url" id="sourceUrlInput" class="v2-input" placeholder="https://worker.example.com/sources.json?scope=all" autocomplete="off" spellcheck="false">
+                    <button type="button" id="sourceUrlBtn" class="v2-btn v2-btn--secondary v2-btn--sm">导入</button>
                 </div>
-                <p class="v2-url-hint">可直接填 Worker 的 /sources.json 地址</p>
+                <p class="v2-url-hint">支持 Worker 分享链接；私密 / 全部范围需私密模式或链接凭证</p>
             ` : '';
             body.innerHTML = `
                 <div id="sourceDropZone" class="v2-dropzone">

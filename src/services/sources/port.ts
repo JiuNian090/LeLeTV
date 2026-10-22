@@ -381,6 +381,49 @@ function handleSourceImportFile(file: File): void {
 }
 
 /**
+ * 把本站 Worker 的常见地址统一成 /sources.json：
+ *   - /sources.json（含分享的 scope / key）原样使用
+ *   - Worker 根地址自动补 /sources.json
+ *   - /api-sites → scope=public；/api-sites/hidden → scope=hidden
+ * 只有 origin 与 __ENV__.TMDB_WORKER_URL 一致时才改写，避免误伤第三方地址。
+ */
+function normalizeWorkerSourceUrl(parsedUrl: URL): boolean {
+    const path = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+    if (/\/sources\.json$/i.test(path)) return true;
+
+    const env = (window as SourceImportWindow).__ENV__;
+    const workerBase = env && env.TMDB_WORKER_URL;
+    if (!workerBase) return false;
+
+    let sameWorker = false;
+    try {
+        sameWorker = new URL(workerBase).origin === parsedUrl.origin;
+    } catch (e) {
+        sameWorker = false;
+    }
+    if (!sameWorker) return false;
+    if (path !== '/' && path !== '/api-sites' && path !== '/api-sites/hidden') return false;
+
+    parsedUrl.pathname = '/sources.json';
+    if (!parsedUrl.searchParams.get('scope')) {
+        const legacyHidden = parsedUrl.searchParams.get('hidden') === '1';
+        if (path === '/api-sites/hidden') {
+            parsedUrl.searchParams.set('scope', 'hidden');
+        } else if (legacyHidden) {
+            parsedUrl.searchParams.set('scope', 'all');
+        } else if (path === '/api-sites') {
+            parsedUrl.searchParams.set('scope', 'public');
+        } else {
+            parsedUrl.searchParams.set(
+                'scope',
+                isHiddenContentMode() && env && env.HIDDENKEY ? 'all' : 'public'
+            );
+        }
+    }
+    return true;
+}
+
+/**
  * 从 URL 拉取并解析源列表。
  * Worker 分享链接用 scope=public|hidden|all 表示范围：
  *   - public：普通源，直接拉取；
@@ -404,7 +447,7 @@ function handleSourceImportUrl(rawUrl: string): void {
         const env = (window as SourceImportWindow).__ENV__;
         const hiddenKey = env && env.HIDDENKEY;
         const parsedUrl = new URL(url);
-        const isWorkerSource = /(^|\/)sources\.json$/i.test(parsedUrl.pathname);
+        const isWorkerSource = normalizeWorkerSourceUrl(parsedUrl);
         if (isWorkerSource) {
             const hasShareKey = parsedUrl.searchParams.has('key');
             const hasLegacyHidden = parsedUrl.searchParams.get('hidden') === '1';

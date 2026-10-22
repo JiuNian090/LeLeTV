@@ -1266,8 +1266,8 @@
 }
 
 .v2-src-name {
-    position: relative;
-    padding-left: 10px;
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1276,22 +1276,35 @@
     transition: color 0.15s ease;
 }
 
-/* 来源小圆点：不额外占 flex 宽度，只在名称前留 5px 点 + 5px 间距 */
-.v2-src-name::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 5px;
-    height: 5px;
-    margin-top: -2.5px;
+/* 来源呼吸圆点：普通源 Worker 绿 / 导入紫；私密源 Worker 绿 / 导入黄 */
+.v2-src-dot {
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: #22d3ee;
-    opacity: 0.9;
+    flex: none;
+    background: #22c55e;
+    animation: v2-src-breathe 2.6s ease-in-out infinite;
 }
 
-.v2-src-item[data-origin="import"] .v2-src-name::before {
+.v2-src-item[data-origin="import"] .v2-src-dot {
     background: #a78bfa;
+}
+
+.v2-src-item[data-hidden="1"][data-origin="import"] .v2-src-dot {
+    background: #fbbf24;
+}
+
+@keyframes v2-src-breathe {
+    0%, 100% { opacity: 0.55; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .v2-src-dot {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .v2-switch-input:checked ~ .v2-src-name {
@@ -2855,12 +2868,19 @@
 }
 
 /* 源列表 URL 导入：与拖拽区同一视觉层级，窄屏自动换行 */
+.v2-url-title {
+    margin-top: 14px;
+    color: var(--v2-t2);
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .v2-url-import {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 8px;
 }
 
 .v2-url-import .v2-input {
