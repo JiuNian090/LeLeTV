@@ -17,6 +17,8 @@ const versionWindow = window as VersionWindow;
 
 const LAST_VERSION_KEY = 'leletv_last_version';
 const UPDATING_KEY = 'leletv_updating';
+/** 更新锁的有效期：超过这个时间视为上一次更新中途退出，允许重试 */
+const UPDATING_LOCK_MS = 15000;
 
 var hasNewVersion = false;
 var latestChangelogVersion: string | null = null;
@@ -26,6 +28,48 @@ function formatDisplayVersion(rawVersion: string | null | undefined): string {
   if (rawVersion.startsWith('{{')) return '';
   if (rawVersion.startsWith('v')) return rawVersion;
   return `v${rawVersion}`;
+}
+
+/** 解析 v4.2.0 / 4.2.0 / 遗留时间戳 202509291200 → 数字段 */
+function parseVersionParts(version: string | null | undefined): number[] | null {
+  if (!version) return null;
+  var match = /^v?(\d+(?:\.\d+)*)$/.exec(String(version).trim());
+  if (!match) return null;
+  var parts = match[1].split('.').map(Number);
+  if (!parts.length || parts.some(function (n) { return !isFinite(n); })) return null;
+  return parts;
+}
+
+/**
+ * 比较两个版本号：>0 表示 a 更新，<0 表示 a 更旧，0 表示相同，null 表示无法比较。
+ * 遗留版本号是单段纯数字时间戳（YYYYMMDDHHmm）；从时间戳迁到 vX.Y.Z 时，语义版本视为更新。
+ */
+function compareVersions(a: string, b: string): number | null {
+  var pa = parseVersionParts(a);
+  var pb = parseVersionParts(b);
+  if (!pa || !pb) return null;
+
+  if (pa.length === 1 && pb.length > 1) return 1;
+  if (pb.length === 1 && pa.length > 1) return -1;
+
+  var len = Math.max(pa.length, pb.length);
+  for (var i = 0; i < len; i++) {
+    var x = pa[i] || 0;
+    var y = pb[i] || 0;
+    if (x !== y) return x > y ? 1 : -1;
+  }
+  return 0;
+}
+
+/**
+ * 只有服务器版本确实比本地记录更新时才提示。
+ * 版本回退（如本地 v4.2.0、服务器仍返回 v4.0.7）或无法比较时不打扰，
+ * 避免把本地记录写回旧值，造成「升级 → 回退 → 再升级」来回弹窗。
+ */
+function isNewerVersion(latest: string, last: string | null): boolean {
+  if (!last || latest === last) return false;
+  var cmp = compareVersions(latest, last);
+  return cmp !== null && cmp > 0;
 }
 
 async function clearAllCaches(): Promise<void> {
@@ -66,14 +110,44 @@ async function sendClearCacheMessage(): Promise<boolean> {
   return false;
 }
 
-async function performUpdate(): Promise<void> {
-  if (localStorage.getItem(UPDATING_KEY) === 'true') return;
-  localStorage.setItem(UPDATING_KEY, 'true');
+/**
+ * 判断是否真的有另一个更新流程正在进行。
+ * 旧版本把锁写成永久的 'true'，若更新途中关闭页面就会永久卡住；
+ * 这里把 'true' 和过期时间戳都视为失效，允许重新发起更新。
+ */
+function isUpdatingLocked(): boolean {
+  try {
+    var raw = localStorage.getItem(UPDATING_KEY);
+    if (!raw) return false;
+    if (raw === 'true') {
+      localStorage.removeItem(UPDATING_KEY);
+      return false;
+    }
+    var startedAt = Number(raw);
+    if (!isFinite(startedAt) || Date.now() - startedAt > UPDATING_LOCK_MS) {
+      localStorage.removeItem(UPDATING_KEY);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function performUpdate(): Promise<boolean> {
+  if (isUpdatingLocked()) return false;
+
+  try {
+    // 存时间戳而不是 'true'，页面中途被关掉时锁会自动过期
+    localStorage.setItem(UPDATING_KEY, String(Date.now()));
+  } catch (e) { /* 隐私模式等场景下写不进去，不影响后续流程 */ }
 
   updateFooterBtn('正在更新');
 
   if (latestChangelogVersion) {
-    localStorage.setItem(LAST_VERSION_KEY, latestChangelogVersion);
+    try {
+      localStorage.setItem(LAST_VERSION_KEY, latestChangelogVersion);
+    } catch (e) { /* 同上 */ }
   }
 
   await sendClearCacheMessage();
@@ -81,9 +155,13 @@ async function performUpdate(): Promise<void> {
   await unregisterServiceWorker();
 
   setTimeout(() => {
-    localStorage.removeItem(UPDATING_KEY);
+    try {
+      localStorage.removeItem(UPDATING_KEY);
+    } catch (e) { /* 同上 */ }
     window.location.href = '/?_=' + Date.now();
   }, 800);
+
+  return true;
 }
 
 function updateFooterBtn(text: string): void {
@@ -102,7 +180,9 @@ function setStatusDot(color: string): void {
 /** 从 VERSION.txt 获取最新版本号 */
 async function getChangelogVersion(): Promise<string | null> {
   try {
-    var resp = await fetch('/VERSION.txt', { cache: 'no-store' });
+    // 带时间戳绕过浏览器 / 中间层对旧 VERSION.txt 的缓存；
+    // 否则设备可能一直拿到旧版本号，与本地记录形成“版本倒挂”
+    var resp = await fetch('/VERSION.txt?_=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) return null;
     var text = await resp.text();
     var rawVersion = text.trim();
@@ -133,7 +213,7 @@ async function checkForUpdates(): Promise<boolean> {
     return false;
   }
 
-  if (changelogVersion !== lastVersion) {
+  if (isNewerVersion(changelogVersion, lastVersion)) {
     hasNewVersion = true;
     updateFooterBtn('立即更新');
     setStatusDot('red');
@@ -283,9 +363,19 @@ function bindUpdateModal(): void {
   if (btn) {
     const updateBtn = btn;
     updateBtn.addEventListener('click', function () {
+      if (updateBtn.disabled) return;
       updateBtn.disabled = true;
       updateBtn.textContent = '正在更新';
-      performUpdate();
+      performUpdate().then(function (started) {
+        if (!started) {
+          // 另一个标签正在更新，或旧锁刚被判定失效：恢复按钮，允许重试
+          updateBtn.disabled = false;
+          updateBtn.textContent = '立即更新';
+        }
+      }).catch(function () {
+        updateBtn.disabled = false;
+        updateBtn.textContent = '立即更新';
+      });
     });
   }
 }
@@ -413,7 +503,7 @@ async function checkAndPromptUpdate(): Promise<void> {
   if (!latest) return;
 
   var lastVersion = localStorage.getItem(LAST_VERSION_KEY);
-  if (!lastVersion || lastVersion === latest) return;
+  if (!isNewerVersion(latest, lastVersion)) return;
 
   latestChangelogVersion = latest;
   hasNewVersion = true;
