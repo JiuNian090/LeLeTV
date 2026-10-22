@@ -47,6 +47,34 @@ const adminWindow = window as AdminPanelWindow;
 // 跨 bundle：邀请码服务与 toast 都在首屏 bundle 中，settings 按需 bundle 不再重复打包
 const showToast = (window as Window & { showToast: (message: string, type?: string) => void }).showToast;
 
+// 面板内联图标：与设置页其它 SVG 同一线性风格（stroke 1.8，随主题色）
+const ICON = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/>',
+  logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/>',
+  key: '<path d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.03 5.91c-.56-.1-1.16.03-1.56.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.82c0-.6.24-1.17.66-1.59l6.5-6.5c.4-.4.52-1 .43-1.56A6 6 0 1 1 21.75 8.25Z"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  share: '<path d="M12 16V4m0 0L8 8m4-4 4 4M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/>',
+  power: '<path d="M12 3v9m5.66-6.66a8 8 0 1 1-11.32 0"/>',
+  pencil: '<path d="m14.5 5.5 4 4M4 20l4.2-.9L20 7.3a1.8 1.8 0 0 0 0-2.6l-.7-.7a1.8 1.8 0 0 0-2.6 0L4.9 15.8 4 20Z"/>',
+  trash: '<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13h10l1-13M10 11v5m4-5v5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>'
+};
+
+function icon(name: keyof typeof ICON): string {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[name] + '</svg>';
+}
+
+/** 服务端返回的邀请码 / 备注 / 设备名都按不可信文本处理 */
+function esc(value: unknown): string {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const INVITE_ADMIN_PANEL = {
   _baseUrl(path: string): string {
     const workerBase = adminWindow.__ENV__?.TMDB_WORKER_URL || '';
@@ -179,36 +207,43 @@ const INVITE_ADMIN_PANEL = {
     if (staleGenModal) staleGenModal.remove();
 
     container.innerHTML = `
-      <div class="dash-card">
+      <div class="dash-card invite-panel">
         <div class="dash-card-header">
           <span class="dash-card-icon">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>
-            </svg>
+            ${icon('key')}
           </span>
-          <h3 class="dash-card-title">邀请码管理</h3>
+          <h3 class="dash-card-title">邀请码管理<span class="dash-card-desc">生成、停用邀请码，追踪登录设备</span></h3>
           <div class="header-actions">
-            <button id="inviteGenerateBtn" class="gen-btn">＋ 生成</button>
-            <button id="inviteRefreshBtn" class="header-btn" title="刷新">⟳</button>
-            <button id="inviteAdminLogoutBtn" class="header-btn" title="退出登录">⏻</button>
+            <button type="button" id="inviteGenerateBtn" class="gen-btn">${icon('plus')}<span>生成</span></button>
+            <button type="button" id="inviteRefreshBtn" class="header-btn" title="刷新" aria-label="刷新">${icon('refresh')}</button>
+            <button type="button" id="inviteAdminLogoutBtn" class="header-btn" title="退出登录" aria-label="退出登录">${icon('logout')}</button>
           </div>
         </div>
         <div class="dash-card-body">
           <div id="inviteStats" class="invite-stats-grid">
-            <div class="invite-stat-card"><div class="text-gray-500 text-xs text-center py-2">加载中...</div></div>
+            <div class="invite-stat-card is-accent"><div class="invite-stat-value">—</div><div class="invite-stat-label">总邀请码</div></div>
+            <div class="invite-stat-card"><div class="invite-stat-value">—</div><div class="invite-stat-label">总设备</div></div>
+            <div class="invite-stat-card is-active"><div class="invite-stat-value">—</div><div class="invite-stat-label">活跃设备</div></div>
+            <div class="invite-stat-card is-muted"><div class="invite-stat-value">—</div><div class="invite-stat-label">不活跃</div></div>
           </div>
           <div id="inviteCodeList" class="invite-code-list">
-            <p class="text-gray-500 text-sm text-center">点击刷新加载列表</p>
+            <p class="invite-loading">正在读取邀请码…</p>
           </div>
         </div>
       </div>
-      <div id="inviteGenModal" class="gen-modal-overlay">
+      <div id="inviteGenModal" class="gen-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inviteGenModalTitle">
         <div class="gen-modal-box">
-          <div class="gen-modal-title">生成邀请码</div>
+          <div class="gen-modal-head">
+            <span class="gen-modal-icon">${icon('plus')}</span>
+            <div class="gen-modal-copy">
+              <div id="inviteGenModalTitle" class="gen-modal-title">生成邀请码</div>
+              <p class="gen-modal-desc">可填写备注，方便日后区分使用人。</p>
+            </div>
+          </div>
           <input id="inviteGenRemarkInput" class="gen-modal-input" placeholder="备注（可选，如：朋友、家人）" maxlength="30" autocomplete="off">
           <div class="gen-modal-actions">
-            <button id="inviteGenCancel" class="gen-modal-btn">取消</button>
-            <button id="inviteGenConfirm" class="gen-modal-btn gen-modal-btn-primary">确定生成</button>
+            <button type="button" id="inviteGenCancel" class="gen-modal-btn">取消</button>
+            <button type="button" id="inviteGenConfirm" class="gen-modal-btn gen-modal-btn-primary">确定生成</button>
           </div>
         </div>
       </div>
@@ -302,16 +337,22 @@ const INVITE_ADMIN_PANEL = {
       const recentActive = stats.recent_active_devices ?? 0;
       const totalCodes = stats.total_codes ?? 0;
       const totalDevices = stats.total_devices ?? 0;
-      statsEl.innerHTML = `
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#f472b6">${totalCodes}</div><div class="invite-stat-label">总邀请码</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#60a5fa">${totalDevices}</div><div class="invite-stat-label">总设备数</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#22c55e">${recentActive}</div><div class="invite-stat-label">最近活跃</div></div>
-        <div class="invite-stat-card"><div class="invite-stat-value" style="color:#9ca3af">${totalDevices - recentActive}</div><div class="invite-stat-label">不活跃</div></div>
-      `;
+      statsEl.innerHTML =
+        `<div class="invite-stat-card is-accent"><div class="invite-stat-value">${totalCodes}</div><div class="invite-stat-label">总邀请码</div></div>` +
+        `<div class="invite-stat-card"><div class="invite-stat-value">${totalDevices}</div><div class="invite-stat-label">总设备</div></div>` +
+        `<div class="invite-stat-card is-active"><div class="invite-stat-value">${recentActive}</div><div class="invite-stat-label">活跃设备</div></div>` +
+        `<div class="invite-stat-card is-muted"><div class="invite-stat-value">${totalDevices - recentActive}</div><div class="invite-stat-label">不活跃</div></div>`;
     }
     
     if (codes.length === 0) {
-      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">暂无邀请码</p>';
+      listEl.innerHTML = `
+        <div class="invite-empty">
+          <span class="invite-empty-icon">${icon('key')}</span>
+          <p class="invite-empty-title">还没有邀请码</p>
+          <p class="invite-empty-desc">生成一个邀请码，分享给朋友或家人加入</p>
+          <button type="button" class="gen-btn invite-empty-btn">${icon('plus')}<span>生成第一个邀请码</span></button>
+        </div>`;
+      listEl.querySelector('.invite-empty-btn')?.addEventListener('click', () => this._handleGenerate(container));
       return;
     }
     
@@ -319,41 +360,53 @@ const INVITE_ADMIN_PANEL = {
       const devices = invite.devices || [];
       const lastActive = devices.length > 0 ? devices[0].last_active_at : null;
       const recentDot = lastActive ? _recentDot(lastActive) : '';
+      const active = !!invite.is_active;
+      const code = esc(invite.code);
+      const remark = invite.remark ? esc(invite.remark) : '';
+      const deviceCount = invite.device_count ?? devices.length;
+      const maxDevices = invite.max_devices ?? '—';
       return `
-      <div class="invite-card ${lastActive ? '' : 'invite-card-idle'}">
+      <div class="invite-card ${lastActive ? '' : 'invite-card-idle'} ${active ? 'is-enabled' : 'is-disabled'}">
         <div class="invite-card-top">
-          <div>
-            <span class="invite-code-text" data-code="${invite.code}" title="点击复制">${invite.code}</span>
-            ${invite.remark ? `<span class="invite-remark-text">（${invite.remark}）</span>` : ''}
+          <div class="invite-card-id">
+            <span class="invite-code-text" data-code="${code}" title="点击复制邀请码" role="button" tabindex="0">
+              <span class="invite-code">${code}</span>${icon('copy')}
+            </span>
+            ${remark ? `<span class="invite-remark-text">${remark}</span>` : ''}
           </div>
-          <div class="invite-card-actions" style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;flex-wrap:wrap;">
-            <span class="invite-status-badge ${invite.is_active ? 'invite-status-active' : 'invite-status-disabled'}">● ${invite.is_active ? '启用' : '禁用'}</span>
-            <button class="invite-action-btn share-code-btn" data-code="${invite.code}" title="分享该邀请码">分享</button>
-            <button class="invite-action-btn toggle-btn" data-code="${invite.code}" data-active="${invite.is_active}">${invite.is_active ? '禁用' : '启用'}</button>
-            <button class="invite-action-btn remark-btn" data-code="${invite.code}" title="编辑备注">✎</button>
-            <button class="invite-action-btn invite-action-btn-danger delete-code-btn" data-code="${invite.code}" title="删除">🗑️</button>
+          <div class="invite-card-actions">
+            <span class="invite-status-badge ${active ? 'invite-status-active' : 'invite-status-disabled'}"><i class="invite-status-dot"></i>${active ? '启用' : '禁用'}</span>
+            <button type="button" class="invite-icon-btn share-code-btn" data-code="${code}" title="分享邀请码" aria-label="分享邀请码">${icon('share')}</button>
+            <button type="button" class="invite-icon-btn toggle-btn" data-code="${code}" data-active="${active}" title="${active ? '禁用' : '启用'}" aria-label="${active ? '禁用' : '启用'}">${icon('power')}</button>
+            <button type="button" class="invite-icon-btn remark-btn" data-code="${code}" title="编辑备注" aria-label="编辑备注">${icon('pencil')}</button>
+            <button type="button" class="invite-icon-btn invite-action-btn-danger delete-code-btn" data-code="${code}" title="删除邀请码" aria-label="删除邀请码">${icon('trash')}</button>
           </div>
         </div>
         <div class="invite-card-meta">
           <span>${invite.created_at != null ? _formatTime(invite.created_at) : '—'}</span>
-          <span>设备：${invite.device_count}/${invite.max_devices}</span>
-          ${lastActive ? `<span>${recentDot} 最近使用：${_timeAgo(lastActive)}</span>` : '<span class="text-gray-600">暂无使用</span>'}
+          <span>设备 ${deviceCount}/${maxDevices}</span>
+          <span class="invite-last-active">${lastActive ? recentDot + ' 最近使用 ' + _timeAgo(lastActive) : '暂无使用'}</span>
         </div>
         ${devices.length > 0 ? `
-        <details class="invite-devices" open>
-          <summary class="invite-device-toggle">设备详情（${devices.length}）</summary>
-          ${devices.map(d => {
-            const lastActive = d.last_active_at;
-            const recent = lastActive != null && _isRecentlyActive(lastActive);
-            const dot = lastActive != null ? _recentDot(lastActive) : '';
-            const activeText = lastActive != null ? _timeAgo(lastActive) : '从未';
-            return `
-          <div class="invite-device-item ${recent ? 'invite-device-recent' : ''}">
-            <span class="invite-device-name">${dot} ${_deviceIcon(d.browser)} ${d.device_name}</span>
-            <span>${activeText} <button class="invite-action-btn invite-action-btn-danger delete-device-btn" data-code="${invite.code}" data-fp="${d.device_fingerprint}" title="删除设备">✕</button></span>
+        <details class="invite-devices">
+          <summary class="invite-device-toggle">设备详情<span class="invite-device-count">${devices.length}</span></summary>
+          <div class="invite-device-list">
+            ${devices.map(d => {
+              const last = d.last_active_at;
+              const recent = last != null && _isRecentlyActive(last);
+              const dot = last != null ? _recentDot(last) : '';
+              const activeText = last != null ? _timeAgo(last) : '从未';
+              return `
+            <div class="invite-device-item ${recent ? 'invite-device-recent' : ''}">
+              <span class="invite-device-name">${dot}${_deviceIcon(d.browser)} ${esc(d.device_name)}</span>
+              <span class="invite-device-side">
+                <span>${activeText}</span>
+                <button type="button" class="invite-icon-btn invite-action-btn-danger delete-device-btn" data-code="${code}" data-fp="${esc(d.device_fingerprint)}" title="删除设备" aria-label="删除设备">${icon('close')}</button>
+              </span>
+            </div>
+            `;
+            }).join('')}
           </div>
-          `;
-          }).join('')}
         </details>
         ` : ''}
       </div>`;
@@ -378,23 +431,29 @@ const INVITE_ADMIN_PANEL = {
       });
     });
     
-    // 点击邀请码复制
+    // 点击 / 回车复制邀请码
+    const copyInviteCode = async (el: HTMLElement): Promise<void> => {
+      const code = el.dataset.code;
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code);
+        showToast('邀请码已复制', 'success');
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('邀请码已复制', 'success');
+      }
+    };
     listEl.querySelectorAll<HTMLElement>('.invite-code-text').forEach(el => {
-      el.addEventListener('click', async () => {
-        const code = el.dataset.code;
-        if (!code) return;
-        try {
-          await navigator.clipboard.writeText(code);
-          showToast('邀请码已复制', 'success');
-        } catch {
-          const ta = document.createElement('textarea');
-          ta.value = code;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-          showToast('邀请码已复制', 'success');
-        }
+      el.addEventListener('click', () => { void copyInviteCode(el); });
+      el.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        void copyInviteCode(el);
       });
     });
     

@@ -35,9 +35,27 @@ interface UserDevicesWindow extends Window {
 }
 
 const devicesWindow = window as UserDevicesWindow;
-// 跨 bundle：邀请码服务 / toast / themeColor 由首屏 bundle 提供
+// 跨 bundle：邀请码服务 / toast 由首屏 bundle 提供
 const showToast = (window as Window & { showToast: (message: string, type?: string) => void }).showToast;
-const themeColor = (window as Window & { themeColor?: () => string }).themeColor;
+
+function uiIcon(name: 'refresh' | 'logout' | 'pencil' | 'close'): string {
+  const paths = {
+    refresh: '<path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/>',
+    logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/>',
+    pencil: '<path d="m14.5 5.5 4 4M4 20l4.2-.9L20 7.3a1.8 1.8 0 0 0 0-2.6l-.7-.7a1.8 1.8 0 0 0-2.6 0L4.9 15.8 4 20Z"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>'
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[name] + '</svg>';
+}
+
+function escapeText(value: unknown): string {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 const USER_DEVICES_PANEL = {
   _inviteUrl(path: string): string {
@@ -124,31 +142,34 @@ const USER_DEVICES_PANEL = {
 
   async render(container: HTMLElement) {
     container.innerHTML = `
-      <div class="dash-card">
+      <div class="dash-card user-device-panel">
         <div class="dash-card-header">
           <span class="dash-card-icon">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/>
             </svg>
           </span>
-          <h3 class="dash-card-title">设备管理</h3>
+          <h3 class="dash-card-title">设备管理<span class="dash-card-desc">查看当前账号的登录设备，可重命名或移除</span></h3>
           <div class="header-actions">
-            <button id="userDeviceShareBtn" class="header-btn" title="分享邀请信息" aria-label="分享邀请信息">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" id="userDeviceShareBtn" class="header-btn" title="分享邀请信息" aria-label="分享邀请信息">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/>
               </svg>
             </button>
-            <button id="userDeviceRefreshBtn" class="header-btn" title="刷新">⟳</button>
-            <button id="userDeviceLogoutBtn" class="header-btn" title="退出登录">⏻</button>
+            <button type="button" id="userDeviceRefreshBtn" class="header-btn" title="刷新" aria-label="刷新">${uiIcon('refresh')}</button>
+            <button type="button" id="userDeviceLogoutBtn" class="header-btn" title="退出登录" aria-label="退出登录">${uiIcon('logout')}</button>
           </div>
         </div>
         <div class="dash-card-body">
-          <div id="userDeviceInfo" class="invite-card-meta" style="margin-top:0;margin-bottom:0.5rem;">
-            <span>邀请码：<code class="invite-code-text" style="font-size:0.8rem;cursor:pointer;" id="userDeviceCode" title="点击复制"></code></span>
-            <span>设备数 <strong id="userDeviceCount" style="color:#fff;">0</strong> / <span id="userDeviceMax">5</span></span>
+          <div class="user-device-overview">
+            <div class="user-device-overview-main">
+              <span class="user-device-label">我的邀请码</span>
+              <code class="invite-code-text" id="userDeviceCode" title="点击复制邀请码"></code>
+            </div>
+            <span class="user-device-count"><strong id="userDeviceCount">0</strong><span class="user-device-sep">/</span><span id="userDeviceMax">5</span> 台设备</span>
           </div>
-          <div id="userDeviceList" class="invite-code-list">
-            <p class="text-gray-500 text-sm text-center py-4">加载中...</p>
+          <div id="userDeviceList" class="user-device-list">
+            <p class="invite-loading">正在读取设备…</p>
           </div>
         </div>
       </div>
@@ -186,7 +207,7 @@ const USER_DEVICES_PANEL = {
     if (!listEl) return;
 
     if (!data) {
-      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">加载失败</p>';
+      listEl.innerHTML = '<div class="user-device-empty">加载失败，请点击右上角刷新重试</div>';
       return;
     }
 
@@ -200,26 +221,25 @@ const USER_DEVICES_PANEL = {
 
     const devices = data.devices || [];
     if (devices.length === 0) {
-      listEl.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">暂无设备</p>';
+      listEl.innerHTML = '<div class="user-device-empty">暂无登录设备</div>';
       return;
     }
 
     listEl.innerHTML = devices.map((d: DeviceInfo) => {
-      const isCurrent = d.device_fingerprint && d.device_fingerprint === currentFingerprint;
-      const safeName = (d.device_name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const isCurrent = !!d.device_fingerprint && d.device_fingerprint === currentFingerprint;
+      const name = escapeText(d.device_name || '未知设备');
+      const fp = escapeText(d.device_fingerprint);
       return `
-      <div class="invite-card" style="margin-bottom:0.35rem;">
-        <div class="invite-card-top" style="gap:0.4rem;">
-          <div class="invite-device-name" style="font-size:0.82rem;color:#e2e8f0;display:flex;align-items:center;gap:0.3rem;flex:1;min-width:0;">
-            ${isCurrent
-              ? `<span class="truncate invite-name-editable" data-fp="${d.device_fingerprint}" title="点击修改设备名">${_deviceIcon(d.browser)} ${safeName} <span class="invite-rename-icon">✎</span></span>`
-              : `<span class="truncate">${_deviceIcon(d.browser)} ${safeName}</span>`}
-            ${isCurrent ? '<span class="invite-status-badge invite-status-active" style="font-size:0.6rem;flex-shrink:0;">当前</span>' : ''}
-          </div>
-          <div style="display:flex;align-items:center;gap:0.3rem;flex-shrink:0;">
-            <span class="text-xs text-gray-500" style="white-space:nowrap;">${d.last_active_at != null ? _timeAgo(d.last_active_at) : '从未'}</span>
-            <button class="invite-action-btn ${isCurrent ? '' : 'invite-action-btn-danger'} del-device-btn" data-fp="${d.device_fingerprint}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}" style="flex-shrink:0;">${isCurrent ? '退出' : '✕'}</button>
-          </div>
+      <div class="user-device-item ${isCurrent ? 'is-current' : ''}">
+        <div class="user-device-main">
+          ${isCurrent
+            ? `<span class="invite-name-editable" data-fp="${fp}" data-name="${name}" title="点击修改设备名">${_deviceIcon(d.browser)} ${name}<span class="invite-rename-icon">${uiIcon('pencil')}</span></span>`
+            : `<span class="user-device-name">${_deviceIcon(d.browser)} ${name}</span>`}
+          ${isCurrent ? '<span class="invite-status-badge invite-status-active"><i class="invite-status-dot"></i>本机</span>' : ''}
+        </div>
+        <div class="user-device-side">
+          <span class="user-device-time">${d.last_active_at != null ? _timeAgo(d.last_active_at) : '从未'}</span>
+          <button type="button" class="invite-icon-btn ${isCurrent ? '' : 'invite-action-btn-danger'} del-device-btn" data-fp="${fp}" data-current="${isCurrent}" title="${isCurrent ? '退出登录' : '删除设备'}" aria-label="${isCurrent ? '退出登录' : '删除设备'}">${uiIcon(isCurrent ? 'logout' : 'close')}</button>
         </div>
       </div>`;
     }).join('');
@@ -275,11 +295,8 @@ const USER_DEVICES_PANEL = {
         const fp = this.dataset.fp;
         if (!fp) return;
 
-        // 提取纯文本（去掉尾部的 ✎ 图标）
-        let rawText = this.textContent.replace('✎', '').trim();
-        const iconMatch = rawText.match(/^(\p{Emoji})\s*/u);
-        const icon = iconMatch ? iconMatch[1] + ' ' : '';
-        const currentName = iconMatch ? rawText.slice(icon.length) : rawText;
+        const currentName = this.dataset.name || '';
+        const originalHtml = this.innerHTML;
 
         // 替换为输入框
         const input = document.createElement('input');
@@ -287,34 +304,39 @@ const USER_DEVICES_PANEL = {
         input.className = 'invite-name-input';
         input.value = currentName;
         input.maxLength = 30;
-        input.style.cssText = 'background:#1a1a2e;border:1px solid ' + ((typeof themeColor === 'function') ? themeColor() : '#ec4899') + ';color:#e2e8f0;border-radius:0.25rem;padding:0.1rem 0.3rem;font-size:0.82rem;width:100%;outline:none;';
 
         this.innerHTML = '';
         this.appendChild(input);
         input.focus();
         input.select();
 
+        let settled = false;
+        const restore = () => {
+          if (settled) return;
+          settled = true;
+          this.innerHTML = originalHtml;
+        };
         const save = async () => {
+          if (settled) return;
           const val = input.value.trim();
           if (!val || val === currentName) {
-            this.innerHTML = rawText + ' <span class="invite-rename-icon">✎</span>';
+            restore();
             return;
           }
+          settled = true;
           const ok = await USER_DEVICES_PANEL.renameDevice(val);
           if (ok) {
             showToast('设备名已更新', 'success');
             USER_DEVICES_PANEL._refresh(container);
           } else {
             showToast('修改失败', 'error');
-            this.innerHTML = rawText + ' <span class="invite-rename-icon">✎</span>';
+            this.innerHTML = originalHtml;
           }
         };
 
         input.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') { e.preventDefault(); save(); }
-          else if (e.key === 'Escape') {
-            this.innerHTML = rawText + ' <span class="invite-rename-icon">✎</span>';
-          }
+          else if (e.key === 'Escape') { restore(); }
         });
         input.addEventListener('blur', save);
       });

@@ -2587,15 +2587,15 @@
 }
 
 @media (max-width: 720px) {
-    /* 数据源勾选：窄屏强制 3 列，缩小 gap 和 item 内边距给名称留空间 */
+    /* 数据源勾选：窄屏两列，避免三列挤压片源名称 */
     .dash-api-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2px 6px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px 10px;
     }
 
     .dash-api-grid .v2-src-item {
-        gap: 6px;
-        padding: 6px 4px;
+        gap: 8px;
+        padding: 7px 6px;
     }
 
     .movies-topbar-inner {
