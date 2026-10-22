@@ -1182,8 +1182,11 @@ export async function switchToResource(sourceKey: string, vodId: string): Promis
         const currentBack = currentUrlParams2.get('back');
         const backSuffix = currentBack ? `&back=${encodeURIComponent(currentBack)}` : '';
 
-        // 构建播放页面URL，包含当前播放进度
-        const watchUrl = `src/pages/player/index.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}${backSuffix}`;
+        // 构建播放页面URL，包含当前播放进度。
+        // 必须用站内绝对路径：本函数在播放页（/src/pages/player/index.html）里执行，
+        // 相对路径会按当前页面目录再拼一层，变成 /src/pages/player/src/pages/player/index.html，
+        // 落到 404 / 首页启动屏，而不是当前播放页。
+        const watchUrl = `/src/pages/player/index.html?id=${vodId}&source=${sourceKey}&url=${encodeURIComponent(targetUrl)}&index=${targetIndex}&title=${encodeURIComponent(currentVideoTitle)}&position=${currentPosition}${backSuffix}`;
 
         // 保存当前状态到localStorage
         try {
