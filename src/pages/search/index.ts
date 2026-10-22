@@ -670,15 +670,7 @@ export function setupEventListeners() {
             case 'update-custom-api': updateCustomApi(parseInt(el.dataset.index || '0')); break;
             case 'cancel-edit-custom-api': cancelEditCustomApi(); break;
             case 'load-tmdb-results': loadTmdbResults(); break;
-            case 'tmdb-search-video': tmdbSearchVideo(
-                el.dataset.title || '',
-                el.dataset.genres || '',
-                el.dataset.mediaSource,
-                el.dataset.mediaId,
-                el.dataset.mediaType,
-                el.dataset.category,
-                el.dataset.year
-            ); break;
+            case 'tmdb-search-video': tmdbSearchVideo(el.dataset.title || '', el.dataset.genres || ''); break;
             case 'recent-more': if (typeof openTmdbCategory === 'function') openTmdbCategory(el.dataset.recentType || ''); break;
             case 'play-from-history': {
                 const url = el.dataset.url;

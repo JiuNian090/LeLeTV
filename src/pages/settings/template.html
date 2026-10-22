@@ -23,39 +23,6 @@
                         </div>
                     </section>
 
-                    <!-- 元数据源 -->
-                    <section class="dash-card">
-                        <header class="dash-card-header">
-                            <span class="dash-card-icon" aria-hidden="true">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
-                            </span>
-                            <div class="dash-card-title">元数据源<p class="dash-card-desc">分类、详情、简介与演员表的数据来源</p></div>
-                        </header>
-                        <div class="dash-card-body dash-switch-body">
-                            <div class="dash-switch-row">
-                                <div class="dash-switch-info">
-                                    <span class="dash-switch-label">主数据源</span>
-                                    <span class="dash-switch-desc">豆瓣优先；豆瓣不支持的筛选会自动使用 TMDB。</span>
-                                </div>
-                                <div class="v2-seg-mini" id="mediaSourceSeg" role="radiogroup" aria-label="主数据源">
-                                    <button type="button" role="radio" data-media-source="douban" class="is-active" aria-checked="true">豆瓣</button>
-                                    <button type="button" role="radio" data-media-source="tmdb" aria-checked="false">TMDB</button>
-                                </div>
-                            </div>
-                            <div class="dash-switch-row">
-                                <div class="dash-switch-info">
-                                    <span class="dash-switch-label">自动降级</span>
-                                    <span class="dash-switch-desc">豆瓣超时、被限流或返回异常时，自动切换到 TMDB。</span>
-                                </div>
-                                <label class="dash-switch-toggle" for="mediaAutoFailoverToggle">
-                                    <input type="checkbox" id="mediaAutoFailoverToggle" class="dash-switch-input" checked>
-                                    <span class="dash-switch-track"></span>
-                                    <span class="dash-switch-dot"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </section>
-
                     <!-- 自定义资源站 -->
                     <section class="dash-card">
                         <header class="dash-card-header">

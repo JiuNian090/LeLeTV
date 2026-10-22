@@ -5,4 +5,3 @@
 import '../../services/theme';
 import './admin-panel';
 import './user-devices';
-import './media-settings';
