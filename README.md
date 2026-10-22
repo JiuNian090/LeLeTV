@@ -28,15 +28,15 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 | 指标 | 数据 |
 |------|------|
-| 源码 | 82 个 TypeScript 模块（`src/`，core / services / ui / pages / router） |
+| 源码 | 67 个 TypeScript 模块（`src/`，core / services / ui / pages / router） |
 | 第三方库 | 5 个（`libs/`：ArtPlayer / HLS.js / marked / sha256 / JSZip）+ Geist 字体 |
 | 样式 | 6 个手写 CSS（`src/styles/` + 页面级样式，无构建步骤） |
 | 构建产物 | 5 个 esbuild bundle（core / app / category / settings / player，ESM splitting + 内容哈希） |
 | 主题配色 | 11 套预设方案 + 自定义配色 |
 | 搜索源 | 21 个内置采集站（11 公开 + 10 隐藏）+ 最多 5 个自定义源，另支持云端下发 |
-| 页面 | `src/index.html`（SPA，1220 行）+ `src/pages/player/index.html`（独立播放页，317 行） |
+| 页面 | `src/index.html`（SPA，1220 行）+ `src/pages/player/index.html`（独立播放页，316 行） |
 | 数据库 | Cloudflare D1（`invitation_codes` + `devices` + `api_sites`） |
-| 代码图谱 | CodeGraph 231 文件 / 6,361 节点 / 23,733 边 |
+| 代码图谱 | CodeGraph 215 文件 / 6,144 节点 / 23,040 边 |
 
 ## ⚠️ 重要声明
 
@@ -100,7 +100,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
 
 ### 数据源与缓存
 - 设置页可勾选/重置数据源配置，支持导入/导出源列表（兼容 LibreTV、TVBOX 等格式，拖拽上传，导入自动去重合并），最多添加 5 个自定义采集站
-- 云端数据源：采集源存放在 D1，可在 `/admin` 面板在线增删改，前端启动时自动同步并缓存；内置源始终兜底
+- 云端数据源：采集源存放在 D1，可在 `/admin` 面板在线增删改，也能导入源列表（粘贴内容 / 选文件 / 填订阅地址，兼容 LibreTV、TVBOX 等格式，按接口地址合并去重，可标记为私密源），前端启动时自动同步并缓存；内置源始终兜底
 - 智能缓存管理：24 小时清理临时数据，保护用户设置与历史
 - **首页与导航偏好**：可关闭首页聚合动效、首页内容板块，导航可只显示图标（手机端始终只显示图标）；私密模式下聚合动效与内容板块默认关闭，仍可在设置里手动打开
 - PWA 可安装（`standalone` + `window-controls-overlay`），检测到可安装时弹出提示条（iOS / 局域网 http 给出手动步骤）
@@ -223,7 +223,7 @@ LeLeTV 是一个自用的在线视频搜索与观看平台，仅用于个人学�
     │       ├── GET / ────────────── 部署状态控制台（自检密钥与绑定）
     │       ├── /invite/* ────────── 邀请码 API 路由
     │       ├── /api-sites ───────── 云端数据源下发（私密源走 /api-sites/hidden）
-    │       └── /admin ───────────── 数据源管理面板（登录后在线增删改查）
+    │       └── /admin ───────────── 数据源管理面板（登录后在线增删改查、导入源列表）
     │
     └── 第三方采集站 API ─────────── 视频搜索与播放源（经 Functions 代理）
 ```
@@ -493,7 +493,7 @@ npm run dev
 
 ### 版本管理
 
-版本号保存在 `VERSION.txt`（当前 `v4.2.1`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
+版本号保存在 `VERSION.txt`（当前 `v4.2.2`），`npm run build` 时由 `scripts/generate-version.mjs` 完成：
 
 1. 替换 HTML 中的 `{{LELETV_VERSION}}` 占位符
 2. 为所有 CSS/JS 引用追加 `?v=<版本号>` 缓存参数
@@ -504,6 +504,10 @@ npm run dev
 ## 📝 更新日志
 
 > 最近 3 条，完整历史见 [CHANGELOG.md](CHANGELOG.md) 或站内「关于」页面。
+
+### v4.2.2 (2026-10-22)
+- 🎉 新增 数据源管理面板支持导入源列表，可粘贴内容、选择文件或填写订阅地址，兼容 LibreTV、TVBOX 等格式，按接口地址自动合并去重
+- ✨ 优化 版本更新检测更准确：只有服务端版本确实变新才提示，中途关闭页面也不会再让更新检查失效
 
 ### v4.2.1 (2026-10-22)
 - 🏗️ 重构 移除实验性豆瓣数据源，分类与详情统一使用 TMDB
@@ -516,10 +520,6 @@ npm run dev
 - 🔧 修复 项目说明页命中缓存后 Markdown 排版丢失的问题
 - 🔧 修复 旧版观看记录无法在新播放页继续播放的问题
 - ✨ 优化 仅开启首页内容板块时，标题与搜索框上移，内容更早进入首屏
-
-### v4.1.2 (2026-10-20)
-- 🔧 修复 iOS Safari 上播放页双指捏合缩放导致页面错乱的问题
-- 🔧 修复 播放页在部分屏幕下底部或右侧露出空白的问题
 
 <p align="center"><a href="CHANGELOG.md"><strong>更多更新日志 →</strong></a></p>
 
