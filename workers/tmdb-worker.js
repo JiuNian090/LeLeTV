@@ -18,6 +18,7 @@
 // GET  /admin/status            运行状态（TMDB 配置、D1 就绪、源数量），需管理员鉴权
 // GET  /admin/api-sites/list    全量列表（含停用与私密），需管理员鉴权
 // POST /admin/api-sites/save | /delete | /toggle，需管理员鉴权
+// POST /admin/api-sites/import   导入 LibreTV / TVBOX 源列表（按 API 地址合并），需管理员鉴权
 //
 // 环境变量：
 // - TMDB_API_KEY (secret)
@@ -1140,6 +1141,340 @@ async function handleApiSiteDelete(request, env, url) {
   }
 }
 
+// ====== LibreTV 源列表导入（/admin/api-sites/import）======
+//
+// 解析规则与前端 src/services/sources/port.ts 保持一致：
+//   1. LibreTV-SourceList：{ sources: [{ name, url, detail?, isAdult? }] }
+//   2. 裸数组：[{ name, url }]
+//   3. TVBOX：{ sites: [{ type: 1, api, name }] }，只取 Apple CMS 直连源
+//   4. 旧版映射：{ api_site: {...} } / { apiSites: {...} } / { API_SITES: {...} } / 直接映射
+// 导入按 API 地址合并：已存在只更新名称与 detail，不重复新增。
+// 所有地址都过 sanitizeApiSiteUrl（含内网/SSRF 校验），订阅 URL 的重定向逐跳校验。
+
+const IMPORT_MAX_BYTES = 2 * 1024 * 1024;
+const IMPORT_MAX_SOURCES = 100;
+const IMPORT_MAX_ERRORS = 10;
+const IMPORT_FETCH_TIMEOUT_MS = 8000;
+const IMPORT_MAX_REDIRECTS = 3;
+
+/** 规范化导入地址：只接受 http(s)，去掉末尾斜杠用于去重 */
+function normalizeImportUrl(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return '';
+  try {
+    new URL(trimmed);
+  } catch {
+    return '';
+  }
+  return trimmed.replace(/\/+$/, '');
+}
+
+function importHostname(url) {
+  try {
+    return new URL(url).hostname || url;
+  } catch {
+    return url;
+  }
+}
+
+/** 旧版键值映射 → 条目数组 */
+function sourceMapToImportEntries(map) {
+  return Object.keys(map).map((key) => {
+    const item = map[key];
+    if (!item || typeof item !== 'object') return null;
+    return Object.assign({}, item, {
+      name: item.name || key,
+      url: item.url || item.api,
+    });
+  }).filter(Boolean);
+}
+
+function looksLikeImportSourceMap(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return Object.keys(value).some((key) => {
+    const item = value[key];
+    return item && typeof item === 'object'
+      && typeof (item.url || item.api) === 'string';
+  });
+}
+
+/** 从受支持的 JSON 结构中取出待解析的源条目数组 */
+function extractRawImportList(json) {
+  if (Array.isArray(json)) return json;
+  if (!json || typeof json !== 'object') return null;
+
+  if (Array.isArray(json.sources)) return json.sources;
+
+  // TVBOX：只取 type=1（Apple CMS 直连接口），Spider / XML 无法在本站运行
+  if (Array.isArray(json.sites)) {
+    return json.sites.filter((site) =>
+      site && (site.type === 1 || site.type === '1') && typeof site.api === 'string'
+    );
+  }
+
+  const maps = [json.api_site, json.apiSites, json.API_SITES];
+  for (const map of maps) {
+    if (map && typeof map === 'object' && !Array.isArray(map)) {
+      return sourceMapToImportEntries(map);
+    }
+  }
+  if (looksLikeImportSourceMap(json)) return sourceMapToImportEntries(json);
+  return null;
+}
+
+/** 单条原始条目 → 标准源；无效地址返回 null */
+function normalizeImportEntry(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const url = normalizeImportUrl(raw.url || raw.api);
+  if (!url) return null;
+
+  const name = typeof raw.name === 'string' ? raw.name.trim() : '';
+  const entry = {
+    name: (name || importHostname(url)).slice(0, API_SITE_MAX_NAME_LEN),
+    url,
+  };
+
+  const detail = normalizeImportUrl(raw.detail || raw.detailUrl);
+  if (detail) entry.detail = detail;
+  if (raw.isAdult === true || raw.hidden === true) entry.isAdult = true;
+  return entry;
+}
+
+/** 解析 JSON → 去重、限制数量，并给出统计 */
+function parseImportPayload(json) {
+  const rawList = extractRawImportList(json);
+  if (!rawList) {
+    return { error: '未识别到源列表（支持 LibreTV 源列表、TVBOX sites 或旧版源配置）' };
+  }
+
+  const sources = [];
+  const seen = new Set();
+  let invalid = 0;
+  let duplicates = 0;
+  let truncated = 0;
+
+  for (const raw of rawList) {
+    const entry = normalizeImportEntry(raw);
+    if (!entry) {
+      invalid++;
+      continue;
+    }
+    if (seen.has(entry.url)) {
+      duplicates++;
+      continue;
+    }
+    seen.add(entry.url);
+
+    if (sources.length >= IMPORT_MAX_SOURCES) {
+      truncated++;
+      continue;
+    }
+    sources.push(entry);
+  }
+
+  return {
+    sources,
+    stats: { total: rawList.length, invalid, duplicates, truncated },
+  };
+}
+
+/** 拉取订阅地址：超时、大小限制、逐跳校验重定向目标（避免 SSRF） */
+async function fetchImportSourceText(rawUrl) {
+  let current = String(rawUrl || '').trim();
+
+  for (let i = 0; i <= IMPORT_MAX_REDIRECTS; i++) {
+    const check = sanitizeApiSiteUrl(current, '订阅地址');
+    if (check.error) return { error: check.error };
+    current = check.value;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), IMPORT_FETCH_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(current, {
+        signal: controller.signal,
+        redirect: 'manual',
+        headers: {
+          'User-Agent': 'LeLeTV-Worker-Import/1.0',
+          'Accept': 'application/json,text/plain,*/*',
+        },
+      });
+    } catch (error) {
+      return { error: error && error.name === 'AbortError' ? '订阅地址请求超时' : '订阅地址请求失败' };
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('Location');
+      if (!location) return { error: '订阅地址返回了空重定向' };
+      try {
+        current = new URL(location, current).toString();
+      } catch {
+        return { error: '订阅地址重定向格式不正确' };
+      }
+      continue;
+    }
+
+    if (!response.ok) return { error: `订阅地址返回 HTTP ${response.status}` };
+
+    const declared = parseInt(response.headers.get('Content-Length') || '0', 10);
+    if (declared > IMPORT_MAX_BYTES) return { error: '订阅内容超过 2MB' };
+    const text = await response.text();
+    if (text.length > IMPORT_MAX_BYTES) return { error: '订阅内容超过 2MB' };
+    return { text };
+  }
+
+  return { error: '订阅地址重定向次数过多' };
+}
+
+async function handleApiSiteImport(request, env, url) {
+  const declaredLength = parseInt(request.headers.get('Content-Length') || '0', 10);
+  if (declaredLength > IMPORT_MAX_BYTES + 64 * 1024) {
+    return jsonResponse({ ok: false, error: '导入内容超过 2MB' }, 413);
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') {
+    return jsonResponse({ ok: false, error: '请求体不是合法 JSON' }, 400);
+  }
+
+  let text = '';
+  if (typeof body.text === 'string' && body.text.trim()) {
+    text = body.text;
+  } else if (typeof body.url === 'string' && body.url.trim()) {
+    const fetched = await fetchImportSourceText(body.url);
+    if (fetched.error) return jsonResponse({ ok: false, error: fetched.error }, 400);
+    text = fetched.text;
+  } else {
+    return jsonResponse({ ok: false, error: '请提供 JSON 文本或订阅地址' }, 400);
+  }
+
+  if (text.length > IMPORT_MAX_BYTES) {
+    return jsonResponse({ ok: false, error: '导入内容超过 2MB' }, 413);
+  }
+
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return jsonResponse({ ok: false, error: '内容不是合法的 JSON' }, 400);
+  }
+
+  const parsed = parseImportPayload(json);
+  if (parsed.error) return jsonResponse({ ok: false, error: parsed.error }, 400);
+  if (!parsed.sources.length) {
+    return jsonResponse({ ok: false, error: '没有可导入的有效源', stats: parsed.stats }, 400);
+  }
+
+  const hiddenFlag = body.hidden ? 1 : 0;
+  const now = Date.now();
+
+  try {
+    const existingResult = await env.INVITE_DB.prepare(
+      'SELECT id, source_key, name, api, detail, hidden, enabled, sort_order, updated_at FROM api_sites'
+    ).all();
+    const rows = (existingResult && existingResult.results) || [];
+
+    const byUrl = new Map();
+    const usedKeys = new Set();
+    let nextSort = 0;
+    for (const row of rows) {
+      const key = normalizeImportUrl(row.api);
+      if (key && !byUrl.has(key)) byUrl.set(key, row);
+      if (row.source_key) usedKeys.add(row.source_key);
+      const sort = Number(row.sort_order) || 0;
+      if (sort > nextSort) nextSort = sort;
+    }
+
+    const statements = [];
+    const errors = [];
+    let imported = 0;
+    let updated = 0;
+
+    for (const source of parsed.sources) {
+      const existing = byUrl.get(source.url);
+      const wantHidden = hiddenFlag || (source.isAdult ? 1 : 0);
+
+      if (existing) {
+        let detail = existing.detail || '';
+        if (source.detail) {
+          const detailCheck = sanitizeApiSiteUrl(source.detail, 'detail 地址');
+          if (detailCheck.value) detail = detailCheck.value;
+        }
+
+        statements.push(env.INVITE_DB.prepare(
+          'UPDATE api_sites SET name = ?, detail = ?, hidden = ?, updated_at = ? WHERE id = ?'
+        ).bind(
+          (source.name || existing.name || '').slice(0, API_SITE_MAX_NAME_LEN),
+          detail,
+          wantHidden ? 1 : (existing.hidden ? 1 : 0),
+          now,
+          existing.id
+        ));
+        updated++;
+        continue;
+      }
+
+      // 最终入库前再校验一次，避免解析阶段放过了异常地址
+      const apiCheck = sanitizeApiSiteUrl(source.url, 'API 地址');
+      if (apiCheck.error) {
+        errors.push(`${source.name || source.url}：${apiCheck.error}`);
+        continue;
+      }
+
+      let detail = '';
+      if (source.detail) {
+        const detailCheck = sanitizeApiSiteUrl(source.detail, 'detail 地址');
+        if (detailCheck.value) detail = detailCheck.value;
+      }
+
+      let key = generateApiSiteKey();
+      while (usedKeys.has(key)) key = generateApiSiteKey();
+      usedKeys.add(key);
+      nextSort += 1;
+
+      statements.push(env.INVITE_DB.prepare(
+        'INSERT INTO api_sites (source_key, name, api, detail, hidden, enabled, sort_order, created_at, updated_at)'
+        + ' VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)'
+      ).bind(
+        key,
+        (source.name || importHostname(source.url)).slice(0, API_SITE_MAX_NAME_LEN),
+        apiCheck.value,
+        detail,
+        wantHidden ? 1 : 0,
+        nextSort,
+        now,
+        now
+      ));
+      imported++;
+    }
+
+    if (!statements.length) {
+      return jsonResponse({
+        ok: false,
+        error: errors.length ? '没有可导入的有效源' : '没有需要导入的源',
+        stats: Object.assign({}, parsed.stats, { imported: 0, updated: 0 }),
+        errors: errors.slice(0, IMPORT_MAX_ERRORS),
+      }, 400);
+    }
+
+    await env.INVITE_DB.batch(statements);
+    await purgeApiSitesCache(url);
+
+    return jsonResponse({
+      ok: true,
+      stats: Object.assign({}, parsed.stats, { imported, updated }),
+      errors: errors.slice(0, IMPORT_MAX_ERRORS),
+    }, 200);
+  } catch (error) {
+    console.error('[api-sites] 导入失败:', error && error.message);
+    return jsonResponse({ ok: false, error: '导入失败：请确认已执行 migrations/004_add_api_sites.sql' }, 500);
+  }
+}
+
 // ====== 管理员登录与状态（/admin/login、/admin/status）======
 
 // 登录失败节流：同一 IP 连续失败达到上限后锁定一段时间。
@@ -1281,6 +1616,8 @@ button.primary{background:#ec4899;border-color:#ec4899;color:#fff}
 button.primary:hover{background:#db2777}
 button.danger:hover{background:#2a1a1c;border-color:#7f1d1d;color:#fca5a5}
 .item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#1a1a1f;border-radius:8px;margin-bottom:8px}
+.item.is-on{box-shadow:inset 2px 0 0 #22c55e}
+.item.is-off{box-shadow:inset 2px 0 0 #3f3f46}
 .item .info{flex:1;min-width:0}
 .item .nm{font-size:14px;color:#e0e0e0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .item .meta{font-size:11px;color:#555;margin-top:4px;word-break:break-all}
@@ -1315,6 +1652,35 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
 .modal-card{position:relative;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;background:#16161a;border:1px solid #2a2a30;border-radius:12px;padding:26px 24px;box-shadow:0 18px 48px rgba(0,0,0,.55)}
 .modal-card h2{margin-bottom:18px}
 .footer{margin-top:22px;text-align:center;font-size:11px;color:#444}
+/* 导入弹窗与代码工作风细节：key/URL 用等宽字体，保持与 Worker 状态页一致的深色克制风格 */
+textarea{width:100%;min-height:150px;resize:vertical;background:#1a1a1f;border:1px solid #2a2a30;border-radius:8px;color:#e0e0e0;padding:10px 12px;font-size:12px;line-height:1.7;font-family:ui-monospace,SFMono-Regular,Consolas,'Courier New',monospace;transition:border-color .2s}
+textarea:focus{outline:none;border-color:#ec4899}
+input[type=file]{width:100%;font-size:12px;color:#888}
+input[type=file]::file-selector-button{background:#1e1e24;border:1px solid #2a2a30;border-radius:6px;color:#aaa;font-size:12px;padding:6px 12px;margin-right:10px;cursor:pointer;font-family:inherit}
+input[type=file]::file-selector-button:hover{background:#2a2a30;color:#e0e0e0}
+.import-btn{margin-left:0;padding:4px 12px;font-size:11px;border-color:#831843;color:#ec4899}
+.import-btn:hover{background:#1f1419;border-color:#ec4899;color:#f9a8d4}
+.tabs{display:flex;gap:6px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #2a2a30}
+.tab{background:transparent;border:1px solid transparent;border-radius:6px;padding:6px 10px;font-size:12px;color:#777}
+.tab:hover{background:#1e1e24;color:#bbb}
+.tab.active{background:#1f1419;border-color:#831843;color:#ec4899}
+.import-pane{margin-bottom:14px}
+.hint{font-size:11px;color:#555;line-height:1.7;margin-top:6px}
+.item .meta{font-family:ui-monospace,SFMono-Regular,Consolas,'Courier New',monospace}
+.import-result{margin-top:14px;padding:12px 14px;background:#1a1a1f;border:1px solid #2a2a30;border-radius:8px;font-size:12px;line-height:1.8}
+.import-result .ok{color:#4ade80}
+.import-result .warn{color:#fbbf24;margin-top:8px}
+.import-result ul{margin:6px 0 0 16px;color:#aaa}
+.import-result li{word-break:break-all}
+@media (max-width:560px){
+  body{padding:18px 10px}
+  .container{padding:24px 18px}
+  .item{flex-direction:column;align-items:flex-start}
+  .item .ops{width:100%;justify-content:flex-end;flex-wrap:wrap}
+  .stat{min-width:100%}
+  .modal-card{padding:22px 18px}
+  .tabs{flex-wrap:wrap}
+}
 </style>
 </head>
 <body>
@@ -1350,7 +1716,7 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
 
 <!-- 数据源统一板块：统计 / 列表 / 状态消息都在这里，新增与编辑走弹窗 -->
 <div class="block">
-<h2>数据源管理<span class="count" id="siteCount"></span><button class="icon-btn" id="addSiteBtn" title="新增数据源" aria-label="新增数据源">+</button></h2>
+<h2>数据源管理<span class="count" id="siteCount"></span><button type="button" class="mini import-btn" id="importBtn" title="导入 LibreTV 源列表">导入</button><button class="icon-btn" id="addSiteBtn" title="新增数据源" aria-label="新增数据源">+</button></h2>
 <div id="list"><div class="empty">加载中…</div></div>
 <div class="msg" id="msg"></div>
 </div>
@@ -1390,6 +1756,39 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
 <div class="msg" id="modalMsg"></div>
 </div>
 </div>
+
+<!-- 导入数据源弹窗：粘贴 / 文件 / 订阅 URL 三种入口，服务端按 API 地址合并 -->
+<div class="modal hidden" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+<div class="modal-mask" data-import-close="1"></div>
+<div class="modal-card">
+<h2 id="importTitle">导入数据源</h2>
+<div class="tabs" role="tablist">
+<button type="button" class="tab active" data-import-tab="text" role="tab">粘贴 JSON</button>
+<button type="button" class="tab" data-import-tab="file" role="tab">上传文件</button>
+<button type="button" class="tab" data-import-tab="url" role="tab">订阅 URL</button>
+</div>
+<div class="import-pane" data-import-pane="text">
+<textarea id="importText" rows="8" placeholder="支持 LibreTV SourceList、TVBOX sites、旧版源配置"></textarea>
+<div class="hint">{ "sources": [{ "name": "...", "url": "https://..." }] } 或 { "sites": [{ "type": 1, "api": "https://...", "name": "..." }] }</div>
+</div>
+<div class="import-pane hidden" data-import-pane="file">
+<input type="file" id="importFile" accept=".json,application/json">
+<div class="hint" id="importFileHint">选择 .json 文件，最大 2MB</div>
+</div>
+<div class="import-pane hidden" data-import-pane="url">
+<input type="text" id="importUrl" placeholder="https://example.com/sources.json">
+<div class="hint">由 Worker 拉取，需为可公开访问的 JSON 地址；会校验内网地址与重定向。</div>
+</div>
+<label class="check"><input type="checkbox" id="importHidden"> 作为私密源导入（18+，仅隐藏内容模式可见）</label>
+<div class="hint">按 API 地址合并：已存在的源只更新名称与 detail，不重复新增。</div>
+<div class="actions">
+<button type="button" id="importCancel">取消</button>
+<button type="button" class="primary" id="importConfirm">导入</button>
+</div>
+<div class="msg" id="importMsg"></div>
+<div id="importResult" class="hidden"></div>
+</div>
+</div>
 <script>
 (function () {
   'use strict';
@@ -1422,6 +1821,20 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
   var editingId = 0;
   var saving = false;
   var lastFocus = null;
+  var importBtn = document.getElementById('importBtn');
+  var importModal = document.getElementById('importModal');
+  var importText = document.getElementById('importText');
+  var importFile = document.getElementById('importFile');
+  var importFileHint = document.getElementById('importFileHint');
+  var importUrl = document.getElementById('importUrl');
+  var importHidden = document.getElementById('importHidden');
+  var importMsg = document.getElementById('importMsg');
+  var importResult = document.getElementById('importResult');
+  var importConfirm = document.getElementById('importConfirm');
+  var importCancel = document.getElementById('importCancel');
+  var importMode = 'text';
+  var importFileText = '';
+  var importing = false;
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1464,6 +1877,152 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
       body: JSON.stringify({ username: username, password: password })
     }).then(function (r) {
       return r.json().catch(function () { return { ok: false, error: 'HTTP ' + r.status }; });
+    });
+  }
+
+  // ===== 导入弹窗 =====
+
+  function isImportOpen() {
+    return importModal.className.indexOf('hidden') === -1;
+  }
+
+  function switchImportTab(mode) {
+    importMode = mode;
+    var tabs = document.querySelectorAll('[data-import-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-import-tab') === mode);
+    }
+    var panes = document.querySelectorAll('[data-import-pane]');
+    for (var j = 0; j < panes.length; j++) {
+      panes[j].classList.toggle('hidden', panes[j].getAttribute('data-import-pane') !== mode);
+    }
+  }
+
+  function resetImportForm() {
+    importText.value = '';
+    importFile.value = '';
+    importFileText = '';
+    importFileHint.textContent = '选择 .json 文件，最大 2MB';
+    importUrl.value = '';
+    importHidden.checked = false;
+    importing = false;
+    importConfirm.disabled = false;
+    say(importMsg, '');
+    importResult.className = 'hidden';
+    importResult.innerHTML = '';
+    switchImportTab('text');
+  }
+
+  function openImportModal() {
+    resetImportForm();
+    lastFocus = document.activeElement;
+    importModal.className = 'modal';
+    setTimeout(function () { importText.focus(); }, 60);
+  }
+
+  function closeImportModal() {
+    if (!isImportOpen() || importing) return;
+    importModal.className = 'modal hidden';
+    say(importMsg, '');
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+    lastFocus = null;
+  }
+
+  function readImportFile() {
+    var file = importFile.files && importFile.files[0];
+    importFileText = '';
+    if (!file) {
+      importFileHint.textContent = '选择 .json 文件，最大 2MB';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      importFile.value = '';
+      importFileHint.textContent = '选择 .json 文件，最大 2MB';
+      say(importMsg, '文件超过 2MB，请换一个文件', 'err');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      importFileText = String(reader.result || '');
+      importFileHint.textContent = file.name + ' · ' + (file.size / 1024).toFixed(1) + ' KB';
+      say(importMsg, '');
+    };
+    reader.onerror = function () {
+      importFileText = '';
+      say(importMsg, '文件读取失败', 'err');
+    };
+    reader.readAsText(file);
+  }
+
+  function renderImportResult(stats, errors) {
+    stats = stats || {};
+    var parts = [];
+    if (stats.total) parts.push('识别 ' + stats.total + ' 条');
+    if (stats.imported) parts.push('新增 ' + stats.imported);
+    if (stats.updated) parts.push('更新 ' + stats.updated);
+    if (stats.invalid) parts.push('无效 ' + stats.invalid);
+    if (stats.duplicates) parts.push('重复 ' + stats.duplicates);
+    if (stats.truncated) parts.push('超限丢弃 ' + stats.truncated);
+
+    var changed = !!(stats.imported || stats.updated);
+    var html = '<div class="' + (changed ? 'ok' : 'warn') + '">'
+      + esc(parts.join(' · ') || '没有变化') + '</div>';
+    if (errors && errors.length) {
+      html += '<div class="warn">部分条目未导入：</div><ul>';
+      for (var i = 0; i < errors.length; i++) {
+        html += '<li>' + esc(errors[i]) + '</li>';
+      }
+      html += '</ul>';
+    }
+    importResult.innerHTML = html;
+    importResult.className = 'import-result';
+  }
+
+  function doImport() {
+    if (importing) return;
+
+    var payload = { hidden: importHidden.checked };
+    if (importMode === 'url') {
+      payload.url = importUrl.value.trim();
+      if (!payload.url) {
+        say(importMsg, '请输入订阅 URL', 'err');
+        return;
+      }
+    } else if (importMode === 'file') {
+      if (!importFileText) {
+        say(importMsg, '请先选择 JSON 文件', 'err');
+        return;
+      }
+      payload.text = importFileText;
+    } else {
+      payload.text = importText.value.trim();
+      if (!payload.text) {
+        say(importMsg, '请粘贴 JSON 内容', 'err');
+        return;
+      }
+    }
+
+    importing = true;
+    importConfirm.disabled = true;
+    importResult.className = 'hidden';
+    say(importMsg, '导入中…');
+
+    call('/admin/api-sites/import', payload).then(function (res) {
+      importing = false;
+      importConfirm.disabled = false;
+      if (!res.ok) {
+        say(importMsg, res.error || '导入失败', 'err');
+        if (res.stats) renderImportResult(res.stats, res.errors || []);
+        return;
+      }
+      say(importMsg, '');
+      renderImportResult(res.stats || {}, res.errors || []);
+      loadSites();
+      loadStatus();
+    }).catch(function () {
+      importing = false;
+      importConfirm.disabled = false;
+      say(importMsg, '网络错误', 'err');
     });
   }
 
@@ -1572,23 +2131,32 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
     });
   }
 
+  function formatTime(ts) {
+    var d = new Date(Number(ts) || 0);
+    if (!d.getTime()) return '';
+    function p(n) { return n < 10 ? '0' + n : String(n); }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+      + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
   function render(sites) {
     allSites = sites;
     var enabledCount = sites.filter(function (s) { return s.enabled; }).length;
     siteCount.textContent = sites.length ? ('共 ' + sites.length + ' 个 · ' + enabledCount + ' 启用') : '';
     if (!sites.length) {
-      listEl.innerHTML = '<div class="empty">还没有配置数据源，点右上角「+」添加</div>';
+      listEl.innerHTML = '<div class="empty">还没有配置数据源，点右上角「导入」或「+」添加</div>';
       return;
     }
     listEl.innerHTML = sites.map(function (s) {
       var tags = '<span class="tag ' + (s.enabled ? 'on' : 'off') + '">' + (s.enabled ? '启用' : '停用') + '</span>';
       if (s.hidden) tags += '<span class="tag priv">私密</span>';
-      return '<div class="item">' +
+      return '<div class="item ' + (s.enabled ? 'is-on' : 'is-off') + '">' +
         '<div class="info">' +
           '<div class="nm">' + esc(s.name) + tags + '</div>' +
           '<div class="meta">' + esc(s.key) + '</div>' +
           '<div class="meta">' + esc(s.api) + '</div>' +
           (s.detail ? '<div class="meta">detail: ' + esc(s.detail) + '</div>' : '') +
+          (s.updated_at ? '<div class="meta">更新于 ' + esc(formatTime(s.updated_at)) + '</div>' : '') +
         '</div>' +
         '<div class="ops">' +
           '<button data-act="edit" data-id="' + s.id + '">编辑</button>' +
@@ -1659,6 +2227,24 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
   addSiteBtn.addEventListener('click', function () {
     openModal(null);
   });
+
+  // 导入弹窗：按钮、入口切换、文件读取、三种来源共用一个提交
+  importBtn.addEventListener('click', openImportModal);
+  importCancel.addEventListener('click', closeImportModal);
+  importConfirm.addEventListener('click', doImport);
+  importFile.addEventListener('change', readImportFile);
+  importUrl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') doImport();
+  });
+  importModal.addEventListener('click', function (e) {
+    if (e.target && e.target.getAttribute('data-import-close') === '1') closeImportModal();
+  });
+  var importTabs = document.querySelectorAll('[data-import-tab]');
+  for (var ti = 0; ti < importTabs.length; ti++) {
+    importTabs[ti].addEventListener('click', function () {
+      switchImportTab(this.getAttribute('data-import-tab'));
+    });
+  }
   modalCancel.addEventListener('click', closeModal);
   modalSave.addEventListener('click', saveSite);
 
@@ -1668,7 +2254,10 @@ input[type=password]:focus{outline:none;border-color:#ec4899}
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeImportModal();
+      closeModal();
+    }
   });
 
   fName.addEventListener('keydown', function (e) {
@@ -1806,6 +2395,7 @@ async function handleApiSitesRequest(request, env, ctx, url) {
       '/admin/api-sites/save': 'POST',
       '/admin/api-sites/delete': 'POST',
       '/admin/api-sites/toggle': 'POST',
+      '/admin/api-sites/import': 'POST',
     }[path];
     if (allowedMethod) {
       if (request.method !== allowedMethod) {
@@ -1820,6 +2410,7 @@ async function handleApiSitesRequest(request, env, ctx, url) {
       if (path === '/admin/api-sites/list') return await handleApiSiteList(env);
       if (path === '/admin/api-sites/save') return await handleApiSiteSave(request, env, url);
       if (path === '/admin/api-sites/delete') return await handleApiSiteDelete(request, env, url);
+      if (path === '/admin/api-sites/import') return await handleApiSiteImport(request, env, url);
       return await handleApiSiteToggle(request, env, url);
     }
 
